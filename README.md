@@ -5,10 +5,11 @@ Sentinel is a JSON-based database for next-generation sequencing statistics.
 ## Build & Run
 
 ```sh
-$ cd Sentinel
+$ git clone {this-repository}
+$ cd sentinel
 $ ./sbt
 > container:start
 > browse
 ```
 
-If `browse` doesn't launch your browser, manually open [http://localhost:9090/](http://localhost:9090/) in your browser.
+If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
