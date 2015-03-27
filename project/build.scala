@@ -1,0 +1,85 @@
+import sbt._
+import Keys._
+import org.scalatra.sbt._
+import org.scalatra.sbt.PluginKeys._
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import com.mojolly.scalate.ScalatePlugin._
+import ScalateKeys._
+
+object SentinelBuild extends Build {
+  val Organization = "nl.lumc.sasc"
+  val Name = "Sentinel"
+  val Version = "0.1.0-SNAPSHOT"
+  val ScalaVersion = "2.11.6"
+  val ScalatraVersion = "2.3.1"
+
+  lazy val formattingPreferences = {
+    import scalariform.formatter.preferences._
+    FormattingPreferences()
+      .setPreference(AlignParameters, true)
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(CompactStringConcatenation, false)
+      .setPreference(CompactControlReadability, false)
+      .setPreference(DoubleIndentClassDeclaration, false)
+      .setPreference(IndentLocalDefs, false)
+      .setPreference(IndentPackageBlocks, true)
+      .setPreference(IndentSpaces, 2)
+      .setPreference(PlaceScaladocAsterisksBeneathSecondAsterisk, false)
+      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(PreserveSpaceBeforeArguments, false)
+      .setPreference(RewriteArrowSymbols, false)
+      .setPreference(SpaceBeforeColon, false)
+      .setPreference(SpaceInsideBrackets, false)
+      .setPreference(SpaceInsideParentheses, false)
+      .setPreference(SpacesWithinPatternBinders, true)
+  }
+
+  lazy val project = Project (
+    "sentinel",
+    file("."),
+    settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ Seq(
+      organization := Organization,
+      name := Name,
+      version := Version,
+      scalaVersion := ScalaVersion,
+      resolvers += Classpaths.typesafeReleases,
+      resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+      resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
+      resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
+      libraryDependencies ++= Seq(
+        "ch.qos.logback"          %  "logback-classic"          % "1.1.2"               % "runtime",
+        "com.typesafe.akka"       %% "akka-actor"               % "2.3.6",
+        "commons-codec"           %  "commons-codec"            % "1.7",
+        "javax.servlet"           %  "javax.servlet-api"        % "3.1.0"               % "container;provided;test",
+        "net.databinder.dispatch" %% "dispatch-core"            % "0.11.2",
+        "net.databinder.dispatch" %% "dispatch-json4s-jackson"  % "0.11.2",
+        "org.eclipse.jetty"       %  "jetty-plus"               % "9.1.5.v20140505"     % "container",
+        "org.eclipse.jetty"       %  "jetty-webapp"             % "9.1.5.v20140505"     % "container",
+        "org.json4s"              %% "json4s-native"            % "3.2.10",
+        "org.json4s"              %% "json4s-jackson"           % "3.2.10",
+        "org.json4s"              %% "json4s-ext"               % "3.2.10",
+        "org.scalatest"           %% "scalatest"                % "2.2.1"               % "test",
+        "org.scalatra"            %% "scalatra"                 % ScalatraVersion,
+        "org.scalatra"            %% "scalatra-scalate"         % ScalatraVersion,
+        "org.scalatra"            %% "scalatra-specs2"          % ScalatraVersion       % "test",
+        "org.scalatra"            %% "scalatra-json"            % ScalatraVersion,
+        "org.scalatra"            %% "scalatra-swagger"         % ScalatraVersion,
+        "org.scalatra"            %% "scalatra-swagger-ext"     % ScalatraVersion,
+        "org.scalatra"            %% "scalatra-slf4j"           % ScalatraVersion
+      ),
+      ScalariformKeys.preferences := formattingPreferences,
+      scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
+        Seq(
+          TemplateConfig(
+            base / "webapp" / "WEB-INF" / "templates",
+            Seq.empty,  /* default imports should be added here */
+            Seq(
+              Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
+            ),  /* add extra bindings here */
+            Some("templates")
+          )
+        )
+      }
+    )
+  )
+}
