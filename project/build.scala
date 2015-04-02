@@ -49,6 +49,7 @@ object SentinelBuild extends Build {
       resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
       libraryDependencies ++= Seq(
         "ch.qos.logback"          %  "logback-classic"          % "1.1.2"               % "runtime",
+        "com.github.fge"          %  "json-schema-validator"    % "2.2.6",
         "com.typesafe.akka"       %% "akka-actor"               % "2.3.6",
         "commons-codec"           %  "commons-codec"            % "1.7",
         "javax.servlet"           %  "javax.servlet-api"        % "3.1.0"               % "container;provided;test",
