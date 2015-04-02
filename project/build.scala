@@ -12,6 +12,7 @@ object SentinelBuild extends Build {
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.6"
   val ScalatraVersion = "2.3.1"
+  val Json4sVersion = "3.2.11"
 
   lazy val formattingPreferences = {
     import scalariform.formatter.preferences._
@@ -55,9 +56,11 @@ object SentinelBuild extends Build {
         "net.databinder.dispatch" %% "dispatch-json4s-jackson"  % "0.11.2",
         "org.eclipse.jetty"       %  "jetty-plus"               % "9.1.5.v20140505"     % "container",
         "org.eclipse.jetty"       %  "jetty-webapp"             % "9.1.5.v20140505"     % "container",
-        "org.json4s"              %% "json4s-native"            % "3.2.10",
-        "org.json4s"              %% "json4s-jackson"           % "3.2.10",
-        "org.json4s"              %% "json4s-ext"               % "3.2.10",
+        "org.json4s"              %% "json4s-native"            % Json4sVersion,
+        "org.json4s"              %% "json4s-jackson"           % Json4sVersion,
+        "org.json4s"              %% "json4s-mongo"             % Json4sVersion,
+        "org.json4s"              %% "json4s-ext"               % Json4sVersion,
+        "org.mongodb"             %% "casbah"                   % "2.8.0",
         "org.scalatest"           %% "scalatest"                % "2.2.1"               % "test",
         "org.scalatra"            %% "scalatra"                 % ScalatraVersion,
         "org.scalatra"            %% "scalatra-scalate"         % ScalatraVersion,
