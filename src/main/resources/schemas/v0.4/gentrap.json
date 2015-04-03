@@ -1,0 +1,853 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Gentrap Pipeline Summary",
+    "description": "Schema for full Gentrap pipeline runs",
+    "type": "object",
+    "required": [ "samples", "gentrap" ],
+
+    "properties": {
+
+      "meta": {
+        "description": "Pipeline run metadata",
+        "type": "object",
+        "required": [ "version", "last_commit_hash" ],
+
+        "properties": {
+
+          "version": {
+            "description": "Pipeline release version",
+            "type": "string"
+          },
+
+          "last_commit_hash": {
+            "description": "Commit hash of the source code repository at the time the pipeline was compiled",
+            "type": "string",
+            "minLength": 7
+          }
+        }
+      },
+
+      "samples": {
+        "description": "All samples analyzed in the Gentrap run",
+        "type": "object",
+        "minItems": 1,
+        "additionalProperties": { "$ref": "#/definitions/sample" }
+      },
+
+      "gentrap": {
+        "description": "Pipeline-level Gentrap information",
+        "type": "object",
+        "required": [ "files", "executables", "settings" ],
+
+        "properties": {
+
+          "files": {
+            "description": "File groups tracked by Gentrap",
+            "type": "object",
+
+            "properties": {
+
+              "pipeline": {
+                "description": "Files tracked by Gentrap",
+                "type": "object",
+                "required": [ "annotation_refflat" ],
+                "additionalProperties": { "$ref": "#/definitions/file" }
+              }
+            }
+          },
+
+          "executables": {
+            "description": "Executables used in the Gentrap run",
+            "type": "object",
+            "additionalProperties": { "$ref": "#/definitions/executable" }
+          },
+
+          "settings": {
+            "description": "Settings used for the Gentrap run",
+            "type": "object",
+            "required": [
+              "aligner", "call_variants", "remove_ribosomal_reads",
+              "expression_measures", "strand_protocol", "reference"
+            ],
+
+            "properties": {
+
+              "aligner": { "type": "string" },
+              "call_variants": { "type": "boolean" },
+              "remove_ribosomal_reads": { "type": "boolean" },
+
+              "expression_measures": {
+                "description": "Expression measurements for each sample",
+                "type": "array",
+                "minItems": 0,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "FragmentsPerGene", "FragmentsPerExon", "BasesPerGene", "BasesPerExon",
+                    "CufflinksStrict", "CufflinksGuided", "CufflinksBlind"
+                  ]
+                }
+              },
+
+              "strand_protocol": {
+                "description": "Wet lab protocol that was used to track origin strand of reads",
+                "type": "string",
+                "enum": [ "NonSpecific", "Dutp" ]
+              },
+
+              "reference": {
+                "description": "Reference sequence information",
+                "type": "object",
+                "required": [ "contigs" ],
+
+                "properties": {
+
+                  "contigs": {
+                    "description": "All contigs / chromosomes in the reference sequence",
+                    "type": "object",
+                    "minItems": 1,
+                    "additionalProperties": { "$ref": "#/definitions/referenceContig" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+  "definitions": {
+
+    "sample": {
+      "description": "A single Gentrap sample",
+      "type": "object",
+      "required": [ "libraries", "gentrap" ],
+
+      "properties": {
+
+        "libraries": {
+          "description": "All libraries belonging to the sample",
+          "type": "object",
+          "minItems": 1,
+          "additionalProperties": { "$ref": "#/definitions/library" }
+        },
+
+        "gentrap": {
+          "description": "Sample-level Gentrap information",
+          "required": [ "files", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by Gentrap",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Sample-level Gentrap files",
+                  "type": "object",
+                  "required": [ "alignment" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                },
+
+                "rna_metrics": {
+                  "description": "Library-level RNA-seq metrics",
+                  "type": "object",
+                  "required": [ "annotation", "metrics" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "stats": {
+              "description": "Library-level Gentrap statistics",
+              "type": "object",
+
+              "properties": {}
+            }
+          }
+        },
+
+        "bammetrics": {
+          "description": "Sample-level mapping metrics",
+          "type": "object",
+          "required": [ "files", "executables", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by BamMetrics",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Mapping",
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in BamMetrics",
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/executable" }
+            },
+
+            "stats": {
+              "description": "Statistics gathered by BamMetrics",
+              "type": "object",
+              "required": [ "alignment_metrics", "biopet_flagstat" ],
+
+              "properties": {
+
+                "alignment_metrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+
+                "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
+
+                "insert_size_metrics": {
+                  "description": "Metrics gathered by the Picard CollectInsertSizeMetrics tool (only for paired-end libraries)",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "library": {
+      "description": "A single Gentrap library",
+      "type": "object",
+      "required": [ "flexiprep", "mapping", "bammetrics", "gentrap" ],
+
+      "properties": {
+
+        "flexiprep": {
+          "description": "Library-level Flexiprep information",
+          "type": "object",
+          "required": [ "files", "executables", "settings", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by Flexiprep",
+              "type": "object",
+              "required": [ "pipeline", "fastqc_R1" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Flexiprep",
+                  "type": "object",
+                  "required": [ "input_R1", "output_R1" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                },
+
+                "fastqc_R1": {
+                  "description": "FastQC files of the R1 read",
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in Flexiprep",
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/executable" }
+            },
+
+            "settings": {
+              "description": "Settings used for the Flexiprep run",
+              "type": "object",
+              "required": [ "skip_trim", "skip_clip", "paired" ],
+
+              "properties": {
+
+                "skip_trim": {
+                  "description": "Whether base quality trimming step is skipped or not",
+                  "type": "boolean"
+                },
+
+                "skip_clip": {
+                  "description": "Whether adapter clipping step is skipped or not",
+                  "type": "boolean"
+                },
+
+                "paired": {
+                  "description": "Whether the input sequence is paired or not",
+                  "type": "boolean"
+                }
+              }
+            },
+
+            "stats": {
+              "description": "Statistics gathered by Flexiprep",
+              "type": "object",
+              "required": [ "fastqc_R1", "seqstat_R1" ],
+
+              "properties": {
+
+                "seqstat_R1": { "$ref": "#/definitions/statsSeqstat" },
+                "seqstat_R2": { "$ref": "#/definitions/statsSeqstat" },
+                "seqstat_R1_qc": { "$ref": "#/definitions/statsSeqstat" },
+                "seqstat_R1_qc": { "$ref": "#/definitions/statsSeqstat" },
+                "fastqc_R1": { "$ref": "#/definitions/statsFastqc" },
+                "fastqc_R2": { "$ref": "#/definitions/statsFastqc" },
+                "fastqc_R1_qc": { "$ref": "#/definitions/statsFastqc" },
+                "fastqc_R2_qc": { "$ref": "#/definitions/statsFastqc" },
+                "clipping_R1": { "$ref": "#/definitions/statsCutadapt" },
+                "clipping_R2": { "$ref": "#/definitions/statsCutadapt" },
+
+                "fastq_sync": {
+                  "description": "Statistics for read syncing, after clipping",
+                  "type": "object",
+
+                  "properties": {
+
+                    "num_reads_discarded_R1": { "type": "integer" },
+                    "num_reads_discarded_R2": { "type": "integer" },
+                    "num_reads_kept": { "type": "integer" }
+                  }
+                },
+
+                "trimming": {
+                  "description": "Statistics for base-quality trimming, based on sickle results",
+                  "type": "object",
+                  "required": [ "num_reads_discarded_total", "num_reads_kept" ],
+                  "additionalProperties": false,
+
+                  "properties": {
+
+                    "num_reads_discarded_total": { "type": "integer" },
+                    "num_reads_kept": { "type": "integer" },
+                    "num_reads_discarded_R1": { "type": "integer" },
+                    "num_reads_discarded_R2": { "type": "integer" },
+                    "num_reads_discarded_both": { "type": "integer" },
+                    "num_reads_kept_R1": { "type": "integer" },
+                    "num_reads_kept_R2": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "mapping": {
+          "description": "Library-level mapping information",
+          "type": "object",
+          "required": [ "files", "executables", "settings" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by Mapping",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Mapping",
+                  "type": "object",
+                  "required": [ "input_R1", "output_bamfile" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in Mapping",
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/executable" }
+            },
+
+            "settings": {
+              "description": "Settings used for Mapping",
+              "type": "object",
+              "required": [ "aligner", "chunking", "number_chunks", "skip_flexiprep", "skip_markduplicates", "skip_metrics" ],
+
+              "properties": {
+
+                "aligner": { "type": "string" },
+
+                "chunking": {
+                  "description": "Whether the input FASTQ files are split (chunked), aligned separately, and then merged, or not",
+                  "type": "boolean"
+                },
+
+                "number_chunks": {
+                  "description": "If chungking is enabled, the number of FASTQ chunks",
+                  "type": "integer"
+                },
+
+                "skip_flexipep": {
+                  "description": "Whether the Flexiprep pipeline run is skipped or not",
+                  "type": "boolean"
+                },
+
+                "skip_markduplicates": {
+                  "description": "Whether the Picard MarkDuplicates step is skipped or not",
+                  "type": "boolean"
+                },
+
+                "skip_metrics": {
+                  "description": "Whether the alignment metrics gethering (by the BamMetrics) pipeline is skipped or not",
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+
+        "bammetrics": {
+          "description": "Library-level mapping metrics",
+          "type": "object",
+          "required": [ "files", "executables", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by BamMetrics",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Mapping",
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in BamMetrics",
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/executable" }
+            },
+
+            "stats": {
+              "description": "Statistics gathered by BamMetrics",
+              "type": "object",
+              "required": [ "alignment_metrics", "biopet_flagstat" ],
+
+              "properties": {
+
+                "alignment_metrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+
+                "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
+
+                "insert_size_metrics": {
+                  "description": "Metrics gathered by the Picard CollectInsertSizeMetrics tool (only for paired-end libraries)",
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+
+        "gentrap": {
+          "description": "Library-level Gentrap information",
+          "type": "object",
+          "required": [ "files", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by Gentrap",
+              "type": "object",
+              "required": [ "pipeline", "rna_metrics" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Library-level Gentrap files",
+                  "type": "object",
+                  "required": [ "alignment" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                },
+
+                "rna_metrics": {
+                  "description": "Library-level RNA-seq metrics",
+                  "type": "object",
+                  "required": [ "annotation", "metrics" ],
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "stats": {
+              "description": "Library-level Gentrap statistics",
+              "type": "object",
+              "required": [ "rna_metrics" ],
+
+              "properties": {
+
+                "rna_metrics": { "$ref": "#/definitions/statsRnaSeqMetrics" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "referenceContig": {
+      "description": "Entry for a single contig in a reference sequence",
+      "type": "object",
+      "required": [ "md5", "size" ],
+
+      "properties": {
+
+        "md5": {
+          "description": "MD5 checksum of the contig",
+          "type": "string"
+        },
+
+        "size": {
+          "description": "Size of the contig in base pairs",
+          "type": "integer"
+        }
+      }
+    },
+
+    "fileGroup": {
+      "description": "File entries grouped as properties of an object",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/file" }
+    },
+
+    "file": {
+      "description": "A single file entry",
+      "type": "object",
+      "required": [ "path", "md5" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "md5":    { "type": "string" },
+        "sha1":   { "type": "string" },
+        "sha256": { "type": "string" },
+
+        "path":   {
+          "description": "Absolute file system path of the file",
+          "type": "string"
+        }
+      }
+    },
+
+    "executable": {
+      "description": "Entry for storing executable information",
+      "type": "object",
+      "required": [ "version" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "version":  {
+          "description": "Version of the executable, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "md5": {
+          "description": "MD5 checksum of the executable, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "jar_md5": {
+          "description": "MD5 checksum of the JAR (only for JAR-packaged tools)",
+          "type": ["string", "null"]
+        },
+
+        "java_md5": {
+          "description": "MD5 checksum of the java executable (only for JAR-packaged tools)",
+          "type": ["string", "null"]
+        }
+      }
+    },
+
+    "statsSeqstat": {
+      "description": "Sequence statistics created by SeqStat (part of the Flexiprep pipeline)",
+      "type": "object",
+      "required": [ "bases", "reads" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "bases": {
+          "description": "Base pair-level statistics",
+          "type": "object",
+          "required": [ "nucleotides", "num_total" ],
+
+          "properties": {
+
+            "nucleotides": {
+              "description": "Counts of specific nucleotides across all reads (including ambiguous characters as outlined in http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2865858/",
+              "type": "object",
+              "additionalProperties": false,
+
+              "patternProperties": {
+                "^[ACGTURYMKSWHBVDN]$": { "type": "integer" }
+              }
+            },
+
+            "num_total": {
+              "description": "Total number of bases",
+              "type": "integer"
+            }
+          }
+        },
+
+        "reads": {
+          "description": "Read-level statistics",
+          "type": "object",
+          "required": [ "len_max", "len_min", "num_with_n", "num_total", "qual_encoding" ],
+
+          "properties": {
+
+            "len_max": {
+              "description": "Length of longest read",
+              "type": "integer"
+            },
+
+            "len_min": {
+              "description": "Length of shortest read",
+              "type": "integer"
+            },
+
+            "num_with_n": {
+              "description": "Number of reads that contains at least one 'N' or 'n' base",
+              "type": "integer"
+            },
+
+            "num_total": {
+              "description": "Total number of reads",
+              "type": "integer"
+            },
+
+            "qual_encoding": {
+              "description": "Quality encoding; which can be sanger (ASCII offset 33), solexa, or illumina (both with ASCII offset 64)",
+              "type": "string",
+              "enum": [ "sanger", "illumina", "solexa" ]
+            }
+          }
+        }
+      }
+    },
+
+    "statsFastqc": {
+      "description": "Sequence statistics created by FastQC (part of the Flexiprep pipeline)",
+      "type": "object",
+      "required": [ "median_qual_by_position", "content_by_position" ],
+
+      "properties": {
+
+        "median_qual_by_position": {
+          "description": "Array of median base quality per position (aggregated from all reads)",
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 1
+        },
+
+        "content_by_position": {
+          "description": "Array of base composition per position (aggregated from all reads)",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+
+            "patternProperties": {
+              "^[ACGTURYMKSWHBVDN]$": { "type": "number" }
+            }
+          },
+          "minItems": 1
+        }
+      }
+    },
+
+    "statsCutadapt": {
+      "description": "Sequence statistics from a Cutadapt run (part of the Flexiprep pipeline)",
+      "type": "object",
+      "required": [ "adapters", "num_reads_affected", "num_reads_discarded_too_long", "num_reads_discarded_too_short" ],
+
+      "properties": {
+
+        "num_reads_affected": { "type": "integer" },
+        "num_reads_discarded_too_long": { "type": "integer" },
+        "num_reads_discarded_too_short": { "type": "integer" },
+
+        "adapters": {
+          "description": "Adapters found in the library",
+          "type": "object",
+          "additionalProperties": false,
+
+          "patternProperties": {
+            "^.+$": {
+              "description": "Adapter sequence and how many times it is clipped by Cutadapt",
+              "type": "array",
+              "items": { "type": [ "string", "integer" ] },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+
+    "statsAlignmentSummary": {
+      "description": "Metrics gathered by Picard CollectAlignmentSummaryMetrics",
+      "type": "object",
+      "additionalProperties": false,
+
+      "properties": {
+
+        "FIRST_OF_PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "SECOND_OF_PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "UNPAIRED": { "$ref": "#/definitions/statsAlignmentSummaryPair" }
+      }
+    },
+
+    "statsAlignmentSummaryPair": {
+      "description": "Alignment statistics gathered by Picard CollectAlignmentSummaryMetrics, per pair",
+      "type": "object",
+      "required": [ "pct_chimeras", "pf_hq_aligned_reads", "pf_hq_error_rate", "pf_indel_rate", "pf_mismatch_rate",
+                    "pf_reads", "total_reads" ],
+
+      "properties": {
+
+        "bad_cycles": { "type": "integer" },
+        "mean_read_length": { "type": "number" },
+        "pct_adapter": { "type": "number" },
+        "pct_chimeras": { "type": "number" },
+        "pct_pf_reads": { "type": "number" },
+        "pct_pf_reads_aligned": { "type": "number" },
+        "pct_reads_aligned_in_pairs": { "type": "number" },
+        "pf_aligned_bases": { "type": "integer" },
+        "pf_hq_aligned_bases": { "type": "integer" },
+        "pf_hq_aligned_q20_bases": { "type": "integer" },
+        "pf_hq_aligned_reads": { "type": "integer" },
+        "pf_hq_error_rate": { "type": "number" },
+        "pf_hq_median_mismatches": { "type": "number" },
+        "pf_indel_rate": { "type": "number" },
+        "pf_mismatch_rate": { "type": "number" },
+        "pf_noise_reads": { "type": "integer" },
+        "pf_reads": { "type": "integer" },
+        "pf_reads_aligned": { "type": "integer" },
+        "reads_aligned_in_pairs": { "type": "integer" },
+        "strand_balance": { "type": "number" },
+        "total_reads": { "type": "integer" }
+      }
+    },
+
+    "statsBiopetFlagstat": {
+      "description": "Alignment statistics gathered by the BiopetFlagstat tool",
+      "type": "object",
+      "required": [ "All", "Mapped", "ReadPaired", "ProperPair" ],
+
+      "properties": {
+
+        "All": { "type": "integer" },
+        "Duplicates": { "type": "integer" },
+        "First inverted, second read inverted": { "type": "integer" },
+        "First inverted, second read normal": { "type": "integer" },
+        "First normal, second read inverted (paired end orientation)": { "type": "integer" },
+        "First normal, second read normal": { "type": "integer" },
+        "FirstOfPair": { "type": "integer" },
+        "MAPQ>0": { "type": "integer" },
+        "MAPQ>10": { "type": "integer" },
+        "MAPQ>20": { "type": "integer" },
+        "MAPQ>30": { "type": "integer" },
+        "MAPQ>40": { "type": "integer" },
+        "MAPQ>50": { "type": "integer" },
+        "MAPQ>60": { "type": "integer" },
+        "Mapped": { "type": "integer" },
+        "Mate in same strand": { "type": "integer" },
+        "Mate on other chr": { "type": "integer" },
+        "MateNegativeStrand": { "type": "integer" },
+        "MateUnmapped": { "type": "integer" },
+        "NotPrimaryAlignment": { "type": "integer" },
+        "ProperPair": { "type": "integer" },
+        "ReadFailsVendorQualityCheck": { "type": "integer" },
+        "ReadNegativeStrand": { "type": "integer" },
+        "ReadPaired": { "type": "integer" },
+        "SecondOfPair": { "type": "integer" },
+        "SecondaryOrSupplementary": { "type": "integer" },
+        "SupplementaryAlignment": { "type": "integer" }
+      }
+    },
+
+    "statsInsertSizeMetrics": {
+      "description": "Alignment statistics gathered by Picard CollectInsertSizeMetrics tool",
+      "type": "object",
+      "required": [ "max_insert_size", "mean_insert_size", "median_insert_size", "min_insert_size",
+                    "pair_orientation", "read_pairs", "standard_deviation" ],
+
+      "properties": {
+        "max_insert_size": { "type": "integer" },
+        "mean_insert_size": { "type": "number" },
+        "median_absolute_deviation": { "type": "number" },
+        "median_insert_size": { "type": "number" },
+        "min_insert_size": { "type": "integer" },
+        "pair_orientation": { "type": "string" },
+        "read_pairs": { "type": "integer" },
+        "standard_deviation": { "type": "number" },
+        "width_of_10_percent": { "type": "integer" },
+        "width_of_20_percent": { "type": "integer" },
+        "width_of_30_percent": { "type": "integer" },
+        "width_of_40_percent": { "type": "integer" },
+        "width_of_50_percent": { "type": "integer" },
+        "width_of_60_percent": { "type": "integer" },
+        "width_of_70_percent": { "type": "integer" },
+        "width_of_80_percent": { "type": "integer" },
+        "width_of_90_percent": { "type": "integer" },
+        "width_of_99_percent": { "type": "integer" }
+      }
+    },
+
+    "statsRnaSeqMetrics": {
+      "description": "RNA-seq statistics gathered by Picard CollectRnaSeqMetrics tool",
+      "type": "object",
+      "required": [ "coding_bases", "correct_strand_reads", "ignored_reads", "incorrect_strand_reads",
+                    "intergenic_bases", "intronic_bases", "median_3prime_bias", "median_5prime_bias",
+                    "median_5prime_to_3prime_bias", "pf_aligned_bases", "pf_bases", "utr_bases" ],
+
+      "properties": {
+        "coding_bases": { "type": "integer" },
+        "correct_strand_reads": { "type": "integer" },
+        "ignored_reads": { "type": "integer" },
+        "incorrect_strand_reads": { "type": "integer" },
+        "intergenic_bases": { "type": "integer" },
+        "intronic_bases": { "type": "integer" },
+        "median_3prime_bias": { "type": "number" },
+        "median_5prime_bias": { "type": "number" },
+        "median_5prime_to_3prime_bias": { "type": "number" },
+        "median_cv_coverage": { "type": "number" },
+        "pct_coding_bases": { "type": "number" },
+        "pct_correct_strand_reads": { "type": "number" },
+        "pct_intergenic_bases": { "type": "number" },
+        "pct_intronic_bases": { "type": "number" },
+        "pct_mrna_bases": { "type": "number" },
+        "pct_ribosomal_bases": { "type": "number" },
+        "pct_usable_bases": { "type": "number" },
+        "pct_utr_bases": { "type": "number" },
+        "pf_aligned_bases": { "type": "integer" },
+        "pf_bases": { "type": "integer" },
+        "ribosomal_bases": { "type": "integer" },
+        "utr_bases": { "type": "integer" }
+      }
+    }
+  }
+}
