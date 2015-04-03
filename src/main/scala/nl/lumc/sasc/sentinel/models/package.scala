@@ -2,7 +2,7 @@ package nl.lumc.sasc.sentinel
 
 import java.util.Date
 
-package object model {
+package object models {
 
   case class ApiError(message: String, supportEmail: String)
 
