@@ -5,7 +5,10 @@ import org.json4s._
 import org.scalatra.ScalatraServlet
 import org.scalatra.swagger.{ApiInfo, JacksonSwaggerBase, Swagger}
 
-class SentinelSwagger extends Swagger(apiInfo = SentinelSwagger.apiInfo, apiVersion = "0.1.0", swaggerVersion = "2.0")
+import nl.lumc.sasc.sentinel.CurrentApiVersion
+
+class SentinelSwagger extends Swagger(apiInfo = SentinelSwagger.apiInfo, apiVersion = CurrentApiVersion,
+                                      swaggerVersion = "2.0")
 
 object SentinelSwagger {
   val apiInfo = ApiInfo(
