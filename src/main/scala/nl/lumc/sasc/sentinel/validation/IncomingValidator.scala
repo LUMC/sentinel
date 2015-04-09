@@ -7,8 +7,6 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.JavaConverters._
-import scala.language.implicitConversions
-import scala.languageFeature.implicitConversions
 
 /**
  * Validator for incoming JSON payloads.
@@ -55,6 +53,8 @@ class IncomingValidator(rawSchema: JValue) {
 }
 
 object IncomingValidator {
+
+  import scala.language.implicitConversions
 
   /** Implicit conversion from a [[JValue]] object to a [[JsonNode]] object; used internally by the validator. */
   implicit def toJsonNode(jv: JValue): JsonNode = asJsonNode(jv)
