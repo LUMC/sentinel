@@ -6,7 +6,7 @@ import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.servlet.FileUploadSupport
 
-import nl.lumc.sasc.sentinel.model._
+import nl.lumc.sasc.sentinel.models._
 
 class DepotController(implicit val swagger: Swagger) extends ScalatraServlet
   with FileUploadSupport

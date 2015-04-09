@@ -1,6 +1,6 @@
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.model._
+import nl.lumc.sasc.sentinel.models._
 import org.json4s._
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
