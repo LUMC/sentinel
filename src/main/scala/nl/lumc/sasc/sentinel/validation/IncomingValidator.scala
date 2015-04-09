@@ -1,9 +1,5 @@
 package nl.lumc.sasc.sentinel.validation
 
-import java.io.File
-import java.net.URL
-import java.nio.file.Paths
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.core.report.{ ProcessingMessage, ProcessingReport }
 import com.github.fge.jsonschema.main._
@@ -11,6 +7,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scala.collection.JavaConverters._
+import scala.language.implicitConversions
 import scala.languageFeature.implicitConversions
 
 /**

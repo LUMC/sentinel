@@ -23,4 +23,9 @@ class GentrapSpec extends Specification with PipelineSpec { def is = s2"""
     val summary = loadResource("/v0.4/gentrap_multi_sample_single_lib.json")
     schema.isValid(summary) must beTrue
   }
+
+  // TODO: add test for single sample single lib
+  // TODO: add test for multi sample single lib
+  // TODO: add test for multi sample multi lib
+  // TODO: add test for invalid summaries
 }

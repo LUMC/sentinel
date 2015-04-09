@@ -11,16 +11,20 @@ import org.specs2._
 
 import nl.lumc.sasc.sentinel.{ Pipeline, SchemaVersion }
 import nl.lumc.sasc.sentinel.utils.getResourceFile
-import nl.lumc.sasc.sentinel.validation.Schemas
+import nl.lumc.sasc.sentinel.validation.{ IncomingValidator, Schemas }
 
 /** Trait for pipeline summary tests; must extend the specs2 [[Specification]]. */
 trait PipelineSpec { this: Specification =>
 
+  /** Pipeline schema to test against */
   val pipeline: Pipeline.Value
 
+  /** Schema version to test against */
   val schemaVersion: SchemaVersion.Value
 
-  def schema = Schemas(schemaVersion)(pipeline)
+  /** Schema object to test against */
+  def schema: IncomingValidator = Schemas(schemaVersion)(pipeline)
 
+  /** Loads the given test resource as a [[JValue]] object. */
   def loadResource(url: String): JValue = parse(getResourceFile(url))
 }
