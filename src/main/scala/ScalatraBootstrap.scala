@@ -10,6 +10,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     implicit val system = ActorSystem("appActorSystem")
     try {
+      context mount (new RootController, "/*")
       context mount (new RefsController, "/refs/*")
       context mount (new DepotController, "/depot/*")
       context mount (new StatsController, "/stats/*")
