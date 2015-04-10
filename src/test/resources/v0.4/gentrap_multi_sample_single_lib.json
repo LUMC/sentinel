@@ -133,47 +133,47 @@
             "pipeline": {
                 "annotation_bed": {
                     "md5": "519351d169e8f22a6d9e437f4afde4c3",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.bed"
+                    "path": "/sentinel/gentrap/ucsc_refseq.bed"
                 },
                 "annotation_gtf": {
                     "md5": "d0e7c22453f532f910980c88da6bf7d3",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.gtf"
+                    "path": "/sentinel/gentrap/ucsc_refseq.gtf"
                 },
                 "annotation_refflat": {
                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
+                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
                 },
                 "gene_bases_count": {
                     "md5": "37e04be3535514f7e530228267f8680e",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/expression_estimates/all_samples.bases_per_gene"
+                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.bases_per_gene"
                 },
                 "gene_bases_count_heatmap": {
                     "md5": "05553581524661c3dd2798d63a579a5f",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/heatmaps/heatmap_bases_per_gene.png"
+                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_bases_per_gene.png"
                 },
                 "gene_fpkm_cufflinks_strict": {
                     "md5": "cb7db4c9c2aa841345aced37915e20b3",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/expression_estimates/all_samples.genes_fpkm_cufflinks_strict"
+                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.genes_fpkm_cufflinks_strict"
                 },
                 "gene_fpkm_cufflinks_strict_heatmap": {
                     "md5": "4e9f989a56ad2025cb2036cb2f189e93",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/heatmaps/heatmap_genes_fpkm_cufflinks_strict.png"
+                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_genes_fpkm_cufflinks_strict.png"
                 },
                 "gene_fragments_count": {
                     "md5": "d73a65ad3a0603f5033a6976dbefcb74",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/expression_estimates/all_samples.fragments_per_gene"
+                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.fragments_per_gene"
                 },
                 "gene_fragments_count_heatmap": {
                     "md5": "7957854e050258f5f1a53ba9dc950d9c",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/heatmaps/heatmap_fragments_per_gene.png"
+                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_fragments_per_gene.png"
                 },
                 "isoform_fpkm_cufflinks_strict": {
                     "md5": "1fa864fc9cec39f5f6a0db9611ccc25e",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/expression_estimates/all_samples.isoforms_fpkm_cufflinks_strict"
+                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.isoforms_fpkm_cufflinks_strict"
                 },
                 "isoform_fpkm_cufflinks_strict_heatmap": {
                     "md5": "41d2023eb25955f7e34d22ea4608dfd6",
-                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/heatmaps/heatmap_isoforms_fpkm_cufflinks_strict.png"
+                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_isoforms_fpkm_cufflinks_strict.png"
                 },
                 "reference_dict": {
                     "md5": "ea407876cabc02d2692f8c53e46abf99",
@@ -548,23 +548,23 @@
                     "pipeline": {
                         "alignment": {
                             "md5": "39706221df3edaa34823316b9554bfa2",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/S1.bam"
+                            "path": "/sentinel/gentrap/output/sample_S1/S1.bam"
                         },
                         "gene_bases_count": {
                             "md5": "b65d00cb6f80c6a10c4ef285b64ef808",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/S1.bases_per_gene"
+                            "path": "/sentinel/gentrap/output/sample_S1/S1.bases_per_gene"
                         },
                         "gene_fpkm_cufflinks_strict": {
                             "md5": "834f145967e075177aaa0817b878b6bb",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/cufflinks_strict/S1.genes_fpkm_cufflinks_strict"
+                            "path": "/sentinel/gentrap/output/sample_S1/cufflinks_strict/S1.genes_fpkm_cufflinks_strict"
                         },
                         "gene_fragments_count": {
                             "md5": "324016772d4bc9168630ef7cc909d9f6",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/S1.fragments_per_gene"
+                            "path": "/sentinel/gentrap/output/sample_S1/S1.fragments_per_gene"
                         },
                         "isoform_fpkm_cufflinks_strict": {
                             "md5": "e71a7bf154372fa5e21de9e92b16c04a",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/cufflinks_strict/S1.isoforms_fpkm_cufflinks_strict"
+                            "path": "/sentinel/gentrap/output/sample_S1/cufflinks_strict/S1.isoforms_fpkm_cufflinks_strict"
                         }
                     }
                 },
@@ -612,13 +612,13 @@
                             "insert_size_metrics": {
                                 "output_histogram": {
                                     "md5": "37348ede7322bb40b613f3f1ef8341ea",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/metrics/S1-lib1.insertsizemetrics.pdf"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/metrics/S1-lib1.insertsizemetrics.pdf"
                                 }
                             },
                             "pipeline": {
                                 "input_bam": {
                                     "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/S1-lib1.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.bam"
                                 }
                             }
                         },
@@ -794,89 +794,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "dac44462377eb49c2dadfcc233b4d71e",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "9802e653b47bcf0e621b498673907ceb",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "9623b7aa3fe12d30ddb1000289572303",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "64239d0a6b637460612cb6b1b80dc93a",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "9f14120de3eaae3625092c54f8c206cd",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "633e8756c7538190d48faf32504b320e",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "4a2b964cbec48551104a2a92536982ab",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "66ccd5cfb39384ea7f9a5f1f06cd8458",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "49541f77dff9c2b3de9fa399c035c51e",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
                                     "md5": "173787154984521dc9b35894f28fe633",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "7b16ef66fe7636a8e6c100a881c49578",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "458039d962d398682ad3b1a01c5cde51",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "c668997fe48efe063178ca9589937832",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "98a45c0e3e634dd8b2bfb382f8f2b384",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "ae8e91360906dc7e9b462ad614a8e4c4",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "b44e13c471ef0a94a8afcd50e156133a",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "c731fec50cd9419e8360322a4863ef96",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "47a3d4464cf487e157685036c4a0925c",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "14ccf1313d2add00fee25b5768c737ae",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2": {
@@ -886,89 +886,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "700b13f323f3144260b3e270bf27e19c",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "42dc663f92a543adf070c4f9fe837d59",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "a9e02ec68cac0cea70378a16544eb1e5",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "db03bd42ea6ba8fda82b01ce993b8386",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "2d4322483fe030c3fb9515e8716c5f82",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "1f3110b8ad42b63af317d2983b421468",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "7d1c4d6c7ea056a545523883283bb514",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "371d108e3695fea439e72c017aada82a",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "49541f77dff9c2b3de9fa399c035c51e",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
                                     "md5": "5b74e86fe355d7c30aabab52f539a9d2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "8b3ca9fb6c5ecbf1511efb4ee947ab9b",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "a82619145cbda6147dac68c648abf735",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "6c966aceec5f7a92f4a9060b044c3115",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "c64aa1ed9c5d6b07d6f0d6d467d8b9cd",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "2b5d561e54d50753f0f5532677540398",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "98a7bfa34e0a53edb109745978f67c79",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "89d98fbb9874f927566d1a9f2cd15c1a",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "36ce78e96621e9a6bae439e610cc2661",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "052af5378828d43b6218905a3c82bb4f",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "pipeline": {
@@ -982,11 +982,11 @@
                                 },
                                 "output_R1": {
                                     "md5": "173787154984521dc9b35894f28fe633",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
                                     "md5": "5b74e86fe355d7c30aabab52f539a9d2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
                                 }
                             }
                         },
@@ -4029,21 +4029,21 @@
                             "pipeline": {
                                 "alignment": {
                                     "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/S1-lib1.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.bam"
                                 }
                             },
                             "rna_metrics": {
                                 "annotation": {
                                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
+                                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
                                     "md5": "35f33032390fe9f5a7d6bea4d40fb4c8",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/S1-lib1.rna_metrics"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.rna_metrics"
                                 },
                                 "output_chart": {
                                     "md5": "0406fbc899561dd75650c3d80461d807",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/S1-lib1.coverage_bias.pdf"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.coverage_bias.pdf"
                                 }
                             }
                         },
@@ -4168,7 +4168,7 @@
                                 },
                                 "output_bamfile": {
                                     "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S1/lib_lib1/S1-lib1.final.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.final.bam"
                                 }
                             }
                         },
@@ -4190,23 +4190,23 @@
                     "pipeline": {
                         "alignment": {
                             "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/S28.bam"
+                            "path": "/sentinel/gentrap/output/sample_S28/S28.bam"
                         },
                         "gene_bases_count": {
                             "md5": "1ad20b5a98d4ef784866aeb5f22ad81e",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/S28.bases_per_gene"
+                            "path": "/sentinel/gentrap/output/sample_S28/S28.bases_per_gene"
                         },
                         "gene_fpkm_cufflinks_strict": {
                             "md5": "5f8cd2693eeb566c7d89269ecfb4edc0",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/cufflinks_strict/S28.genes_fpkm_cufflinks_strict"
+                            "path": "/sentinel/gentrap/output/sample_S28/cufflinks_strict/S28.genes_fpkm_cufflinks_strict"
                         },
                         "gene_fragments_count": {
                             "md5": "7f23093d07893a885ea6b31a61b7d9d6",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/S28.fragments_per_gene"
+                            "path": "/sentinel/gentrap/output/sample_S28/S28.fragments_per_gene"
                         },
                         "isoform_fpkm_cufflinks_strict": {
                             "md5": "0c73e870462ff75e1ee321bb687a446e",
-                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/cufflinks_strict/S28.isoforms_fpkm_cufflinks_strict"
+                            "path": "/sentinel/gentrap/output/sample_S28/cufflinks_strict/S28.isoforms_fpkm_cufflinks_strict"
                         }
                     }
                 },
@@ -4254,13 +4254,13 @@
                             "insert_size_metrics": {
                                 "output_histogram": {
                                     "md5": "026a2ebf4c2e2e4329098e3b2da27e06",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/metrics/S28-lib1.insertsizemetrics.pdf"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/metrics/S28-lib1.insertsizemetrics.pdf"
                                 }
                             },
                             "pipeline": {
                                 "input_bam": {
                                     "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/S28-lib1.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.bam"
                                 }
                             }
                         },
@@ -4436,89 +4436,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "186d0a4ec37e9b17a21335eb5ae6bc23",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "54a8b98f4fcf1789ec56ca9937d6049e",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "8d26bf5dc17cca57d8e16ddbb4acc4e3",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "0cd239d9a85fba09a1f644c4d5156a6f",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "c60fab069460448d64235d47fef2aee3",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "8c313dfc7a79d5f630848eca3e4fb3cb",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "70cec4ec35b69b5c5bdcc93f6efd03fe",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "08cedd764ae2f0f7438853d8cf9ba2a3",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "30f35451cbfb5efe0bd0c97252c44ec6",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
                                     "md5": "6e12468cfa2e4e87517901f535417513",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "cdd62b4b0f8fb70ff29d2699fcfaf3d1",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "0447cd45596eeca634e6ee9fff6bcab1",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "5ca2c16da574c10e91fd8970a4dd4bf2",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "80c59a1f8ed60c568c0aafe696064d8b",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "6e7d444dcc961cc7dbcbb07e97dacb09",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "362278a9e99d6afd226346b58293849f",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "fc28fd283448474546134345b1a46466",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "e19f43d18bc1a552ea5d220748831529",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "696215d66dbe4545e77e4d5169651452",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2": {
@@ -4528,89 +4528,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "2d1c2de7f3c2ec092ddee33d858873b1",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "674bddedd9f919af7b5304fd32d14c7a",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "2f66b581a07dc9e98f9f7ad2133b2bd5",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "1e367332a2e99549b15a536684e1a639",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "d4ab2b0eba4a27af2028cd5d593d9722",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "8833e268482f3ef48cd3af61717634a0",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "ff4fe981da584d6070c843afb6a2d696",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "7c18be5b8b3f004c53aaba71b231c9fe",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "30f35451cbfb5efe0bd0c97252c44ec6",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
                                     "md5": "1ff98d9bb76db6e7ef89bb225fcc2833",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "c96c88aaf519447bb0ab9d499b5f84e3",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "da361851ec39fcc15991e5486320e48f",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "cc55249b942ae5c0a55b838f65e0cb1c",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "60a1a33900ac0785b2b741fb77938f97",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "143ac8f0c78eb4cee1a22fdc3959928d",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "6dbfe81da5aad4f29774e5d2af4d1ee6",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "2053ae2e2695ead4537fb231e51b4fe5",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "0a3564a7514bea19cb981792fa36331b",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "0acd28d7387798dc304d2eab3638ef72",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "pipeline": {
@@ -4624,11 +4624,11 @@
                                 },
                                 "output_R1": {
                                     "md5": "6e12468cfa2e4e87517901f535417513",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
                                     "md5": "1ff98d9bb76db6e7ef89bb225fcc2833",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
                                 }
                             }
                         },
@@ -7671,21 +7671,21 @@
                             "pipeline": {
                                 "alignment": {
                                     "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/S28-lib1.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.bam"
                                 }
                             },
                             "rna_metrics": {
                                 "annotation": {
                                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
+                                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
                                     "md5": "fbfe039d11dd72afc426495bbb8869ad",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/S28-lib1.rna_metrics"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.rna_metrics"
                                 },
                                 "output_chart": {
                                     "md5": "e51fbc0bb281202c72adc4c5ea8c7205",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/S28-lib1.coverage_bias.pdf"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.coverage_bias.pdf"
                                 }
                             }
                         },
@@ -7810,7 +7810,7 @@
                                 },
                                 "output_bamfile": {
                                     "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/output/sample_S28/lib_lib1/S28-lib1.final.bam"
+                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.final.bam"
                                 }
                             }
                         },
