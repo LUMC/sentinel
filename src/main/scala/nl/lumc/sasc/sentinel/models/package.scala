@@ -2,6 +2,8 @@ package nl.lumc.sasc.sentinel
 
 import java.util.Date
 
+import org.json4s.JValue
+
 package object models {
 
   case class ApiError(message: String, supportEmail: String)
@@ -10,7 +12,10 @@ package object models {
 
   case class AnnotationFile(annotId: String, extension: String, name: String)
 
-  case class DepotItem(depotId: String, creationTime: Date, pipeline: String, contents: Object)
+  case class RunSummary(runId: String, uploadTime: Date, updateTime: Date, uploader: String, public: Boolean,
+                        contents: Option[JValue])
+
+  case class RunSummaryPatch(public: Boolean)
 
   case class GentrapAlignmentStats(
     alnType: String, nReads: Long, nReadsAligned: Long, rateReadsMismatch: Double, rateIndel: Double,
