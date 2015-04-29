@@ -20,6 +20,7 @@ package object sentinel {
   /** Supported pipeline summary schemas */
   object Pipeline extends Enumeration {
     type Pipeline = Value
+    val Unknown = Value
     val Gentrap = Value
   }
 
