@@ -8,7 +8,7 @@ import org.scalatra.swagger.{ApiInfo, JacksonSwaggerBase, Swagger}
 import nl.lumc.sasc.sentinel.CurrentApiVersion
 
 class SentinelSwagger extends Swagger(apiInfo = SentinelSwagger.apiInfo, apiVersion = CurrentApiVersion,
-                                      swaggerVersion = "2.0")
+                                      swaggerVersion = Swagger.SpecVersion)
 
 object SentinelSwagger {
   val apiInfo = ApiInfo(
