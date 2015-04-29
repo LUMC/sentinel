@@ -8,10 +8,6 @@ package object models {
 
   case class ApiError(message: String, data: Any = None)
 
-  case class AlignmentReference(contigIds: List[String], refId: String, name: String)
-
-  case class AnnotationFile(annotId: String, extension: String, name: String)
-
   case class RunSummary(runId: String, uploadTime: Date, updateTime: Date, uploader: String, public: Boolean,
                         pipeline: String, contents: Option[JValue])
 
@@ -33,4 +29,8 @@ package object models {
   case class PipelineRunStats(nRuns: Int, nSamples: Int, nLibs: Int)
 
   case class RunStats(gentrap: PipelineRunStats, unknown: PipelineRunStats)
+
+  case class Reference(refId: String, contigMd5s: List[String], name: String)
+
+  case class Annotation(annotId: String, annotMd5: String, extension: String, name: String)
 }
