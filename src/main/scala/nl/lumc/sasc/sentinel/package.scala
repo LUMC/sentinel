@@ -23,6 +23,9 @@ package object sentinel {
     val Gentrap = Value
   }
 
+  /** Allowed pipeline parameters in HTTP requests */
+  val AllowedPipelineParams = Pipeline.values.map(_.toString.toLowerCase)
+
   /** Current API version */
   val CurrentApiVersion = "0.1.0"
 }
