@@ -29,4 +29,8 @@ package object models {
     nBasesN: Long, nBasesByQual: List[Long], medianQualByPosition: List[Double], nReads: Long)
 
   case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None)
+
+  case class PipelineRunStats(nRuns: Int, nSamples: Int, nLibs: Int)
+
+  case class RunStats(gentrap: PipelineRunStats, unknown: PipelineRunStats)
 }
