@@ -30,10 +30,13 @@ package object utils {
   }
 
   object CommonErrors {
-    val InvalidPipeline = ApiError("Pipeline is invalid. Valid values are " + AllowedPipelineParams.mkString(", ") + ".")
+    val InvalidPipeline = ApiError(
+      "Pipeline parameter is invalid. Valid values are " + AllowedPipelineParams.mkString(", ") + "."
+    )
     val UnspecifiedUserId = ApiError("User ID not specified.")
     val UnspecifiedRunId = ApiError("Run summary ID not specified.")
     val MissingUserId = ApiError("User ID can not be found.")
     val MissingRunId = ApiError("Run summary ID can not be found.")
+    val Unauthorized = ApiError("Not authorized to access resource.")
   }
 }
