@@ -24,9 +24,9 @@ package object models {
     nBasesAligned: Long, nBasesUtr: Long, nBasesCoding: Long, nBasesIntron: Long, nBasesIntergenic: Long,
     nBasesRibosomal: Long, median5PrimeBias: Double, median3PrimeBias: Double, normalizedTranscriptCoverage: List[Double])
 
-  case class GeneralSeqStats(
+  case class ReadStats(
     seqType: String, hasPair: Boolean, nBases: Long, nBasesA: Long, nBasesT: Long, nBasesG: Long, nBasesC: Long,
     nBasesN: Long, nBasesByQual: List[Long], medianQualByPosition: List[Double], nReads: Long)
 
-  case class GeneralSeqInput(read1: GeneralSeqStats, read2: Option[GeneralSeqStats] = None)
+  case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None)
 }
