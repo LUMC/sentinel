@@ -6,7 +6,7 @@ import org.json4s.JValue
 
 package object models {
 
-  case class ApiError(message: String, supportEmail: String)
+  case class ApiError(message: String, data: Any = None)
 
   case class AlignmentReference(contigIds: List[String], refId: String, name: String)
 
