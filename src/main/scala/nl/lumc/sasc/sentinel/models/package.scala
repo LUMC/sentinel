@@ -13,7 +13,7 @@ package object models {
   case class AnnotationFile(annotId: String, extension: String, name: String)
 
   case class RunSummary(runId: String, uploadTime: Date, updateTime: Date, uploader: String, public: Boolean,
-                        contents: Option[JValue])
+                        pipeline: String, contents: Option[JValue])
 
   case class RunSummaryPatch(public: Boolean)
 
