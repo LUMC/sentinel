@@ -33,7 +33,8 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified or patch operations invalid."),
-      StringResponseMessage(401, CommonErrors.Unauthorized.message),
+      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
+      StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message))
   )
 
@@ -41,7 +42,8 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
     // TODO: return 400 if patch operation invalid
     // TODO: return 404 if user ID not found
-    // TODO: return 401 if not authorized
+    // TODO: return 401 if not authenticated
+    // TODO: return 403 if unauthorized
     // TODO: return 200 and user record
   }
 
@@ -51,14 +53,15 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     parameters pathParam[String]("userId").description("User ID.")
     responseMessages (
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
-      StringResponseMessage(401, CommonErrors.Unauthorized.message),
+      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message))
   )
 
   get("/:userId", operation(usersUserIdGetOperation)) {
     val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
     // TODO: return 404 if user ID not found
-    // TODO: return 401 if not authorized
+    // TODO: return 401 if not authenticated
+    // TODO: return 403 if unauthorized
     // TODO: return 200 and user record
   }
 

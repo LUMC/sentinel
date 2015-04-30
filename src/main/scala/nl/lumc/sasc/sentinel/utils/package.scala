@@ -40,6 +40,7 @@ package object utils {
     val UnspecifiedRunId = ApiError("Run summary ID not specified.")
     val MissingUserId = ApiError("User ID can not be found.")
     val MissingRunId = ApiError("Run summary ID can not be found.")
-    val Unauthorized = ApiError("Not authorized to access resource.")
+    val Unauthenticated = ApiError("Authentication required to access resource.")
+    val Unauthorized = ApiError("Unauthorized to access resource.")
   }
 }
