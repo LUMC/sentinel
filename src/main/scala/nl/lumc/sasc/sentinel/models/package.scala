@@ -8,10 +8,8 @@ package object models {
 
   case class ApiError(message: String, data: Any = None)
 
-  case class RunSummary(runId: String, uploadTime: Date, updateTime: Date, uploader: String, public: Boolean,
-                        pipeline: String, contents: Option[JValue])
-
-  case class RunSummaryPatch(public: Boolean)
+  case class RunSummary(runId: String, uploadTime: Date, updateTime: Date, uploader: String, pipeline: String,
+                        contents: Option[JValue])
 
   case class GentrapAlignmentStats(
     alnType: String, nReads: Long, nReadsAligned: Long, rateReadsMismatch: Double, rateIndel: Double,
