@@ -39,6 +39,7 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
       pathParam[String]("runId").description("Run summary ID."))
     responseMessages (
       StringResponseMessage(204, "Run summary deleted successfully."),
+      StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, "User ID or run summary ID not found."))
   )
