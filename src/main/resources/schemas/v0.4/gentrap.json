@@ -10,7 +10,7 @@
       "meta": {
         "description": "Pipeline run metadata",
         "type": "object",
-        "required": [ "version", "last_commit_hash" ],
+        "required": [ "version", "last_commit_hash", "pipeline" ],
 
         "properties": {
 
@@ -23,6 +23,12 @@
             "description": "Commit hash of the source code repository at the time the pipeline was compiled",
             "type": "string",
             "minLength": 7
+          },
+
+          "pipeline": {
+            "description": "Name of the pipeline that created the summary file",
+            "type": "string",
+            "enum": [ "gentrap" ]
           }
         }
       },
