@@ -17,6 +17,9 @@ package object sentinel {
   /** Current schema versions */
   val CurrentSchemaVersion = SchemaVersion.V04
 
+  /** Current API version */
+  val CurrentApiVersion = "0.1.0"
+
   /** Supported pipeline summary schemas */
   object Pipeline extends Enumeration {
     type Pipeline = Value
@@ -27,6 +30,23 @@ package object sentinel {
   /** Allowed pipeline parameters in HTTP requests */
   val AllowedPipelineParams = Pipeline.values.map(_.toString.toLowerCase)
 
-  /** Current API version */
-  val CurrentApiVersion = "0.1.0"
+  /** Supported library types */
+  object LibType extends Enumeration {
+    type LibType = Value
+    val Single = Value
+    val Paired = Value
+  }
+
+  /** Allowed library type parameters in HTTP requests */
+  val AllowedLibTypeParams = LibType.values.map(_.toString.toLowerCase)
+
+  /** Supported statistics accumulation level */
+  object AccLevel extends Enumeration {
+    type AccLevel = Value
+    val Lib = Value
+    val Sample = Value
+  }
+
+  /** Allowed accumulation level parameters in HTTP requests */
+  val AllowedAccLevelParams = AccLevel.values.map(_.toString.toLowerCase)
 }
