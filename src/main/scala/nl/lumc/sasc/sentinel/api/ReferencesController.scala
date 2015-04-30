@@ -6,7 +6,7 @@ import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-class RefsController(implicit val swagger: Swagger) extends ScalatraServlet
+class ReferencesController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with SwaggerSupport {
 

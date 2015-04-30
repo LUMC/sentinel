@@ -11,9 +11,9 @@ class ScalatraBootstrap extends LifeCycle {
     implicit val system = ActorSystem("appActorSystem")
     try {
       context mount (new RootController, "/*")
-      context mount (new RefsController, "/refs/*")
-      context mount (new RunsController, "/runs/*")
       context mount (new StatsController, "/stats/*")
+      context mount (new ReferencesController, "/references/*")
+      context mount (new RunsController, "/runs/*")
       context mount (new ResourcesApp, "/api-docs/*")
     } catch {
       case e: Throwable => e.printStackTrace()
