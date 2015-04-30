@@ -30,4 +30,11 @@ package object models {
   case class Reference(refId: String, contigMd5s: List[String], name: String)
 
   case class Annotation(annotId: String, annotMd5: String, extension: String, name: String)
+
+  case class User(id: String, email: String, isConfirmed: Boolean, isAdmin: Boolean, nSummaries: Int,
+                  creationTime: Date, updateTime: Date)
+
+  case class UserPatch(email: String, isConfirmed: Boolean)
+
+  case class UserRequest(id: String, email: String, password: String)
 }

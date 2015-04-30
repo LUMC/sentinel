@@ -15,6 +15,7 @@ class ScalatraBootstrap extends LifeCycle {
       context mount (new ReferencesController, "/references/*")
       context mount (new AnnotationsController, "/annotations/*")
       context mount (new RunsController, "/runs/*")
+      context mount (new UsersController, "/users/*")
       context mount (new ResourcesApp, "/api-docs/*")
     } catch {
       case e: Throwable => e.printStackTrace()
