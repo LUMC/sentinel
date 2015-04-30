@@ -64,13 +64,15 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, "User ID or run summary ID not found."))
+      StringResponseMessage(404, "User ID or run summary ID not found."),
+      StringResponseMessage(410, "Run summary not available anymore."))
   )
 
   get("/:runId", operation(runsRunIdGetOperation)) {
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     // TODO: return 404 if user ID or run ID not found
     // TODO: return 401 if unauthorized
+    // TODO: return 410 if run was available but has been deleted
     // TODO: return 200 and run summary
   }
 
