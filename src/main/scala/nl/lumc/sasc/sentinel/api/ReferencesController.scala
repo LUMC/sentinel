@@ -16,7 +16,7 @@ class ReferencesController(implicit val swagger: Swagger) extends ScalatraServle
   protected implicit val jsonFormats: Formats = DefaultFormats
 
   protected val applicationDescription: String = "Retrieval of reference sequence synopses"
-  override protected val applicationName: Option[String] = None
+  override protected val applicationName: Option[String] = Some("references")
 
   before() {
     contentType = formats("json")

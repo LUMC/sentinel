@@ -16,7 +16,7 @@ class AnnotationsController(implicit val swagger: Swagger) extends ScalatraServl
   protected implicit val jsonFormats: Formats = DefaultFormats
 
   protected val applicationDescription: String = "Retrieval of annotation file synopses"
-  override protected val applicationName: Option[String] = None
+  override protected val applicationName: Option[String] = Some("annotations")
 
   before() {
     contentType = formats("json")
