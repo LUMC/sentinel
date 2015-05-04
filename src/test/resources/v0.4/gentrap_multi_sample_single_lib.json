@@ -539,7 +539,8 @@
     },
     "meta": {
         "last_commit_hash": "8a617e00",
-        "version": "0.3.1"
+        "version": "0.3.1",
+        "pipeline": "gentrap"
     },
     "samples": {
         "S1": {
