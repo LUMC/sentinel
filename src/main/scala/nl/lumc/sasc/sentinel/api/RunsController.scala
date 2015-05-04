@@ -1,10 +1,12 @@
 package nl.lumc.sasc.sentinel.api
 
+import java.io.File
+
 import org.scalatra.ScalatraServlet
 import org.scalatra.swagger._
 import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.servlet.FileUploadSupport
+import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig }
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
 import nl.lumc.sasc.sentinel.models._
@@ -14,6 +16,9 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with FileUploadSupport
   with SwaggerSupport {
+
+  // set maximum accepted file size to 16 MB
+  configureMultipartHandling(MultipartConfig(maxFileSize = Some(16 * 1024 * 1024)))
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -84,11 +89,11 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
-      bodyParam[Any]("run-summary").description("Contents of the run summary."))
+      formParam[File]("run").description("Run summary file."))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
-      StringResponseMessage(400, "Run summary is invalid."),
+      StringResponseMessage(400, "Run summary is unspecified or invalid."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message))
@@ -96,7 +101,8 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
 
   post("/", operation(runsPostOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
-    val runSummary = parsedBody.extract[Any]
+    val uploadedRun = fileParams.getOrElse("run", halt(400, "Run summary file not specified."))
+    // TODO: return 413 if file is too large
     // TODO: return 404 if user not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if not authorized
