@@ -1,6 +1,5 @@
 package nl.lumc.sasc.sentinel.api
 
-
 import scala.util.Try
 
 import org.json4s.DefaultFormats

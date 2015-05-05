@@ -2,11 +2,12 @@ package nl.lumc.sasc.sentinel.api
 
 import java.io.File
 
-import org.scalatra.ScalatraServlet
+import org.json4s.jackson.Serialization
+import org.scalatra.{ RequestEntityTooLarge, ScalatraServlet}
 import org.scalatra.swagger._
 import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig }
+import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
 import nl.lumc.sasc.sentinel.models._
@@ -16,9 +17,6 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with FileUploadSupport
   with SwaggerSupport {
-
-  // set maximum accepted file size to 16 MB
-  configureMultipartHandling(MultipartConfig(maxFileSize = Some(16 * 1024 * 1024)))
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -31,6 +29,19 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
   before() {
     contentType = formats("json")
     response.headers += ("Access-Control-Allow-Origin" -> "*")
+  }
+
+  protected def maxFileSize = 16 * 1024 * 1024
+
+  configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
+
+  error {
+    case e: SizeConstraintExceededException =>
+      contentType = formats("json")
+      RequestEntityTooLarge(
+        Serialization.write(
+          ApiError("Run summary exceeds " + (maxFileSize / (1024 * 1024)).toString + " MB."))
+      )
   }
 
   val runsRunIdDeleteOperation = (apiOperation[Unit]("runsRunIdDelete")
@@ -96,7 +107,8 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message))
+      StringResponseMessage(404, CommonErrors.MissingUserId.message),
+      StringResponseMessage(413, "Run summary too large."))
   )
 
   post("/", operation(runsPostOperation)) {
