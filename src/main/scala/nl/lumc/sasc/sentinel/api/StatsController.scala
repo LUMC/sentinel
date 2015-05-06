@@ -7,7 +7,7 @@ import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams }
 import nl.lumc.sasc.sentinel.api.models._
-import nl.lumc.sasc.sentinel.utils.{ CommonErrors, splitParam }
+import nl.lumc.sasc.sentinel.utils.splitParam
 
 class StatsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport

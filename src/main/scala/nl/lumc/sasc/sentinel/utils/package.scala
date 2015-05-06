@@ -8,8 +8,6 @@ package nl.lumc.sasc.sentinel
 import java.io.File
 import java.nio.file.Paths
 
-import nl.lumc.sasc.sentinel.api.models._
-
 /** General utilities */
 package object utils {
 
@@ -27,21 +25,5 @@ package object utils {
                  fallback: Seq[String] = Seq()): Seq[String] = param match {
     case Some(str)  => str.split(delimiter).toSeq
     case None       => fallback
-  }
-
-  object CommonErrors {
-    val InvalidPipeline = ApiError("Pipeline parameter is invalid.",
-      "Valid values are " + AllowedPipelineParams.mkString(", ") + ".")
-    val InvalidLibType = ApiError("Library type parameter is invalid.",
-      "Valid values are " + AllowedLibTypeParams.mkString(", ") + ".")
-    val InvalidAccLevel = ApiError("Accumulation level parameter is invalid.",
-      "Valid values are " + AllowedAccLevelParams.mkString(", ") + ".")
-    val UnspecifiedUserId = ApiError("User ID not specified.")
-    val UnspecifiedRunId = ApiError("Run summary ID not specified.")
-    val UnspecifiedPipeline = ApiError("Pipeline not specified.")
-    val MissingUserId = ApiError("User ID can not be found.")
-    val MissingRunId = ApiError("Run summary ID can not be found.")
-    val Unauthenticated = ApiError("Authentication required to access resource.")
-    val Unauthorized = ApiError("Unauthorized to access resource.")
   }
 }

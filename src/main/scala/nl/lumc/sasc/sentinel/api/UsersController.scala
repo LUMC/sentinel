@@ -6,7 +6,6 @@ import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 
 import nl.lumc.sasc.sentinel.api.models._
-import nl.lumc.sasc.sentinel.utils.CommonErrors
 
 class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport

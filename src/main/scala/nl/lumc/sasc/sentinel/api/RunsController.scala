@@ -11,7 +11,7 @@ import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraint
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
 import nl.lumc.sasc.sentinel.api.models._
-import nl.lumc.sasc.sentinel.utils.{ CommonErrors, splitParam }
+import nl.lumc.sasc.sentinel.utils.splitParam
 
 class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
