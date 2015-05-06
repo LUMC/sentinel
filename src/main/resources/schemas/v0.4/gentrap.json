@@ -159,7 +159,7 @@
                 },
 
                 "rna_metrics": {
-                  "description": "Library-level RNA-seq metrics",
+                  "description": "Sample-level RNA-seq metrics",
                   "type": "object",
                   "required": [ "annotation", "metrics" ],
                   "additionalProperties": { "$ref": "#/definitions/file" }
@@ -169,7 +169,7 @@
             },
 
             "stats": {
-              "description": "Library-level Gentrap statistics",
+              "description": "Sample-level Gentrap statistics",
               "type": "object",
 
               "properties": {}
