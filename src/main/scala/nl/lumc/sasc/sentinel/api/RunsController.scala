@@ -11,7 +11,7 @@ import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraint
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.CommonErrors
+import nl.lumc.sasc.sentinel.utils.{ CommonErrors, splitParam }
 
 class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
@@ -132,7 +132,7 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
-      queryParam[String]("pipeline")
+      queryParam[List[String]]("pipelines")
         .description(
           """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `unknown`. If not
             |specified, all run summaries are returned.""".stripMargin.replaceAll("\n", ""))
@@ -142,11 +142,13 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
         StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
         StringResponseMessage(401, CommonErrors.Unauthenticated.message),
         StringResponseMessage(403, CommonErrors.Unauthorized.message),
+        StringResponseMessage(404, "One or more pipeline is invalid."),
         StringResponseMessage(404, CommonErrors.MissingUserId.message))
   )
 
   get("/", operation(runsGetOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
+    val pipelines = splitParam(params.getAs[String]("pipelines"))
     // TODO: return 404 if user ID not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if unauthorized

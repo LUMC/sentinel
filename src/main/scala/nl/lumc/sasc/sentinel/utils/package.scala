@@ -38,6 +38,7 @@ package object utils {
       "Valid values are " + AllowedAccLevelParams.mkString(", ") + ".")
     val UnspecifiedUserId = ApiError("User ID not specified.")
     val UnspecifiedRunId = ApiError("Run summary ID not specified.")
+    val UnspecifiedPipeline = ApiError("Pipeline not specified.")
     val MissingUserId = ApiError("User ID can not be found.")
     val MissingRunId = ApiError("Run summary ID can not be found.")
     val Unauthenticated = ApiError("Authentication required to access resource.")
