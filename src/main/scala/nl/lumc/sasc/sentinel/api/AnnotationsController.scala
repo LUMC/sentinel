@@ -1,10 +1,11 @@
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.models._
 import org.json4s._
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
+
+import nl.lumc.sasc.sentinel.api.models._
 
 class AnnotationsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport

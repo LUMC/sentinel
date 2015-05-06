@@ -1,4 +1,4 @@
-package nl.lumc.sasc.sentinel
+package nl.lumc.sasc.sentinel.api
 
 import java.util.Date
 

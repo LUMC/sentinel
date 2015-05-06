@@ -8,7 +8,7 @@ package nl.lumc.sasc.sentinel
 import java.io.File
 import java.nio.file.Paths
 
-import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.api.models._
 
 /** General utilities */
 package object utils {
