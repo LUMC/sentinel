@@ -592,7 +592,7 @@
         "bases": {
           "description": "Base pair-level statistics",
           "type": "object",
-          "required": [ "nucleotides", "num_total" ],
+          "required": [ "nucleotides", "num_total", "num_by_qual" ],
 
           "properties": {
 
@@ -609,6 +609,12 @@
             "num_total": {
               "description": "Total number of bases",
               "type": "integer"
+            },
+
+            "num_by_qual": {
+              "description": "Array of base counts by quality, from quality 0 to 60",
+              "type": "array",
+              "items": { "type": "integer" }
             }
           }
         },
