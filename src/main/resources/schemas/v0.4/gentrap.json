@@ -828,7 +828,8 @@
       "type": "object",
       "required": [ "coding_bases", "correct_strand_reads", "ignored_reads", "incorrect_strand_reads",
                     "intergenic_bases", "intronic_bases", "median_3prime_bias", "median_5prime_bias",
-                    "median_5prime_to_3prime_bias", "pf_aligned_bases", "pf_bases", "utr_bases" ],
+                    "median_5prime_to_3prime_bias", "normalized_transcript_cov", "pf_aligned_bases", "pf_bases",
+                    "utr_bases" ],
 
       "properties": {
         "coding_bases": { "type": "integer" },
@@ -841,6 +842,10 @@
         "median_5prime_bias": { "type": "number" },
         "median_5prime_to_3prime_bias": { "type": "number" },
         "median_cv_coverage": { "type": "number" },
+        "normalized_transcript_cov": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
         "pct_coding_bases": { "type": "number" },
         "pct_correct_strand_reads": { "type": "number" },
         "pct_intergenic_bases": { "type": "number" },
