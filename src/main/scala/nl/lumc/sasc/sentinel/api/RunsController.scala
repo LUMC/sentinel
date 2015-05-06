@@ -104,6 +104,8 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
+      StringResponseMessage(400, CommonErrors.UnspecifiedPipeline.message),
+      StringResponseMessage(400, CommonErrors.InvalidPipeline.message),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
@@ -113,6 +115,7 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
 
   post("/", operation(runsPostOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
+    val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, "Run summary file not specified."))
     // TODO: return 413 if file is too large
     // TODO: return 404 if user not found
