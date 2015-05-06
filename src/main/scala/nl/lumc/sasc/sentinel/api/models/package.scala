@@ -13,15 +13,35 @@ package object models {
   case class RunSummary(runId: String, uploadTime: Date, uploader: String, pipeline: String, contents: Option[JValue])
 
   case class GentrapAlignmentStats(
-    alnType: String, nReads: Long, nReadsAligned: Long, rateReadsMismatch: Double, rateIndel: Double,
-    nChimericPairs: Option[Long] = None, nSingletons: Option[Long] = None, maxInsertSize: Option[Long] = None,
-    medianInsertSize: Option[Long] = None, meanInsertSize: Option[Double] = None, stdevInsertSize: Option[Double] = None,
-    nBasesAligned: Long, nBasesUtr: Long, nBasesCoding: Long, nBasesIntron: Long, nBasesIntergenic: Long,
-    nBasesRibosomal: Long, median5PrimeBias: Double, median3PrimeBias: Double, normalizedTranscriptCoverage: List[Double])
+    nReads: Long,
+    nReadsAligned: Long,
+    rateReadsMismatch: Double,
+    rateIndel: Double,
+    pctChimeras: Option[Double] = None,
+    nSingletons: Option[Long] = None,
+    maxInsertSize: Option[Long] = None,
+    medianInsertSize: Option[Long] = None,
+    stdevInsertSize: Option[Double] = None,
+    nBasesAligned: Long,
+    nBasesUtr: Long,
+    nBasesCoding: Long,
+    nBasesIntron: Long,
+    nBasesIntergenic: Long,
+    nBasesRibosomal: Option[Long],
+    median5PrimeBias: Double,
+    median3PrimeBias: Double,
+    normalizedTranscriptCoverage: Seq[Double])
 
   case class ReadStats(
-    seqType: String, hasPair: Boolean, nBases: Long, nBasesA: Long, nBasesT: Long, nBasesG: Long, nBasesC: Long,
-    nBasesN: Long, nBasesByQual: List[Long], medianQualByPosition: List[Double], nReads: Long)
+    nBases: Long,
+    nBasesA: Long,
+    nBasesT: Long,
+    nBasesG: Long,
+    nBasesC: Long,
+    nBasesN: Long,
+    nBasesByQual: Seq[Long],
+    medianQualByPosition: Seq[Double],
+    nReads: Long)
 
   case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None)
 
@@ -33,8 +53,14 @@ package object models {
 
   case class Annotation(annotId: String, annotMd5: String, extension: String, name: String)
 
-  case class User(id: String, email: String, isConfirmed: Boolean, isAdmin: Boolean, nSummaries: Int,
-                  creationTime: Date, updateTime: Date)
+  case class User(
+    id: String,
+    email: String,
+    isConfirmed: Boolean,
+    isAdmin: Boolean,
+    nSummaries: Int,
+    creationTime: Date,
+    updateTime: Date)
 
   case class UserPatch(email: String, isConfirmed: Boolean)
 
