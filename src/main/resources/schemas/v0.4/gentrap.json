@@ -172,7 +172,10 @@
               "description": "Sample-level Gentrap statistics",
               "type": "object",
 
-              "properties": {}
+              "properties": {
+
+                "rna_metrics": { "$ref": "#/definitions/statsRnaSeqMetrics" }
+              }
             }
           }
         },
@@ -217,10 +220,7 @@
 
                 "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
 
-                "insert_size_metrics": {
-                  "description": "Metrics gathered by the Picard CollectInsertSizeMetrics tool (only for paired-end libraries)",
-                  "type": "object"
-                }
+                "insert_size_metrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
               }
             }
           }
@@ -455,10 +455,7 @@
 
                 "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
 
-                "insert_size_metrics": {
-                  "description": "Metrics gathered by the Picard CollectInsertSizeMetrics tool (only for paired-end libraries)",
-                  "type": "object"
-                }
+                "insert_size_metrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
               }
             }
           }
