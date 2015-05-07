@@ -6,10 +6,6 @@ abstract class BaseSampleDocument {
 
   def runId: String
 
-  def referenceId: Option[String]
-
-  def annotationIds: Option[Seq[String]]
-
   def libs: Seq[BaseLibDocument]
 
   def inputFiles: Seq[BaseFileDocument] = libs.map(_.inputFiles).flatten

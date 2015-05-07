@@ -20,7 +20,10 @@ trait RunProcessor { this: DatabaseProvider =>
 
   def validate(runJson: JValue): Seq[ProcessingMessage] = validator.validationMessages(runJson)
 
-  def extractSamples(runJson: JValue, runId: String,
-                     refId: Option[String], annotIds: Option[Seq[String]]): Seq[SampleDocument]
+  def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]): Seq[SampleDocument]
+
+  def extractReference(runJson: JValue): Reference
+
+  def extractAnnotations(runJson: JValue): Seq[Annotation]
 }
 

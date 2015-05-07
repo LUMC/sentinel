@@ -85,7 +85,7 @@ trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
 
   val validator: RunValidator = getSchemaValidator("v0.4/gentrap.json")
 
-  def extractSamples(runJson: JValue, runId: String, refId: Option[String], annotIds: Option[Seq[String]]) =
+  def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]) = {
     (runJson \ "samples")
       .extract[Map[String, JValue]]
       .map { case (sampleName, sampleJson) =>
@@ -100,4 +100,9 @@ trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
           .toSeq,
         alnStats = sampleJson.getAs[GentrapAlignmentStats])
     }.toSeq
+  }
+
+  def extractReference(runJson: JValue): Reference = ???
+
+  def extractAnnotations(runJson: JValue): Seq[Annotation] = ???
 }

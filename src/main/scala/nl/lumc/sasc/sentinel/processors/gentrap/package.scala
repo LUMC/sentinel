@@ -37,8 +37,8 @@ package object gentrap {
   case class GentrapSampleDocument(
     name: Option[String] = None,
     runId: String,
-    referenceId: Option[String],
-    annotationIds: Option[Seq[String]],
+    referenceId: String,
+    annotationIds: Seq[String],
     libs: Seq[GentrapLibDocument],
     alnStats: Option[GentrapAlignmentStats] = None) extends BaseSampleDocument
 }
