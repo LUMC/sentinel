@@ -6,9 +6,9 @@ import org.json4s.JValue
 
 package object models {
 
-  case class Reference(refId: String, contigMd5s: List[String], name: String)
+  case class Reference(refId: Option[String], contigMd5s: Seq[String], combinedMd5: String, name: Option[String] = None)
 
-  case class Annotation(annotId: String, annotMd5: String, extension: String, name: String)
+  case class Annotation(annotId: Option[String], annotMd5: String, extension: Option[String], name: Option[String] = None)
 
   case class ApiError(message: String, data: Any = None)
 

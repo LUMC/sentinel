@@ -2,6 +2,7 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import scala.util.Try
 
+import org.apache.commons.io.FilenameUtils.getExtension
 import org.json4s.{ Reader => JsonReader, _ }
 import org.json4s.JsonDSL._
 import org.json4s.mongo.ObjectIdSerializer
@@ -10,6 +11,7 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.db.DatabaseProvider
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunProcessor
+import nl.lumc.sasc.sentinel.utils.calcSeqMd5
 import nl.lumc.sasc.sentinel.validation.RunValidator
 
 trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
@@ -79,30 +81,62 @@ trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
     )
   }
 
+  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
+
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
   type SampleDocument = GentrapSampleDocument
+
+  val sampleCollectionName = "gentrap.samples"
 
   val validator: RunValidator = getSchemaValidator("v0.4/gentrap.json")
 
   def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]) = {
     (runJson \ "samples")
       .extract[Map[String, JValue]]
-      .map { case (sampleName, sampleJson) =>
-      GentrapSampleDocument(
-        name = Option(sampleName),
-        runId = runId,
-        referenceId = refId,
-        annotationIds = annotIds,
-        libs = (sampleJson \ "libraries")
-          .extract[Map[String, JValue]]
-          .map { case (libName, libJson) => (("name", JString(libName)) ++ libJson).as[GentrapLibDocument] }
-          .toSeq,
-        alnStats = sampleJson.getAs[GentrapAlignmentStats])
-    }.toSeq
+      .map {
+        case (sampleName, sampleJson) =>
+          GentrapSampleDocument(
+            name = Option(sampleName),
+            runId = runId,
+            referenceId = refId,
+            annotationIds = annotIds,
+            libs = (sampleJson \ "libraries")
+              .extract[Map[String, JValue]]
+              .map { case (libName, libJson) => (("name", JString(libName)) ++ libJson).as[GentrapLibDocument] }
+              .toSeq,
+            alnStats = sampleJson.getAs[GentrapAlignmentStats])
+      }.toSeq
   }
 
-  def extractReference(runJson: JValue): Reference = ???
+  def extractReference(runJson: JValue): Reference = {
+    val contigMd5s = (runJson \ "gentrap" \ "settings" \ "reference" \\ "md5")
+      .children
+      .map(_.extract[String])
+      .sorted
+    val combinedMd5 = calcSeqMd5(contigMd5s)
+    Reference(None, contigMd5s, combinedMd5)
+  }
 
-  def extractAnnotations(runJson: JValue): Seq[Annotation] = ???
+  def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
+    .filterField {
+      case JField(key, _) if GentrapAnnotationKeys.contains(key) => true
+      case _ => false
+    }
+    .children
+    .map {
+      case fileJson =>
+        Annotation(None,
+          annotMd5 = (fileJson \ "md5").extract[String],
+          // Make sure file has extension and always return lower case extensions
+          extension = (fileJson \ "path").extractOpt[String] match {
+            case None => None
+            case Some(path) => {
+              val ext = getExtension(path)
+              if (ext.isEmpty) None
+              else Some(ext.toLowerCase)
+            }
+          })
+    }
+
 }

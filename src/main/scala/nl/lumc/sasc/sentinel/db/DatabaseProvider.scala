@@ -5,6 +5,7 @@ import scala.io.Source
 import scala.util.Try
 
 import org.json4s.jackson.JsonMethods._
+import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunProcessor
@@ -13,7 +14,15 @@ trait DatabaseProvider { this: RunProcessor =>
 
   type DbId = String
 
-  def storeRun(is: InputStream): Try[DbId]
+  case class StoreRunResult(runId: DbId, refId: DbId, annotIds: Seq[DbId], sampleIds: Seq[DbId])
+
+  def referenceCollectionName: String = "references"
+
+  def annotationCollectionName: String = "annotations"
+
+  def sampleCollectionName: String
+
+  def storeRawInput(is: InputStream): Try[DbId]
 
   def storeReference(ref: Reference): Try[DbId]
 
@@ -21,25 +30,28 @@ trait DatabaseProvider { this: RunProcessor =>
 
   def storeAnnotations(annots: Seq[Annotation]): Try[Seq[DbId]]
 
-  def process(is: InputStream): Try[Seq[DbId]] = {
-      // NOTE: this stores the entire file in memory
-      val fileContents = Source.fromInputStream(is).map(_.toByte).toArray
+  def storeRun(fi: FileItem): Try[StoreRunResult] = {
+      // NOTE: This stores the entire file in memory
+      val fileContents = Source.fromInputStream(fi.getInputStream).map(_.toByte).toArray
       val json = parse(new ByteArrayInputStream(fileContents))
       val validationMsgs = validate(json)
 
       if (validationMsgs.nonEmpty)
-        // TODO: nicer way to store all messages in a string?
+        // TODO: Implement nicer way to store all messages in a string
         Try(throw new IllegalArgumentException(validationMsgs.head.getMessage))
       else {
+        // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
+        //       It does not break our application though, so it's an acceptable trade off.
+        // TODO: Explore other types that are more expressive than Try to store state.
         for {
-          runId <- storeRun(new ByteArrayInputStream(fileContents))
-          annots <- Try(extractAnnotations(json))
-          annotIds <- storeAnnotations(annots)
+          runId <- storeRawInput(new ByteArrayInputStream(fileContents))
           ref <- Try(extractReference(json))
           refId <- storeReference(ref)
+          annots <- Try(extractAnnotations(json))
+          annotIds <- storeAnnotations(annots)
           samples <- Try(extractSamples(json, runId, refId, annotIds))
           sampleIds <- storeSamples(samples)
-        } yield sampleIds
+        } yield StoreRunResult(runId, refId, annotIds, sampleIds)
       }
     }
 }

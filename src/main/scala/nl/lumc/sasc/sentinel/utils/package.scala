@@ -7,6 +7,7 @@ package nl.lumc.sasc.sentinel
 
 import java.io.File
 import java.nio.file.Paths
+import java.security.MessageDigest
 
 /** General utilities */
 package object utils {
@@ -20,6 +21,12 @@ package object utils {
   }
 
   def getResourceFile(url: String): File = new File(getResourcePath(url))
+
+  def calcSeqMd5(seq: Seq[String]): String = {
+    val digest = MessageDigest.getInstance("MD5")
+    seq.foreach { case item => digest.update(item.getBytes) }
+    digest.digest().map("%02x".format(_)).mkString
+  }
 
   def splitParam(param: Option[String], delimiter: String = ",",
                  fallback: Seq[String] = Seq()): Seq[String] = param match {
