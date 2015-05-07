@@ -70,10 +70,10 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 204 if delete successful
   }
 
-  val runsRunIdGetOperation = (apiOperation[RunSummary]("runsRunIdGet")
-    summary "Retrieves a run summary with its full content."
+  val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")
+    summary "Retrieves full run summaries."
     notes
-      """This endpoint retrieves a single run summary. Only administrators and the run summary uploader can access this
+      """This endpoint retrieves single run summaries. Only administrators and the run summary uploader can access this
         |resource.
       """.stripMargin.replaceAll("\n", "")
     parameters (
@@ -85,6 +85,7 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, "User ID or run summary ID not found."),
       StringResponseMessage(410, "Run summary not available anymore."))
+    produces "application/octet-stream"
   )
 
   get("/:runId", operation(runsRunIdGetOperation)) {
@@ -94,9 +95,10 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 403 if unauthorized
     // TODO: return 410 if run was available but has been deleted
     // TODO: return 200 and run summary
+    contentType = "application/octet-stream"
   }
 
-  val runsPostOperation = (apiOperation[RunSummary]("runsPost")
+  val runsPostOperation = (apiOperation[RunRecord]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
@@ -125,8 +127,8 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 201 if post successful
   }
 
-  val runsGetOperation = (apiOperation[List[RunSummary]]("runsGet")
-    summary "Retrieves run summaries."
+  val runsGetOperation = (apiOperation[List[RunRecord]]("runsGet")
+    summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
         |Only administrators and the run summary uploader can access this resource. Note that this endpoint omits the

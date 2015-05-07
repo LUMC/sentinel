@@ -12,7 +12,7 @@ package object models {
 
   case class ApiError(message: String, data: Any = None)
 
-  case class RunSummary(runId: String, uploadTime: Date, uploader: String, pipeline: String, contents: Option[JValue])
+  case class RunRecord(runId: String, uploadTime: Date, uploader: String, pipeline: String)
 
   case class User(
     id: String,
