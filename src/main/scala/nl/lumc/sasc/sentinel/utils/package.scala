@@ -5,12 +5,16 @@
  */
 package nl.lumc.sasc.sentinel
 
-import java.io.File
+import java.io.{ File, InputStream, PushbackInputStream }
+import java.util.zip.GZIPInputStream
 import java.nio.file.Paths
 import java.security.MessageDigest
+import scala.io.Source
 
 /** General utilities */
 package object utils {
+
+  private[this] val GzipMagic = Seq(0x1f, 0x8b)
 
   def getResourcePath(url: String): String = {
     require(url startsWith "/", "Resource paths must start with '/'")
@@ -32,5 +36,17 @@ package object utils {
                  fallback: Seq[String] = Seq()): Seq[String] = param match {
     case Some(str)  => str.split(delimiter).toSeq
     case None       => fallback
+  }
+
+  def getByteArray(is: InputStream): Array[Byte] = {
+
+    def readAll(i: InputStream) = Source.fromInputStream(i).map(_.toByte).toArray
+
+    val pb = new PushbackInputStream(is, 2)
+    val inMagic = Seq(pb.read(), pb.read())
+    inMagic.reverse.foreach(pb.unread(_))
+
+    if (inMagic == GzipMagic) readAll(new GZIPInputStream(pb))
+    else readAll(pb)
   }
 }

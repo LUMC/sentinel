@@ -9,6 +9,7 @@ import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunProcessor
+import nl.lumc.sasc.sentinel.utils.getByteArray
 
 trait DatabaseProvider { this: RunProcessor =>
 
@@ -32,7 +33,7 @@ trait DatabaseProvider { this: RunProcessor =>
 
   def storeRun(fi: FileItem): Try[StoreRunResult] = {
       // NOTE: This stores the entire file in memory
-      val fileContents = Source.fromInputStream(fi.getInputStream).map(_.toByte).toArray
+      val fileContents = getByteArray(fi.getInputStream)
       val json = parse(new ByteArrayInputStream(fileContents))
       val validationMsgs = validate(json)
 
