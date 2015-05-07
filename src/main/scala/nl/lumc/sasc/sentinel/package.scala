@@ -5,17 +5,16 @@
  */
 package nl.lumc.sasc
 
+import nl.lumc.sasc.sentinel.processors.gentrap.GentrapProcessorV04
+
 /** General package-level information */
 package object sentinel {
 
-  /** Supported schema versions */
-  object SchemaVersion extends Enumeration {
-    type SchemaVersion = Value
-    val V04 = Value
+  /** Supported run summaries */
+  object RunSummary extends Enumeration {
+    type RunSummary = Value
+    val GentrapV04 = Value
   }
-
-  /** Current schema versions */
-  val CurrentSchemaVersion = SchemaVersion.V04
 
   /** Current API version */
   val CurrentApiVersion = "0.1.0"
