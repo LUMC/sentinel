@@ -5,7 +5,7 @@ import org.scalatra.swagger._
 import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 
-import nl.lumc.sasc.sentinel.api.models._
+import nl.lumc.sasc.sentinel.models._
 
 class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport

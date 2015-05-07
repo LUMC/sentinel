@@ -5,7 +5,7 @@ import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.api.models._
+import nl.lumc.sasc.sentinel.models._
 
 class ReferencesController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport

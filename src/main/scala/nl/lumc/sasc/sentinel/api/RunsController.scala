@@ -10,7 +10,7 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
-import nl.lumc.sasc.sentinel.api.models._
+import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.splitParam
 
 class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
