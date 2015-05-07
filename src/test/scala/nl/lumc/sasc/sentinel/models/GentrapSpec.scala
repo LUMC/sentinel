@@ -12,8 +12,8 @@ import nl.lumc.sasc.sentinel.{ Pipeline, SchemaVersion }
 class GentrapSpec extends Specification with PipelineSpec { def is = s2"""
 
     The Gentrap v0.4 schema must
-      return valid for multi sample, single library summary              $multiSampleSingleLib
-      return valid for multi sample, multi library summary               $multiSampleMultiLib
+      be valid for multi sample, single library summary              $multiSampleSingleLib
+      be valid for multi sample, multi library summary               $multiSampleMultiLib
 """
 
   val pipeline = Pipeline.Gentrap
@@ -22,12 +22,12 @@ class GentrapSpec extends Specification with PipelineSpec { def is = s2"""
 
   def multiSampleSingleLib = {
     val summary = loadResource("/v0.4/gentrap_multi_sample_single_lib.json")
-    schema.isValid(summary) must beTrue
+    schema.validationMessages(summary).toList must beEmpty
   }
 
   def multiSampleMultiLib = {
     val summary = loadResource("/v0.4/gentrap_multi_sample_multi_lib.json")
-    schema.isValid(summary) must beTrue
+    schema.validationMessages(summary).toList must beEmpty
   }
 
   // TODO: add test for single sample single lib
