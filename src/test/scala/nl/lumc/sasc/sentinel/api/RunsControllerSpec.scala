@@ -8,13 +8,13 @@ import org.scalatra.test.specs2._
 
 class RunsControllerSpec extends ScalatraSpec with SentinelSpec { def is = s2"""
 
-    POST / on RunsController must
-      return status 400 if user is unspecified                      $postRunsUnspecifiedUserStatus
-      return the correct message if user is unspecified             $postRunsUnspecifiedUserMessage
-      return status 400 if pipeline is unspecified                  $postRunsUnspecifiedPipelineStatus
-      return the correct message if pipeline is unspecified         $postRunsUnspecifiedPipelineMessage
-      return status 413 if run summary is too large                 $postRunsFileTooLargeStatus
-      return the correct message if run summary is too large        $postRunsFileTooLargeMessage
+  POST / on RunsController must
+    return status 400 if user is unspecified                      $postRunsUnspecifiedUserStatus
+    return the correct message if user is unspecified             $postRunsUnspecifiedUserMessage
+    return status 400 if pipeline is unspecified                  $postRunsUnspecifiedPipelineStatus
+    return the correct message if pipeline is unspecified         $postRunsUnspecifiedPipelineMessage
+    return status 413 if run summary is too large                 $postRunsFileTooLargeStatus
+    return the correct message if run summary is too large        $postRunsFileTooLargeMessage
 """
 
   protected lazy val tempDir = Files.createTempDir()

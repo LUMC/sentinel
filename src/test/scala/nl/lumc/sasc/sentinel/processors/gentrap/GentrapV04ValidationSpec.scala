@@ -12,9 +12,9 @@ import nl.lumc.sasc.sentinel.validation.SchemaValidationSpec
 
 class GentrapV04ValidationSpec extends Specification with SchemaValidationSpec { def is = s2"""
 
-    The Gentrap v0.4 schema must
-      be valid for multi sample, single library summary              $multiSampleSingleLibV04
-      be valid for multi sample, multi library summary               $multiSampleMultiLibV04
+  The Gentrap v0.4 schema must
+    be valid for multi sample, single library summary              $multiSampleSingleLibV04
+    be valid for multi sample, multi library summary               $multiSampleMultiLibV04
 """
 
   object GentrapV04ProcessorModule$ extends GentrapV04Processor with AllSuccessDatabaseProvider
