@@ -13,9 +13,9 @@ import scala.collection.JavaConverters._
  *
  * @param rawSchema JSON schema to validate against, as a [[JValue]] object.
  */
-class IncomingValidator(rawSchema: JValue) {
+class RunValidator(rawSchema: JValue) {
 
-  import nl.lumc.sasc.sentinel.validation.IncomingValidator._
+  import nl.lumc.sasc.sentinel.validation.RunValidator._
 
   /** Alternative constructor for creating a validator from any valid [[JsonInput]] object. */
   def this(in: JsonInput) {
@@ -52,7 +52,7 @@ class IncomingValidator(rawSchema: JValue) {
   def isValid(instance: JValue): Boolean = validationMessages(instance).isEmpty
 }
 
-object IncomingValidator {
+object RunValidator {
 
   import scala.language.implicitConversions
 

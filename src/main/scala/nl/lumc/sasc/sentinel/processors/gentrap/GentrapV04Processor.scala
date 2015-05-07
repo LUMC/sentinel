@@ -7,12 +7,12 @@ import org.json4s.JsonDSL._
 import org.json4s.mongo.ObjectIdSerializer
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.validation.IncomingValidator
+import nl.lumc.sasc.sentinel.db.DatabaseProvider
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunProcessor
-import nl.lumc.sasc.sentinel.db.DatabaseProvider
+import nl.lumc.sasc.sentinel.validation.RunValidator
 
-trait GentrapProcessorV04 extends RunProcessor { this: DatabaseProvider =>
+trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
 
   implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
 
@@ -83,7 +83,7 @@ trait GentrapProcessorV04 extends RunProcessor { this: DatabaseProvider =>
 
   type SampleDocument = GentrapSampleDocument
 
-  val validator: IncomingValidator = getSchemaValidator("v0.4/gentrap.json")
+  val validator: RunValidator = getSchemaValidator("v0.4/gentrap.json")
 
   def extractSamples(runJson: JValue, runId: String, refId: Option[String], annotIds: Option[Seq[String]]) =
     (runJson \ "samples")

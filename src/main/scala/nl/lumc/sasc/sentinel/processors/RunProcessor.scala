@@ -6,21 +6,21 @@ import org.json4s.JValue
 import nl.lumc.sasc.sentinel.db.DatabaseProvider
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.getResourceFile
-import nl.lumc.sasc.sentinel.validation.IncomingValidator
+import nl.lumc.sasc.sentinel.validation.RunValidator
 
 trait RunProcessor { this: DatabaseProvider =>
 
   protected def getSchema(schemaUrl: String) = getResourceFile("/schemas/" + schemaUrl)
 
-  protected def getSchemaValidator(schemaUrl: String) = new IncomingValidator(getSchema(schemaUrl))
+  protected def getSchemaValidator(schemaUrl: String) = new RunValidator(getSchema(schemaUrl))
 
   type SampleDocument <: BaseSampleDocument
 
-  def validator: IncomingValidator
+  def validator: RunValidator
 
-  def validate(json: JValue): Seq[ProcessingMessage] = validator.validationMessages(json)
+  def validate(runJson: JValue): Seq[ProcessingMessage] = validator.validationMessages(runJson)
 
-  def extractSamples(json: JValue, runId: String,
+  def extractSamples(runJson: JValue, runId: String,
                      refId: Option[String], annotIds: Option[Seq[String]]): Seq[SampleDocument]
 }
 
