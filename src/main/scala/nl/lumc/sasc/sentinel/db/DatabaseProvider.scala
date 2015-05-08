@@ -1,17 +1,16 @@
 package nl.lumc.sasc.sentinel.db
 
 import java.io.{ ByteArrayInputStream, InputStream }
-import scala.io.Source
 import scala.util.Try
 
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.RunProcessor
+import nl.lumc.sasc.sentinel.processors.{ InputAdapter, OutputAdapter }
 import nl.lumc.sasc.sentinel.utils.getByteArray
 
-trait DatabaseProvider { this: RunProcessor =>
+trait DatabaseProvider { this: InputAdapter with OutputAdapter =>
 
   type DbId = String
 

@@ -17,16 +17,16 @@ class GentrapV04ValidationSpec extends Specification with SchemaValidationSpec {
     be valid for multi sample, multi library summary               $multiSampleMultiLibV04
 """
 
-  object GentrapV04ProcessorModule$ extends GentrapV04Processor with AllSuccessDatabaseProvider
+  object GentrapV04Module extends GentrapV04InputAdapter with GentrapOutputAdapter with AllSuccessDatabaseProvider
 
   def multiSampleSingleLibV04 = {
     val summary = loadJson("/v0.4/gentrap_multi_sample_single_lib.json")
-    GentrapV04ProcessorModule$.validate(summary).toList must beEmpty
+    GentrapV04Module.validate(summary).toList must beEmpty
   }
 
   def multiSampleMultiLibV04 = {
     val summary = loadJson("/v0.4/gentrap_multi_sample_multi_lib.json")
-    GentrapV04ProcessorModule$.validate(summary).toList must beEmpty
+    GentrapV04Module.validate(summary).toList must beEmpty
   }
 
   // TODO: add test for single sample single lib

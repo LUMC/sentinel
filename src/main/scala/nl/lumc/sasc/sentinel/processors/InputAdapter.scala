@@ -8,7 +8,7 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.getResourceFile
 import nl.lumc.sasc.sentinel.validation.RunValidator
 
-trait RunProcessor { this: DatabaseProvider =>
+trait InputAdapter { this: DatabaseProvider =>
 
   protected def getSchema(schemaUrl: String) = getResourceFile("/schemas/" + schemaUrl)
 

@@ -10,11 +10,11 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.db.DatabaseProvider
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.RunProcessor
+import nl.lumc.sasc.sentinel.processors.InputAdapter
 import nl.lumc.sasc.sentinel.utils.calcSeqMd5
 import nl.lumc.sasc.sentinel.validation.RunValidator
 
-trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
+trait GentrapV04InputAdapter extends InputAdapter { this: DatabaseProvider =>
 
   implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
 
@@ -86,8 +86,6 @@ trait GentrapV04Processor extends RunProcessor { this: DatabaseProvider =>
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
   type SampleDocument = GentrapSampleDocument
-
-  val sampleCollectionName = "gentrap.samples"
 
   val validator: RunValidator = getSchemaValidator("v0.4/gentrap.json")
 
