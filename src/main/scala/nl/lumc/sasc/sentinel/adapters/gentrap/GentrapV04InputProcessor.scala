@@ -1,20 +1,28 @@
-package nl.lumc.sasc.sentinel.processors.gentrap
+package nl.lumc.sasc.sentinel.adapters.gentrap
+
+import java.io.ByteArrayInputStream
 
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.json4s.{ Reader => JsonReader, _ }
 import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
 import org.json4s.mongo.ObjectIdSerializer
+import org.scalatra.servlet.FileItem
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.db.DatabaseProvider
+import nl.lumc.sasc.sentinel.adapters._
+import nl.lumc.sasc.sentinel.db.{ MongodbAccessObject, MongodbConnector }
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.InputAdapter
-import nl.lumc.sasc.sentinel.utils.calcSeqMd5
-import nl.lumc.sasc.sentinel.validation.RunValidator
+import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray }
 
-trait GentrapV04InputAdapter extends InputAdapter { this: DatabaseProvider =>
+class GentrapV04InputProcessor(val db: MongodbAccessObject)
+  extends SamplesAdapter
+  with RunAdapter
+  with SingleReferenceAdapter
+  with MultiAnnotationsAdapter
+  with MongodbConnector {
 
   implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
 
@@ -81,13 +89,17 @@ trait GentrapV04InputAdapter extends InputAdapter { this: DatabaseProvider =>
     )
   }
 
-  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
-
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
   type SampleDocument = GentrapSampleDocument
 
-  val validator: RunValidator = getSchemaValidator("v0.4/gentrap.json")
+  val sampleCollectionName = GentrapSamplesCollectionName
+
+  protected case class StoreRunResult(runId: DbId, refId: DbId, annotIds: Seq[DbId], sampleIds: Seq[DbId])
+
+  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
+
+  val validator = getSchemaValidator("v0.4/gentrap.json")
 
   def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]) = {
     (runJson \ "samples")
@@ -129,12 +141,35 @@ trait GentrapV04InputAdapter extends InputAdapter { this: DatabaseProvider =>
           // Make sure file has extension and always return lower case extensions
           extension = (fileJson \ "path").extractOpt[String] match {
             case None => None
-            case Some(path) => {
+            case Some(path) =>
               val ext = getExtension(path)
               if (ext.isEmpty) None
               else Some(ext.toLowerCase)
-            }
           })
     }
 
+  def storeRun(fi: FileItem): Try[StoreRunResult] = {
+    // NOTE: This stores the entire file in memory
+    val fileContents = getByteArray(fi.getInputStream)
+    val json = parse(new ByteArrayInputStream(fileContents))
+    val validationMsgs = validate(json)
+
+    if (validationMsgs.nonEmpty)
+    // TODO: Implement nicer way to store all messages in a string
+      Try(throw new IllegalArgumentException(validationMsgs.head.getMessage))
+    else {
+      // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
+      //       It does not break our application though, so it's an acceptable trade off.
+      // TODO: Explore other types that are more expressive than Try to store state.
+      for {
+        runId <- storeRawRun(new ByteArrayInputStream(fileContents), fi.getName)
+        ref <- Try(extractReference(json))
+        refId <- storeReference(ref)
+        annots <- Try(extractAnnotations(json))
+        annotIds <- storeAnnotations(annots)
+        samples <- Try(extractSamples(json, runId, refId, annotIds))
+        sampleIds <- storeSamples(samples)
+      } yield StoreRunResult(runId, refId, annotIds, sampleIds)
+    }
+  }
 }

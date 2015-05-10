@@ -1,8 +1,10 @@
-package nl.lumc.sasc.sentinel.processors
+package nl.lumc.sasc.sentinel.adapters
 
 import nl.lumc.sasc.sentinel.models._
 
 package object gentrap {
+
+  val GentrapSamplesCollectionName = "gentrap.samples"
 
   case class GentrapAlignmentStats(
     nReads: Long,
