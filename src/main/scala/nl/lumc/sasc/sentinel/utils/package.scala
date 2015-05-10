@@ -42,9 +42,9 @@ package object utils {
 
     def readAll(i: InputStream) = Source.fromInputStream(i).map(_.toByte).toArray
 
-    val pb = new PushbackInputStream(is, 2)
+    val pb = new PushbackInputStream(is, GzipMagic.size)
     val inMagic = Seq(pb.read(), pb.read())
-    inMagic.reverse.foreach(pb.unread(_))
+    inMagic.reverse.foreach { pb.unread }
 
     if (inMagic == GzipMagic) readAll(new GZIPInputStream(pb))
     else readAll(pb)
