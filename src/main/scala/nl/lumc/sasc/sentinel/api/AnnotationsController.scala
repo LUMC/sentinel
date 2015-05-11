@@ -1,23 +1,28 @@
 package nl.lumc.sasc.sentinel.api
 
+import nl.lumc.sasc.sentinel.processors.AnnotationsProcessor
 import org.json4s._
+import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 
-class AnnotationsController(implicit val swagger: Swagger) extends ScalatraServlet
+class AnnotationsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with SwaggerSupport {
+
+  protected val applicationDescription: String = "Retrieval of annotation file synopses"
+  override protected val applicationName = Some("annotations")
+
+  protected val annotationsProcessor = new AnnotationsProcessor(mongo)
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = DefaultFormats
-
-  protected val applicationDescription: String = "Retrieval of annotation file synopses"
-  override protected val applicationName: Option[String] = Some("annotations")
+  protected implicit val jsonFormats: Formats = DefaultFormats + new ObjectIdSerializer
 
   before() {
     contentType = formats("json")
@@ -43,6 +48,6 @@ class AnnotationsController(implicit val swagger: Swagger) extends ScalatraServl
   )
 
   get("/", operation(annotationsGetOperation)) {
-    // TODO: return 200 and annotation items
+    annotationsProcessor.getAnnotations()
   }
 }
