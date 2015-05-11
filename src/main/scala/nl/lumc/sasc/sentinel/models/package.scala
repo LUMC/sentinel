@@ -2,17 +2,9 @@ package nl.lumc.sasc.sentinel
 
 import java.util.Date
 
-import org.json4s.JValue
-
 package object models {
 
-  case class Reference(refId: Option[String], contigMd5s: Seq[String], combinedMd5: String, name: Option[String] = None)
-
-  case class Annotation(annotId: Option[String], annotMd5: String, extension: Option[String], name: Option[String] = None)
-
   case class ApiError(message: String, data: Any = None)
-
-  case class RunRecord(runId: String, uploadTime: Date, uploader: String, pipeline: String)
 
   case class User(
     id: String,
