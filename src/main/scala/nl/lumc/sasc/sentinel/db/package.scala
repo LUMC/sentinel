@@ -16,6 +16,6 @@ package object db {
 
     type DbId = String
 
-    protected val db: MongodbAccessObject
+    protected val mongo: MongodbAccessObject
   }
 }

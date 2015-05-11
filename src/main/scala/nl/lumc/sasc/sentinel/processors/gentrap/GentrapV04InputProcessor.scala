@@ -1,10 +1,11 @@
-package nl.lumc.sasc.sentinel.adapters.gentrap
+package nl.lumc.sasc.sentinel.processors.gentrap
 
 import java.io.ByteArrayInputStream
-
+import java.time.Clock
+import java.util.Date
 import scala.util.Try
 
-import org.apache.commons.io.FilenameUtils.getExtension
+import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
 import org.json4s.{ Reader => JsonReader, _ }
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
@@ -12,17 +13,19 @@ import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.servlet.FileItem
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters._
-import nl.lumc.sasc.sentinel.db.{ MongodbAccessObject, MongodbConnector }
+import nl.lumc.sasc.sentinel.processors._
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray }
+import nl.lumc.sasc.sentinel.utils.{RunValidationException, calcSeqMd5, getByteArray}
 
-class GentrapV04InputProcessor(val db: MongodbAccessObject)
+class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   extends SamplesAdapter
   with RunAdapter
-  with SingleReferenceAdapter
-  with MultiAnnotationsAdapter
+  with ReferencesAdapter
+  with AnnotationsAdapter
   with MongodbConnector {
+
+  implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
   implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
 
@@ -89,13 +92,11 @@ class GentrapV04InputProcessor(val db: MongodbAccessObject)
     )
   }
 
-  implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
-
   type SampleDocument = GentrapSampleDocument
 
-  val sampleCollectionName = GentrapSamplesCollectionName
-
-  protected case class StoreRunResult(runId: DbId, refId: DbId, annotIds: Seq[DbId], sampleIds: Seq[DbId])
+  val samplesCollectionName = GentrapSamplesCollectionName
+  
+  val runsCollectionName = GentrapRunsCollectionName
 
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
@@ -136,40 +137,44 @@ class GentrapV04InputProcessor(val db: MongodbAccessObject)
     .children
     .map {
       case fileJson =>
+        val filePath = (fileJson \ "path").extractOpt[String]
         Annotation(None,
           annotMd5 = (fileJson \ "md5").extract[String],
           // Make sure file has extension and always return lower case extensions
-          extension = (fileJson \ "path").extractOpt[String] match {
+          extension = filePath match {
             case None => None
             case Some(path) =>
               val ext = getExtension(path)
               if (ext.isEmpty) None
               else Some(ext.toLowerCase)
-          })
+          },
+          fileName = filePath.collect { case path => getName(path) },
+          creationTime = Option(Date.from(Clock.systemUTC().instant)))
     }
 
-  def storeRun(fi: FileItem): Try[StoreRunResult] = {
+  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunRecord] = {
     // NOTE: This stores the entire file in memory
-    val fileContents = getByteArray(fi.getInputStream)
+    val (fileContents, unzipped) = getByteArray(fi.getInputStream)
     val json = parse(new ByteArrayInputStream(fileContents))
     val validationMsgs = validate(json)
 
     if (validationMsgs.nonEmpty)
     // TODO: Implement nicer way to store all messages in a string
-      Try(throw new IllegalArgumentException(validationMsgs.head.getMessage))
+      Try(throw new RunValidationException("Gentrap run summary is invalid.", validationMsgs))
     else {
       // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
       //       It does not break our application though, so it's an acceptable trade off.
       // TODO: Explore other types that are more expressive than Try to store state.
       for {
-        runId <- storeRawRun(new ByteArrayInputStream(fileContents), fi.getName)
+        fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), fi.getName, unzipped))
         ref <- Try(extractReference(json))
-        refId <- storeReference(ref)
+        refId <- Try(storeReference(ref))
         annots <- Try(extractAnnotations(json))
-        annotIds <- storeAnnotations(annots)
-        samples <- Try(extractSamples(json, runId, refId, annotIds))
-        sampleIds <- storeSamples(samples)
-      } yield StoreRunResult(runId, refId, annotIds, sampleIds)
+        annotIds <- Try(storeAnnotations(annots))
+        samples <- Try(extractSamples(json, fileId, refId, annotIds))
+        sampleIds <- Try(storeSamples(samples))
+        run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
+      } yield run
     }
   }
 }
