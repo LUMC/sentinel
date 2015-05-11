@@ -38,7 +38,7 @@ package object utils {
     case None       => fallback
   }
 
-  def getByteArray(is: InputStream): Array[Byte] = {
+  def getByteArray(is: InputStream): (Array[Byte], Boolean) = {
 
     def readAll(i: InputStream) = Source.fromInputStream(i).map(_.toByte).toArray
 
@@ -46,7 +46,7 @@ package object utils {
     val inMagic = Seq(pb.read(), pb.read())
     inMagic.reverse.foreach { pb.unread }
 
-    if (inMagic == GzipMagic) readAll(new GZIPInputStream(pb))
-    else readAll(pb)
+    if (inMagic == GzipMagic) (readAll(new GZIPInputStream(pb)), true)
+    else (readAll(pb), false)
   }
 }
