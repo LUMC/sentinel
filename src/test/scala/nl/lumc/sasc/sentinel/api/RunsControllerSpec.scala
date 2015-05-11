@@ -5,8 +5,11 @@ import java.io.{ File, RandomAccessFile }
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.scalatra.test.specs2._
+import org.specs2.mock.Mockito
 
-class RunsControllerSpec extends ScalatraSpec with SentinelSpec { def is = s2"""
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+
+class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito { def is = s2"""
 
   POST / on RunsController must
     return status 400 if user is unspecified                      $postRunsUnspecifiedUserStatus
@@ -36,7 +39,9 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec { def is = s2"""
 
   implicit val swagger = new SentinelSwagger
 
-  addServlet(new RunsController, "/runs/*")
+  val mockConn = mock[MongodbAccessObject]
+
+  addServlet(new RunsController(mockConn), "/runs/*")
 
   def postRunsUnspecifiedUserStatus = post("/runs", Seq(("pipeline", "unknown"))) {
     status mustEqual 400
