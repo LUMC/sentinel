@@ -12,6 +12,7 @@ object SentinelBuild extends Build {
   val Name = "Sentinel"
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.6"
+  val JavaVersion = "1.8"
   val ScalatraVersion = "2.3.1"
   val Json4sVersion = "3.2.11"
 
@@ -43,6 +44,11 @@ object SentinelBuild extends Build {
       organization := Organization,
       name := Name,
       version := Version,
+      initialize := {
+        val _ = initialize.value
+        if (sys.props("java.specification.version") != JavaVersion)
+          sys.error("Sentinel requires Java 8")
+      },
       scalaVersion := ScalaVersion,
       scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
       resolvers += Classpaths.typesafeReleases,
