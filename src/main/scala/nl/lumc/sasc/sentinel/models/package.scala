@@ -43,6 +43,8 @@ package object models {
     val Unauthenticated = ApiError("Authentication required to access resource.")
 
     val Unauthorized = ApiError("Unauthorized to access resource.")
+
+    val Unexpected = ApiError("Unexpected error. Please contact the site administrators.")
   }
 
   case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None)
