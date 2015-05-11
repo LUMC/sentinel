@@ -13,10 +13,9 @@ import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.servlet.FileItem
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.processors._
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{RunValidationException, calcSeqMd5, getByteArray}
+import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray, RunValidationException }
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   extends SamplesAdapter
