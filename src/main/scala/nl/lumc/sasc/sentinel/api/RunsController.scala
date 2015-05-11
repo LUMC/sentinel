@@ -3,28 +3,32 @@ package nl.lumc.sasc.sentinel.api
 import java.io.File
 
 import org.json4s.jackson.Serialization
-import org.scalatra.{ RequestEntityTooLarge, ScalatraServlet}
+import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.AllowedPipelineParams
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.splitParam
+import nl.lumc.sasc.sentinel.utils.{ splitParam, RunValidationException }
 
-class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
+class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with FileUploadSupport
   with SwaggerSupport {
+
+  protected val applicationDescription: String = "Submission and retrieval of run summaries"
+  override protected val applicationName = Some("runs")
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
-  protected val applicationDescription: String = "Submission and retrieval of run summaries"
-  override protected val applicationName: Option[String] = Some("runs")
+  val gentrap = new GentrapV04InputProcessor(mongo)
 
   before() {
     contentType = formats("json")
@@ -102,6 +106,10 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
+      queryParam[List[String]]("pipelines")
+        .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `unknown`.")
+        .allowableValues(AllowedPipelineParams.toList)
+        .optional,
       formParam[File]("run").description("Run summary file."))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
@@ -123,8 +131,28 @@ class RunsController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 404 if user not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if not authorized
-    // TODO: return 400 if run summary is invalid
-    // TODO: return 201 if post successful
+    // TODO: return 400 if any other error occurs (duplicate run?)
+
+    if (!AllowedPipelineParams.contains(pipeline)) {
+      BadRequest(CommonErrors.InvalidPipeline.message)
+    } else {
+      val processor = pipeline match {
+        case "gentrap"  => gentrap
+        // TODO: implement generic run processor
+        //case otherwise  => ;
+      }
+      processor.processRun(uploadedRun, userId, pipeline) match {
+        case scala.util.Failure(f)    =>
+          log(f.getMessage, f)
+          f match {
+            case vexc: RunValidationException =>
+              BadRequest(ApiError(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+            case otherwise =>
+              InternalServerError(CommonErrors.Unexpected)
+          }
+        case scala.util.Success(run)  => Created(run)
+      }
+    }
   }
 
   val runsGetOperation = (apiOperation[List[RunRecord]]("runsGet")
