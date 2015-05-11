@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc
 
-import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
+import nl.lumc.sasc.sentinel.db._
 
 /** General package-level information */
 package object sentinel {

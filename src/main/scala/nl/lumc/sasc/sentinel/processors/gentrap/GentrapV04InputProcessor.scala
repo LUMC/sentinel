@@ -19,7 +19,8 @@ import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray, RunValidationExce
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   extends SamplesAdapter
-  with RunAdapter
+  with ValidationAdapter
+  with RunsAdapter
   with ReferencesAdapter
   with AnnotationsAdapter
   with MongodbConnector {
@@ -151,6 +152,18 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           creationTime = Option(Date.from(Clock.systemUTC().instant)))
     }
 
+  def createRun(fileId: DbId, refId: DbId, annotIds: Seq[DbId], samples: Seq[SampleDocument],
+    userId: String, pipeline: String) =
+      RunRecord(
+        runId = fileId, // NOTE: runId kept intentionally the same as fileId
+        refId = refId,
+        annotIds = annotIds,
+        creationTime = Date.from(Clock.systemUTC().instant),
+        uploader = userId,
+        pipeline = pipeline,
+        nSamples = samples.size,
+        nLibsPerSample = samples.map(_.libs.size))
+
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunRecord] = {
     // NOTE: This stores the entire file in memory
     val (fileContents, unzipped) = getByteArray(fi.getInputStream)
@@ -173,6 +186,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         samples <- Try(extractSamples(json, fileId, refId, annotIds))
         sampleIds <- Try(storeSamples(samples))
         run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
+        _ <- Try(storeRun(run))
       } yield run
     }
   }
