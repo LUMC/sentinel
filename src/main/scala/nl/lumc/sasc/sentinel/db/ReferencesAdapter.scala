@@ -1,5 +1,7 @@
 package nl.lumc.sasc.sentinel.db
 
+import scala.util.{ Failure, Success, Try }
+
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
@@ -23,4 +25,24 @@ trait ReferencesAdapter extends IndexedCollectionAdapter { this: MongodbConnecto
         coll.insert(grater[Reference].asDBObject(ref))
         ref
     }
+
+  def getReferences(maxNumReturn: Option[Int] = None): Seq[Reference] = {
+    val qResult = coll
+      .find()
+      .sort(MongoDBObject("creationTime" -> -1))
+      .map { case dbo => grater[Reference].asObject(dbo) }
+    maxNumReturn match {
+      case None       => qResult.toSeq
+      case Some(num)  => qResult.take(num).toSeq
+    }
+  }
+
+  def getReference(annotId: DbId): Option[Reference] = {
+    Try(new ObjectId(annotId)) match {
+      case Failure(_)   => None
+      case Success(qid) => coll
+        .findOneByID(qid)
+        .collect { case dbo => grater[Reference].asObject(dbo) }
+    }
+  }
 }
