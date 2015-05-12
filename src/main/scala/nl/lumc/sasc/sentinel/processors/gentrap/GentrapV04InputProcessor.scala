@@ -110,7 +110,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         case (sampleName, sampleJson) =>
           GentrapSampleDocument(
             name = Option(sampleName),
-            runId = runId,
+            runId = new ObjectId,
             referenceId = refId,
             annotationIds = annotIds,
             libs = (sampleJson \ "libraries")
@@ -185,7 +185,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         annots <- Try(extractAnnotations(json))
         annotIds <- Try(storeAnnotations(annots))
         samples <- Try(extractSamples(json, fileId, refId, annotIds))
-        sampleIds <- Try(storeSamples(samples))
+        _ <- Try(storeSamples(samples))
         run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
         _ <- Try(storeRun(run))
       } yield run
