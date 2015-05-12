@@ -1,6 +1,8 @@
 package nl.lumc.sasc.sentinel.models
 
-abstract class BaseSampleDocument {
+import com.novus.salat.annotations.Salat
+
+@Salat abstract class BaseSampleDocument {
 
   def name: Option[String]
 

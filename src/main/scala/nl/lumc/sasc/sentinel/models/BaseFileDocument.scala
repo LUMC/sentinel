@@ -1,6 +1,8 @@
 package nl.lumc.sasc.sentinel.models
 
-abstract class BaseFileDocument {
+import com.novus.salat.annotations.Salat
+
+@Salat abstract class BaseFileDocument {
 
   def path: String
 
