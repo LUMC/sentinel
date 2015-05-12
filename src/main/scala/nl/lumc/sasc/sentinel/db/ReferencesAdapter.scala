@@ -16,14 +16,11 @@ trait ReferencesAdapter extends IndexedCollectionAdapter { this: MongodbConnecto
     super.createIndices()
   }
 
-  def storeReference(ref: Reference): DbId = {
-    val doc = coll.findOne(MongoDBObject("combinedMd5" -> ref.combinedMd5)) match {
-      case Some(dbo) => dbo
+  def getOrStoreReference(ref: Reference): Reference =
+    coll.findOne(MongoDBObject("combinedMd5" -> ref.combinedMd5)) match {
+      case Some(dbo) => grater[Reference].asObject(dbo)
       case None =>
-        val newDoc = grater[Reference].asDBObject(ref)
-        coll.insert(newDoc)
-        newDoc
+        coll.insert(grater[Reference].asDBObject(ref))
+        ref
     }
-    doc._id.get.toString
-  }
 }

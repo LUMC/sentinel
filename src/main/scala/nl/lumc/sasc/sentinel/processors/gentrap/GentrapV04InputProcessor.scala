@@ -127,7 +127,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       .map(_.extract[String])
       .sorted
     val combinedMd5 = calcSeqMd5(contigMd5s)
-    Reference(None, contigMd5s, combinedMd5)
+    Reference(new ObjectId, contigMd5s, combinedMd5)
   }
 
   def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
@@ -181,8 +181,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       // TODO: Explore other types that are more expressive than Try to store state.
       for {
         fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), fi.getName, unzipped))
-        ref <- Try(extractReference(json))
-        refId <- Try(storeReference(ref))
+        runRef <- Try(extractReference(json))
+        ref <- Try(getOrStoreReference(runRef))
+        refId = ref.refId.toString
 
         runAnnots <- Try(extractAnnotations(json))
         annots <- Try(getOrStoreAnnotations(runAnnots))
