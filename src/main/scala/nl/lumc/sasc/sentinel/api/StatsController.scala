@@ -1,26 +1,27 @@
 package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
-import org.scalatra.ScalatraServlet
+import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams }
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats
+import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.utils.splitParam
 
-class StatsController(implicit val swagger: Swagger) extends ScalatraServlet
+class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
   with SwaggerSupport {
+
+  protected val applicationDescription: String = "Statistics from deposited summaries"
+  override protected val applicationName: Option[String] = Some("stats")
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
-  protected val applicationDescription: String = "Statistics from deposited summaries"
-  override protected val applicationName: Option[String] = Some("stats")
 
   before() {
     contentType = formats("json")
