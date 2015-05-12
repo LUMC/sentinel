@@ -68,11 +68,11 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     summary "Creates a user account."
     notes
       """This endpoint is used for creating new user accounts. The user data must be supplied in the body of the request
-        |and formatted as JSON. The JSON payload must define the following keys: `id`, `password`, and `email`. `id`
-        |must not contain whitespace, must be at least 3 characters long, and must only contain alphanumeric characters.
-        |`password` must be at least 6 characters long and contain a mixture of at least alphanumeric characters with
-        |small and large caps. A user can only submit data after the created account is confirmed (using an out-of-band
-        |communication channel).
+        | and formatted as JSON. The JSON payload must define the following keys: `id`, `password`, and `email`. `id`
+        | must not contain whitespace, must be at least 3 characters long, and must only contain alphanumeric characters.
+        | `password` must be at least 6 characters long and contain a mixture of at least alphanumeric characters with
+        | small and large caps. A user can only submit data after the created account is confirmed (using an out-of-band
+        | communication channel).
       """.stripMargin.replaceAll("\n", "")
     responseMessages (
       StringResponseMessage(201, "User record created successfully."),

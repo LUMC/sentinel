@@ -52,7 +52,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     summary "Deletes an uploaded run summary."
     notes
       """This endpoint deletes an uploaded run summary. Only administrators and the run summary uploader can delete a
-        |run summary.
+        | run summary.
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("runId").description("Run summary ID."),
@@ -78,7 +78,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     summary "Retrieves full run summaries."
     notes
       """This endpoint retrieves single run summaries. Only administrators and the run summary uploader can access this
-        |resource.
+        | resource.
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("runId").description("Run summary ID."),
@@ -161,9 +161,9 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
-        |Only administrators and the run summary uploader can access this resource. Note that this endpoint omits the
-        |actual run summary content. To retrieve the run summary content, you must specify its ID using another
-        |endpoint.
+        | Only administrators and the run summary uploader can access this resource. Note that this endpoint omits the
+        | actual run summary content. To retrieve the run summary content, you must specify its ID using another
+        | endpoint.
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),

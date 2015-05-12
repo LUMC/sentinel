@@ -56,7 +56,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
       queryParam[String]("accLevel")
         .description(
           """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
-            |accumulation or `sample` for sample-level accumulation (default: `sample`).
+            | accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedAccLevelParams.keySet.toList)
         .optional
@@ -96,7 +96,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
       queryParam[String]("libType")
         .description(
           """The types of sequence libraries to return. Possible values are `single` for single end
-            |libraries, `paired` for paired end libraries. If not specified, both library types are returned.
+            | libraries, `paired` for paired end libraries. If not specified, both library types are returned.
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional
