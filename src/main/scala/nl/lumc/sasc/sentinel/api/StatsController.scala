@@ -45,11 +45,11 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("references")
+      queryParam[List[String]]("refIds")
         .description("Include only Gentrap runs based on the given reference ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("annotations")
+      queryParam[List[String]]("annotIds")
         .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
         .multiValued
         .optional,
@@ -65,16 +65,16 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
   )
 
   get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
-    val runs = splitParam(params.getAs[String]("runIds"))
-    val references = splitParam(params.getAs[String]("references"))
-    val annotations = splitParam(params.getAs[String]("annotations"))
+    val runIds = splitParam(params.getAs[String]("runIds"))
+    val refIds = splitParam(params.getAs[String]("refIds"))
+    val annotIds = splitParam(params.getAs[String]("annotIds"))
     val accLevel = params.getAs[String]("accLevel").getOrElse("sample")
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
 
     AllowedAccLevelParams.get(accLevel) match {
       case None           => BadRequest(CommonErrors.InvalidAccLevel)
       case Some(accEnum)  =>
-        gentrap.getAlignmentStats(accEnum, runs, references, annotations)
+        gentrap.getAlignmentStats(accEnum, runIds, refIds, annotIds)
     }
   }
 
@@ -85,11 +85,11 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("references")
+      queryParam[List[String]]("refIds")
         .description("Include only Gentrap runs based on the given reference ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("annotations")
+      queryParam[List[String]]("annotIds")
         .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
         .multiValued
         .optional,
@@ -109,8 +109,8 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
 
   get("/sequences/gentrap", operation(statsSequencesGentrapGetOperation)) {
     val runIds = splitParam(params.getAs[String]("runIds"))
-    val references = splitParam(params.getAs[String]("references"))
-    val annotations = splitParam(params.getAs[String]("annotations"))
+    val refIds = splitParam(params.getAs[String]("refIds"))
+    val annotIds = splitParam(params.getAs[String]("annotIds"))
     val libType = params.getAs[String]("libType")
     // TODO: return 400 if library type is invalid
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
