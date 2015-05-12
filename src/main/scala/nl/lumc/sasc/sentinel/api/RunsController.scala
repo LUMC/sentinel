@@ -106,7 +106,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
-      queryParam[List[String]]("pipelines")
+      queryParam[String]("pipeline")
         .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `unknown`.")
         .allowableValues(AllowedPipelineParams.keySet.toList)
         .optional,
