@@ -1,6 +1,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
+import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
@@ -21,7 +22,7 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = DefaultFormats
+  protected implicit val jsonFormats: Formats = DefaultFormats + new ObjectIdSerializer
 
   before() {
     contentType = formats("json")
