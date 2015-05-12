@@ -15,7 +15,7 @@ import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
-class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
+class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
   with JacksonJsonSupport
   with FileUploadSupport
   with SwaggerSupport {

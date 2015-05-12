@@ -10,7 +10,7 @@ import org.scalatra.swagger._
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 
-class AnnotationsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
+class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
   with JacksonJsonSupport
   with SwaggerSupport {
 

@@ -38,10 +38,9 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito { d
   }
 
   implicit val swagger = new SentinelSwagger
+  implicit val mongo = mock[MongodbAccessObject]
 
-  val mockConn = mock[MongodbAccessObject]
-
-  addServlet(new RunsController(mockConn), "/runs/*")
+  addServlet(new RunsController, "/runs/*")
 
   def postRunsUnspecifiedUserStatus = post("/runs", Seq(("pipeline", "unsupported"))) {
     status mustEqual 400

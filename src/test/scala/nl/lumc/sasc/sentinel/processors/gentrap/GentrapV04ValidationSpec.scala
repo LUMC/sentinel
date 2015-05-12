@@ -18,9 +18,9 @@ class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mo
     be valid for multi sample, multi library summary               $multiSampleMultiLibV04
 """
 
-  val mockConn = mock[MongodbAccessObject]
+  val mongo = mock[MongodbAccessObject]
 
-  val gentrapV04InputProcessor = new GentrapV04InputProcessor(mockConn)
+  val gentrapV04InputProcessor = new GentrapV04InputProcessor(mongo)
 
   def multiSampleSingleLibV04 = {
     val summary = loadJson("/v0.4/gentrap_multi_sample_single_lib.json")
