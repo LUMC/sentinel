@@ -37,8 +37,8 @@ trait ReferencesAdapter extends IndexedCollectionAdapter { this: MongodbConnecto
     }
   }
 
-  def getReference(annotId: DbId): Option[Reference] = {
-    Try(new ObjectId(annotId)) match {
+  def getReference(refId: DbId): Option[Reference] = {
+    Try(new ObjectId(refId)) match {
       case Failure(_)   => None
       case Success(qid) => coll
         .findOneByID(qid)
