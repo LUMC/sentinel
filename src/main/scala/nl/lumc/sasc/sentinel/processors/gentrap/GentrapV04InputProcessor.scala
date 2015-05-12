@@ -32,14 +32,14 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
 
-    def read(sampleOrLibjson: JValue): GentrapAlignmentStats = {
+    def read(effJson: JValue): GentrapAlignmentStats = {
 
-      val isPaired = (sampleOrLibjson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
-      val alnMetrics = sampleOrLibjson \ "bammetrics" \ "stats" \ "alignment_metrics" \
+      val isPaired = (effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
+      val alnMetrics = effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \
         (if (isPaired) "PAIR" else "UNPAIRED")
-      val bpFlagstat = sampleOrLibjson \ "bammetrics" \ "stats" \ "biopet_flagstat"
-      val insMetrics = sampleOrLibjson \ "bammetrics" \ "stats" \ "insert_size_metrics"
-      val rnaMetrics = sampleOrLibjson \ "gentrap" \ "stats" \ "rna_metrics"
+      val bpFlagstat = effJson \ "bammetrics" \ "stats" \ "biopet_flagstat"
+      val insMetrics = effJson \ "bammetrics" \ "stats" \ "insert_size_metrics"
+      val rnaMetrics = effJson \ "gentrap" \ "stats" \ "rna_metrics"
 
       GentrapAlignmentStats(
         nReads = (alnMetrics \ "pf_reads").extract[Long],
@@ -110,16 +110,19 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       .extract[Map[String, JValue]]
       .map {
         case (sampleName, sampleJson) =>
+          val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
           GentrapSampleDocument(
             name = Option(sampleName),
             runId = new ObjectId,
             referenceId = refId,
             annotationIds = annotIds,
-            libs = (sampleJson \ "libraries")
-              .extract[Map[String, JValue]]
+            libs = libJsons
               .map { case (libName, libJson) => (("name", JString(libName)) ++ libJson).as[GentrapLibDocument] }
               .toSeq,
-            alnStats = sampleJson.getAs[GentrapAlignmentStats])
+            // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
+            alnStats =
+              if (libJsons.size > 1) sampleJson.getAs[GentrapAlignmentStats]
+              else libJsons.values.head.getAs[GentrapAlignmentStats])
       }.toSeq
   }
 
