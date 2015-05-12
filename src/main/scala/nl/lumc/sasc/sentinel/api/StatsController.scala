@@ -53,7 +53,7 @@ class StatsController(implicit val swagger: Swagger) extends ScalatraServlet
       queryParam[String]("accLevel")
         .description(
           """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
-            |accumulation or `sample` for sample-level accumulation.
+            |accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedAccLevelParams.toList)
         .optional
@@ -68,8 +68,7 @@ class StatsController(implicit val swagger: Swagger) extends ScalatraServlet
     val runIds = splitParam(params.getAs[String]("runIds"))
     val references = splitParam(params.getAs[String]("references"))
     val annotations = splitParam(params.getAs[String]("annotations"))
-    val accLevel = params.getAs[String]("accLevel")
-    // TODO: return 400 if accumulation level is invalid
+    val accLevel = params.getAs[String]("accLevel").getOrElse("sample")
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
     // TODO: return 200 and alignment stats
   }
