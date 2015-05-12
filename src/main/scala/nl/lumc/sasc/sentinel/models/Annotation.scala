@@ -6,7 +6,7 @@ import com.novus.salat.annotations._
 import org.bson.types.ObjectId
 
 case class Annotation(
-  @Key("_id") annotId: Option[ObjectId],
+  @Key("_id") annotId: ObjectId,
   annotMd5: String,
   extension: Option[String],
   fileName: Option[String] = None,

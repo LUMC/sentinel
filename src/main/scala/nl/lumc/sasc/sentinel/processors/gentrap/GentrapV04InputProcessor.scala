@@ -139,7 +139,8 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     .map {
       case fileJson =>
         val filePath = (fileJson \ "path").extractOpt[String]
-        Annotation(None,
+        Annotation(
+          annotId = new ObjectId,
           annotMd5 = (fileJson \ "md5").extract[String],
           // Make sure file has extension and always return lower case extensions
           extension = filePath match {
@@ -182,8 +183,11 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), fi.getName, unzipped))
         ref <- Try(extractReference(json))
         refId <- Try(storeReference(ref))
-        annots <- Try(extractAnnotations(json))
-        annotIds <- Try(storeAnnotations(annots))
+
+        runAnnots <- Try(extractAnnotations(json))
+        annots <- Try(getOrStoreAnnotations(runAnnots))
+        annotIds = annots.map(_.annotId.toString)
+
         samples <- Try(extractSamples(json, fileId, refId, annotIds))
         _ <- Try(storeSamples(samples))
         run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))

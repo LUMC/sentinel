@@ -16,20 +16,15 @@ trait AnnotationsAdapter extends IndexedCollectionAdapter { this: MongodbConnect
     super.createIndices()
   }
 
-  def storeAnnotations(annots: Seq[Annotation]): Seq[DbId] = {
-    val docs = annots
-      .map { case annot =>
-        val stored = coll.findOne(MongoDBObject("annotMd5" -> annot.annotMd5))
-        stored match {
-          case Some(dbo) => dbo
-          case None =>
-            val doc = grater[Annotation].asDBObject(annot)
-            coll.insert(doc)
-            doc
+  def getOrStoreAnnotations(annots: Seq[Annotation]): Seq[Annotation] =
+    annots
+      .map { case annot => coll.findOne(MongoDBObject("annotMd5" -> annot.annotMd5)) match {
+        case Some(dbo) => annot.copy(annotId = dbo._id.get)
+        case None =>
+          coll.insert(grater[Annotation].asDBObject(annot))
+          annot
         }
       }
-    docs.map(_._id).flatten.map(_.toString)
-  }
 
   def getAnnotations(maxNumReturn: Option[Int] = None): Seq[Annotation] = {
     val qResult = coll
