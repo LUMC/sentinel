@@ -108,7 +108,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
       queryParam[String]("userId").description("Run summary uploader ID."),
       queryParam[List[String]]("pipelines")
         .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `unknown`.")
-        .allowableValues(AllowedPipelineParams.toList)
+        .allowableValues(AllowedPipelineParams.keySet.toList)
         .optional,
       formParam[File]("run").description("Run summary file."))
     responseMessages (
@@ -172,7 +172,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
         .description(
           """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `unknown`. If not
             |specified, all run summaries are returned.""".stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedPipelineParams.toList)
+        .allowableValues(AllowedPipelineParams.keySet.toList)
         .optional)
       responseMessages (
         StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),

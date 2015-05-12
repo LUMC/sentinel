@@ -5,7 +5,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.{ AccLevel, AllowedLibTypeParams, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams }
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
@@ -58,7 +58,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
           """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
             |accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedAccLevelParams.toList)
+        .allowableValues(AllowedAccLevelParams.keySet.toList)
         .optional
     )
     responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message)
@@ -98,7 +98,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
           """The types of sequence libraries to return. Possible values are `single` for single end
             |libraries, `paired` for paired end libraries. If not specified, both library types are returned.
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedLibTypeParams.toList)
+        .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional
     )
     responseMessages (
