@@ -1,19 +1,8 @@
 package nl.lumc.sasc.sentinel
 
-import java.util.Date
-
 package object models {
 
   case class ApiError(message: String, data: Any = None)
-
-  case class User(
-    id: String,
-    email: String,
-    isConfirmed: Boolean,
-    isAdmin: Boolean,
-    nSummaries: Int,
-    creationTime: Date,
-    updateTime: Date)
 
   case class UserPatch(email: String, isConfirmed: Boolean)
 
@@ -46,23 +35,4 @@ package object models {
 
     val Unexpected = ApiError("Unexpected error. Please contact the site administrators.")
   }
-
-  case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None)
-
-  case class PipelineRunStats(nRuns: Int, nSamples: Int, nLibs: Int)
-
-  case class RunStats(gentrap: PipelineRunStats, unknown: PipelineRunStats)
-
-  case class ReadStats(
-    nBases: Long,
-    nBasesA: Long,
-    nBasesT: Long,
-    nBasesG: Long,
-    nBasesC: Long,
-    nBasesN: Long,
-    nBasesByQual: Seq[Long],
-    medianQualByPosition: Seq[Double],
-    nReads: Long)
-
-  case class FileDocument(path: String, md5: String) extends BaseFileDocument
 }
