@@ -3,7 +3,7 @@ package nl.lumc.sasc.sentinel.api
 import nl.lumc.sasc.sentinel.processors.AnnotationsProcessor
 import org.json4s._
 import org.json4s.mongo.ObjectIdSerializer
-import org.scalatra.ScalatraServlet
+import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
@@ -17,7 +17,7 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   protected val applicationDescription: String = "Retrieval of annotation file synopses"
   override protected val applicationName = Some("annotations")
 
-  protected val annotationsProcessor = new AnnotationsProcessor(mongo)
+  protected val annots = new AnnotationsProcessor(mongo)
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -39,8 +39,10 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
 
   get("/:annotId", operation(annotationsRefIdGetOperation)) {
     val annotId = params.getAs[String]("annotId").getOrElse(halt(400, ApiError("Annotation ID not specified.")))
-    // TODO: return 404 if annotation ID is not found
-    // TODO: return 200 and annotation item
+    annots.getAnnotation(annotId) match {
+      case None         => NotFound(ApiError("Annotation ID can not be found."))
+      case Some(annot)  => Ok(annot)
+    }
   }
 
   val annotationsGetOperation = (apiOperation[List[Annotation]]("annotationsGet")
@@ -48,6 +50,6 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   )
 
   get("/", operation(annotationsGetOperation)) {
-    annotationsProcessor.getAnnotations()
+    annots.getAnnotations()
   }
 }

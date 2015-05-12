@@ -1,8 +1,11 @@
 package nl.lumc.sasc.sentinel.db
 
+import scala.util.{ Failure, Try, Success }
+
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+
 import nl.lumc.sasc.sentinel.models.Annotation
 
 trait AnnotationsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
@@ -34,6 +37,15 @@ trait AnnotationsAdapter extends IndexedCollectionAdapter { this: MongodbConnect
     maxNumReturn match {
       case None       => qResult.toSeq
       case Some(num)  => qResult.take(num).toSeq
+    }
+  }
+
+  def getAnnotation(annotId: DbId): Option[Annotation] = {
+    Try(new ObjectId(annotId)) match {
+      case Failure(_)   => None
+      case Success(qid) => coll
+        .findOneByID(qid)
+        .collect { case dbo => grater[Annotation].asObject(dbo) }
     }
   }
 }
