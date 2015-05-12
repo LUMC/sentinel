@@ -23,7 +23,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     val queryBuilder = MongoDBObject.newBuilder
     if (runs.size > 0) queryBuilder += "runId" -> runs
 
-    val a = coll
+    coll
       .find(queryBuilder.result(), MongoDBObject("alnStats" -> 1))
       .map { case dbo =>
         dbo.get("alnStats") match {
@@ -31,7 +31,6 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
         }
       }
       .toSeq
-    Stream.continually(a.head).take(10000)
   }
 
 }
