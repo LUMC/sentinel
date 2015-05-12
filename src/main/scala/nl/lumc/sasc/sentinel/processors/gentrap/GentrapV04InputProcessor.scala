@@ -132,7 +132,11 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       .map(_.extract[String])
       .sorted
     val combinedMd5 = calcSeqMd5(contigMd5s)
-    Reference(new ObjectId, contigMd5s, combinedMd5)
+    Reference(
+      refId = new ObjectId,
+      combinedMd5 = combinedMd5,
+      contigMd5s = contigMd5s,
+      creationTime = Option(Date.from(Clock.systemUTC().instant)))
   }
 
   def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
