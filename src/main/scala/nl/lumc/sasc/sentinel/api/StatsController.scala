@@ -5,7 +5,8 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.{ AccLevel, AllowedLibTypeParams, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.utils.splitParam
@@ -22,6 +23,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
+  val gentrap = new GentrapOutputProcessor(mongo)
 
   before() {
     contentType = formats("json")
@@ -63,12 +65,17 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
   )
 
   get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
-    val runIds = splitParam(params.getAs[String]("runIds"))
+    val runs = splitParam(params.getAs[String]("runIds"))
     val references = splitParam(params.getAs[String]("references"))
     val annotations = splitParam(params.getAs[String]("annotations"))
     val accLevel = params.getAs[String]("accLevel").getOrElse("sample")
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
-    // TODO: return 200 and alignment stats
+
+    AllowedAccLevelParams.get(accLevel) match {
+      case None           => BadRequest(CommonErrors.InvalidAccLevel)
+      case Some(accEnum)  =>
+        gentrap.getAlignmentStats(accEnum, runs, references, annotations)
+    }
   }
 
   val statsSequencesGentrapGetOperation = (apiOperation[List[SeqStats]]("statsSequencesGentrapGet")
