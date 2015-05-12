@@ -6,6 +6,7 @@ import java.util.Date
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
+import org.bson.types.ObjectId
 import org.json4s.{ Reader => JsonReader, _ }
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._

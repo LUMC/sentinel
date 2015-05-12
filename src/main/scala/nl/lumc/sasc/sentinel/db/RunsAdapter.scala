@@ -26,9 +26,8 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
     }.get.toString
   }
 
-  def storeRun(run: RunRecord): DbId = {
+  def storeRun(run: RunRecord): WriteResult = {
     val dbo = grater[RunRecord].asDBObject(run)
     coll.insert(dbo)
-    dbo._id.get.toString
   }
 }
