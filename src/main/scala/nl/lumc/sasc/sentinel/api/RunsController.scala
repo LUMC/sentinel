@@ -134,7 +134,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     // TODO: return 400 if any other error occurs (duplicate run?)
 
     if (!AllowedPipelineParams.contains(pipeline)) {
-      BadRequest(CommonErrors.InvalidPipeline.message)
+      BadRequest(CommonErrors.InvalidPipeline)
     } else {
       val processor = pipeline match {
         case "gentrap"  => gentrap
