@@ -43,11 +43,11 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito { d
 
   addServlet(new RunsController(mockConn), "/runs/*")
 
-  def postRunsUnspecifiedUserStatus = post("/runs", Seq(("pipeline", "unknown"))) {
+  def postRunsUnspecifiedUserStatus = post("/runs", Seq(("pipeline", "unsupported"))) {
     status mustEqual 400
   }
 
-  def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unknown"))) {
+  def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unsupported"))) {
     bodyMap mustEqual Some(Map("message" -> "User ID not specified."))
   }
 
