@@ -16,6 +16,11 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunRecord]
 
+  override def createIndices() = {
+    coll.createIndex(MongoDBObject("md5" -> 1, "metadata.userId" -> 1), MongoDBObject("unique" -> true))
+    super.createIndices()
+  }
+
   private lazy val coll = mongo.db(runsCollectionName)
 
   def storeFile(ins: InputStream, fileName: String, unzipped: Boolean): DbId = {
