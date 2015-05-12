@@ -180,7 +180,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       //       It does not break our application though, so it's an acceptable trade off.
       // TODO: Explore other types that are more expressive than Try to store state.
       for {
-        fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), fi.getName, unzipped))
+        fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), userId, pipeline, fi.getName, unzipped))
         runRef <- Try(extractReference(json))
         ref <- Try(getOrStoreReference(runRef))
         refId = ref.refId.toString

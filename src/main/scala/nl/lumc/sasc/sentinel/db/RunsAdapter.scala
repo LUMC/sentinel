@@ -23,11 +23,15 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   private lazy val coll = mongo.db(runsCollectionName)
 
-  def storeFile(ins: InputStream, fileName: String, unzipped: Boolean): DbId = {
+  def storeFile(ins: InputStream, userId: String, pipeline: String, fileName: String, unzipped: Boolean): DbId = {
     mongo.gridfs(ins) { f =>
       f.filename = fileName
       f.contentType = "application/json"
-      f.metaData = MongoDBObject("inputGzipped" -> unzipped)
+      f.metaData = MongoDBObject(
+        "userId"  -> userId,
+        "pipeline" -> pipeline,
+        "inputGzipped" -> unzipped
+      )
     }.get.toString
   }
 
