@@ -5,8 +5,6 @@
  */
 package nl.lumc.sasc
 
-import nl.lumc.sasc.sentinel.db._
-
 /** General package-level information */
 package object sentinel {
 
@@ -27,7 +25,9 @@ package object sentinel {
   }
 
   /** Allowed pipeline parameters in HTTP requests */
-  val AllowedPipelineParams = Pipeline.values.map(_.toString.toLowerCase)
+  val AllowedPipelineParams = Pipeline.values
+    .map(enum => enum.toString.toLowerCase -> enum)
+    .toMap
 
   /** Supported library types */
   object LibType extends Enumeration {
@@ -37,7 +37,9 @@ package object sentinel {
   }
 
   /** Allowed library type parameters in HTTP requests */
-  val AllowedLibTypeParams = LibType.values.map(_.toString.toLowerCase)
+  val AllowedLibTypeParams = LibType.values
+    .map(enum => enum.toString.toLowerCase -> enum)
+    .toMap
 
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
@@ -47,5 +49,7 @@ package object sentinel {
   }
 
   /** Allowed accumulation level parameters in HTTP requests */
-  val AllowedAccLevelParams = AccLevel.values.map(_.toString.toLowerCase)
+  val AllowedAccLevelParams = AccLevel.values
+    .map(enum => enum.toString.toLowerCase -> enum)
+    .toMap
 }
