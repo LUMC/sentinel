@@ -13,7 +13,7 @@ import nl.lumc.sasc.sentinel.AllowedPipelineParams
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ splitParam, RunValidationException }
+import nl.lumc.sasc.sentinel.utils._
 
 class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonJsonSupport
@@ -117,6 +117,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
       StringResponseMessage(400, CommonErrors.UnspecifiedPipeline.message),
       StringResponseMessage(400, CommonErrors.InvalidPipeline.message),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
+      StringResponseMessage(400, "Run summary already uploaded by the user."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message),
@@ -131,7 +132,7 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
     // TODO: return 404 if user not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if not authorized
-    // TODO: return 400 if any other error occurs (duplicate run?)
+    // TODO: return 400 if any other error occurs (???)
 
     if (!AllowedPipelineParams.contains(pipeline)) {
       BadRequest(CommonErrors.InvalidPipeline)
@@ -147,6 +148,8 @@ class RunsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger) 
           f match {
             case vexc: RunValidationException =>
               BadRequest(ApiError(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+            case dexc: DuplicateRunException =>
+              BadRequest(ApiError("Run summary already uploaded by the user."))
             case otherwise =>
               InternalServerError(CommonErrors.Unexpected)
           }
