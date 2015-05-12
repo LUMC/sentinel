@@ -59,10 +59,7 @@ class StatsController(mongo: MongodbAccessObject)(implicit val swagger: Swagger)
         .allowableValues(AllowedAccLevelParams.toList)
         .optional
     )
-    responseMessages (
-      StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
-      StringResponseMessage(404, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs not found.")
-    )
+    responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message)
   )
 
   get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
