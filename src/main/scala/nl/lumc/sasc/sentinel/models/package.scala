@@ -11,16 +11,16 @@ package object models {
   object CommonErrors {
 
     val InvalidPipeline = ApiError("Pipeline parameter is invalid.",
-      "Valid values are " + AllowedPipelineParams.mkString(", ") + ".")
+      "Valid values are " + AllowedPipelineParams.keySet.mkString(", ") + ".")
 
     val InvalidLibType = ApiError("Library type parameter is invalid.",
-      "Valid values are " + AllowedLibTypeParams.mkString(", ") + ".")
+      "Valid values are " + AllowedLibTypeParams.keySet.mkString(", ") + ".")
 
     val InvalidAccLevel = ApiError("Accumulation level parameter is invalid.",
-      "Valid values are " + AllowedAccLevelParams.mkString(", ") + ".")
+      "Valid values are " + AllowedAccLevelParams.keySet.mkString(", ") + ".")
 
     val InvalidSeqQcPhase = ApiError("Sequencing QC phase parameter is invalid.",
-      "Valid values are " + AllowedSeqQcPhaseParams.mkString(", ") + ".")
+      "Valid values are " + AllowedSeqQcPhaseParams.keySet.mkString(", ") + ".")
 
     val UnspecifiedUserId = ApiError("User ID not specified.")
 
