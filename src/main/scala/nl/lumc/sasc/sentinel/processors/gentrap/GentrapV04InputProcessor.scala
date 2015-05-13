@@ -105,8 +105,6 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   val samplesCollectionName = GentrapSamplesCollectionName
   
-  val runsCollectionName = GentrapRunsCollectionName
-
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
   val validator = getSchemaValidator("v0.4/gentrap.json")
