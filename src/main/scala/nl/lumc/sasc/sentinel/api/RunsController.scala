@@ -102,7 +102,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     contentType = "application/octet-stream"
   }
 
-  val runsPostOperation = (apiOperation[RunRecord]("runsPost")
+  val runsPostOperation = (apiOperation[RunDocument]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
@@ -157,7 +157,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     }
   }
 
-  val runsGetOperation = (apiOperation[List[RunRecord]]("runsGet")
+  val runsGetOperation = (apiOperation[List[RunDocument]]("runsGet")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.

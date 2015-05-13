@@ -4,7 +4,7 @@ import java.util.Date
 
 import com.novus.salat.annotations.Key
 
-case class RunRecord(
+case class RunDocument(
   @Key("_id") runId: String,
   refId: String,
   annotIds: Seq[String],
@@ -12,4 +12,4 @@ case class RunRecord(
   uploader: String,
   pipeline: String,
   nSamples: Int,
-  nLibsPerSample: Seq[Int])
+  nLibs: Int)

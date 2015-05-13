@@ -171,7 +171,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   def createRun(fileId: DbId, refId: DbId, annotIds: Seq[DbId], samples: Seq[SampleDocument],
     userId: String, pipeline: String) =
-      RunRecord(
+      RunDocument(
         runId = fileId, // NOTE: runId kept intentionally the same as fileId
         refId = refId,
         annotIds = annotIds,
@@ -179,9 +179,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         uploader = userId,
         pipeline = pipeline,
         nSamples = samples.size,
-        nLibsPerSample = samples.map(_.libs.size))
+        nLibs = samples.map(_.libs.size).sum)
 
-  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunRecord] = {
+  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] = {
     // NOTE: This stores the entire file in memory
     val (fileContents, unzipped) = getByteArray(fi.getInputStream)
     val json = parse(new ByteArrayInputStream(fileContents))

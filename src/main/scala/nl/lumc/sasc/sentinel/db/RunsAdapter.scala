@@ -8,13 +8,13 @@ import com.novus.salat._
 import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.models.RunRecord
+import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument }
 
 trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   def runsCollectionName: String
 
-  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunRecord]
+  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument]
 
   override def createIndices() = {
     coll.createIndex(MongoDBObject("md5" -> 1, "metadata.userId" -> 1), MongoDBObject("unique" -> true))
@@ -35,8 +35,8 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
     }.get.toString
   }
 
-  def storeRun(run: RunRecord): WriteResult = {
-    val dbo = grater[RunRecord].asDBObject(run)
+  def storeRun(run: RunDocument): WriteResult = {
+    val dbo = grater[RunDocument].asDBObject(run)
     coll.insert(dbo)
   }
 }
