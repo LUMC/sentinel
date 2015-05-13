@@ -5,7 +5,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, AllowedSeqQcPhaseParams }
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
@@ -96,13 +96,21 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       queryParam[String]("libType")
         .description(
           """The types of sequence libraries to return. Possible values are `single` for single end
-            | libraries, `paired` for paired end libraries. If not specified, both library types are returned.
+            | libraries and `paired` for paired end libraries (default: `paired`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .optional,
+      queryParam[String]("qcPhase")
+        .description(
+          """Selects for the sequencing QC phase to return. Possible values are `raw` for raw data before any QC
+            | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
         .optional
     )
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
       StringResponseMessage(404, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs not found.")
     )
   )
@@ -111,9 +119,11 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = splitParam(params.getAs[String]("runIds"))
     val refIds = splitParam(params.getAs[String]("refIds"))
     val annotIds = splitParam(params.getAs[String]("annotIds"))
-    val libType = params.getAs[String]("libType")
+    val libType = params.getAs[String]("libType").getOrElse("paired")
+    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse("raw")
     // TODO: return 400 if library type is invalid
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
     // TODO: return 200 and sequence stats
+    gentrap.getSeqStats(AllowedLibTypeParams(libType), AllowedSeqQcPhaseParams(seqQcPhase))
   }
 }
