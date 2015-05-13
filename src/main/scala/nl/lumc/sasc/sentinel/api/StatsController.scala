@@ -9,6 +9,7 @@ import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, Allo
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.splitParam
 
 class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
@@ -24,18 +25,19 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected implicit val jsonFormats: Formats = DefaultFormats
 
   val gentrap = new GentrapOutputProcessor(mongo)
+  val runs = new RunsProcessor(mongo)
 
   before() {
     contentType = formats("json")
     response.headers += ("Access-Control-Allow-Origin" -> "*")
   }
 
-  val statsRunsGetOperation = (apiOperation[List[RunStats]]("statsRunsGet")
+  val statsRunsGetOperation = (apiOperation[Seq[PipelineRunStats]]("statsRunsGet")
     summary "Retrieves general statistics of uploaded run summaries."
   )
 
   get("/runs", operation(statsRunsGetOperation)) {
-    // TODO: return 200 and run stats
+    runs.getGlobalRunStats()
   }
 
   val statsAlignmentsGentrapGetOperation = (apiOperation[List[GentrapAlignmentStats]]("statsAlignmentsGentrapGet")

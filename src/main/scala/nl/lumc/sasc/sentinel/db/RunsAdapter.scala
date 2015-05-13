@@ -39,4 +39,20 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
     val dbo = grater[RunDocument].asDBObject(run)
     coll.insert(dbo)
   }
+
+  final def getGlobalRunStats(): Seq[PipelineRunStats] = {
+    coll
+      .aggregate(List(
+        MongoDBObject("$project" ->
+          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nLibs" -> 1)),
+        MongoDBObject("$group" ->
+          MongoDBObject(
+            "_id" -> "$pipeline",
+            "nRuns" -> MongoDBObject("$sum" -> 1),
+            "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
+            "nLibs" -> MongoDBObject("$sum" -> "$nLibs")))),
+        AggregationOptions(AggregationOptions.CURSOR))
+      .map { case pstat => grater[PipelineRunStats].asObject(pstat) }
+      .toSeq
+  }
 }
