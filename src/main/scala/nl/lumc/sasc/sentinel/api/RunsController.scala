@@ -57,8 +57,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         | run summary.
       """.stripMargin.replaceAll("\n", "")
     parameters (
-      queryParam[String]("runId").description("Run summary ID."),
-      pathParam[String]("userId").description("Run summary uploader ID."))
+      pathParam[String]("runId").description("Run summary ID."),
+      queryParam[String]("userId").description("Run summary uploader ID."))
     responseMessages (
       StringResponseMessage(204, "Run summary deleted successfully."),
       StringResponseMessage(400, "User ID or run summary ID not specified."),
@@ -83,8 +83,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         | resource.
       """.stripMargin.replaceAll("\n", "")
     parameters (
-      queryParam[String]("runId").description("Run summary ID."),
-      pathParam[String]("userId").description("Run summary uploader ID."))
+      pathParam[String]("runId").description("Run summary ID."),
+      queryParam[String]("userId").description("Run summary uploader ID."))
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
