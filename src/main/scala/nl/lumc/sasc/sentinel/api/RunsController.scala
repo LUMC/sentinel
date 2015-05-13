@@ -78,31 +78,54 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")
-    summary "Retrieves full run summaries."
+    summary "Retrieves single run summaries."
     notes
-      """This endpoint retrieves single run summaries. Only administrators and the run summary uploader can access this
-        | resource.
+      """This endpoint retrieves the a single record of an uploaded summary. Optionally, you can also download the
+        | actual summary file by specifying the `download` parameter. Only administrators and the run summary uploader
+        | can access this resource.
       """.stripMargin.replaceAll("\n", "")
     parameters (
       pathParam[String]("runId").description("Run summary ID."),
-      queryParam[String]("userId").description("Run summary uploader ID."))
+      queryParam[String]("userId").description("Run summary uploader ID."),
+      queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional)
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, "User ID or run summary ID not found."),
       StringResponseMessage(410, "Run summary not available anymore."))
-    produces "application/octet-stream"
+    produces (
+      "application/json",
+      "application/octet-stream")
   )
 
   get("/:runId", operation(runsRunIdGetOperation)) {
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
-    // TODO: return 404 if user ID or run ID not found
+    val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
+    // Since there is no standard to define boolean in query parameter, we try to capture the common ones
+    val doDownload = params.get("download") match {
+      case None     => false
+      case Some(p)  => p.toLowerCase match {
+        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
+        case otherwise                                          => true
+      }
+    }
+    // TODO: return 404 if user ID not found
     // TODO: return 401 if unauthenticated
     // TODO: return 403 if unauthorized
     // TODO: return 410 if run was available but has been deleted
-    // TODO: return 200 and run summary
-    contentType = "application/octet-stream"
+    // Any processor that extends RunsAdapter can be used
+    unsupported.getRun(runId, doDownload) match {
+      case None         => NotFound(CommonErrors.MissingRunId)
+      case Some(result) => result match {
+        case Left(runDoc)   => Ok(runDoc)
+        case Right(runFile) =>
+          contentType = "application/octet-stream"
+          response.setHeader("Content-Disposition",
+            "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
+          Ok(runFile.inputStream)
+      }
+    }
   }
 
   val runsPostOperation = (apiOperation[RunDocument]("runsPost")

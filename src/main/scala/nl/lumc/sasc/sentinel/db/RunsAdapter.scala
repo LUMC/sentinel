@@ -1,7 +1,9 @@
 package nl.lumc.sasc.sentinel.db
 
 import java.io.InputStream
-import scala.util.Try
+import com.mongodb.casbah.gridfs.GridFSDBFile
+
+import scala.util.{ Failure, Success, Try }
 
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
@@ -42,6 +44,20 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
   def storeRun(run: RunDocument): WriteResult = {
     val dbo = grater[RunDocument].asDBObject(run)
     coll.insert(dbo)
+  }
+
+  def getRun(runId: String, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
+    Try(new ObjectId(runId)) match {
+      case Failure(_)   => None
+      case Success(qid) =>
+
+        if (doDownload) mongo.gridfs
+          .findOne(qid)
+          .collect { case gfs => Right(gfs) }
+        else coll
+          .findOneByID(qid)
+          .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
+    }
   }
 
   final def getGlobalRunStats(): Seq[PipelineRunStats] = {
