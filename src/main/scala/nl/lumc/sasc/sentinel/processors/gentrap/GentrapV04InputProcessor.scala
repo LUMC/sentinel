@@ -4,24 +4,25 @@ import java.io.ByteArrayInputStream
 import java.time.Clock
 import java.util.Date
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
 import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.servlet.FileItem
-import scalaz._, Scalaz._
+import scalaz.{ Failure => _, _ }, Scalaz._
 
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray, RunValidationException }
+import nl.lumc.sasc.sentinel.processors.SentinelProcessor
+import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, RunValidationException }
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-  extends SamplesAdapter
+  extends SentinelProcessor
+  with SamplesAdapter
   with ValidationAdapter
   with RunsAdapter
   with ReferencesAdapter
@@ -99,10 +100,10 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   type SampleDocument = GentrapSampleDocument
 
   val samplesCollectionName = GentrapSamplesCollectionName
-  
-  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
-  val validator = getSchemaValidator("biopet/v0.4/gentrap.json")
+  val schemaResourceUrl = "/schemas/biopet/v0.4/gentrap.json"
+
+  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
   def extractSamples(runJson: JValue, runId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId]) = {
     (runJson \ "samples")
@@ -174,21 +175,13 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         nSamples = samples.size,
         nLibs = samples.map(_.libs.size).sum)
 
-  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] = {
-    // NOTE: This stores the entire file in memory
-    val (fileContents, unzipped) = getByteArray(fi.getInputStream)
-    val json = parse(new ByteArrayInputStream(fileContents))
-    val validationMsgs = validate(json)
-
-    if (validationMsgs.nonEmpty)
-    // TODO: Implement nicer way to store all messages in a string
-      Try(throw new RunValidationException("Gentrap run summary is invalid.", validationMsgs))
-    else {
+  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] =
+    validateAndExtract(fi).flatMap { case json =>
       // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
       //       It does not break our application though, so it's an acceptable trade off.
       // TODO: Explore other types that are more expressive than Try to store state.
       for {
-        fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), userId, pipeline, fi.getName, unzipped))
+        fileId <- Try(storeFile(fi.byteStream, userId, pipeline, fi.getName, fi.inputUnzipped))
         runRef <- Try(extractReference(json))
         ref <- Try(getOrStoreReference(runRef))
         refId = ref.refId
@@ -203,5 +196,4 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         _ <- Try(storeRun(run))
       } yield run
     }
-  }
 }
