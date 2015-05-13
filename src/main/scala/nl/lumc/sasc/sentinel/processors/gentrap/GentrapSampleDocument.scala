@@ -11,6 +11,6 @@ case class GentrapSampleDocument(
   referenceId: ObjectId,
   annotationIds: Seq[ObjectId],
   libs: Seq[GentrapLibDocument],
+  alnStats: GentrapAlignmentStats,
   @Key("_id") id: ObjectId = new ObjectId,
-  name: Option[String] = None,
-  alnStats: Option[GentrapAlignmentStats] = None) extends BaseSampleDocument
+  name: Option[String] = None) extends BaseSampleDocument

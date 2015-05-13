@@ -8,7 +8,7 @@ import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
 import org.bson.types.ObjectId
-import org.json4s.{ Reader => JsonReader, _ }
+import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.mongo.ObjectIdSerializer
@@ -30,63 +30,60 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
-  implicit object GentrapAlignmentStatsReader extends JsonReader[GentrapAlignmentStats] {
+  private def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
 
-    def read(effJson: JValue): GentrapAlignmentStats = {
+    val isPaired = (effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
+    val alnMetrics = effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \
+      (if (isPaired) "PAIR" else "UNPAIRED")
+    val bpFlagstat = effJson \ "bammetrics" \ "stats" \ "biopet_flagstat"
+    val insMetrics = effJson \ "bammetrics" \ "stats" \ "insert_size_metrics"
+    val rnaMetrics = effJson \ "gentrap" \ "stats" \ "rna_metrics"
 
-      val isPaired = (effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
-      val alnMetrics = effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \
-        (if (isPaired) "PAIR" else "UNPAIRED")
-      val bpFlagstat = effJson \ "bammetrics" \ "stats" \ "biopet_flagstat"
-      val insMetrics = effJson \ "bammetrics" \ "stats" \ "insert_size_metrics"
-      val rnaMetrics = effJson \ "gentrap" \ "stats" \ "rna_metrics"
-
-      GentrapAlignmentStats(
-        nReads = (alnMetrics \ "pf_reads").extract[Long],
-        nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
-        rateReadsMismatch = (alnMetrics \ "pf_mismatch_rate").extract[Double],
-        rateIndel = (alnMetrics \ "pf_indel_rate").extract[Double],
-        pctChimeras = isPaired.option { (alnMetrics \ "pct_chimeras").extract[Double] },
-        nSingletons = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
-        maxInsertSize = (insMetrics \ "max_insert_size").extractOpt[Long],
-        medianInsertSize = (insMetrics \ "median_insert_size").extractOpt[Long],
-        stdevInsertSize = (insMetrics \ "standard_deviation").extractOpt[Double],
-        nBasesAligned = (alnMetrics \ "pf_aligned_bases").extract[Long],
-        nBasesUtr = (rnaMetrics \ "utr_bases").extract[Long],
-        nBasesCoding = (rnaMetrics \ "coding_bases").extract[Long],
-        nBasesIntron = (rnaMetrics \ "intronic_bases").extract[Long],
-        nBasesIntergenic = (rnaMetrics \ "intergenic_bases").extract[Long],
-        nBasesRibosomal = (rnaMetrics \ "ribosomal_bases").extractOpt[Long],
-        median5PrimeBias = (rnaMetrics \ "median_5prime_bias").extract[Double],
-        median3PrimeBias = (rnaMetrics \ "median_3prime_bias").extract[Double],
-        normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
+    GentrapAlignmentStats(
+      nReads = (alnMetrics \ "pf_reads").extract[Long],
+      nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
+      rateReadsMismatch = (alnMetrics \ "pf_mismatch_rate").extract[Double],
+      rateIndel = (alnMetrics \ "pf_indel_rate").extract[Double],
+      pctChimeras = isPaired.option { (alnMetrics \ "pct_chimeras").extract[Double] },
+      nSingletons = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
+      maxInsertSize = (insMetrics \ "max_insert_size").extractOpt[Long],
+      medianInsertSize = (insMetrics \ "median_insert_size").extractOpt[Long],
+      stdevInsertSize = (insMetrics \ "standard_deviation").extractOpt[Double],
+      nBasesAligned = (alnMetrics \ "pf_aligned_bases").extract[Long],
+      nBasesUtr = (rnaMetrics \ "utr_bases").extract[Long],
+      nBasesCoding = (rnaMetrics \ "coding_bases").extract[Long],
+      nBasesIntron = (rnaMetrics \ "intronic_bases").extract[Long],
+      nBasesIntergenic = (rnaMetrics \ "intergenic_bases").extract[Long],
+      nBasesRibosomal = (rnaMetrics \ "ribosomal_bases").extractOpt[Long],
+      median5PrimeBias = (rnaMetrics \ "median_5prime_bias").extract[Double],
+      median3PrimeBias = (rnaMetrics \ "median_3prime_bias").extract[Double],
+      normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
     }
+
+  private def extractReadDocument(libJson: JValue,
+                                  fileKey: String, seqStatKey: String, fastqcKey: String): GentrapReadDocument = {
+
+    val flexStats = libJson \ "flexiprep" \ "stats"
+    val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
+
+    GentrapReadDocument(
+      file = (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument],
+      stats = ReadStats(
+        nBases = (flexStats \ seqStatKey \ "bases" \ "num_total").extract[Long],
+        nBasesA = (nuclCounts \ "A").extract[Long],
+        nBasesT = (nuclCounts \ "T").extract[Long],
+        nBasesG = (nuclCounts \ "G").extract[Long],
+        nBasesC = (nuclCounts \ "C").extract[Long],
+        nBasesN = (nuclCounts \ "N").extract[Long],
+        nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_by_qual").extract[Seq[Long]],
+        medianQualByPosition = (flexStats \ fastqcKey \ "median_qual_by_position").extract[Seq[Double]],
+        nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
+    )
   }
 
-  implicit object GentrapLibDocumentReader extends JsonReader[GentrapLibDocument] {
-
-    protected def extractReadDocument(libJson: JValue,
-                                      fileKey: String, seqStatKey: String, fastqcKey: String): GentrapReadDocument = {
-
-      val flexStats = libJson \ "flexiprep" \ "stats"
-      val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
-
-      GentrapReadDocument(
-        file = (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument],
-        stats = ReadStats(
-          nBases = (flexStats \ seqStatKey \ "bases" \ "num_total").extract[Long],
-          nBasesA = (nuclCounts \ "A").extract[Long],
-          nBasesT = (nuclCounts \ "T").extract[Long],
-          nBasesG = (nuclCounts \ "G").extract[Long],
-          nBasesC = (nuclCounts \ "C").extract[Long],
-          nBasesN = (nuclCounts \ "N").extract[Long],
-          nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_by_qual").extract[Seq[Long]],
-          medianQualByPosition = (flexStats \ fastqcKey \ "median_qual_by_position").extract[Seq[Double]],
-          nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
-      )
-    }
-    def read(libJson: JValue): GentrapLibDocument = GentrapLibDocument(
-      name = Option((libJson \ "name").extract[String]),
+  private def extractLibDocument(name: String, libJson: JValue): GentrapLibDocument =
+    GentrapLibDocument(
+      name = (libJson \ "name").extractOpt[String],
       rawSeq = GentrapSeqDocument(
         read1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
         read2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption),
@@ -97,9 +94,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
               read1 = ps,
               read2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
         },
-      alnStats = libJson.as[GentrapAlignmentStats]
-    )
-  }
+      alnStats = extractAlnStats(libJson))
 
   type SampleDocument = GentrapSampleDocument
 
@@ -121,12 +116,12 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
             referenceId = refId,
             annotationIds = annotIds,
             libs = libJsons
-              .map { case (libName, libJson) => (("name", JString(libName)) ++ libJson).as[GentrapLibDocument] }
+              .map { case (libName, libJson) => extractLibDocument(libName, libJson) }
               .toSeq,
             // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
             alnStats =
-              if (libJsons.size > 1) sampleJson.getAs[GentrapAlignmentStats]
-              else libJsons.values.head.getAs[GentrapAlignmentStats])
+              if (libJsons.size > 1) extractAlnStats(sampleJson)
+              else extractAlnStats(libJsons.values.head))
       }.toSeq
   }
 
