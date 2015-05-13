@@ -1,10 +1,9 @@
 package nl.lumc.sasc.sentinel.db
 
 import java.io.InputStream
-import com.mongodb.casbah.gridfs.GridFSDBFile
-
 import scala.util.{ Failure, Success, Try }
 
+import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
@@ -57,6 +56,22 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
         else coll
           .findOneByID(qid)
           .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
+    }
+  }
+
+  def getRuns(userId: String, pipelines: Seq[String], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
+    val query =
+      if (pipelines.isEmpty)
+        $and("uploader" $eq userId)
+      else
+        $and("uploader" $eq userId, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
+    val qResult = coll
+      .find(query)
+      .sort(MongoDBObject("creationTime" -> -1))
+      .map { case dbo => grater[RunDocument].asObject(dbo) }
+    maxNumReturn match {
+      case None       => qResult.toSeq
+      case Some(num)  => qResult.take(num).toSeq
     }
   }
 

@@ -14,6 +14,7 @@ import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
@@ -30,6 +31,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
 
   protected implicit val jsonFormats: Formats = DefaultFormats + new ObjectIdSerializer
 
+  val runs = new RunsProcessor(mongo)
   val gentrap = new GentrapV04InputProcessor(mongo)
   val unsupported = new UnsupportedInputProcessor(mongo)
 
@@ -115,7 +117,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 403 if unauthorized
     // TODO: return 410 if run was available but has been deleted
     // Any processor that extends RunsAdapter can be used
-    unsupported.getRun(runId, doDownload) match {
+    runs.getRun(runId, doDownload) match {
       case None         => NotFound(CommonErrors.MissingRunId)
       case Some(result) => result match {
         case Left(runDoc)   => Ok(runDoc)
@@ -201,9 +203,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         .optional)
       responseMessages (
         StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
+        StringResponseMessage(400, "One or more pipeline is invalid."),
         StringResponseMessage(401, CommonErrors.Unauthenticated.message),
         StringResponseMessage(403, CommonErrors.Unauthorized.message),
-        StringResponseMessage(404, "One or more pipeline is invalid."),
         StringResponseMessage(404, CommonErrors.MissingUserId.message))
   )
 
@@ -213,7 +215,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 404 if user ID not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if unauthorized
-    // TODO: return 200 and user's run summary
+    runs.getRuns(userId, pipelines)
   }
 
 }
