@@ -171,8 +171,8 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     userId: String, pipeline: String) =
       RunDocument(
         runId = fileId, // NOTE: runId kept intentionally the same as fileId
-        refId = refId,
-        annotIds = annotIds,
+        refId = Option(refId),
+        annotIds = Option(annotIds),
         creationTime = Date.from(Clock.systemUTC().instant),
         uploader = userId,
         pipeline = pipeline,
