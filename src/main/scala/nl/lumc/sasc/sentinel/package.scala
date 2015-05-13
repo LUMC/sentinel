@@ -52,4 +52,16 @@ package object sentinel {
   val AllowedAccLevelParams = AccLevel.values
     .map(enum => enum.toString.toLowerCase -> enum)
     .toMap
+
+  /** Supported QC step for sequences */
+  object SeqQcPhase extends Enumeration {
+    type SeqQcPhase = Value
+    val Raw = Value
+    val Processed = Value
+  }
+
+  /** Allowed sequencing QC step parameters in HTTP requests */
+  val AllowedSeqQcPhaseParams = SeqQcPhase.values
+    .map(enum => enum.toString.toLowerCase -> enum)
+    .toMap
 }

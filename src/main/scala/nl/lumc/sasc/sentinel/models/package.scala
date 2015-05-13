@@ -19,6 +19,9 @@ package object models {
     val InvalidAccLevel = ApiError("Accumulation level parameter is invalid.",
       "Valid values are " + AllowedAccLevelParams.mkString(", ") + ".")
 
+    val InvalidSeqQcPhase = ApiError("Sequencing QC phase parameter is invalid.",
+      "Valid values are " + AllowedSeqQcPhaseParams.mkString(", ") + ".")
+
     val UnspecifiedUserId = ApiError("User ID not specified.")
 
     val UnspecifiedRunId = ApiError("Run summary ID not specified.")
