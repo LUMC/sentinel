@@ -9,9 +9,10 @@ import org.json4s._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.AllowedPipelineParams
+import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
+import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
@@ -29,6 +30,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected implicit val jsonFormats: Formats = DefaultFormats
 
   val gentrap = new GentrapV04InputProcessor(mongo)
+  val unsupported = new UnsupportedInputProcessor(mongo)
 
   before() {
     contentType = formats("json")
@@ -133,27 +135,27 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 403 if not authorized
     // TODO: return 400 if any other error occurs (???)
 
-    if (!AllowedPipelineParams.contains(pipeline)) {
-      BadRequest(CommonErrors.InvalidPipeline)
-    } else {
-      val processor = pipeline match {
-        case "gentrap"  => gentrap
-        // TODO: implement generic run processor
-        //case otherwise  => ;
-      }
-      processor.processRun(uploadedRun, userId, pipeline) match {
-        case scala.util.Failure(f)    =>
-          log(f.getMessage, f)
-          f match {
-            case vexc: RunValidationException =>
-              BadRequest(ApiError(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
-            case dexc: DuplicateRunException =>
-              BadRequest(ApiError("Run summary already uploaded by the user."))
-            case otherwise =>
-              InternalServerError(CommonErrors.Unexpected)
-          }
-        case scala.util.Success(run)  => Created(run)
-      }
+    val processor = AllowedPipelineParams.get(pipeline).collect {
+      case Pipeline.Gentrap     => gentrap
+      case Pipeline.Unsupported => unsupported
+    }
+
+    processor match {
+      case None     => BadRequest(CommonErrors.InvalidPipeline)
+      case Some(p)  =>
+        p.processRun(uploadedRun, userId, pipeline) match {
+          case scala.util.Failure(f)    =>
+            log(f.getMessage, f)
+            f match {
+              case vexc: RunValidationException =>
+                BadRequest(ApiError(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+              case dexc: DuplicateRunException =>
+                BadRequest(ApiError("Run summary already uploaded by the user."))
+              case otherwise =>
+                InternalServerError(CommonErrors.Unexpected)
+            }
+          case scala.util.Success(run)  => Created(run)
+        }
     }
   }
 
