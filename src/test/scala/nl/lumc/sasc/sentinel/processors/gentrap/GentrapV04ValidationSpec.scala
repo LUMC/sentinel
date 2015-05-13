@@ -23,12 +23,12 @@ class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mo
   val gentrapV04InputProcessor = new GentrapV04InputProcessor(mongo)
 
   def multiSampleSingleLibV04 = {
-    val summary = loadJson("/v0.4/gentrap_multi_sample_single_lib.json")
+    val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
     gentrapV04InputProcessor.validate(summary).toList must beEmpty
   }
 
   def multiSampleMultiLibV04 = {
-    val summary = loadJson("/v0.4/gentrap_multi_sample_multi_lib.json")
+    val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
     gentrapV04InputProcessor.validate(summary).toList must beEmpty
   }
 

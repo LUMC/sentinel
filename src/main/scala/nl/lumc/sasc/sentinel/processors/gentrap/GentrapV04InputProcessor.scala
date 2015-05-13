@@ -107,7 +107,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
-  val validator = getSchemaValidator("v0.4/gentrap.json")
+  val validator = getSchemaValidator("biopet/v0.4/gentrap.json")
 
   def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]) = {
     (runJson \ "samples")
