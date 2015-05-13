@@ -87,10 +87,16 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     }
     def read(libJson: JValue): GentrapLibDocument = GentrapLibDocument(
       name = Option((libJson \ "name").extract[String]),
-      rawRead1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
-      processedRead1 = Try(extractReadDocument(libJson, "output_R1", "seqstat_R1_qc", "fastqc_R1_qc")).toOption,
-      rawRead2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption,
-      processedRead2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption,
+      rawSeq = GentrapSeqDocument(
+        read1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
+        read2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption),
+      processedSeq =
+        Try(extractReadDocument(libJson, "output_R1", "seqstat_R1_qc", "fastqc_R1_qc")).toOption
+          .collect { case ps =>
+            GentrapSeqDocument(
+              read1 = ps,
+              read2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
+        },
       alnStats = libJson.as[GentrapAlignmentStats]
     )
   }

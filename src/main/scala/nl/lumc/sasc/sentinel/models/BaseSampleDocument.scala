@@ -10,6 +10,4 @@ import org.bson.types.ObjectId
   def runId: ObjectId
 
   def libs: Seq[BaseLibDocument]
-
-  def inputFiles: Seq[BaseFileDocument] = libs.map(_.inputFiles).flatten
 }
