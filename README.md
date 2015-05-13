@@ -4,7 +4,7 @@ Sentinel is a JSON-based database for next-generation sequencing statistics.
 
 ## Requirements
 
-Development requires Scala 2.11.6 and Java 8 installed.
+Development requires Scala 2.11.6 and Java 8 installed. MongoDB 3.0 must also be running at localhost:27017 for some tests to pass.
 
 ## Build & Run
 
@@ -20,7 +20,7 @@ If `browse` doesn't launch your browser, manually open [http://localhost:8080/](
 
 ## Support
 
-Please report issues to [the issue page](https://git.lumc.nl/biopet/sentinel/issues). Feature suggestions are also welcome.
+Please report issues to [the issue page](https://git.lumc.nl/sasc/sentinel/issues). Feature suggestions are also welcome.
 
 ## Contributing
 
