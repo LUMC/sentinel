@@ -40,7 +40,7 @@ trait AnnotationsAdapter extends IndexedCollectionAdapter { this: MongodbConnect
     }
   }
 
-  def getAnnotation(annotId: DbId): Option[Annotation] = {
+  def getAnnotation(annotId: String): Option[Annotation] = {
     Try(new ObjectId(annotId)) match {
       case Failure(_)   => None
       case Success(qid) => coll

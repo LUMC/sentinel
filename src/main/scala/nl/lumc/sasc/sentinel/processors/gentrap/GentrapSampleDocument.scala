@@ -7,9 +7,10 @@ import com.novus.salat.annotations.Key
 import nl.lumc.sasc.sentinel.models._
 
 case class GentrapSampleDocument(
-  @Key("_id") runId: ObjectId,
-  referenceId: String,
-  annotationIds: Seq[String],
+  runId: ObjectId,
+  referenceId: ObjectId,
+  annotationIds: Seq[ObjectId],
   libs: Seq[GentrapLibDocument],
+  @Key("_id") id: ObjectId = new ObjectId,
   name: Option[String] = None,
   alnStats: Option[GentrapAlignmentStats] = None) extends BaseSampleDocument

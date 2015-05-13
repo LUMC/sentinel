@@ -3,13 +3,14 @@ package nl.lumc.sasc.sentinel.models
 import java.util.Date
 
 import com.novus.salat.annotations.Key
+import org.bson.types.ObjectId
 
 case class RunDocument(
-  @Key("_id") runId: String,
+  @Key("_id") runId: ObjectId,
   uploader: String,
   pipeline: String,
   nSamples: Int,
   nLibs: Int,
   creationTime: Date,
-  refId: Option[String] = None,
-  annotIds: Option[Seq[String]] = None)
+  refId: Option[ObjectId] = None,
+  annotIds: Option[Seq[ObjectId]] = None)

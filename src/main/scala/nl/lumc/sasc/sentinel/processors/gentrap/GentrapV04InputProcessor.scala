@@ -109,7 +109,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   val validator = getSchemaValidator("biopet/v0.4/gentrap.json")
 
-  def extractSamples(runJson: JValue, runId: DbId, refId: DbId, annotIds: Seq[DbId]) = {
+  def extractSamples(runJson: JValue, runId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId]) = {
     (runJson \ "samples")
       .extract[Map[String, JValue]]
       .map {
@@ -117,7 +117,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
           GentrapSampleDocument(
             name = Option(sampleName),
-            runId = new ObjectId,
+            runId = runId,
             referenceId = refId,
             annotationIds = annotIds,
             libs = libJsons
@@ -167,7 +167,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           creationTime = Option(Date.from(Clock.systemUTC().instant)))
     }
 
-  def createRun(fileId: DbId, refId: DbId, annotIds: Seq[DbId], samples: Seq[SampleDocument],
+  def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[SampleDocument],
     userId: String, pipeline: String) =
       RunDocument(
         runId = fileId, // NOTE: runId kept intentionally the same as fileId
@@ -196,11 +196,11 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         fileId <- Try(storeFile(new ByteArrayInputStream(fileContents), userId, pipeline, fi.getName, unzipped))
         runRef <- Try(extractReference(json))
         ref <- Try(getOrStoreReference(runRef))
-        refId = ref.refId.toString
+        refId = ref.refId
 
         runAnnots <- Try(extractAnnotations(json))
         annots <- Try(getOrStoreAnnotations(runAnnots))
-        annotIds = annots.map(_.annotId.toString)
+        annotIds = annots.map(_.annotId)
 
         samples <- Try(extractSamples(json, fileId, refId, annotIds))
         _ <- Try(storeSamples(samples))

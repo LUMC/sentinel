@@ -3,6 +3,7 @@ package nl.lumc.sasc.sentinel.api
 import java.io.File
 
 import org.json4s.jackson.Serialization
+import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
@@ -27,7 +28,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = DefaultFormats
+  protected implicit val jsonFormats: Formats = DefaultFormats + new ObjectIdSerializer
 
   val gentrap = new GentrapV04InputProcessor(mongo)
   val unsupported = new UnsupportedInputProcessor(mongo)

@@ -23,7 +23,7 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   private lazy val coll = mongo.db(runsCollectionName)
 
-  def storeFile(ins: InputStream, userId: String, pipeline: String, fileName: String, unzipped: Boolean): DbId = {
+  def storeFile(ins: InputStream, userId: String, pipeline: String, fileName: String, unzipped: Boolean): ObjectId = {
     mongo.gridfs(ins) { f =>
       f.filename = fileName
       f.contentType = "application/json"
@@ -32,7 +32,11 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
         "pipeline" -> pipeline,
         "inputGzipped" -> unzipped
       )
-    }.get.toString
+    }.get match {
+      case oid: ObjectId  => oid
+      case otherwise      =>
+        throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+    }
   }
 
   def storeRun(run: RunDocument): WriteResult = {

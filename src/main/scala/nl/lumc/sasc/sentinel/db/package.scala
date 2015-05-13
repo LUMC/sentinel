@@ -14,8 +14,6 @@ package object db {
 
   trait MongodbConnector {
 
-    type DbId = String
-
     protected val mongo: MongodbAccessObject
   }
 }
