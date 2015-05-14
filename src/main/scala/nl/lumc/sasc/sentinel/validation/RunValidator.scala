@@ -56,6 +56,9 @@ object RunValidator {
 
   import scala.language.implicitConversions
 
+  /** Constructor for new [[RunValidator]] objects. */
+  def apply(url: String) = new RunValidator(url)
+
   /** Implicit conversion from a [[JValue]] object to a [[JsonNode]] object; used internally by the validator. */
   implicit def toJsonNode(jv: JValue): JsonNode = asJsonNode(jv)
 

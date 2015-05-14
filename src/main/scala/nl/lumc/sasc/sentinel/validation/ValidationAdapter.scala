@@ -11,11 +11,9 @@ import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceFile }
 
 trait ValidationAdapter { this: SentinelProcessor =>
 
-  def schemaResourceUrl: String
+  def validator: RunValidator
 
-  lazy val validator: RunValidator = new RunValidator(getResourceFile(schemaResourceUrl))
-
-  def validate(json: JValue): Seq[ProcessingMessage] = validator.validationMessages(json)
+  def createValidator(schemaResourceUrl: String) = new RunValidator(getResourceFile(schemaResourceUrl))
 
   def parseAndValidate(byteContents: Array[Byte]): JValue = {
     val json =
@@ -25,7 +23,7 @@ trait ValidationAdapter { this: SentinelProcessor =>
         case exc: Exception =>
           throw new RunValidationException("Input file is not JSON-formatted.", Seq())
       }
-    val msgs = validate(json)
+    val msgs = validator.validationMessages(json)
     if (msgs.nonEmpty) throw new RunValidationException("JSON run summary is invalid.", msgs)
     else json
   }

@@ -17,7 +17,7 @@ class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
   with ValidationAdapter
   with MongodbConnector {
 
-  val schemaResourceUrl = "/schemas/unsupported.json"
+  val validator = createValidator("/schemas/unsupported.json")
 
   def processRun(fi: FileItem, userId: String, pipeline: String) =
     for {

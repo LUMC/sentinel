@@ -20,16 +20,16 @@ class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mo
 
   val mongo = mock[MongodbAccessObject]
 
-  val gentrapV04InputProcessor = new GentrapV04InputProcessor(mongo)
+  val ipv04 = new GentrapV04InputProcessor(mongo)
 
   def multiSampleSingleLibV04 = {
     val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
-    gentrapV04InputProcessor.validate(summary).toList must beEmpty
+    ipv04.validator.validationMessages(summary) must beEmpty
   }
 
   def multiSampleMultiLibV04 = {
     val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
-    gentrapV04InputProcessor.validate(summary).toList must beEmpty
+    ipv04.validator.validationMessages(summary) must beEmpty
   }
 
   // TODO: add test for single sample single lib

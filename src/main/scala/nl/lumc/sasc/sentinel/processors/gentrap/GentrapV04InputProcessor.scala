@@ -101,7 +101,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   val samplesCollectionName = GentrapSamplesCollectionName
 
-  val schemaResourceUrl = "/schemas/biopet/v0.4/gentrap.json"
+  val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
 
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
 
