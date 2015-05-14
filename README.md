@@ -25,7 +25,7 @@ Please report issues to [the issue page](https://git.lumc.nl/sasc/sentinel/issue
 ## Contributing
 
 ```sh
-$ grep -r 'TODO" src/
+$ grep -r 'TODO' src/
 ```
 
 You can also check for unclosed issues in the issue page.
