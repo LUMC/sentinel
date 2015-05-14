@@ -1,6 +1,6 @@
 package nl.lumc.sasc.sentinel.db
 
-import java.io.InputStream
+import java.io.ByteArrayInputStream
 import scala.util.{ Failure, Success, Try }
 
 import com.mongodb.casbah.gridfs.GridFSDBFile
@@ -24,8 +24,9 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   private lazy val coll = mongo.db(runsCollectionName)
 
-  def storeFile(ins: InputStream, userId: String, pipeline: String, fileName: String, unzipped: Boolean): ObjectId = {
-    mongo.gridfs(ins) { f =>
+  def storeFile(byteContents: Array[Byte], userId: String, pipeline: String,
+                fileName: String, unzipped: Boolean): ObjectId = {
+    mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
       f.filename = fileName
       f.contentType = "application/json"
       f.metaData = MongoDBObject(

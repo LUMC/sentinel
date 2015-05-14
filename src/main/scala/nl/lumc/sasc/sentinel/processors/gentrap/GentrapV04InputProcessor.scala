@@ -17,7 +17,7 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.SentinelProcessor
-import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, RunValidationException }
+import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray }
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
@@ -176,24 +176,24 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         nLibs = samples.map(_.libs.size).sum)
 
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] =
-    validateAndExtract(fi).flatMap { case json =>
-      // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
-      //       It does not break our application though, so it's an acceptable trade off.
-      // TODO: Explore other types that are more expressive than Try to store state.
-      for {
-        fileId <- Try(storeFile(fi.byteStream, userId, pipeline, fi.getName, fi.inputUnzipped))
-        runRef <- Try(extractReference(json))
-        ref <- Try(getOrStoreReference(runRef))
-        refId = ref.refId
+    // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
+    //       It does not break our application though, so it's an acceptable trade off.
+    // TODO: Explore other types that are more expressive than Try to store state.
+    for {
+      (byteContents, unzipped) <- Try(fi.readInputStream())
+      json <- Try(parseAndValidate(byteContents))
+      fileId <- Try(storeFile(byteContents, userId, pipeline, fi.getName, unzipped))
+      runRef <- Try(extractReference(json))
+      ref <- Try(getOrStoreReference(runRef))
+      refId = ref.refId
 
-        runAnnots <- Try(extractAnnotations(json))
-        annots <- Try(getOrStoreAnnotations(runAnnots))
-        annotIds = annots.map(_.annotId)
+      runAnnots <- Try(extractAnnotations(json))
+      annots <- Try(getOrStoreAnnotations(runAnnots))
+      annotIds = annots.map(_.annotId)
 
-        samples <- Try(extractSamples(json, fileId, refId, annotIds))
-        _ <- Try(storeSamples(samples))
-        run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
-        _ <- Try(storeRun(run))
-      } yield run
-    }
+      samples <- Try(extractSamples(json, fileId, refId, annotIds))
+      _ <- Try(storeSamples(samples))
+      run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
+      _ <- Try(storeRun(run))
+    } yield run
 }

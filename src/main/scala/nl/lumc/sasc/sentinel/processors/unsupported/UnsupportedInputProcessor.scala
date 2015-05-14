@@ -20,11 +20,10 @@ class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
   val schemaResourceUrl = "/schemas/unsupported.json"
 
   def processRun(fi: FileItem, userId: String, pipeline: String) =
-    validateAndExtract(fi).flatMap { case json =>
-      for {
-        fileId <- Try(storeFile(fi.byteStream, userId, pipeline, fi.getName, fi.inputUnzipped))
-        run = RunDocument(fileId, userId, pipeline, 0, 0, Date.from(Clock.systemUTC().instant))
-        _ <- Try(storeRun(run))
-      } yield run
-    }
+    for {
+      (byteContents, unzipped) <- Try(fi.readInputStream())
+      fileId <- Try(storeFile(byteContents, userId, pipeline, fi.getName, unzipped))
+      run = RunDocument(fileId, userId, pipeline, 0, 0, Date.from(Clock.systemUTC().instant))
+      _ <- Try(storeRun(run))
+    } yield run
 }
