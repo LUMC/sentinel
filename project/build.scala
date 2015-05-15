@@ -2,9 +2,8 @@ import sbt._
 import Keys._
 import org.scalatra.sbt._
 import org.scalatra.sbt.PluginKeys._
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import com.mojolly.scalate.ScalatePlugin._
-import ScalateKeys._
+import scalariform.formatter.preferences._
+import com.typesafe.sbt.SbtScalariform._
 
 object SentinelBuild extends Build {
 
@@ -23,10 +22,11 @@ object SentinelBuild extends Build {
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(CompactStringConcatenation, false)
       .setPreference(CompactControlReadability, false)
-      .setPreference(DoubleIndentClassDeclaration, false)
+      .setPreference(DoubleIndentClassDeclaration, true)
       .setPreference(IndentLocalDefs, false)
       .setPreference(IndentPackageBlocks, true)
       .setPreference(IndentSpaces, 2)
+      .setPreference(IndentWithTabs, false)
       .setPreference(PlaceScaladocAsterisksBeneathSecondAsterisk, false)
       .setPreference(PreserveDanglingCloseParenthesis, true)
       .setPreference(PreserveSpaceBeforeArguments, false)
@@ -40,7 +40,7 @@ object SentinelBuild extends Build {
   lazy val project = Project (
     "sentinel",
     file("."),
-    settings = ScalatraPlugin.scalatraWithJRebel ++ scalateSettings ++ Seq(
+    settings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,
@@ -55,6 +55,7 @@ object SentinelBuild extends Build {
       resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
       resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
       resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
+      ScalariformKeys.preferences := formattingPreferences,
       libraryDependencies ++= Seq(
         "ch.qos.logback"          %  "logback-classic"          % "1.1.2"               % "runtime",
         "com.github.fge"          %  "json-schema-validator"    % "2.2.6",
@@ -79,20 +80,7 @@ object SentinelBuild extends Build {
         "org.scalatra"            %% "scalatra-swagger"         % ScalatraVersion,
         "org.scalatra"            %% "scalatra-swagger-ext"     % ScalatraVersion,
         "org.scalatra"            %% "scalatra-slf4j"           % ScalatraVersion
-      ),
-      ScalariformKeys.preferences := formattingPreferences,
-      scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
-        Seq(
-          TemplateConfig(
-            base / "webapp" / "WEB-INF" / "templates",
-            Seq.empty,  /* default imports should be added here */
-            Seq(
-              Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-            ),  /* add extra bindings here */
-            Some("templates")
-          )
-        )
-      }
+      )
     )
   )
 }
