@@ -13,8 +13,8 @@ import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.splitParam
 
 class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
-  with JacksonJsonSupport
-  with SwaggerSupport {
+    with JacksonJsonSupport
+    with SwaggerSupport {
 
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")
@@ -40,6 +40,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     runs.getGlobalRunStats()
   }
 
+  // format: OFF
   val statsAlignmentsGentrapGetOperation = (apiOperation[List[GentrapAlignmentStats]]("statsAlignmentsGentrapGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
     parameters (
@@ -61,10 +62,9 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedAccLevelParams.keySet.toList)
-        .optional
-    )
-    responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message)
-  )
+        .optional)
+    responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message))
+  // format: ON
 
   get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
     val runIds = splitParam(params.getAs[String]("runIds"))
@@ -74,12 +74,13 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
 
     AllowedAccLevelParams.get(accLevel) match {
-      case None           => BadRequest(CommonErrors.InvalidAccLevel)
-      case Some(accEnum)  =>
+      case None => BadRequest(CommonErrors.InvalidAccLevel)
+      case Some(accEnum) =>
         gentrap.getAlignmentStats(accEnum, runIds, refIds, annotIds)
     }
   }
 
+  // format: OFF
   val statsSequencesGentrapGetOperation = (apiOperation[List[SeqStats]]("statsSequencesGentrapGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
     parameters (
@@ -108,14 +109,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
-        .optional
-    )
+        .optional)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
       StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
-      StringResponseMessage(404, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs not found.")
-    )
-  )
+      StringResponseMessage(404, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs not found.")))
+  // format: ON
 
   get("/sequences/gentrap", operation(statsSequencesGentrapGetOperation)) {
     val runIds = splitParam(params.getAs[String]("runIds"))

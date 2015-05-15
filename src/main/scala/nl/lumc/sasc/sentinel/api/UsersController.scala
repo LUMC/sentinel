@@ -8,8 +8,8 @@ import org.scalatra.json.JacksonJsonSupport
 import nl.lumc.sasc.sentinel.models._
 
 class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
-  with JacksonJsonSupport
-  with SwaggerSupport {
+    with JacksonJsonSupport
+    with SwaggerSupport {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -24,6 +24,7 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     response.headers += ("Access-Control-Allow-Origin" -> "*")
   }
 
+  // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
     summary "Updates an existing user record."
     parameters (
@@ -34,8 +35,8 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
       StringResponseMessage(400, "User ID not specified or patch operations invalid."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message))
-  )
+      StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+  // format: ON
 
   patch("/:userId", operation(usersUserIdPatchOperation)) {
     val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
@@ -46,6 +47,7 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 200 and user record
   }
 
+  // format: OFF
   val usersUserIdGetOperation = (apiOperation[User]("usersUserIdGet")
     summary "Retrieves record of the given user ID."
     notes "This endpoint is only available to the particular user and administrators."
@@ -53,8 +55,8 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     responseMessages (
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message))
-  )
+      StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+  // format: ON
 
   get("/:userId", operation(usersUserIdGetOperation)) {
     val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
@@ -64,6 +66,7 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     // TODO: return 200 and user record
   }
 
+  // format: OFF
   val usersUserIdPostOperation = (apiOperation[User]("usersPost")
     summary "Creates a user account."
     notes
@@ -77,8 +80,8 @@ class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
     responseMessages (
       StringResponseMessage(201, "User record created successfully."),
       StringResponseMessage(400, "User data payload is invalid or userID and/or password requirements not met."),
-      StringResponseMessage(409, "User record with the given ID already exists."))
-  )
+      StringResponseMessage(409, "User record with the given ID already exists.")))
+  // format: OFF
 
   post("/", operation(usersUserIdPostOperation)) {
     val userRequest = parsedBody.extract[UserRequest]

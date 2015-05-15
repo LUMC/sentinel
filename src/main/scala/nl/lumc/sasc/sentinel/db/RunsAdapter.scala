@@ -30,13 +30,13 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
       f.filename = fileName
       f.contentType = "application/json"
       f.metaData = MongoDBObject(
-        "userId"  -> userId,
+        "userId" -> userId,
         "pipeline" -> pipeline,
         "inputGzipped" -> unzipped
       )
     }.get match {
-      case oid: ObjectId  => oid
-      case otherwise      =>
+      case oid: ObjectId => oid
+      case otherwise =>
         throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
     }
   }
@@ -48,7 +48,7 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
 
   def getRun(runId: String, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
     Try(new ObjectId(runId)) match {
-      case Failure(_)   => None
+      case Failure(_) => None
       case Success(qid) =>
 
         if (doDownload) mongo.gridfs
@@ -71,8 +71,8 @@ trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
       .sort(MongoDBObject("creationTime" -> -1))
       .map { case dbo => grater[RunDocument].asObject(dbo) }
     maxNumReturn match {
-      case None       => qResult.toSeq
-      case Some(num)  => qResult.take(num).toSeq
+      case None      => qResult.toSeq
+      case Some(num) => qResult.take(num).toSeq
     }
   }
 

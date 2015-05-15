@@ -19,9 +19,9 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
-  with JacksonJsonSupport
-  with FileUploadSupport
-  with SwaggerSupport {
+    with JacksonJsonSupport
+    with FileUploadSupport
+    with SwaggerSupport {
 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
@@ -53,6 +53,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       )
   }
 
+  // format: OFF
   val runsRunIdDeleteOperation = (apiOperation[Unit]("runsRunIdDelete")
     summary "Deletes an uploaded run summary."
     notes
@@ -67,8 +68,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, "User ID or run summary ID not found."))
-  )
+      StringResponseMessage(404, "User ID or run summary ID not found.")))
+  // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
@@ -79,6 +80,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 204 if delete successful
   }
 
+  // format: OFF
   val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")
     summary "Retrieves single run summaries."
     notes
@@ -98,18 +100,18 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(410, "Run summary not available anymore."))
     produces (
       "application/json",
-      "application/octet-stream")
-  )
+      "application/octet-stream"))
+  // format: ON
 
   get("/:runId", operation(runsRunIdGetOperation)) {
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     // Since there is no standard to define boolean in query parameter, we try to capture the common ones
     val doDownload = params.get("download") match {
-      case None     => false
-      case Some(p)  => p.toLowerCase match {
+      case None => false
+      case Some(p) => p.toLowerCase match {
         case "0" | "no" | "false" | "null" | "none" | "nothing" => false
-        case otherwise                                          => true
+        case otherwise => true
       }
     }
     // TODO: return 404 if user ID not found
@@ -118,9 +120,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 410 if run was available but has been deleted
     // Any processor that extends RunsAdapter can be used
     runs.getRun(runId, doDownload) match {
-      case None         => NotFound(CommonErrors.MissingRunId)
+      case None => NotFound(CommonErrors.MissingRunId)
       case Some(result) => result match {
-        case Left(runDoc)   => Ok(runDoc)
+        case Left(runDoc) => Ok(runDoc)
         case Right(runFile) =>
           contentType = "application/octet-stream"
           response.setHeader("Content-Disposition",
@@ -130,6 +132,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     }
   }
 
+  // format: OFF
   val runsPostOperation = (apiOperation[RunDocument]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
@@ -148,8 +151,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message),
-      StringResponseMessage(413, "Run summary too large."))
-  )
+      StringResponseMessage(413, "Run summary too large.")))
+  // format: ON
 
   post("/", operation(runsPostOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
@@ -167,10 +170,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     }
 
     processor match {
-      case None     => BadRequest(CommonErrors.InvalidPipeline)
-      case Some(p)  =>
+      case None => BadRequest(CommonErrors.InvalidPipeline)
+      case Some(p) =>
         p.processRun(uploadedRun, userId, pipeline) match {
-          case scala.util.Failure(f)    =>
+          case scala.util.Failure(f) =>
             log(f.getMessage, f)
             f match {
               case vexc: RunValidationException =>
@@ -180,11 +183,12 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
               case otherwise =>
                 InternalServerError(CommonErrors.Unexpected)
             }
-          case scala.util.Success(run)  => Created(run)
+          case scala.util.Success(run) => Created(run)
         }
     }
   }
 
+  // format: OFF
   val runsGetOperation = (apiOperation[List[RunDocument]]("runsGet")
     summary "Retrieves run summary records."
     notes
@@ -206,8 +210,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         StringResponseMessage(400, "One or more pipeline is invalid."),
         StringResponseMessage(401, CommonErrors.Unauthenticated.message),
         StringResponseMessage(403, CommonErrors.Unauthorized.message),
-        StringResponseMessage(404, CommonErrors.MissingUserId.message))
-  )
+        StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+  // format: ON
 
   get("/", operation(runsGetOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))

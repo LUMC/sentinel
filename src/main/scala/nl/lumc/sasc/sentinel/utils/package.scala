@@ -34,8 +34,8 @@ package object utils {
 
   def splitParam(param: Option[String], delimiter: String = ",",
                  fallback: Seq[String] = Seq()): Seq[String] = param match {
-    case Some(str)  => str.split(delimiter).toSeq
-    case None       => fallback
+    case Some(str) => str.split(delimiter).toSeq
+    case None      => fallback
   }
 
   def getByteArray(is: InputStream): (Array[Byte], Boolean) = {

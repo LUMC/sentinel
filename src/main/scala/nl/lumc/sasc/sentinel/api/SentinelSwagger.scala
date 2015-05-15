@@ -3,12 +3,12 @@ package nl.lumc.sasc.sentinel.api
 import akka.actor.ActorSystem
 import org.json4s._
 import org.scalatra.ScalatraServlet
-import org.scalatra.swagger.{ApiInfo, JacksonSwaggerBase, Swagger}
+import org.scalatra.swagger.{ ApiInfo, JacksonSwaggerBase, Swagger }
 
 import nl.lumc.sasc.sentinel.CurrentApiVersion
 
 class SentinelSwagger extends Swagger(apiInfo = SentinelSwagger.apiInfo, apiVersion = CurrentApiVersion,
-                                      swaggerVersion = Swagger.SpecVersion)
+  swaggerVersion = Swagger.SpecVersion)
 
 object SentinelSwagger {
   val apiInfo = ApiInfo(
@@ -21,7 +21,7 @@ object SentinelSwagger {
 }
 
 class ResourcesApp(implicit protected val system: ActorSystem, val swagger: SentinelSwagger) extends ScalatraServlet
-  with JacksonSwaggerBase {
+    with JacksonSwaggerBase {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -34,7 +34,7 @@ class ResourcesApp(implicit protected val system: ActorSystem, val swagger: Sent
     val port = request.getServerPort
     val h = request.getServerName
     val prot = if (port == 443) "https" else "http"
-    val (proto, host) = if (port != 80 && port != 443) ("http", h+":"+port.toString) else (prot, h)
+    val (proto, host) = if (port != 80 && port != 443) ("http", h + ":" + port.toString) else (prot, h)
     "%s://%s%s%s".format(
       proto,
       host,

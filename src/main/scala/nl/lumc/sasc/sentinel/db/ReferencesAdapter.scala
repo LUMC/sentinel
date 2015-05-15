@@ -32,14 +32,14 @@ trait ReferencesAdapter extends IndexedCollectionAdapter { this: MongodbConnecto
       .sort(MongoDBObject("creationTime" -> -1))
       .map { case dbo => grater[Reference].asObject(dbo) }
     maxNumReturn match {
-      case None       => qResult.toSeq
-      case Some(num)  => qResult.take(num).toSeq
+      case None      => qResult.toSeq
+      case Some(num) => qResult.take(num).toSeq
     }
   }
 
   def getReference(refId: String): Option[Reference] = {
     Try(new ObjectId(refId)) match {
-      case Failure(_)   => None
+      case Failure(_) => None
       case Success(qid) => coll
         .findOneByID(qid)
         .collect { case dbo => grater[Reference].asObject(dbo) }

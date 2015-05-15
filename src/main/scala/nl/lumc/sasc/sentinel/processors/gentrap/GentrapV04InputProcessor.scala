@@ -21,13 +21,13 @@ import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray }
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-  extends SentinelProcessor
-  with SamplesAdapter
-  with ValidationAdapter
-  with RunsAdapter
-  with ReferencesAdapter
-  with AnnotationsAdapter
-  with MongodbConnector {
+    extends SentinelProcessor
+    with SamplesAdapter
+    with ValidationAdapter
+    with RunsAdapter
+    with ReferencesAdapter
+    with AnnotationsAdapter
+    with MongodbConnector {
 
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 
@@ -59,7 +59,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       median5PrimeBias = (rnaMetrics \ "median_5prime_bias").extract[Double],
       median3PrimeBias = (rnaMetrics \ "median_3prime_bias").extract[Double],
       normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
-    }
+  }
 
   private def extractReadDocument(libJson: JValue,
                                   fileKey: String, seqStatKey: String, fastqcKey: String): GentrapReadDocument = {
@@ -90,11 +90,12 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         read2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption),
       processedSeq =
         Try(extractReadDocument(libJson, "output_R1", "seqstat_R1_qc", "fastqc_R1_qc")).toOption
-          .collect { case ps =>
-            GentrapSeqDocument(
-              read1 = ps,
-              read2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
-        },
+          .collect {
+            case ps =>
+              GentrapSeqDocument(
+                read1 = ps,
+                read2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
+          },
       alnStats = extractAlnStats(libJson))
 
   type SampleDocument = GentrapSampleDocument
@@ -164,16 +165,16 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     }
 
   def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[SampleDocument],
-    userId: String, pipeline: String) =
-      RunDocument(
-        runId = fileId, // NOTE: runId kept intentionally the same as fileId
-        refId = Option(refId),
-        annotIds = Option(annotIds),
-        creationTime = Date.from(Clock.systemUTC().instant),
-        uploader = userId,
-        pipeline = pipeline,
-        nSamples = samples.size,
-        nLibs = samples.map(_.libs.size).sum)
+                userId: String, pipeline: String) =
+    RunDocument(
+      runId = fileId, // NOTE: runId kept intentionally the same as fileId
+      refId = Option(refId),
+      annotIds = Option(annotIds),
+      creationTime = Date.from(Clock.systemUTC().instant),
+      uploader = userId,
+      pipeline = pipeline,
+      nSamples = samples.size,
+      nLibs = samples.map(_.libs.size).sum)
 
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
