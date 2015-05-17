@@ -62,6 +62,6 @@ var adminUser = {
     isAdmin: true,
     creationTime: new Date()
 }
-db.user.insert(adminUser);
+db.users.insert(adminUser);
 
 print("\n************ Done ************\n");
