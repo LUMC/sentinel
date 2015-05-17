@@ -5,9 +5,9 @@ import java.util.Date
 case class User(
   id: String,
   email: String,
+  hashedPassword: String,
   isConfirmed: Boolean,
   isAdmin: Boolean,
-  nRuns: Int,
   creationTime: Date,
-  updateTime: Date)
+  updateTime: Option[Date])
 
