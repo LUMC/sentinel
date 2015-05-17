@@ -73,6 +73,7 @@ object SentinelBuild extends Build {
         "org.json4s"              %% "json4s-mongo"             % Json4sVersion,
         "org.json4s"              %% "json4s-ext"               % Json4sVersion,
         "org.mongodb"             %% "casbah"                   % "2.8.0",
+        "org.mindrot"             %  "jbcrypt"                  % "0.3m",
         "org.scalatra"            %% "scalatra"                 % ScalatraVersion,
         "org.scalatra"            %% "scalatra-scalate"         % ScalatraVersion,
         "org.scalatra"            %% "scalatra-specs2"          % ScalatraVersion       % "test",
