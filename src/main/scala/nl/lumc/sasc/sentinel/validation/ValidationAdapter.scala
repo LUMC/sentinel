@@ -11,7 +11,7 @@ import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceFile }
 
 trait ValidationAdapter { this: SentinelProcessor =>
 
-  def validator: RunValidator
+  val validator: RunValidator
 
   def createValidator(schemaResourceUrl: String) = new RunValidator(getResourceFile(schemaResourceUrl))
 
