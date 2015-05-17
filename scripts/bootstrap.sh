@@ -26,9 +26,12 @@ MONGO_HOST=localhost
 MONGO_PORT=27017
 
 # Uncomment and fill values to authenticate against MongoDB instance.
-MONGO_USER=admin
-MONGO_PASSWD=admin
-MONGO_AUTHDB=admin
+## User name
+#MONGO_USER=
+## User password
+#MONGO_PASSWD=
+## Authentication database name
+#MONGO_AUTHDB=
 
 # Sentinel-specific settings
 DB_NAME=sentinel
