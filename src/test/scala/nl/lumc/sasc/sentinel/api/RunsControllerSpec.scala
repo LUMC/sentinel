@@ -9,7 +9,8 @@ import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
-class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito { def is = s2"""
+class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito {
+  def is = s2"""
 
   POST / on RunsController must
     return status 400 if user is unspecified                      $postRunsUnspecifiedUserStatus
@@ -21,7 +22,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito { d
 """
 
   protected lazy val tempDir = Files.createTempDir()
-  
+
   def createTempFile(name: String): File = new File(tempDir, name)
 
   override def stop(): Unit = {

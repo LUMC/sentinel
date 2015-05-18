@@ -2,7 +2,8 @@ package nl.lumc.sasc.sentinel.api
 
 import org.scalatra.test.specs2._
 
-class RootControllerSpec extends ScalatraSpec { def is = s2"""
+class RootControllerSpec extends ScalatraSpec {
+  def is = s2"""
 
   GET / on RootController must
     return status 301           $getRoot301
@@ -16,7 +17,7 @@ class RootControllerSpec extends ScalatraSpec { def is = s2"""
     status mustEqual 301
   }
 
-  def getRootRedirect  = get("/") {
+  def getRootRedirect = get("/") {
     header("Location") must endWith("/api-docs")
   }
 

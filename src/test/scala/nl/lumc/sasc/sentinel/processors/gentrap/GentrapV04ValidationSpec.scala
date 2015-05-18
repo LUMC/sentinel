@@ -11,7 +11,8 @@ import org.specs2.mock.Mockito
 import nl.lumc.sasc.sentinel.JsonLoaderSpec
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
-class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mockito { def is = s2"""
+class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mockito {
+  def is = s2"""
 
   The Gentrap v0.4 schema must
     be valid for multi sample, single library summary              $multiSampleSingleLibV04
