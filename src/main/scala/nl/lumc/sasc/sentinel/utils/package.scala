@@ -11,6 +11,8 @@ import java.nio.file.Paths
 import java.security.MessageDigest
 import scala.io.Source
 
+import org.scalatra.servlet.FileItem
+
 /** General utilities */
 package object utils {
 
@@ -48,5 +50,14 @@ package object utils {
 
     if (inMagic == GzipMagic) (readAll(new GZIPInputStream(pb)), true)
     else (readAll(pb), false)
+  }
+
+  object implicits {
+
+    import scala.language.implicitConversions
+
+    implicit class RichFileItem(fi: FileItem) {
+      def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
+    }
   }
 }

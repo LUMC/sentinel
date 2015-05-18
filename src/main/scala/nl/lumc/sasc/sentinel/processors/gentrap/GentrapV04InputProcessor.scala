@@ -1,10 +1,9 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import java.io.ByteArrayInputStream
 import java.time.Clock
 import java.util.Date
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
 import org.bson.types.ObjectId
@@ -16,18 +15,17 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.SentinelProcessor
-import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getByteArray }
+import nl.lumc.sasc.sentinel.utils.calcSeqMd5
+import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends SentinelProcessor
+    extends MongodbConnector
     with SamplesAdapter
     with ValidationAdapter
     with RunsAdapter
     with ReferencesAdapter
-    with AnnotationsAdapter
-    with MongodbConnector {
+    with AnnotationsAdapter {
 
   implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
 

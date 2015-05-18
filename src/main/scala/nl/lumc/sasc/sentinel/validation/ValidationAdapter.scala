@@ -2,14 +2,12 @@ package nl.lumc.sasc.sentinel.validation
 
 import java.io.ByteArrayInputStream
 
-import com.github.fge.jsonschema.core.report.ProcessingMessage
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.processors.SentinelProcessor
 import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceFile }
 
-trait ValidationAdapter { this: SentinelProcessor =>
+trait ValidationAdapter {
 
   val validator: RunValidator
 

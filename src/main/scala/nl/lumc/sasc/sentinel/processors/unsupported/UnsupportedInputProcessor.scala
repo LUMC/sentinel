@@ -8,14 +8,13 @@ import scala.util.Try
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.db._
-import nl.lumc.sasc.sentinel.processors.SentinelProcessor
+import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
-    extends SentinelProcessor
+    extends MongodbConnector
     with RunsAdapter
-    with ValidationAdapter
-    with MongodbConnector {
+    with ValidationAdapter {
 
   val validator = createValidator("/schemas/unsupported.json")
 
