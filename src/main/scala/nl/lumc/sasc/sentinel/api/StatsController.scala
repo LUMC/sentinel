@@ -1,6 +1,5 @@
 package nl.lumc.sasc.sentinel.api
 
-import org.json4s._
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
@@ -12,17 +11,12 @@ import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.splitParam
 
-class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
+class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with JacksonJsonSupport
     with SwaggerSupport {
 
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")
-
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
-
-  protected implicit val jsonFormats: Formats = DefaultFormats
 
   val gentrap = new GentrapOutputProcessor(mongo)
   val runs = new RunsProcessor(mongo)

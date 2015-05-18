@@ -1,7 +1,5 @@
 package nl.lumc.sasc.sentinel.api
 
-import org.json4s._
-import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
@@ -10,7 +8,7 @@ import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.ReferencesProcessor
 
-class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends ScalatraServlet
+class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with JacksonJsonSupport
     with SwaggerSupport {
 
@@ -18,11 +16,6 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   override protected val applicationName: Option[String] = Some("references")
 
   protected val refs = new ReferencesProcessor(mongo)
-
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
-
-  protected implicit val jsonFormats: Formats = DefaultFormats + new ObjectIdSerializer
 
   before() {
     contentType = formats("json")
