@@ -27,11 +27,11 @@ MONGO_PORT=27017
 
 # Uncomment and fill values to authenticate against MongoDB instance.
 ## User name
-#MONGO_USER=
+MONGO_USER=
 ## User password
-#MONGO_PASSWD=
+MONGO_PASSWD=
 ## Authentication database name
-#MONGO_AUTHDB=
+MONGO_AUTHDB=
 
 # Sentinel-specific settings
 DB_NAME=sentinel
