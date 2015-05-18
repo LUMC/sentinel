@@ -11,16 +11,11 @@ import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument }
 
-trait RunsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
+trait RunsAdapter { this: MongodbConnector =>
 
   def runsCollectionName: String = "runs"
 
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument]
-
-  override def createIndices() = {
-    coll.createIndex(MongoDBObject("md5" -> 1, "metadata.userId" -> 1), MongoDBObject("unique" -> true))
-    super.createIndices()
-  }
 
   private lazy val coll = mongo.db(runsCollectionName)
 

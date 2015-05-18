@@ -8,16 +8,11 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.Annotation
 
-trait AnnotationsAdapter extends IndexedCollectionAdapter { this: MongodbConnector =>
+trait AnnotationsAdapter { this: MongodbConnector =>
 
   def annotationCollectionName: String = "annotations"
 
   private lazy val coll = mongo.db(annotationCollectionName)
-
-  override def createIndices(): Unit = {
-    coll.createIndex(MongoDBObject("annotMd5" -> 1), MongoDBObject("unique" -> true))
-    super.createIndices()
-  }
 
   def getOrStoreAnnotations(annots: Seq[Annotation]): Seq[Annotation] =
     annots
