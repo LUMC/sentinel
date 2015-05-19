@@ -1,19 +1,17 @@
 package nl.lumc.sasc.sentinel.api
 
 import org.scalatra._
-import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.ReferencesProcessor
 
-class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet {
+class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
   protected val applicationDescription: String = "Retrieval of reference sequence synopses"
   override protected val applicationName: Option[String] = Some("references")
 
-  protected val refs = new ReferencesProcessor(mongo)
+  protected val refs = new ReferencesAdapter with MongodbConnector { val mongo = self.mongo }
 
   before() {
     contentType = formats("json")

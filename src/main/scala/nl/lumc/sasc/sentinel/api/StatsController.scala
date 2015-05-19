@@ -1,23 +1,27 @@
 package nl.lumc.sasc.sentinel.api
 
+import scala.util.Try
+
 import org.scalatra._
-import org.scalatra.json.JacksonJsonSupport
+import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, AllowedSeqQcPhaseParams }
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.splitParam
 
-class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet {
+class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")
 
-  val gentrap = new GentrapOutputProcessor(mongo)
-  val runs = new RunsProcessor(mongo)
+  protected val runs = new RunsAdapter with MongodbConnector {
+    val mongo = self.mongo
+    def processRun(fi: FileItem, userId: String, pipeline: String) = Try(throw new NotImplementedError)
+  }
+  protected val gentrap = new GentrapOutputProcessor(mongo)
 
   before() {
     contentType = formats("json")

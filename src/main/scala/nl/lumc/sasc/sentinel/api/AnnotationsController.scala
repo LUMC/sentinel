@@ -3,16 +3,15 @@ package nl.lumc.sasc.sentinel.api
 import org.scalatra._
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.AnnotationsProcessor
 
-class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet {
+class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
   protected val applicationDescription: String = "Retrieval of annotation file synopses"
   override protected val applicationName = Some("annotations")
 
-  protected val annots = new AnnotationsProcessor(mongo)
+  protected val annots = new AnnotationsAdapter with MongodbConnector { val mongo = self.mongo }
 
   before() {
     contentType = formats("json")

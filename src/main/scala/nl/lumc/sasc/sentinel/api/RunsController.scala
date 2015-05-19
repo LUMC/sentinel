@@ -5,25 +5,29 @@ import java.io.File
 import org.json4s.jackson.Serialization
 import org.scalatra._
 import org.scalatra.swagger._
-import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
+import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
+import scala.util.Try
+
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
-    with FileUploadSupport {
+    with FileUploadSupport { self =>
 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
 
-  val runs = new RunsProcessor(mongo)
-  val gentrap = new GentrapV04InputProcessor(mongo)
-  val unsupported = new UnsupportedInputProcessor(mongo)
+  protected val runs = new RunsAdapter with MongodbConnector {
+    val mongo = self.mongo
+    def processRun(fi: FileItem, userId: String, pipeline: String) = Try(throw new NotImplementedError)
+  }
+  protected val gentrap = new GentrapV04InputProcessor(mongo)
+  protected val unsupported = new UnsupportedInputProcessor(mongo)
 
   before() {
     contentType = formats("json")
