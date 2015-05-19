@@ -13,7 +13,7 @@ import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument }
 
 trait RunsAdapter { this: MongodbConnector =>
 
-  def runsCollectionName: String = "runs"
+  def runsCollectionName = CollectionNames.Runs
 
   def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument]
 

@@ -9,7 +9,7 @@ import nl.lumc.sasc.sentinel.models.Reference
 
 trait ReferencesAdapter { this: MongodbConnector =>
 
-  def referenceCollectionName: String = "references"
+  def referenceCollectionName = CollectionNames.References
 
   private lazy val coll = mongo.db(referenceCollectionName)
 

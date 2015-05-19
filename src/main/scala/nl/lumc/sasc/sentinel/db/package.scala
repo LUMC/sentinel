@@ -5,6 +5,12 @@ import com.mongodb.casbah.gridfs.Imports._
 
 package object db {
 
+  object CollectionNames {
+    val Annotations = "annotations"
+    val References = "references"
+    val Runs = "runs"
+  }
+
   case class MongodbAccessObject(client: MongoClient, dbName: String) {
 
     lazy val db: MongoDB = client(dbName)
