@@ -5,7 +5,6 @@ import java.io.File
 import org.json4s.jackson.Serialization
 import org.scalatra._
 import org.scalatra.swagger._
-import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
@@ -17,9 +16,7 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
-    with JacksonJsonSupport
-    with FileUploadSupport
-    with SwaggerSupport {
+    with FileUploadSupport {
 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
@@ -214,5 +211,4 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     // TODO: return 403 if unauthorized
     runs.getRuns(userId, pipelines)
   }
-
 }

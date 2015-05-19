@@ -8,9 +8,7 @@ import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.ReferencesProcessor
 
-class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
-    with JacksonJsonSupport
-    with SwaggerSupport {
+class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet {
 
   protected val applicationDescription: String = "Retrieval of reference sequence synopses"
   override protected val applicationName: Option[String] = Some("references")

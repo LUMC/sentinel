@@ -11,9 +11,7 @@ import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.splitParam
 
-class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
-    with JacksonJsonSupport
-    with SwaggerSupport {
+class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet {
 
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")

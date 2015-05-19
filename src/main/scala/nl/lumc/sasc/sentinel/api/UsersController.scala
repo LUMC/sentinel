@@ -1,20 +1,11 @@
 package nl.lumc.sasc.sentinel.api
 
-import org.scalatra.ScalatraServlet
 import org.scalatra.swagger._
 import org.json4s._
-import org.scalatra.json.JacksonJsonSupport
 
 import nl.lumc.sasc.sentinel.models._
 
-class UsersController(implicit val swagger: Swagger) extends ScalatraServlet
-    with JacksonJsonSupport
-    with SwaggerSupport {
-
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
-
-  protected implicit val jsonFormats: Formats = DefaultFormats
+class UsersController(implicit val swagger: Swagger) extends SentinelServlet {
 
   protected val applicationDescription: String = "Operations on user data"
   override protected val applicationName: Option[String] = Some("users")
