@@ -1,8 +1,5 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import java.time.Clock
-import java.util.Date
-
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
@@ -15,7 +12,7 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.calcSeqMd5
+import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
@@ -135,7 +132,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       refId = new ObjectId,
       combinedMd5 = combinedMd5,
       contigMd5s = contigMd5s,
-      creationTime = Option(Date.from(Clock.systemUTC().instant)))
+      creationTime = Option(getTimeNow))
   }
 
   def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
@@ -159,7 +156,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
               else Some(ext.toLowerCase)
           },
           fileName = filePath.collect { case path => getName(path) },
-          creationTime = Option(Date.from(Clock.systemUTC().instant)))
+          creationTime = Option(getTimeNow))
     }
 
   def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[SampleDocument],
@@ -168,7 +165,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
-      creationTime = Date.from(Clock.systemUTC().instant),
+      creationTime = getTimeNow,
       uploader = userId,
       pipeline = pipeline,
       nSamples = samples.size,

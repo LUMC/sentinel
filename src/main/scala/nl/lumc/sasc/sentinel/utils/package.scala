@@ -1,14 +1,11 @@
-/**
- * Copyright (c) 2015 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
- *
- * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
- */
 package nl.lumc.sasc.sentinel
 
 import java.io.{ File, InputStream, PushbackInputStream }
+import java.util.Date
 import java.util.zip.GZIPInputStream
 import java.nio.file.Paths
 import java.security.MessageDigest
+import java.time.Clock
 import scala.io.Source
 
 import org.scalatra.servlet.FileItem
@@ -51,6 +48,8 @@ package object utils {
     if (inMagic == GzipMagic) (readAll(new GZIPInputStream(pb)), true)
     else (readAll(pb), false)
   }
+
+  def getTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
   object implicits {
 
