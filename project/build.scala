@@ -51,6 +51,7 @@ object SentinelBuild extends Build {
       },
       scalaVersion := ScalaVersion,
       scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
+      ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
       resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
