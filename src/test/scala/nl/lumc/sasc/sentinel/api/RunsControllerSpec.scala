@@ -7,9 +7,11 @@ import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.scalatra.test.specs2._
 import org.specs2.mock.Mockito
 
+import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.models.ApiError
 
-class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito {
+class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
   def is = s2"""
 
   POST / on RunsController must
@@ -48,7 +50,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito {
   }
 
   def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unsupported"))) {
-    bodyMap mustEqual Some(Map("message" -> "User ID not specified."))
+    apiError mustEqual Some(ApiError("User ID not specified."))
   }
 
   def postRunsUnspecifiedPipelineStatus = post("/runs", Seq(("userId", "testMan"))) {
@@ -56,7 +58,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito {
   }
 
   def postRunsUnspecifiedPipelineMessage = post("/runs", Seq(("userId", "testMan"))) {
-    bodyMap mustEqual Some(Map("message" -> "Pipeline not specified."))
+    apiError mustEqual Some(ApiError("Pipeline not specified."))
   }
 
   def postRunsFileTooLargeStatus = {
@@ -73,7 +75,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelSpec with Mockito {
   def postRunsFileTooLargeMessage = {
     val tooBigFile = createTempFile("tooBig.json")
     post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
-      bodyMap mustEqual Some(Map("message" -> "Run summary exceeds 16 MB."))
+      apiError mustEqual Some(ApiError("Run summary exceeds 16 MB."))
     } before {
       fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
     } after {
