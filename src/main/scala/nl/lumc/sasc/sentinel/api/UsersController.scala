@@ -46,7 +46,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val usersUserIdGetOperation = (apiOperation[User]("usersUserIdGet")
+  val usersUserIdGetOperation = (apiOperation[JValue]("usersUserIdGet")
     summary "Retrieves record of the given user ID."
     notes "This endpoint is only available to the particular user and administrators."
     parameters pathParam[String]("userId").description("User ID.")
@@ -66,7 +66,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val usersUserIdPostOperation = (apiOperation[User]("usersPost")
+  val usersUserIdPostOperation = (apiOperation[ApiMessage]("usersPost")
     summary "Creates a user account."
     notes
       """This endpoint is used for creating new user accounts. The user data must be supplied in the body of the request
