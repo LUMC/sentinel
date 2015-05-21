@@ -9,6 +9,7 @@ package object db {
     val Annotations = "annotations"
     val References = "references"
     val Runs = "runs"
+    val Users = "users"
   }
 
   case class MongodbAccessObject(client: MongoClient, dbName: String) {

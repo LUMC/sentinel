@@ -1,14 +1,20 @@
 package nl.lumc.sasc.sentinel.api
 
+import scala.util.{ Failure, Success, Try }
+
+import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
 
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 
-class UsersController(implicit val swagger: Swagger) extends SentinelServlet {
+class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
   protected val applicationDescription: String = "Operations on user data"
   override protected val applicationName: Option[String] = Some("users")
+
+  val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
 
   before() {
     contentType = formats("json")
@@ -64,11 +70,11 @@ class UsersController(implicit val swagger: Swagger) extends SentinelServlet {
     summary "Creates a user account."
     notes
       """This endpoint is used for creating new user accounts. The user data must be supplied in the body of the request
-        | and formatted as JSON. The JSON payload must define the following keys: `id`, `password`, and `email`. `id`
-        | must not contain whitespace, must be at least 3 characters long, and must only contain alphanumeric characters.
-        | `password` must be at least 6 characters long and contain a mixture of at least alphanumeric characters with
-        | small and large caps. A user can only submit data after the created account is confirmed (using an out-of-band
-        | communication channel).
+        | and formatted as JSON. The JSON payload must define the following keys: `id`, `password`, `confirmPassword`,
+        | and `email`. `id` must not contain whitespace, must be at least 3 characters long, and must only contain
+        | alphanumeric characters. `password` must be at least 6 characters long and contain a mixture of at least
+        | alphanumeric characters with small and large caps. A user can only submit data after the created account is
+        | verified (using an out-of-band communication channel).
       """.stripMargin.replaceAll("\n", "")
     responseMessages (
       StringResponseMessage(201, "User record created successfully."),
@@ -77,9 +83,20 @@ class UsersController(implicit val swagger: Swagger) extends SentinelServlet {
   // format: OFF
 
   post("/", operation(usersUserIdPostOperation)) {
-    val userRequest = parsedBody.extract[UserRequest]
-    // TODO: return 400 if payload has extra keys, misses keys, username too short, or password too short or simple
-    // TODO: return 409 if user ID already exists
-    // TODO: return 201 if creation successful and return user record
+    val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiError("Malformed user request.")))
+
+    if (userRequest.validationMessages.size > 0)
+      BadRequest(ApiError("Invalid user request.", data = userRequest.validationMessages))
+    else {
+      Try(users.userExist(userRequest.id)) match {
+        case Failure(_) => InternalServerError(CommonErrors.Unexpected)
+        case Success(true)  => Conflict(ApiError("User ID already taken."))
+        case Success(false)  =>
+          Try(users.addUser(userRequest.user)) match {
+            case Failure(_) => InternalServerError(CommonErrors.Unexpected)
+            case Success(_) => Created(ApiError("New user created.", "/users/" + userRequest.user.id))
+          }
+      }
+    }
   }
 }

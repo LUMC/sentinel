@@ -58,5 +58,9 @@ package object utils {
     implicit class RichFileItem(fi: FileItem) {
       def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
     }
+
+    implicit class RichString(str: String) {
+      def toByteArray: Array[Byte] = str.map(_.toByte).toArray
+    }
   }
 }
