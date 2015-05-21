@@ -3,7 +3,7 @@ package nl.lumc.sasc.sentinel.api
 import akka.actor.ActorSystem
 import org.json4s._
 import org.scalatra.ScalatraServlet
-import org.scalatra.swagger.{ ApiInfo, JacksonSwaggerBase, Swagger }
+import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel.CurrentApiVersion
 

@@ -2,13 +2,16 @@ import akka.actor.ActorSystem
 import com.mongodb.casbah.MongoClient
 import javax.servlet.ServletContext
 import org.scalatra.LifeCycle
+import org.scalatra.swagger.ApiKey
 
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api._
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
 class ScalatraBootstrap extends LifeCycle {
 
   implicit val swagger = new SentinelSwagger
+  swagger.addAuthorization(ApiKey(HeaderApiKey, "header"))
 
   override def init(context: ServletContext) {
 

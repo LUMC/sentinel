@@ -8,6 +8,9 @@ package nl.lumc.sasc
 /** General package-level information */
 package object sentinel {
 
+  /** Header API key */
+  val HeaderApiKey = "X-SENTINEL-KEY"
+
   /** Supported run summaries */
   object RunSummary extends Enumeration {
     type RunSummary = Value

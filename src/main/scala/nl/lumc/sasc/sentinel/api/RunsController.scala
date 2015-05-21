@@ -63,6 +63,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, "User ID or run summary ID not found.")))
+  // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
@@ -92,6 +93,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, "User ID or run summary ID not found."),
       StringResponseMessage(410, "Run summary not available anymore."))
+    // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
     produces (
       "application/json",
       "application/octet-stream"))
@@ -146,6 +148,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message),
       StringResponseMessage(413, "Run summary too large.")))
+  // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   post("/", operation(runsPostOperation)) {
@@ -205,6 +208,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         StringResponseMessage(401, CommonErrors.Unauthenticated.message),
         StringResponseMessage(403, CommonErrors.Unauthorized.message),
         StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+  // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   get("/", operation(runsGetOperation)) {

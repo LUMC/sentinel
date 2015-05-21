@@ -40,4 +40,8 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
       super.registerModel(model.copy(properties = interceptedProp))
     }
   }
+
+  options("/*") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+  }
 }
