@@ -6,7 +6,6 @@ import org.scalatra.test.specs2._
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, UserRequest }
-import nl.lumc.sasc.sentinel.utils.implicits._
 
 class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
 
@@ -25,7 +24,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     return status 201 with the correct message if user creation is successful         $postRunsUserCreated
 """
 
-  private def toByteArray[T <: AnyRef](obj: T) = write(obj).toByteArray
+  private def toByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = makeDbAccess
