@@ -58,7 +58,7 @@ var adminUser = {
     email: "admin@sentinel.org",
     // log2 10 hashing round of `admin`
     hashedPassword: "$2a$10$Jn7IauL.0CeaZU92tA0DaOmz7WQIqaGepXbzxoL6y0hUwzAeKou9a",
-    isConfirmed: true,
+    emailVerified: true,
     isAdmin: true,
     creationTime: new Date()
 }
