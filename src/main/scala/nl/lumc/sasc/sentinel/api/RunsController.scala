@@ -43,7 +43,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       contentType = formats("json")
       RequestEntityTooLarge(
         Serialization.write(
-          ApiError("Run summary exceeds " + (maxFileSize / (1024 * 1024)).toString + " MB."))
+          ApiMessage("Run summary exceeds " + (maxFileSize / (1024 * 1024)).toString + " MB."))
       )
   }
 
@@ -174,9 +174,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
             log(f.getMessage, f)
             f match {
               case vexc: RunValidationException =>
-                BadRequest(ApiError(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+                BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
               case dexc: DuplicateRunException =>
-                BadRequest(ApiError("Run summary already uploaded by the user."))
+                BadRequest(ApiMessage("Run summary already uploaded by the user."))
               case otherwise =>
                 InternalServerError(CommonErrors.Unexpected)
             }

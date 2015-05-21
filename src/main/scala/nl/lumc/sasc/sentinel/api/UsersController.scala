@@ -83,18 +83,18 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: OFF
 
   post("/", operation(usersUserIdPostOperation)) {
-    val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiError("Malformed user request.")))
+    val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
 
     if (userRequest.validationMessages.size > 0)
-      BadRequest(ApiError("Invalid user request.", data = userRequest.validationMessages))
+      BadRequest(ApiMessage("Invalid user request.", data = userRequest.validationMessages))
     else {
       Try(users.userExist(userRequest.id)) match {
         case Failure(_) => InternalServerError(CommonErrors.Unexpected)
-        case Success(true)  => Conflict(ApiError("User ID already taken."))
+        case Success(true)  => Conflict(ApiMessage("User ID already taken."))
         case Success(false)  =>
           Try(users.addUser(userRequest.user)) match {
             case Failure(_) => InternalServerError(CommonErrors.Unexpected)
-            case Success(_) => Created(ApiError("New user created.", "/users/" + userRequest.user.id))
+            case Success(_) => Created(ApiMessage("New user created.", "/users/" + userRequest.user.id))
           }
       }
     }

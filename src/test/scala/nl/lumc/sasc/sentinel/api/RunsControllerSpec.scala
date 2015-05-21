@@ -9,7 +9,7 @@ import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
-import nl.lumc.sasc.sentinel.models.ApiError
+import nl.lumc.sasc.sentinel.models.ApiMessage
 
 class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
   def is = s2"""
@@ -50,7 +50,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   }
 
   def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unsupported"))) {
-    apiError mustEqual Some(ApiError("User ID not specified."))
+    apiError mustEqual Some(ApiMessage("User ID not specified."))
   }
 
   def postRunsUnspecifiedPipelineStatus = post("/runs", Seq(("userId", "testMan"))) {
@@ -58,7 +58,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   }
 
   def postRunsUnspecifiedPipelineMessage = post("/runs", Seq(("userId", "testMan"))) {
-    apiError mustEqual Some(ApiError("Pipeline not specified."))
+    apiError mustEqual Some(ApiMessage("Pipeline not specified."))
   }
 
   def postRunsFileTooLargeStatus = {
@@ -75,7 +75,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   def postRunsFileTooLargeMessage = {
     val tooBigFile = createTempFile("tooBig.json")
     post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
-      apiError mustEqual Some(ApiError("Run summary exceeds 16 MB."))
+      apiError mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
     } before {
       fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
     } after {

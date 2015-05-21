@@ -27,9 +27,9 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   )
 
   get("/:annotId", operation(annotationsRefIdGetOperation)) {
-    val annotId = params.getAs[String]("annotId").getOrElse(halt(400, ApiError("Annotation ID not specified.")))
+    val annotId = params.getAs[String]("annotId").getOrElse(halt(400, ApiMessage("Annotation ID not specified.")))
     annots.getAnnotation(annotId) match {
-      case None        => NotFound(ApiError("Annotation ID can not be found."))
+      case None        => NotFound(ApiMessage("Annotation ID can not be found."))
       case Some(annot) => Ok(annot)
     }
   }

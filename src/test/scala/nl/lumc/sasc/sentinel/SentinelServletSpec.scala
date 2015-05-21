@@ -6,7 +6,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.specs2.ScalatraSpec
 
-import nl.lumc.sasc.sentinel.models.ApiError
+import nl.lumc.sasc.sentinel.models.ApiMessage
 import nl.lumc.sasc.sentinel.utils.CustomObjectIdSerializer
 
 trait SentinelServletSpec extends ScalatraSpec with EmbeddedMongodbRunner {
@@ -27,5 +27,5 @@ trait SentinelServletSpec extends ScalatraSpec with EmbeddedMongodbRunner {
 
   def jsonBody: Option[JValue] = Try(parse(body)).toOption
 
-  def apiError: Option[ApiError] = jsonBody.collect { case json => json.extract[ApiError] }
+  def apiError: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
 }
