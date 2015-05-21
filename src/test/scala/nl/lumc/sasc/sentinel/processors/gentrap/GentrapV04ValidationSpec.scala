@@ -3,10 +3,10 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 import org.specs2._
 import org.specs2.mock.Mockito
 
-import nl.lumc.sasc.sentinel.JsonLoaderSpec
+import nl.lumc.sasc.sentinel.JsonLoader
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
-class GentrapV04ValidationSpec extends Specification with JsonLoaderSpec with Mockito {
+class GentrapV04ValidationSpec extends Specification with JsonLoader with Mockito {
   def is = s2"""
 
   The Gentrap v0.4 schema must
