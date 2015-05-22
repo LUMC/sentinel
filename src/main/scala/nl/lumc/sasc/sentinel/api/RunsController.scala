@@ -29,11 +29,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected val gentrap = new GentrapV04InputProcessor(mongo)
   protected val unsupported = new UnsupportedInputProcessor(mongo)
 
-  before() {
-    contentType = formats("json")
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
   protected def maxFileSize = 16 * 1024 * 1024
 
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))

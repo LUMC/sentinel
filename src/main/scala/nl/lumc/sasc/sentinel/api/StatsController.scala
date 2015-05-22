@@ -23,11 +23,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
   protected val gentrap = new GentrapOutputProcessor(mongo)
 
-  before() {
-    contentType = formats("json")
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
   val statsRunsGetOperation = (apiOperation[Seq[PipelineRunStats]]("statsRunsGet")
     summary "Retrieves general statistics of uploaded run summaries."
   )

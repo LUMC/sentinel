@@ -13,11 +13,6 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
 
   protected val annots = new AnnotationsAdapter with MongodbConnector { val mongo = self.mongo }
 
-  before() {
-    contentType = formats("json")
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
   val annotationsRefIdGetOperation = (apiOperation[List[Annotation]]("annotationsRefIdGet")
     summary "Retrieves a single full annotation item."
     parameters pathParam[String]("annotId").description("Annotation ID query.")

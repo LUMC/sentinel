@@ -13,11 +13,6 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
 
   protected val refs = new ReferencesAdapter with MongodbConnector { val mongo = self.mongo }
 
-  before() {
-    contentType = formats("json")
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
   val referencesRefIdGetOperation = (apiOperation[List[Reference]]("referencesRefIdGet")
     summary "Retrieves a single full reference item."
     parameters pathParam[String]("refId").description("Reference ID query.")

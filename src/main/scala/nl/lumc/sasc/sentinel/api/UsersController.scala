@@ -16,11 +16,6 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
 
-  before() {
-    contentType = formats("json")
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
     summary "Updates an existing user record."
