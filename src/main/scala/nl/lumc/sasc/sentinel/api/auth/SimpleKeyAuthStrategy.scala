@@ -1,9 +1,12 @@
 package nl.lumc.sasc.sentinel.api.auth
 
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+import org.scalatra.servlet.RichRequest
+import org.scalatra.util.RicherString
+
 import scala.language.reflectiveCalls
 
-import org.scalatra.ScalatraBase
+import org.scalatra.{ ScalatraBase, Unauthorized }
 import org.scalatra.auth.ScentryStrategy
 import org.scalatra.auth.ScentrySupport
 
@@ -13,25 +16,32 @@ import nl.lumc.sasc.sentinel.api.auth.SimpleKeyAuthStrategy.SimpleKeyAuthRequest
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ CommonErrors, User }
 
-class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: UsersAdapter }) extends ScentryStrategy[User] {
+class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: UsersAdapter }, realm: String)
+    extends ScentryStrategy[User] {
 
   override def name = "SimpleKey"
+
+  protected def challenge = "ApiKey realm=\"%s\"" format realm
 
   def authenticate()(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] =
     app.users.getUser(app.params("userId")).flatMap {
       case user =>
-        if (user.keyMatches(app.params(HeaderApiKey))) Some(user)
+        if (user.keyMatches(request.getHeader(HeaderApiKey))) Some(user)
         else None
     }
+
+  override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) {
+    app halt Unauthorized(CommonErrors.Unauthenticated, Map("WWW-Authenticate" -> challenge))
+  }
 }
 
 object SimpleKeyAuthStrategy {
 
-  class SimpleKeyAuthRequest(req: HttpServletRequest) {
+  class SimpleKeyAuthRequest(req: RichRequest) {
 
-    def providesAuth = Option(req.getHeader(HeaderApiKey)).isDefined
+    def providesAuth = req.header(HeaderApiKey).isDefined
 
-    lazy val userId = Option(req.getAttribute("userId"))
+    lazy val userId = new RicherString(req.parameters("userId")).blankOption
   }
 
 }
@@ -42,7 +52,7 @@ trait SimpleKeyAuthSupport[UserType <: AnyRef] {
   private val realm = "Sentinel operations"
 
   protected def simpleKeyAuth()(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    val skReq = new SimpleKeyAuthRequest(request)
+    val skReq = new SimpleKeyAuthRequest(new RichRequest(request))
     if (skReq.userId.isEmpty) {
       halt(400, CommonErrors.UnspecifiedUserId)
     }

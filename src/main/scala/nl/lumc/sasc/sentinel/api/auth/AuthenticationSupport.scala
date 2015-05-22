@@ -17,7 +17,7 @@ trait AuthenticationSupport extends ScentrySupport[User]
   protected val scentryConfig = new ScentryConfig {}.asInstanceOf[ScentryConfiguration]
 
   override protected def registerAuthStrategies() = {
-    scentry.register(new SimpleKeyAuthStrategy(this))
+    scentry.register(new SimpleKeyAuthStrategy(this, "Sentinel operations"))
   }
 
   override protected def configureScentry() = {
