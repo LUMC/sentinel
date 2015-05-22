@@ -10,11 +10,15 @@ case class User(
     id: String,
     email: String,
     hashedPassword: String,
+    activeKey: String,
     emailVerified: Boolean,
     isAdmin: Boolean,
     creationTime: Date,
     updateTime: Option[Date] = None) {
 
   def passwordMatches(candidate: String): Boolean = BCrypt.checkpw(candidate, hashedPassword)
+
+  // NOTE: This is kept super simple now since it's not yet our priority
+  def keyMatches(candidate: String): Boolean = candidate == activeKey
 }
 

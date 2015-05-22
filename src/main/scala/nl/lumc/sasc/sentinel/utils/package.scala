@@ -6,7 +6,10 @@ import java.util.zip.GZIPInputStream
 import java.nio.file.Paths
 import java.security.MessageDigest
 import java.time.Clock
+import javax.crypto.KeyGenerator
 import scala.io.Source
+
+import org.apache.commons.codec.binary.Base64
 
 import org.scalatra.servlet.FileItem
 
@@ -50,6 +53,14 @@ package object utils {
   }
 
   def getTimeNow: Date = Date.from(Clock.systemUTC().instant)
+
+  val KeyGen = {
+    val k = KeyGenerator.getInstance("HmacSHA1")
+    k.init(192)
+    k
+  }
+
+  def generateApiKey(): String = new String(Base64.encodeBase64(KeyGen.generateKey().getEncoded))
 
   object implicits {
 

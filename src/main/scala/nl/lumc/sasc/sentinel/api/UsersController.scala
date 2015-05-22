@@ -94,7 +94,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         case Success(false)  =>
           Try(users.addUser(userRequest.user)) match {
             case Failure(_) => InternalServerError(CommonErrors.Unexpected)
-            case Success(_) => Created(ApiMessage("New user created.", "/users/" + userRequest.user.id))
+            case Success(_) => Created(
+              ApiMessage("New user created.",
+                Map("uri" -> ("/users/" + userRequest.user.id), "apiKey" -> userRequest.user.activeKey)))
           }
       }
     }

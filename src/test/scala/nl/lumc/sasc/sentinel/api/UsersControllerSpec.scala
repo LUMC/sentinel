@@ -1,10 +1,12 @@
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.SentinelServletSpec
+import org.json4s._
 import org.json4s.jackson.Serialization.write
 import org.scalatra.test.specs2._
+import org.specs2.execute.Failure
 import org.specs2.mock.Mockito
 
+import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, UserRequest }
 
 class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
@@ -111,7 +113,11 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(userRequest)
     post("/users", payload) {
       status mustEqual 201
-      apiMessage mustEqual Some(ApiMessage("New user created.", "/users/yeah"))
+      apiMessage.isDefined must beTrue
+      apiMessage.get.message mustEqual "New user created."
+      val msgData = (jsonBody.get \ "data").extract[Map[String, String]]
+      msgData("uri") mustEqual "/users/yeah"
+      msgData.keySet must contain("apiKey")
     } before {
       servlet.users.userExist("yeah") must beFalse
     } after {
