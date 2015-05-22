@@ -27,5 +27,5 @@ trait SentinelServletSpec extends ScalatraSpec with EmbeddedMongodbRunner {
 
   def jsonBody: Option[JValue] = Try(parse(body)).toOption
 
-  def apiError: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
+  def apiMessage: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
 }

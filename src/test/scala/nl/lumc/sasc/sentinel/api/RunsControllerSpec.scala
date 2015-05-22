@@ -50,7 +50,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   }
 
   def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unsupported"))) {
-    apiError mustEqual Some(ApiMessage("User ID not specified."))
+    apiMessage mustEqual Some(ApiMessage("User ID not specified."))
   }
 
   def postRunsUnspecifiedPipelineStatus = post("/runs", Seq(("userId", "testMan"))) {
@@ -58,7 +58,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   }
 
   def postRunsUnspecifiedPipelineMessage = post("/runs", Seq(("userId", "testMan"))) {
-    apiError mustEqual Some(ApiMessage("Pipeline not specified."))
+    apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
   }
 
   def postRunsFileTooLargeStatus = {
@@ -75,7 +75,7 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   def postRunsFileTooLargeMessage = {
     val tooBigFile = createTempFile("tooBig.json")
     post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
-      apiError mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
+      apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
     } before {
       fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
     } after {

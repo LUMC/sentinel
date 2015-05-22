@@ -34,19 +34,19 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
 
   def postRunsEmptyBody = post("/users", body = Array.empty[Byte]) {
     status mustEqual 400
-    apiError mustEqual Some(ApiMessage("Malformed user request."))
+    apiMessage mustEqual Some(ApiMessage("Malformed user request."))
   }
 
   def postRunsInvalidBody = post("/users", Array[Byte](10, 20, 30)) {
     status mustEqual 400
-    apiError mustEqual Some(ApiMessage("Malformed user request."))
+    apiMessage mustEqual Some(ApiMessage("Malformed user request."))
   }
 
   def postRunsPasswordDiff = {
     val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "Mypass456"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.", Seq("Different passwords given.")))
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.", Seq("Different passwords given.")))
     }
   }
 
@@ -54,7 +54,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(UserRequest("hm", "mail@mail.com", "Mypass123", "Mypass123"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.", Seq("User ID too short.")))
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.", Seq("User ID too short.")))
     }
   }
 
@@ -62,7 +62,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "My1", "My1"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.", Seq("Password too short.")))
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.", Seq("Password too short.")))
     }
   }
 
@@ -70,7 +70,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "mypass123", "mypass123"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.",
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.",
         Seq("Password does not contain a mixture of lower case(s), upper case(s), and number(s).")))
     }
   }
@@ -79,7 +79,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MYPASS123", "MYPASS123"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.",
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.",
         Seq("Password does not contain a mixture of lower case(s), upper case(s), and number(s).")))
     }
   }
@@ -88,7 +88,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "Mypass", "Mypass"))
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("Invalid user request.",
+      apiMessage mustEqual Some(ApiMessage("Invalid user request.",
         Seq("Password does not contain a mixture of lower case(s), upper case(s), and number(s).")))
     }
   }
@@ -98,7 +98,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(userRequest)
     post("/users", payload) {
       status mustEqual 400
-      apiError mustEqual Some(ApiMessage("User ID already taken."))
+      apiMessage mustEqual Some(ApiMessage("User ID already taken."))
     } before {
       servlet.users.addUser(userRequest.user)
     } after {
@@ -111,7 +111,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
     val payload = toByteArray(userRequest)
     post("/users", payload) {
       status mustEqual 201
-      apiError mustEqual Some(ApiMessage("New user created.", "/users/yeah"))
+      apiMessage mustEqual Some(ApiMessage("New user created.", "/users/yeah"))
     } before {
       servlet.users.userExist("yeah") must beFalse
     } after {
