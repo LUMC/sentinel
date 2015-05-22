@@ -17,4 +17,8 @@ trait UsersAdapter { this: MongodbConnector =>
   def addUser(user: User): Unit = coll.insert(grater[User].asDBObject(user))
 
   def deleteUser(userId: String): Unit = coll.remove(MongoDBObject("id" -> userId))
+
+  def getUser(userId: String): Option[User] = coll
+    .findOne(MongoDBObject("id" -> userId))
+    .collect { case dbo => grater[User].asObject(dbo) }
 }
