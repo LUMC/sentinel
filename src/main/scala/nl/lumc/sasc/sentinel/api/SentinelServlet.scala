@@ -49,4 +49,9 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
     contentType = formats("json")
     response.headers += ("Access-Control-Allow-Origin" -> "*")
   }
+
+  after() {
+    response.setHeader("Set-Cookie", null) // Disable cookies ~ the server should not store state
+    response.setHeader("REMOTE_USER", null) // Remove nonstandard field added automatically by Scalatra
+  }
 }
