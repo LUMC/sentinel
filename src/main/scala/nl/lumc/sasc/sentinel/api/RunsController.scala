@@ -1,6 +1,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
+import scala.util.{ Failure, Success, Try }
 
 import org.json4s.jackson.Serialization
 import org.scalatra._
@@ -8,16 +9,16 @@ import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
+import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
-import scala.util.Try
-
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
-    with FileUploadSupport { self =>
+    with FileUploadSupport
+    with AuthenticationSupport { self =>
 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
@@ -26,6 +27,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val mongo = self.mongo
     def processRun(fi: FileItem, userId: String, pipeline: String) = Try(throw new NotImplementedError)
   }
+  val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
   protected val gentrap = new GentrapV04InputProcessor(mongo)
   protected val unsupported = new UnsupportedInputProcessor(mongo)
 
@@ -150,10 +152,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, "Run summary file not specified."))
-    // TODO: return 413 if file is too large
     // TODO: return 404 if user not found
-    // TODO: return 401 if not authenticated
-    // TODO: return 403 if not authorized
     // TODO: return 400 if any other error occurs (???)
 
     val processor = AllowedPipelineParams.get(pipeline).collect {
@@ -161,21 +160,25 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case Pipeline.Unsupported => unsupported
     }
 
-    processor match {
-      case None => BadRequest(CommonErrors.InvalidPipeline)
-      case Some(p) =>
-        p.processRun(uploadedRun, userId, pipeline) match {
-          case scala.util.Failure(f) =>
-            log(f.getMessage, f)
-            f match {
-              case vexc: RunValidationException =>
-                BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
-              case dexc: DuplicateRunException =>
-                BadRequest(ApiMessage("Run summary already uploaded by the user."))
-              case otherwise =>
-                InternalServerError(CommonErrors.Unexpected)
+    simpleKeyAuth() match {
+      case Some(user) if !user.emailVerified => Forbidden(CommonErrors.Unauthorized)
+      case _ =>
+        processor match {
+          case None => BadRequest(CommonErrors.InvalidPipeline)
+          case Some(p) =>
+            p.processRun(uploadedRun, userId, pipeline) match {
+              case Failure(f) =>
+                log(f.getMessage, f)
+                f match {
+                  case vexc: RunValidationException =>
+                    BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+                  case dexc: DuplicateRunException =>
+                    BadRequest(ApiMessage("Run summary already uploaded by the user."))
+                  case otherwise =>
+                    InternalServerError(CommonErrors.Unexpected)
+                }
+              case Success(run) => Created(run)
             }
-          case scala.util.Success(run) => Created(run)
         }
     }
   }
