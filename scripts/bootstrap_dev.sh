@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# bootstrap.sh
+# bootstrap_dev.sh
 #
 # Script for bootstrapping local sentinel development.
 #

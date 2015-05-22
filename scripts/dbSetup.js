@@ -51,17 +51,18 @@ db.createUser({
     roles: [ "readWrite" ]
 });
 
-print("\nAdding the API admin user ...");
+print("\nAdding mock user ...");
 // NOTE: must be kept in sync with User in the source code
-var adminUser = {
-    id: "admin",
-    email: "admin@sentinel.org",
-    // log2 10 hashing round of `admin`
-    hashedPassword: "$2a$10$Jn7IauL.0CeaZU92tA0DaOmz7WQIqaGepXbzxoL6y0hUwzAeKou9a",
+var devUser = {
+    id: "dev",
+    email: "dev@sentinel.org",
+    // log2 10 hashing round of `dev`
+    hashedPassword: "$2a$10$dNNzi9ieIj1Lk/ED184tPOHJeYDCIc/9bvCJUggC8Gl.4d4pEsdn6",
+    activeKey: "dev",
     emailVerified: true,
     isAdmin: true,
     creationTime: new Date()
 }
-db.users.insert(adminUser);
+db.users.insert(devUser);
 
 print("\n************ Done ************\n");
