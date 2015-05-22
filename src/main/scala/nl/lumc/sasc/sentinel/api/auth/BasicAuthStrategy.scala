@@ -13,6 +13,8 @@ import nl.lumc.sasc.sentinel.models.User
 class BasicAuthStrategy(protected override val app: SentinelServlet { def users: UsersAdapter }, realm: String)
     extends org.scalatra.auth.strategy.BasicAuthStrategy[User](app, realm) {
 
+  override def name = "Basic"
+
   protected def validate(userId: String, password: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] =
     app.users.getUser(userId).flatMap {
       case user =>

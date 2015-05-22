@@ -18,6 +18,7 @@ trait AuthenticationSupport extends ScentrySupport[User]
 
   override protected def registerAuthStrategies() = {
     scentry.register(new SimpleKeyAuthStrategy(this, "Sentinel operations"))
+    scentry.register(new BasicAuthStrategy(this, "Sentinel users"))
   }
 
   override protected def configureScentry() = {
