@@ -152,8 +152,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, "Run summary file not specified."))
-    // TODO: return 404 if user not found
-    // TODO: return 400 if any other error occurs (???)
 
     val processor = AllowedPipelineParams.get(pipeline).collect {
       case Pipeline.Gentrap     => gentrap
@@ -212,7 +210,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   get("/", operation(runsGetOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipelines = splitParam(params.getAs[String]("pipelines"))
-    // TODO: return 404 if user ID not found
     // TODO: return 401 if not authenticated
     // TODO: return 403 if unauthorized
     runs.getRuns(userId, pipelines)
