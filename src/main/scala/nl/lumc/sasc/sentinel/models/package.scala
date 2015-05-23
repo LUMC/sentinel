@@ -34,6 +34,8 @@ package object models {
 
     val Unauthorized = ApiMessage("Unauthorized to access resource.")
 
+    val IncorrectAuthMode = ApiMessage("Incorrect authentication mode.")
+
     val Unexpected = ApiMessage("Unexpected error. Please contact the site administrators.")
   }
 }
