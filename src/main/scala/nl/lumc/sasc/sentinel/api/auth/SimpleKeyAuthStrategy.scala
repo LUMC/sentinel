@@ -4,13 +4,10 @@ import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.reflectiveCalls
 
 import org.scalatra.{ Forbidden, ScalatraBase, Unauthorized }
-import org.scalatra.servlet.RichRequest
-import org.scalatra.util.RicherString
 import org.scalatra.auth.{ ScentryStrategy, ScentrySupport }
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.SentinelServlet
-import nl.lumc.sasc.sentinel.api.auth.SimpleKeyAuthStrategy.SimpleKeyAuthRequest
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ CommonErrors, User }
 
@@ -43,24 +40,16 @@ object SimpleKeyAuthStrategy {
   val name = "SimpleKey"
 
   val challenge = "SimpleKey realm=\"Sentinel Ops\""
-
-  class SimpleKeyAuthRequest(req: RichRequest) {
-
-    def providesAuth = req.header(HeaderApiKey).isDefined
-
-    lazy val userId = new RicherString(req.parameters("userId")).blankOption
-  }
 }
 
 trait SimpleKeyAuthSupport[UserType <: AnyRef] {
   this: (ScalatraBase with ScentrySupport[UserType]) =>
 
   protected def simpleKeyAuth()(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    val skReq = new SimpleKeyAuthRequest(new RichRequest(request))
-    if (skReq.userId.isEmpty) {
+    if (params.get("userId").isEmpty) {
       halt(400, CommonErrors.UnspecifiedUserId)
     }
-    if (!skReq.providesAuth) {
+    if (Option(request.getHeader(HeaderApiKey)).isEmpty) {
       response.setHeader("WWW-Authenticate", SimpleKeyAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
