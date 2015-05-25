@@ -12,15 +12,15 @@ import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.ApiMessage
 
 class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
-  def is = s2"""
 
-  POST / on RunsController must
-    return status 400 if user is unspecified                      $postRunsUnspecifiedUserStatus
-    return the correct message if user is unspecified             $postRunsUnspecifiedUserMessage
-    return status 400 if pipeline is unspecified                  $postRunsUnspecifiedPipelineStatus
-    return the correct message if pipeline is unspecified         $postRunsUnspecifiedPipelineMessage
-    return status 413 if run summary is too large                 $postRunsFileTooLargeStatus
-    return the correct message if run summary is too large        $postRunsFileTooLargeMessage
+  sequential
+
+  def is = """
+
+  POST '/runs' must
+    return status 400 with the correct message if user is unspecified               $postRunsUnspecifiedUser
+    return status 400 with the correct message if pipeline is unspecified           $postRunsUnspecifiedPipeline
+    return status 413 with the correct messageif run summary is too large           $postRunsFileTooLarge
 """
 
   protected lazy val tempDir = Files.createTempDir()
@@ -41,40 +41,25 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
   }
 
   implicit val swagger = new SentinelSwagger
-  implicit val mongo = mock[MongodbAccessObject]
+  implicit val mongo = makeDbAccess
 
-  addServlet(new RunsController, "/runs/*")
+  val servlet = new RunsController
+  addServlet(servlet, "/runs/*")
 
-  def postRunsUnspecifiedUserStatus = post("/runs", Seq(("pipeline", "unsupported"))) {
+  def postRunsUnspecifiedUser = post("/runs", Seq(("pipeline", "unsupported"))) {
     status mustEqual 400
-  }
-
-  def postRunsUnspecifiedUserMessage = post("/runs", Seq(("pipeline", "unsupported"))) {
     apiMessage mustEqual Some(ApiMessage("User ID not specified."))
   }
 
-  def postRunsUnspecifiedPipelineStatus = post("/runs", Seq(("userId", "testMan"))) {
+  def postRunsUnspecifiedPipeline = post("/runs", Seq(("userId", "testMan"))) {
     status mustEqual 400
-  }
-
-  def postRunsUnspecifiedPipelineMessage = post("/runs", Seq(("userId", "testMan"))) {
     apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
   }
 
-  def postRunsFileTooLargeStatus = {
+  def postRunsFileTooLarge = {
     val tooBigFile = createTempFile("tooBig.json")
     post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
       status mustEqual 413
-    } before {
-      fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
-    } after {
-      deleteQuietly(tooBigFile)
-    }
-  }
-
-  def postRunsFileTooLargeMessage = {
-    val tooBigFile = createTempFile("tooBig.json")
-    post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
       apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
     } before {
       fillFile(tooBigFile, 16 * 1024 * 1024 + 100)

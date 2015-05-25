@@ -13,7 +13,7 @@ class UsersControllerSpec extends ScalatraSpec with SentinelServletSpec with Moc
 
   def is = s2"""
 
-  POST /users must
+  POST '/users' must
     return status 400 with the correct message if request body is empty               $postRunsEmptyBody
     return status 400 with the correct message if request body is not valid JSON      $postRunsInvalidBody
     return status 400 with the correct message if passwords are not equal             $postRunsPasswordDiff
