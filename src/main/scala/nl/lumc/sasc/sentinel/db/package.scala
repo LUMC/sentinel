@@ -2,6 +2,7 @@ package nl.lumc.sasc.sentinel
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.Imports._
+import com.mongodb.gridfs.GridFS.DEFAULT_BUCKET
 
 package object db {
 
@@ -12,11 +13,16 @@ package object db {
     val Users = "users"
   }
 
-  case class MongodbAccessObject(client: MongoClient, dbName: String) {
+  case class MongodbAccessObject(client: MongoClient, dbName: String, bucketName: String = DEFAULT_BUCKET) {
 
     lazy val db: MongoDB = client(dbName)
 
-    lazy val gridfs: GridFS = GridFS(db)
+    def gridfs: GridFS = {
+      val gfs = GridFS(db, bucketName)
+      db.getCollection(s"$bucketName.files").setWriteConcern(WriteConcern.Acknowledged)
+      db.getCollection(s"$bucketName.chunks").setWriteConcern(WriteConcern.Acknowledged)
+      gfs
+    }
   }
 
   trait MongodbConnector {
