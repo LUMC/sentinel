@@ -164,11 +164,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         simpleKeyAuth()
         p.processRun(uploadedRun, userId, pipeline) match {
           case Failure(f) =>
-            log(f.getMessage, f)
             f match {
               case vexc: RunValidationException =>
                 BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
-              case dexc: DuplicateRunException =>
+              case dexc: com.mongodb.DuplicateKeyException =>
                 BadRequest(ApiMessage("Run summary already uploaded by the user."))
               case otherwise =>
                 InternalServerError(CommonErrors.Unexpected)
