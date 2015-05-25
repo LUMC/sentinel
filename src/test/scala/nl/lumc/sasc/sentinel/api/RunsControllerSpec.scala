@@ -38,6 +38,8 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
   "POST '/runs'" >> {
 
+    br
+
     "when the user is not specified" should {
       "return status 400 and the correct message" in {
         post("/runs", Seq(("pipeline", "unsupported"))) {

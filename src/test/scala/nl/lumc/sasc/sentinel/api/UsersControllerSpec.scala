@@ -19,6 +19,8 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
 
   "POST '/users'" >> {
 
+    br
+
     "when the request body is empty" should {
       "return status 400 and the correct message" in {
         post("/users", body = Array.empty[Byte]) {
