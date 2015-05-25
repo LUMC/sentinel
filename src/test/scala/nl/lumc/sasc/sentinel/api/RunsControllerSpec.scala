@@ -6,8 +6,10 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.specs2.mock.Mockito
 
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.ApiMessage
+import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
+import nl.lumc.sasc.sentinel.utils.{ getResourceFile, getTimeNow }
 
 class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
@@ -63,6 +65,16 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
+    "when an invalid pipeline is specified" should {
+      "return status 400 and the correct message" in {
+        val file = getResourceFile("/schema_examples/unsupported.json")
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "devtest")), Map("run" -> file)) {
+          status mustEqual 400
+          apiMessage.collect { case m => m.message } mustEqual Some("Pipeline parameter is invalid.")
+        }
+      }
+    }
+
     "when the submitted run summary exceeds 16 MB" should {
       "return status 400 and the correct message" in {
         val tooBigFile = createTempFile("tooBig.json")
@@ -74,6 +86,50 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         } after {
           deleteQuietly(tooBigFile)
         }
+      }
+    }
+
+    s"when the user does not provide the $HeaderApiKey header" should {
+      "return status 401, the challenge response header, and the correct message" in {
+        val file = getResourceFile("/schema_examples/unsupported.json")
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file)) {
+          status mustEqual 401
+          header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+          apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+        }
+      }
+    }
+
+    s"when the provided $HeaderApiKey does not match the one owned by the user" should {
+      "return status 401, the challenge response header, and the correct message" in {
+        val file = getResourceFile("/schema_examples/unsupported.json")
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
+          Map(HeaderApiKey -> "key")) {
+            status mustEqual 401
+            header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+          } before {
+            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "diffKey", emailVerified = true, isAdmin = false,
+              getTimeNow))
+          } after {
+            servlet.users.deleteUser("devtest")
+          }
+      }
+    }
+
+    "when a user without a verified email address uploads a run summary" should {
+      "return status 403 and the correct message" in {
+        val file = getResourceFile("/schema_examples/unsupported.json")
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
+          Map(HeaderApiKey -> "key")) {
+            status mustEqual 403
+            apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
+          } before {
+            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = false, isAdmin = false,
+              getTimeNow))
+          } after {
+            servlet.users.deleteUser("devtest")
+          }
       }
     }
   }
