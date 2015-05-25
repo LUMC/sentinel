@@ -47,6 +47,10 @@ trait EmbeddedMongodbRunner {
 
   protected lazy val dbAccess = MongodbAccessObject(mongoClient, dbName)
 
+  protected def resetDb(): Unit = dbAccess.db.dropDatabase()
+
+  protected def resetCollection(collectionName: String): Unit = dbAccess.db(collectionName).dropCollection()
+
   def start(): Unit = mongodExecutable.start()
 
   def stop(): Unit = mongodExecutable.stop()
