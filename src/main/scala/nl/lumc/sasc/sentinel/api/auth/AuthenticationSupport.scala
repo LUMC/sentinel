@@ -2,7 +2,6 @@ package nl.lumc.sasc.sentinel.api.auth
 
 import scala.language.reflectiveCalls
 
-import org.bson.types.ObjectId
 import org.scalatra.auth.{ ScentryConfig, ScentrySupport }
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
@@ -29,7 +28,7 @@ trait AuthenticationSupport extends ScentrySupport[User]
   //       still needs to be implemented, so we are implementing something minimum
   protected def fromSession = {
     case id: String =>
-      User(new ObjectId, id, "", "", "", emailVerified = false, isAdmin = false, getTimeNow)
+      User(id, "", "", "", emailVerified = false, isAdmin = false, getTimeNow)
   }
   protected def toSession = { case user: User => user.id }
 

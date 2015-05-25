@@ -6,7 +6,6 @@ import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
 
 case class User(
-    _id: ObjectId,
     id: String,
     email: String,
     hashedPassword: String,
@@ -14,6 +13,7 @@ case class User(
     emailVerified: Boolean,
     isAdmin: Boolean,
     creationTime: Date,
+    _id: ObjectId = new ObjectId,
     updateTime: Option[Date] = None) {
 
   def passwordMatches(candidate: String): Boolean = BCrypt.checkpw(candidate, hashedPassword)

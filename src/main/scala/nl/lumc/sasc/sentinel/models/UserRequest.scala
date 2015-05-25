@@ -42,12 +42,12 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
 
   lazy val user: User =
     User(
-      _id = new ObjectId,
       id = id,
       email = email,
       hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt()),
       activeKey = generateApiKey(),
       emailVerified = false,
       isAdmin = false,
-      creationTime = getTimeNow)
+      creationTime = getTimeNow,
+      _id = new ObjectId)
 }
