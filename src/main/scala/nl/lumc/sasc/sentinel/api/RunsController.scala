@@ -23,13 +23,13 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
 
-  protected val runs = new RunsAdapter with MongodbConnector {
+  val runs = new RunsAdapter with MongodbConnector {
     val mongo = self.mongo
     def processRun(fi: FileItem, userId: String, pipeline: String) = Try(throw new NotImplementedError)
   }
   val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
-  protected val gentrap = new GentrapV04InputProcessor(mongo)
-  protected val unsupported = new UnsupportedInputProcessor(mongo)
+  val unsupported = new UnsupportedInputProcessor(mongo)
+  val gentrap = new GentrapV04InputProcessor(mongo)
 
   protected def maxFileSize = MaxRunSummarySize
 
