@@ -4,72 +4,77 @@ import java.io.{ File, RandomAccessFile }
 
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
-import org.scalatra.test.specs2._
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.ApiMessage
 
-class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
+class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
   sequential
-
-  def is = s2"""
-
-  POST '/runs' must
-    return status 400 with the correct message if user is unspecified               $postRunsUnspecifiedUser
-    return status 400 with the correct message if pipeline is unspecified           $postRunsUnspecifiedPipeline
-    return status 400 with the correct message if run is not specified              $postRunsUnspecifiedRun
-    return status 413 with the correct messageif run summary is too large           $postRunsFileTooLarge
-"""
-
-  protected lazy val tempDir = Files.createTempDir()
-
-  def createTempFile(name: String): File = new File(tempDir, name)
 
   override def stop(): Unit = {
     deleteDirectory(tempDir)
     super.stop()
   }
 
+  protected lazy val tempDir = Files.createTempDir()
+
+  protected def createTempFile(name: String): File = new File(tempDir, name)
+
   protected def fillFile(file: File, size: Long): File = {
     val raf = new RandomAccessFile(file, "rw")
     raf.setLength(size)
-    raf.length()
     raf.close()
     file
   }
 
   implicit val swagger = new SentinelSwagger
-  implicit val mongo = makeDbAccess
-
+  implicit val mongo = dbAccess
   val servlet = new RunsController
   addServlet(servlet, "/runs/*")
 
-  def postRunsUnspecifiedUser = post("/runs", Seq(("pipeline", "unsupported"))) {
-    status mustEqual 400
-    apiMessage mustEqual Some(ApiMessage("User ID not specified."))
-  }
+  "POST '/runs'" >> {
 
-  def postRunsUnspecifiedPipeline = post("/runs", Seq(("userId", "devtest"))) {
-    status mustEqual 400
-    apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
-  }
+    "when the user is not specified" should {
+      "return status 400 and the correct message" in {
+        post("/runs", Seq(("pipeline", "unsupported"))) {
+          status mustEqual 400
+          apiMessage mustEqual Some(ApiMessage("User ID not specified."))
+        }
+      }
+    }
 
-  def postRunsUnspecifiedRun = post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported"))) {
-    status mustEqual 400
-    apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
-  }
+    "when the pipeline is not specified" should {
+      "return status 400 and the correct message" in {
+        post("/runs", Seq(("userId", "devtest"))) {
+          status mustEqual 400
+          apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
+        }
+      }
+    }
 
-  def postRunsFileTooLarge = {
-    val tooBigFile = createTempFile("tooBig.json")
-    post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
-      status mustEqual 413
-      apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
-    } before {
-      fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
-    } after {
-      deleteQuietly(tooBigFile)
+    "when the request body is empty" should {
+      "return status 400 and the correct message" in {
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported"))) {
+          status mustEqual 400
+          apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
+        }
+      }
+    }
+
+    "when the submitted run summary exceeds 16 MB" should {
+      "return status 400 and the correct message" in {
+        val tooBigFile = createTempFile("tooBig.json")
+        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
+          status mustEqual 413
+          apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
+        } before {
+          fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
+        } after {
+          deleteQuietly(tooBigFile)
+        }
+      }
     }
   }
 }

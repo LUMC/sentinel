@@ -45,7 +45,7 @@ trait EmbeddedMongodbRunner {
 
   protected lazy val mongoClient = MongoClient("localhost", mongodPort)
 
-  protected def makeDbAccess = MongodbAccessObject(mongoClient, dbName)
+  protected lazy val dbAccess = MongodbAccessObject(mongoClient, dbName)
 
   def start(): Unit = mongodExecutable.start()
 
