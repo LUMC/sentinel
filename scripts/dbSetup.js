@@ -28,7 +28,7 @@ if (db.getCollectionNames().length > 0) {
 
 print("\nCreating indices for ...");
 // fs.files -> index by md5 and metadata.uploader + unique
-db.fs.files.createIndex({"md5": 1, "metadata.uploader": 1}, {"unique": true})
+db.fs.files.createIndex({"md5": 1, "metadata.userId": 1}, {"unique": true})
 print("- raw uploads");
 // annotations -> annotMd5 + unique
 db.annotations.createIndex({"annotMd5": 1}, {"unique": true})
