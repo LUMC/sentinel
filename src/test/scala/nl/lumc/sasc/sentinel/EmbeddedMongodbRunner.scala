@@ -41,17 +41,29 @@ trait EmbeddedMongodbRunner {
 
   private lazy val starter = MongodStarter.getInstance(runtimeConfig)
 
+  private def createIndices(mongo: MongodbAccessObject): Unit = {
+    mongo.db("fs.files").createIndex(MongoDBObject("md5" -> 1, "metadata.userId" -> 1), MongoDBObject("unique" -> true))
+    mongo.db("annotations").createIndex(MongoDBObject("annotMd5" -> 1), MongoDBObject("unique" -> true))
+    mongo.db("references").createIndex(MongoDBObject("combinedMd5" -> 1), MongoDBObject("unique" -> true))
+  }
+
   private lazy val mongodExecutable = starter.prepare(mongodConfig)
 
   protected lazy val mongoClient = MongoClient("localhost", mongodPort)
 
   protected lazy val dbAccess = MongodbAccessObject(mongoClient, dbName)
 
-  protected def resetDb(): Unit = dbAccess.db.dropDatabase()
+  protected def resetDb(): Unit = {
+    dbAccess.db.getCollectionNames()
+      .filterNot(_.startsWith("system"))
+      .foreach { case collName => dbAccess.db(collName).dropCollection() }
+    createIndices(dbAccess)
+  }
 
-  protected def resetCollection(collectionName: String): Unit = dbAccess.db(collectionName).dropCollection()
-
-  def start(): Unit = mongodExecutable.start()
+  def start(): Unit = {
+    mongodExecutable.start()
+    createIndices(dbAccess)
+  }
 
   def stop(): Unit = mongodExecutable.stop()
 }
