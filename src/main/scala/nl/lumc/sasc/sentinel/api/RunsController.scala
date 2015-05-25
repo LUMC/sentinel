@@ -158,25 +158,23 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case Pipeline.Unsupported => unsupported
     }
 
-    simpleKeyAuth() match {
-      case Some(user) if !user.emailVerified => Forbidden(CommonErrors.Unauthorized)
-      case _ =>
-        processor match {
-          case None => BadRequest(CommonErrors.InvalidPipeline)
-          case Some(p) =>
-            p.processRun(uploadedRun, userId, pipeline) match {
-              case Failure(f) =>
-                log(f.getMessage, f)
-                f match {
-                  case vexc: RunValidationException =>
-                    BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
-                  case dexc: DuplicateRunException =>
-                    BadRequest(ApiMessage("Run summary already uploaded by the user."))
-                  case otherwise =>
-                    InternalServerError(CommonErrors.Unexpected)
-                }
-              case Success(run) => Created(run)
+    simpleKeyAuth()
+
+    processor match {
+      case None => BadRequest(CommonErrors.InvalidPipeline)
+      case Some(p) =>
+        p.processRun(uploadedRun, userId, pipeline) match {
+          case Failure(f) =>
+            log(f.getMessage, f)
+            f match {
+              case vexc: RunValidationException =>
+                BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+              case dexc: DuplicateRunException =>
+                BadRequest(ApiMessage("Run summary already uploaded by the user."))
+              case otherwise =>
+                InternalServerError(CommonErrors.Unexpected)
             }
+          case Success(run) => Created(run)
         }
     }
   }
