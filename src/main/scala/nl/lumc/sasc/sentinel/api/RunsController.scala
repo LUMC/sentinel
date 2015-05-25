@@ -151,7 +151,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   post("/", operation(runsPostOperation)) {
     val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
-    val uploadedRun = fileParams.getOrElse("run", halt(400, "Run summary file not specified."))
+    val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
     val processor = AllowedPipelineParams.get(pipeline).collect {
       case Pipeline.Gentrap     => gentrap
