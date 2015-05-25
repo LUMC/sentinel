@@ -111,9 +111,7 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
           apiMessage mustEqual Some(ApiMessage("User ID already taken."))
         } before {
           servlet.users.addUser(userRequest.user)
-        } after {
-          servlet.users.deleteUser(userRequest.user.id)
-        }
+        } after { resetDb() }
       }
     }
 
@@ -130,9 +128,7 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
           msgData.keySet must contain("apiKey")
         } before {
           servlet.users.userExist("yeah") must beFalse
-        } after {
-          servlet.users.deleteUser(userRequest.user.id)
-        }
+        } after { resetDb() }
       }
     }
   }

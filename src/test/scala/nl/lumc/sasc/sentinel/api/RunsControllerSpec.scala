@@ -113,9 +113,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           } before {
             servlet.users.addUser(User("devtest", "d@d.id", "pwd", "diffKey", emailVerified = true, isAdmin = false,
               getTimeNow))
-          } after {
-            servlet.users.deleteUser("devtest")
-          }
+          } after { resetDb() }
       }
     }
 
