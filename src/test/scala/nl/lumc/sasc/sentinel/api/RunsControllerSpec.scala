@@ -8,18 +8,18 @@ import org.scalatra.test.specs2._
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.ApiMessage
 
 class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mockito {
 
   sequential
 
-  def is = """
+  def is = s2"""
 
   POST '/runs' must
     return status 400 with the correct message if user is unspecified               $postRunsUnspecifiedUser
     return status 400 with the correct message if pipeline is unspecified           $postRunsUnspecifiedPipeline
+    return status 400 with the correct message if run is not specified              $postRunsUnspecifiedRun
     return status 413 with the correct messageif run summary is too large           $postRunsFileTooLarge
 """
 
@@ -51,14 +51,19 @@ class RunsControllerSpec extends ScalatraSpec with SentinelServletSpec with Mock
     apiMessage mustEqual Some(ApiMessage("User ID not specified."))
   }
 
-  def postRunsUnspecifiedPipeline = post("/runs", Seq(("userId", "testMan"))) {
+  def postRunsUnspecifiedPipeline = post("/runs", Seq(("userId", "devtest"))) {
     status mustEqual 400
     apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
   }
 
+  def postRunsUnspecifiedRun = post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported"))) {
+    status mustEqual 400
+    apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
+  }
+
   def postRunsFileTooLarge = {
     val tooBigFile = createTempFile("tooBig.json")
-    post("/runs", Seq(("userId", "testMan")), Map("run" -> tooBigFile)) {
+    post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
       status mustEqual 413
       apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
     } before {
