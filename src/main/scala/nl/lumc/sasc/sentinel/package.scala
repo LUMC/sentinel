@@ -8,17 +8,15 @@ package nl.lumc.sasc
 /** General package-level information */
 package object sentinel {
 
+  /** Current API version */
+  val CurrentApiVersion = "0.1.0"
+
   /** Header API key */
   val HeaderApiKey = "X-SENTINEL-KEY"
 
-  /** Supported run summaries */
-  object RunSummary extends Enumeration {
-    type RunSummary = Value
-    val GentrapV04 = Value
-  }
-
-  /** Current API version */
-  val CurrentApiVersion = "0.1.0"
+  /** Maximum run summary size in MB */
+  val MaxRunSummarySizeMb = 16
+  val MaxRunSummarySize = MaxRunSummarySizeMb * 1024 * 1024
 
   /** Supported pipeline summary schemas */
   object Pipeline extends Enumeration {

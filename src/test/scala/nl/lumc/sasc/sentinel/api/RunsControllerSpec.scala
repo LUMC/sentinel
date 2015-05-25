@@ -6,7 +6,7 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.specs2.mock.Mockito
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
+import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
 import nl.lumc.sasc.sentinel.utils.{ getResourceFile, getTimeNow }
@@ -75,14 +75,14 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
-    "when the submitted run summary exceeds 16 MB" should {
+    s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should {
       "return status 400 and the correct message" in {
         val tooBigFile = createTempFile("tooBig.json")
         post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
-          apiMessage mustEqual Some(ApiMessage("Run summary exceeds 16 MB."))
+          apiMessage mustEqual Some(ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
         } before {
-          fillFile(tooBigFile, 16 * 1024 * 1024 + 100)
+          fillFile(tooBigFile, MaxRunSummarySize + 100)
         } after {
           deleteQuietly(tooBigFile)
         }

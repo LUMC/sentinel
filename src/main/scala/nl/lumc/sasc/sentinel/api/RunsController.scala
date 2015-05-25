@@ -8,7 +8,7 @@ import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
+import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, MaxRunSummarySize, MaxRunSummarySizeMb, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
@@ -31,7 +31,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected val gentrap = new GentrapV04InputProcessor(mongo)
   protected val unsupported = new UnsupportedInputProcessor(mongo)
 
-  protected def maxFileSize = 16 * 1024 * 1024
+  protected def maxFileSize = MaxRunSummarySize
 
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
 
@@ -40,7 +40,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       contentType = formats("json")
       RequestEntityTooLarge(
         Serialization.write(
-          ApiMessage("Run summary exceeds " + (maxFileSize / (1024 * 1024)).toString + " MB."))
+          ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
       )
   }
 
