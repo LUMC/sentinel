@@ -4,22 +4,22 @@ import scala.util.Try
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatra.test.specs2.ScalatraSpec
+import org.scalatra.test.specs2.MutableScalatraSpec
 
 import nl.lumc.sasc.sentinel.models.ApiMessage
 import nl.lumc.sasc.sentinel.utils.CustomObjectIdSerializer
 
-trait SentinelServletSpec extends ScalatraSpec with EmbeddedMongodbRunner {
+trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner {
 
   sequential
 
   override def start() = {
-    super[ScalatraSpec].start()
+    super[MutableScalatraSpec].start()
     super[EmbeddedMongodbRunner].start()
   }
 
   override def stop() = {
-    super[ScalatraSpec].stop()
+    super[MutableScalatraSpec].stop()
     super[EmbeddedMongodbRunner].stop()
   }
 
