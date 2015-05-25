@@ -8,7 +8,7 @@ import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
+import nl.lumc.sasc.sentinel.models.{ RunDocument, ApiMessage, User }
 import nl.lumc.sasc.sentinel.utils.{ getResourceFile, getTimeNow }
 
 class RunsControllerSpec extends SentinelServletSpec with Mockito {
@@ -127,9 +127,35 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           } before {
             servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = false, isAdmin = false,
               getTimeNow))
-          } after {
-            servlet.users.deleteUser("devtest")
-          }
+          } after { resetDb() }
+      }
+    }
+
+    "for 'unsupported' pipelines" >> {
+
+      br
+
+      "when a run summary that passes all validation is uploaded" should {
+        "return status 201 and the correct payload" in {
+          val file = getResourceFile("/schema_examples/unsupported.json")
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
+            Map(HeaderApiKey -> "key")) {
+              status mustEqual 201
+              jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
+                case payload =>
+                  payload.runId must not be empty
+                  payload.uploader mustEqual "devtest"
+                  payload.pipeline mustEqual "unsupported"
+                  payload.nSamples mustEqual 0
+                  payload.nLibs mustEqual 0
+                  payload.annotIds must beNone
+                  payload.refId must beNone
+              }
+            } before {
+              servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+                getTimeNow))
+            } after { resetDb() }
+        }
       }
     }
   }
