@@ -91,49 +91,51 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
-    s"when the user does not provide the $HeaderApiKey header" should {
-      "return status 401, the challenge response header, and the correct message" in {
-        val file = getResourceFile("/schema_examples/unsupported.json")
-        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file)) {
-          status mustEqual 401
-          header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-          apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
-        }
-      }
-    }
-
-    s"when the provided $HeaderApiKey does not match the one owned by the user" should {
-      "return status 401, the challenge response header, and the correct message" in {
-        val file = getResourceFile("/schema_examples/unsupported.json")
-        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
-          Map(HeaderApiKey -> "key")) {
+    "using the 'unsupported' pipeline type" >> {
+      br
+      s"when the user does not provide the $HeaderApiKey header" should {
+        "return status 401, the challenge response header, and the correct message" in {
+          val file = getResourceFile("/schema_examples/unsupported.json")
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file)) {
             status mustEqual 401
             header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
             apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
-          } before {
-            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "diffKey", emailVerified = true, isAdmin = false,
-              getTimeNow))
-          } after { resetDb() }
+          }
+        }
       }
-    }
 
-    "when a user without a verified email address uploads a run summary" should {
-      "return status 403 and the correct message" in {
-        val file = getResourceFile("/schema_examples/unsupported.json")
-        post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
-          Map(HeaderApiKey -> "key")) {
-            status mustEqual 403
-            apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
-          } before {
-            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = false, isAdmin = false,
-              getTimeNow))
-          } after { resetDb() }
+      s"when the provided $HeaderApiKey does not match the one owned by the user" should {
+        "return status 401, the challenge response header, and the correct message" in {
+          val file = getResourceFile("/schema_examples/unsupported.json")
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
+            Map(HeaderApiKey -> "key")) {
+              status mustEqual 401
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+              apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+            } before {
+              servlet.users.addUser(User("devtest", "d@d.id", "pwd", "diffKey", emailVerified = true, isAdmin = false,
+                getTimeNow))
+            } after {
+              resetDb()
+            }
+        }
       }
-    }
 
-    "for 'unsupported' pipelines" >> {
-
-      br
+      "when a user without a verified email address uploads a run summary" should {
+        "return status 403 and the correct message" in {
+          val file = getResourceFile("/schema_examples/unsupported.json")
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> file),
+            Map(HeaderApiKey -> "key")) {
+              status mustEqual 403
+              apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
+            } before {
+              servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = false, isAdmin = false,
+                getTimeNow))
+            } after {
+              resetDb()
+            }
+        }
+      }
 
       "when a run summary that passes all validation is uploaded" should {
         "return status 201 and the correct payload" in {
@@ -155,6 +157,48 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
                 getTimeNow))
             } after { resetDb() }
+        }
+      }
+
+      "when the same run summary is uploaded more than once by the same user" should {
+        "return status 400 and the correct message" in {
+          val params = Seq(("userId", "devtest"), ("pipeline", "unsupported"))
+          val headers = Map(HeaderApiKey -> "key")
+          val fileMap = Map("run" -> getResourceFile("/schema_examples/unsupported.json"))
+          post("/runs", params, fileMap, headers) {
+            status mustEqual 400
+            apiMessage must beSome.like { case api => api.message mustEqual "Run summary already uploaded by the user." }
+          } before {
+            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+              getTimeNow))
+            post("/runs", params, fileMap, headers) {}
+          } after { resetDb() }
+        }
+      }
+
+      "when the same run summary is uploaded more than once by different users" should {
+        "return status 201 and the correct payload" in {
+          val headers = Map(HeaderApiKey -> "key")
+          val fileMap = Map("run" -> getResourceFile("/schema_examples/unsupported.json"))
+          post("/runs", Seq(("userId", "devtest2"), ("pipeline", "unsupported")), fileMap, headers) {
+            status mustEqual 201
+            jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
+              case payload =>
+                payload.runId must not be empty
+                payload.uploader mustEqual "devtest2"
+                payload.pipeline mustEqual "unsupported"
+                payload.nSamples mustEqual 0
+                payload.nLibs mustEqual 0
+                payload.annotIds must beNone
+                payload.refId must beNone
+            }
+          } before {
+            servlet.users.addUser(User("devtest1", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+              getTimeNow))
+            servlet.users.addUser(User("devtest2", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+              getTimeNow))
+            post("/runs", Seq(("userId", "devtest1"), ("pipeline", "unsupported")), fileMap, headers) {}
+          } after { resetDb() }
         }
       }
     }
