@@ -158,11 +158,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case Pipeline.Unsupported => unsupported
     }
 
-    simpleKeyAuth()
-
     processor match {
       case None => BadRequest(CommonErrors.InvalidPipeline)
       case Some(p) =>
+        simpleKeyAuth()
         p.processRun(uploadedRun, userId, pipeline) match {
           case Failure(f) =>
             log(f.getMessage, f)
