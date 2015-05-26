@@ -143,7 +143,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(400, "Run summary already uploaded by the user."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message),
       StringResponseMessage(413, "Run summary too large.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
