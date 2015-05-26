@@ -78,7 +78,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
 
     s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should {
-      "return status 400 and the correct message" in {
+      "return status 413 and the correct message" in {
         val tooBigFile = createTempFile("tooBig.json")
         post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
