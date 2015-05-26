@@ -21,6 +21,7 @@ class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
   def processRun(fi: FileItem, userId: String, pipeline: String) =
     for {
       (byteContents, unzipped) <- Try(fi.readInputStream())
+      _ <- Try(parseAndValidate(byteContents))
       fileId <- Try(storeFile(byteContents, userId, pipeline, fi.getName, unzipped))
       run = RunDocument(fileId, userId, pipeline, 0, 0, Date.from(Clock.systemUTC().instant))
       _ <- Try(storeRun(run))
