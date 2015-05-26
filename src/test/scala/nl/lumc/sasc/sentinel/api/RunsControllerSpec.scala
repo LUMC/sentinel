@@ -139,6 +139,32 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         }
       }
 
+      "when a non-JSON file is uploaded" should {
+        "return status 400 and the correct message" in {
+          val fileMap = Map("run" -> getResourceFile("/schema_examples/not.json"))
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), fileMap, Map(HeaderApiKey -> "key")) {
+            status mustEqual 400
+            apiMessage must beSome.like { case api => api.message mustEqual "File is not JSON-formatted." }
+          } before {
+            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+              getTimeNow))
+          } after { resetDb() }
+        }
+      }
+
+      "when an invalid JSON run summary is uploaded" should {
+        "return status 400 and the correct message" in {
+          val fileMap = Map("run" -> getResourceFile("/schema_examples/invalid.json"))
+          post("/runs", Seq(("userId", "devtest"), ("pipeline", "unsupported")), fileMap, Map(HeaderApiKey -> "key")) {
+            status mustEqual 400
+            apiMessage must beSome.like { case api => api.message mustEqual "JSON run summary is invalid." }
+          } before {
+            servlet.users.addUser(User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false,
+              getTimeNow))
+          } after { resetDb() }
+        }
+      }
+
       "when a run summary that passes all validation is uploaded" should {
         "return status 201 and the correct payload" in {
           val file = getResourceFile("/schema_examples/unsupported.json")
