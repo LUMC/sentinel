@@ -3,7 +3,7 @@ package nl.lumc.sasc.sentinel.api.auth
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.reflectiveCalls
 
-import org.scalatra.{ Forbidden, ScalatraBase, Unauthorized }
+import org.scalatra.{ Forbidden, Params, ScalatraBase, Unauthorized }
 import org.scalatra.auth.{ ScentryStrategy, ScentrySupport }
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
@@ -45,14 +45,17 @@ object SimpleKeyAuthStrategy {
 trait SimpleKeyAuthSupport[UserType <: AnyRef] {
   this: (ScalatraBase with ScentrySupport[UserType]) =>
 
-  protected def simpleKeyAuth()(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    if (params.get("userId").isEmpty) {
-      halt(400, CommonErrors.UnspecifiedUserId)
-    }
-    if (Option(request.getHeader(HeaderApiKey)).isEmpty) {
+  protected def simpleKeyAuth(f: Params => Option[String])(implicit request: HttpServletRequest, response: HttpServletResponse) = {
+
+    def askAuth() = {
       response.setHeader("WWW-Authenticate", SimpleKeyAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
-    scentry.authenticate(SimpleKeyAuthStrategy.name)
+    val a = params
+    if (f(params).isEmpty) {
+      halt(400, CommonErrors.UnspecifiedUserId)
+    }
+    if (Option(request.getHeader(HeaderApiKey)).isEmpty) { askAuth() }
+    scentry.authenticate(SimpleKeyAuthStrategy.name).getOrElse { askAuth() }
   }
 }

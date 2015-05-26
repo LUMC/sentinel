@@ -148,7 +148,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   post("/", operation(runsPostOperation)) {
-    val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
@@ -160,8 +159,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     processor match {
       case None => BadRequest(CommonErrors.InvalidPipeline)
       case Some(p) =>
-        simpleKeyAuth()
-        p.processRun(uploadedRun, userId, pipeline) match {
+        val user = simpleKeyAuth(params => params.get("userId"))
+        p.processRun(uploadedRun, user.id, pipeline) match {
           case Failure(f) =>
             f match {
               case vexc: RunValidationException =>
