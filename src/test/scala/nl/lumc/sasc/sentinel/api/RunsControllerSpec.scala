@@ -40,15 +40,6 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     br
 
-    "when the user is not specified" should {
-      "return status 400 and the correct message" in {
-        post("/runs", Seq(("pipeline", "unsupported"))) {
-          status mustEqual 400
-          apiMessage mustEqual Some(ApiMessage("User ID not specified."))
-        }
-      }
-    }
-
     "when the pipeline is not specified" should {
       "return status 400 and the correct message" in {
         post("/runs", Seq(("userId", "devtest"))) {
@@ -93,6 +84,17 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     "using the 'unsupported' pipeline type" >> {
       br
+
+      "when the user ID is not specified" should {
+        "return status 400 and the correct message" in {
+          val file = getResourceFile("/schema_examples/unsupported.json")
+          post("/runs", Seq(("pipeline", "unsupported")), Map("run" -> file)) {
+            status mustEqual 400
+            apiMessage mustEqual Some(ApiMessage("User ID not specified."))
+          }
+        }
+      }
+
       s"when the user does not provide the $HeaderApiKey header" should {
         "return status 401, the challenge response header, and the correct message" in {
           val file = getResourceFile("/schema_examples/unsupported.json")
