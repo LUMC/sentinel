@@ -202,10 +202,14 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   get("/", operation(runsGetOperation)) {
-    val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val pipelines = splitParam(params.getAs[String]("pipelines"))
-    // TODO: return 401 if not authenticated
-    // TODO: return 403 if unauthorized
-    runs.getRuns(userId, pipelines)
+    val (validPipelines, invalidPipelines) = pipelines.partition { AllowedPipelineParams.contains }
+
+    if (invalidPipelines.nonEmpty)
+      halt(400, ApiMessage("One or more pipeline is invalid", data = Map("Invalid pipelines" -> invalidPipelines)))
+    else {
+      val user = simpleKeyAuth(params => params.get("userId"))
+      runs.getRuns(user.id, validPipelines)
+    }
   }
 }
