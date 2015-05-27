@@ -6,7 +6,6 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.bson.types.ObjectId
 import org.specs2.mock.Mockito
-import org.specs2.mutable.BeforeAfter
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
@@ -85,15 +84,6 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
-    trait UserContext extends BeforeAfter {
-      lazy val user = User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false, getTimeNow)
-      def before = {
-        resetDb()
-        servlet.users.addUser(user)
-      }
-      def after = resetDb()
-    }
-
     "using the 'unsupported' pipeline type" >> {
       br
 
@@ -110,7 +100,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       s"when the user does not provide the $HeaderApiKey header" should {
-        "return status 401, the challenge response header, and the correct message" in new UserContext {
+        "return status 401, the challenge response header, and the correct message" in new UserDbContext {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile)) {
             status mustEqual 401
             header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
@@ -120,7 +110,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       s"when the provided $HeaderApiKey does not match the one owned by the user" should {
-        "return status 401, the challenge response header, and the correct message" in new UserContext {
+        "return status 401, the challenge response header, and the correct message" in new UserDbContext {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> (user.activeKey + "nono"))) {
               status mustEqual 401
@@ -131,10 +121,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when a user without a verified email address uploads a run summary" should {
-        "return status 403 and the correct message" in new UserContext {
+        "return status 403 and the correct message" in new UserDbContext {
           override def before = {
             resetDb()
-            servlet.users.addUser(user.copy(emailVerified = false))
+            addUser(user.copy(emailVerified = false))
           }
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> user.activeKey)) {
@@ -145,7 +135,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when a non-JSON file is uploaded" should {
-        "return status 400 and the correct message" in new UserContext {
+        "return status 400 and the correct message" in new UserDbContext {
           val fileMap = Map("run" -> getResourceFile("/schema_examples/not.json"))
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
@@ -156,7 +146,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when an invalid JSON run summary is uploaded" should {
-        "return status 400 and the correct message" in new UserContext {
+        "return status 400 and the correct message" in new UserDbContext {
           val fileMap = Map("run" -> getResourceFile("/schema_examples/invalid.json"))
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
@@ -167,7 +157,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when a run summary that passes all validation is uploaded" should {
-        "return status 201 and the correct payload" in new UserContext {
+        "return status 201 and the correct payload" in new UserDbContext {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 201
@@ -186,7 +176,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when the same run summary is uploaded more than once by the same user" should {
-        "return status 400 and the correct message" in new UserContext {
+        "return status 400 and the correct message" in new UserDbContext {
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
           def headers = Map(HeaderApiKey -> user.activeKey)
           def fileMap = Map("run" -> runFile)
@@ -204,13 +194,13 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
 
       "when the same run summary is uploaded more than once by different users" should {
-        "return status 201 and the correct payload" in new UserContext {
+        "return status 201 and the correct payload" in new UserDbContext {
           def user2 = user.copy(id = "devtest2", _id = new ObjectId)
           def fileMap = Map("run" -> runFile)
           override def before = {
             resetDb()
-            servlet.users.addUser(user)
-            servlet.users.addUser(user2)
+            addUser(user)
+            addUser(user2)
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) {}
           }
