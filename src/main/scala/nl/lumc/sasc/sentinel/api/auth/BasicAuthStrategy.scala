@@ -34,14 +34,15 @@ trait BasicAuthSupport[UserType <: AnyRef] {
   this: (ScalatraBase with ScentrySupport[UserType]) =>
 
   protected def basicAuth()(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    val baReq = new org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest(request)
-    if (!baReq.providesAuth) {
+
+    def askAuth(): Unit = {
       response.setHeader("WWW-Authenticate", BasicAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
-    if (!baReq.isBasicAuth) {
-      halt(400, CommonErrors.IncorrectAuthMode)
-    }
-    scentry.authenticate(BasicAuthStrategy.name)
+
+    val baReq = new org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest(request)
+    if (!baReq.providesAuth) { askAuth() }
+    if (!baReq.isBasicAuth) { halt(400, CommonErrors.IncorrectAuthMode) }
+    scentry.authenticate(BasicAuthStrategy.name).getOrElse { askAuth() }
   }
 }
