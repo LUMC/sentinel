@@ -3,7 +3,7 @@ package nl.lumc.sasc.sentinel.api.auth
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
 import scala.language.reflectiveCalls
 
-import org.scalatra.ScalatraBase
+import org.scalatra.{ Forbidden, ScalatraBase }
 import org.scalatra.auth.ScentrySupport
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
@@ -21,6 +21,11 @@ class BasicAuthStrategy(protected override val app: SentinelServlet { def users:
         if (user.passwordMatches(password)) Some(user)
         else None
     }
+
+  override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) = {
+    if (!user.emailVerified)
+      app halt Forbidden(CommonErrors.Unauthorized)
+  }
 
   protected def getUserId(user: User)(implicit request: HttpServletRequest, response: HttpServletResponse): String = user.id
 }
