@@ -33,7 +33,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
   }
 
   implicit val swagger = new SentinelSwagger
-  implicit val mongo = dbAccess
+  implicit val mongo = dao
   val servlet = new RunsController
   addServlet(servlet, "/runs/*")
 
@@ -123,7 +123,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       "when a user without a verified email address uploads a run summary" should {
         "return status 403 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
           override def before = {
-            resetDb()
+            resetDatabase()
             addUser(user.copy(emailVerified = false))
           }
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
@@ -196,7 +196,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           def user2 = user.copy(id = "devtest2", _id = new ObjectId)
           def fileMap = Map("run" -> runFile)
           override def before = {
-            resetDb()
+            resetDatabase()
             addUser(user)
             addUser(user2)
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,

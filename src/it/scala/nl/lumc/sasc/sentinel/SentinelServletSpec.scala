@@ -39,13 +39,13 @@ trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner
   object ExampleContext {
 
     trait CleanDatabase extends BeforeAfter {
-      def before = resetDb()
-      def after = resetDb()
+      def before = resetDatabase()
+      def after = resetDatabase()
     }
 
     trait CleanDatabaseWithUser extends CleanDatabase with UsersAdapter {
 
-      lazy val mongo = dbAccess
+      lazy val mongo = dao
 
       def user = testUser
 
@@ -65,13 +65,13 @@ trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner
     }
 
     trait CleanDatabase extends BeforeAllAfterAll {
-      def beforeAll() = resetDb()
-      def afterAll() = resetDb()
+      def beforeAll() = resetDatabase()
+      def afterAll() = resetDatabase()
     }
 
     trait CleanDatabaseWithUser extends CleanDatabase with UsersAdapter {
 
-      lazy val mongo = dbAccess
+      lazy val mongo = dao
 
       def user = testUser
 

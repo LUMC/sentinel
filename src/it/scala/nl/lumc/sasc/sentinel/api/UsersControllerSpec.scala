@@ -13,7 +13,7 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
 
   private def toByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
   implicit val swagger = new SentinelSwagger
-  implicit val mongo = dbAccess
+  implicit val mongo = dao
   val servlet = new UsersController
   addServlet(servlet, "/users/*")
 
@@ -111,7 +111,7 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
           apiMessage mustEqual Some(ApiMessage("User ID already taken."))
         } before {
           servlet.users.addUser(userRequest.user)
-        } after { resetDb() }
+        } after { resetDatabase() }
       }
     }
 
@@ -128,7 +128,7 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
           msgData.keySet must contain("apiKey")
         } before {
           servlet.users.userExist("yeah") must beFalse
-        } after { resetDb() }
+        } after { resetDatabase() }
       }
     }
   }

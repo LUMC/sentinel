@@ -28,7 +28,7 @@ class StatsControllerSpec extends SentinelServletSpec {
   }
 
   implicit val swagger = new SentinelSwagger
-  implicit val mongo = dbAccess
+  implicit val mongo = dao
   val statsServlet = new StatsController
   val runsServlet = new RunsController
   addServlet(statsServlet, "/stats/*")

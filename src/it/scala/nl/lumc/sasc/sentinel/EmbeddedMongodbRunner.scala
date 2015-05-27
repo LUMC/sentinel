@@ -51,18 +51,18 @@ trait EmbeddedMongodbRunner {
 
   protected lazy val mongoClient = MongoClient("localhost", mongodPort)
 
-  protected lazy val dbAccess = MongodbAccessObject(mongoClient, dbName)
+  protected lazy val dao = MongodbAccessObject(mongoClient, dbName)
 
-  protected def resetDb(): Unit = {
-    dbAccess.db.getCollectionNames()
+  protected def resetDatabase(): Unit = {
+    dao.db.getCollectionNames()
       .filterNot(_.startsWith("system"))
-      .foreach { case collName => dbAccess.db(collName).dropCollection() }
-    createIndices(dbAccess)
+      .foreach { case collName => dao.db(collName).dropCollection() }
+    createIndices(dao)
   }
 
   def start(): Unit = {
     mongodExecutable.start()
-    createIndices(dbAccess)
+    createIndices(dao)
   }
 
   def stop(): Unit = mongodExecutable.stop()
