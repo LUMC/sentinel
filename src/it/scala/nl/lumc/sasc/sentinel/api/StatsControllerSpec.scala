@@ -1,10 +1,5 @@
 package nl.lumc.sasc.sentinel.api
 
-import java.io.File
-
-import org.scalatra.test.ClientResponse
-
-import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats
 import nl.lumc.sasc.sentinel.utils.getResourceFile
@@ -12,20 +7,6 @@ import nl.lumc.sasc.sentinel.utils.getResourceFile
 class StatsControllerSpec extends SentinelServletSpec {
 
   sequential
-
-  trait UploadThenStatsContext extends SpecContext.AfterRequest[ClientResponse] {
-    def pipeline: String
-    def runFile: File
-    def uploadEndpoint = "/runs"
-    def uploadParams = Seq(("userId", user.id), ("pipeline", pipeline))
-    def uploadFile = Map("run" -> runFile)
-    def uploadHeader = Map(HeaderApiKey -> user.activeKey)
-    def requestMethod = post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
-
-    "after the summary file is uploaded to an empty database" in {
-      requestResponse.statusLine.code mustEqual 201
-    }
-  }
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
@@ -39,7 +20,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     val endpoint = "/stats/alignments/gentrap"
 
-    class GentrapV04MultiSampleSingleLibContext extends UploadThenStatsContext {
+    class GentrapV04MultiSampleSingleLibContext extends SpecContext.AfterRunUpload {
       def pipeline = "gentrap"
       lazy val runFile = getResourceFile("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
     }

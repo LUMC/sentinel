@@ -1,10 +1,11 @@
 package nl.lumc.sasc.sentinel
 
-
+import java.io.File
 import scala.util.Try
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.scalatra.test.ClientResponse
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.specs2.mutable.{ BeforeAfter, Specification }
 import org.specs2.specification.{ Fragments, Step }
@@ -93,6 +94,20 @@ trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner
       override def beforeAll() = {
         super.beforeAll()
         _requestResponse = requestMethod
+      }
+    }
+
+    trait AfterRunUpload extends AfterRequest[ClientResponse] {
+      def pipeline: String
+      def runFile: File
+      def uploadEndpoint = "/runs"
+      def uploadParams = Seq(("userId", user.id), ("pipeline", pipeline))
+      def uploadFile = Map("run" -> runFile)
+      def uploadHeader = Map(HeaderApiKey -> user.activeKey)
+      def requestMethod = post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
+
+      "after the summary file has been uploaded to an empty database" in {
+        requestResponse.statusLine.code mustEqual 201
       }
     }
   }
