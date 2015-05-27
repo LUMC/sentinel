@@ -165,7 +165,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       refId = Option(refId),
       annotIds = Option(annotIds),
       creationTime = getTimeNow,
-      uploader = userId,
+      uploaderId = userId,
       pipeline = pipeline,
       nSamples = samples.size,
       nLibs = samples.map(_.libs.size).sum)

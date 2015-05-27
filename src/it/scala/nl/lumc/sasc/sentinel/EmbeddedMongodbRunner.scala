@@ -42,7 +42,7 @@ trait EmbeddedMongodbRunner {
   private lazy val starter = MongodStarter.getInstance(runtimeConfig)
 
   private def createIndices(mongo: MongodbAccessObject): Unit = {
-    mongo.db("fs.files").createIndex(MongoDBObject("md5" -> 1, "metadata.userId" -> 1), MongoDBObject("unique" -> true))
+    mongo.db("fs.files").createIndex(MongoDBObject("md5" -> 1, "metadata.uploaderId" -> 1), MongoDBObject("unique" -> true))
     mongo.db("annotations").createIndex(MongoDBObject("annotMd5" -> 1), MongoDBObject("unique" -> true))
     mongo.db("references").createIndex(MongoDBObject("combinedMd5" -> 1), MongoDBObject("unique" -> true))
   }

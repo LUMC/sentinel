@@ -25,7 +25,7 @@ trait RunsAdapter extends MongodbConnector {
       f.filename = fileName
       f.contentType = "application/json"
       f.metaData = MongoDBObject(
-        "userId" -> userId,
+        "uploaderId" -> userId,
         "pipeline" -> pipeline,
         "inputGzipped" -> unzipped
       )
@@ -58,9 +58,9 @@ trait RunsAdapter extends MongodbConnector {
   def getRuns(userId: String, pipelines: Seq[String], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
     val query =
       if (pipelines.isEmpty)
-        $and("uploader" $eq userId)
+        $and("uploaderId" $eq userId)
       else
-        $and("uploader" $eq userId, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
+        $and("uploaderId" $eq userId, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
     val qResult = coll
       .find(query)
       .sort(MongoDBObject("creationTime" -> -1))

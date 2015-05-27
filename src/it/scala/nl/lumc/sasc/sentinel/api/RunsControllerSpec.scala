@@ -164,7 +164,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
                 case payload =>
                   payload.runId must not be empty
-                  payload.uploader mustEqual "devtest"
+                  payload.uploaderId mustEqual "devtest"
                   payload.pipeline mustEqual "unsupported"
                   payload.nSamples mustEqual 0
                   payload.nLibs mustEqual 0
@@ -208,7 +208,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
                 case payload =>
                   payload.runId must not be empty
-                  payload.uploader mustEqual "devtest2"
+                  payload.uploaderId mustEqual "devtest2"
                   payload.pipeline mustEqual "unsupported"
                   payload.nSamples mustEqual 0
                   payload.nLibs mustEqual 0

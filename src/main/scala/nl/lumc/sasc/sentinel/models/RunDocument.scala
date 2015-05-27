@@ -7,7 +7,7 @@ import org.bson.types.ObjectId
 
 case class RunDocument(
   @Key("_id") runId: ObjectId,
-  uploader: String,
+  uploaderId: String,
   pipeline: String,
   nSamples: Int,
   nLibs: Int,
