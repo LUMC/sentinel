@@ -12,8 +12,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
-    extends MongodbConnector
-    with RunsAdapter
+    extends RunsAdapter
     with ValidationAdapter {
 
   val validator = createValidator("/schemas/unsupported.json")

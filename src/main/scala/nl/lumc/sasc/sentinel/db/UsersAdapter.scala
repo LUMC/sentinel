@@ -6,7 +6,7 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.User
 
-trait UsersAdapter { this: MongodbConnector =>
+trait UsersAdapter extends MongodbConnector {
 
   val usersCollectionName = CollectionNames.Users
 

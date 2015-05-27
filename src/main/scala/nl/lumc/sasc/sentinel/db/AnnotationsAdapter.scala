@@ -8,7 +8,7 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.Annotation
 
-trait AnnotationsAdapter { this: MongodbConnector =>
+trait AnnotationsAdapter extends MongodbConnector {
 
   def annotationCollectionName = CollectionNames.Annotations
 

@@ -11,7 +11,7 @@ import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument }
 
-trait RunsAdapter { this: MongodbConnector =>
+trait RunsAdapter extends MongodbConnector {
 
   def runsCollectionName = CollectionNames.Runs
 

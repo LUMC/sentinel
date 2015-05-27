@@ -17,8 +17,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends MongodbConnector
-    with SamplesAdapter
+    extends SamplesAdapter
     with ValidationAdapter
     with RunsAdapter
     with ReferencesAdapter

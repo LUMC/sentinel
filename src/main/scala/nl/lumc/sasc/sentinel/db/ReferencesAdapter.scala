@@ -7,7 +7,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 import nl.lumc.sasc.sentinel.models.Reference
 
-trait ReferencesAdapter { this: MongodbConnector =>
+trait ReferencesAdapter extends MongodbConnector {
 
   def referenceCollectionName = CollectionNames.References
 

@@ -27,6 +27,6 @@ package object db {
 
   trait MongodbConnector {
 
-    protected val mongo: MongodbAccessObject
+    protected def mongo: MongodbAccessObject
   }
 }

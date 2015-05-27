@@ -5,7 +5,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 import nl.lumc.sasc.sentinel.models.BaseSampleDocument
 
-trait SamplesAdapter { this: MongodbConnector =>
+trait SamplesAdapter extends MongodbConnector {
 
   type SampleDocument <: BaseSampleDocument
 
