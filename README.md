@@ -4,7 +4,9 @@ Sentinel is a JSON-based database for next-generation sequencing statistics.
 
 ## Requirements
 
-Development requires Scala 2.11.6 and Java 8 installed. MongoDB 3.0 must also be running at localhost:27017 for some tests to pass.
+- Java 8 (must be set as the default `java`)
+- Scala 2.11.6
+- MongoDB 3.0
 
 ## Build & Run
 
