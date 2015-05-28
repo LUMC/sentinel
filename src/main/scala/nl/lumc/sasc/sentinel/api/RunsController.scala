@@ -196,8 +196,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
         StringResponseMessage(400, "One or more pipeline is invalid."),
         StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-        StringResponseMessage(403, CommonErrors.Unauthorized.message),
-        StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+        StringResponseMessage(403, CommonErrors.Unauthorized.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 

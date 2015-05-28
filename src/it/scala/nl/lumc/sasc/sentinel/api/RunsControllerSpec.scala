@@ -220,6 +220,21 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       new SpecContext.CleanDatabaseWithUser {
 
+        "when the user ID is not specified" should {
+
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 400" in {
+            get(endpoint, Seq(), headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint, Seq(), headers) {
+              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+            }
+          }
+        }
+
         "when done by an unverified user" should {
 
           val params = Seq(("userId", Users.unverified.id))
@@ -297,6 +312,21 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     "using the 'unsupported' and the 'gentrap' run summary files" >> inline {
 
       new DoubleUploadsContext {
+
+        "when the user ID is not specified" should {
+
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 400" in {
+            get(endpoint, Seq(), headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint, Seq(), headers) {
+              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+            }
+          }
+        }
 
         "when done by an unverified user" should {
 
