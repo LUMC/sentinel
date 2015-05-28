@@ -109,38 +109,39 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
 
-    trait AfterRequest[T] extends CleanDatabaseWithUser {
+    trait PriorRequests extends CleanDatabaseWithUser {
       sequential
 
-      type Req = () => T
+      type Req = () => ClientResponse
 
-      def requestMethod: Req
+      def priorRequest: Req = priorRequests.head
 
-      def subsequentRequestMethods: Seq[Req] = Seq.empty[Req]
+      def priorRequests: Seq[Req]
 
-      lazy val requestResponse: T = requestMethod()
+      lazy val priorResponse: ClientResponse = priorResponses.head
 
-      lazy val subsequentRequestResponses: Seq[T] = subsequentRequestMethods.map(f => f())
+      lazy val priorResponses: Seq[ClientResponse] = priorRequests.map(f => f())
 
       override def beforeAll() = {
         super.beforeAll()
-        requestResponse
-        subsequentRequestResponses
+        priorResponses
         ()
       }
     }
 
-    trait AfterRunUpload extends AfterRequest[ClientResponse] {
+    trait PriorRunUpload extends PriorRequests {
       def pipeline: String
       def runFile: File
+      def uploadUser = user
+      def expectedUploadStatus = 201
       def uploadEndpoint = "/runs"
-      def uploadParams = Seq(("userId", user.id), ("pipeline", pipeline))
+      def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipeline))
       def uploadFile = Map("run" -> runFile)
-      def uploadHeader = Map(HeaderApiKey -> user.activeKey)
-      def requestMethod = () => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
+      def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
+      def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
 
-      s"after the user uploads the '$pipeline' summary file to an empty database" in {
-        requestResponse.statusLine.code mustEqual 201
+      s"after a user uploads the '$pipeline' summary file to an empty database" in {
+        priorResponse.statusLine.code mustEqual expectedUploadStatus
       }
     }
   }
