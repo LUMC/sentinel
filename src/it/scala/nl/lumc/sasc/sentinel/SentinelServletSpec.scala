@@ -21,8 +21,6 @@ trait SentinelServletSpec extends MutableScalatraSpec
     with EmbeddedMongodbRunner
     with JsonMatchers {
 
-  import SentinelServletSpec._
-
   sequential
 
   override def start() = {
@@ -54,6 +52,14 @@ trait SentinelServletSpec extends MutableScalatraSpec
     }
   }
 
+  object Users {
+    val avg = User("avg", "avg@test.id", "pwd1", "key1", emailVerified = true, isAdmin = false, getTimeNow)
+    val avg2 = User("avg2", "avg2@test.id", "pwd2", "key2", emailVerified = true, isAdmin = false, getTimeNow)
+    val admin = User("admin", "admin@test.id", "pwd3", "key3", emailVerified = true, isAdmin = true, getTimeNow)
+    val unverified = User("unv", "unv@test.id", "pwd4", "key4", emailVerified = false, isAdmin = false, getTimeNow)
+    def all = Set(avg, avg2, admin, unverified)
+  }
+
   object ExampleContext {
 
     trait CleanDatabase extends BeforeAfter {
@@ -65,11 +71,12 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       lazy val mongo = dao
 
-      def user = testUser
+      def user = Users.avg
+      def users = Users.all
 
       override def before = {
         super.before
-        addUser(user)
+        users.foreach { addUser }
       }
     }
   }
@@ -91,11 +98,12 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       lazy val mongo = dao
 
-      def user = testUser
+      def user = Users.avg
+      def users = Users.all
 
       override def beforeAll() = {
         super.beforeAll()
-        addUser(user)
+        users.foreach { addUser }
       }
     }
 
@@ -131,7 +139,5 @@ trait SentinelServletSpec extends MutableScalatraSpec
 }
 
 object SentinelServletSpec {
-
-  val testUser = User("devtest", "d@d.id", "pwd", "key", emailVerified = true, isAdmin = false, getTimeNow)
 
 }

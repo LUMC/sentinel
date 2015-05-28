@@ -43,7 +43,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     "when the pipeline is not specified" should {
       "return status 400 and the correct message" in {
-        post(endpoint, Seq(("userId", "devtest"))) {
+        post(endpoint, Seq(("userId", Users.avg.id))) {
           status mustEqual 400
           apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
         }
@@ -52,7 +52,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     "when the request body is empty" should {
       "return status 400 and the correct message" in {
-        post(endpoint, Seq(("userId", "devtest"), ("pipeline", "unsupported"))) {
+        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) {
           status mustEqual 400
           apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
         }
@@ -62,7 +62,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     "when an invalid pipeline is specified" should {
       "return status 400 and the correct message" in {
         val file = getResourceFile("/schema_examples/unsupported.json")
-        post(endpoint, Seq(("userId", "devtest"), ("pipeline", "devtest")), Map("run" -> file)) {
+        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
           status mustEqual 400
           apiMessage.collect { case m => m.message } mustEqual Some("Pipeline parameter is invalid.")
         }
@@ -72,7 +72,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should {
       "return status 413 and the correct message" in {
         val tooBigFile = createTempFile("tooBig.json")
-        post(endpoint, Seq(("userId", "devtest"), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
+        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
           apiMessage mustEqual Some(ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
         } before {
@@ -121,12 +121,8 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when a user without a verified email address uploads a run summary" should {
         "return status 403 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
-          override def before = {
-            resetDatabase()
-            addUser(user.copy(emailVerified = false))
-          }
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
-            Map(HeaderApiKey -> user.activeKey)) {
+          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runFile),
+            Map(HeaderApiKey -> Users.unverified.activeKey)) {
               status mustEqual 403
               apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
             }
@@ -163,7 +159,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
                 case payload =>
                   payload.runId must not be empty
-                  payload.uploaderId mustEqual "devtest"
+                  payload.uploaderId mustEqual user.id
                   payload.pipeline mustEqual "unsupported"
                   payload.nSamples mustEqual 0
                   payload.nLibs mustEqual 0
@@ -192,22 +188,19 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when the same run summary is uploaded more than once by different users" should {
         "return status 201 and the correct payload" in new ExampleContext.CleanDatabaseWithUser {
-          def user2 = user.copy(id = "devtest2", _id = new ObjectId)
           def fileMap = Map("run" -> runFile)
           override def before = {
-            resetDatabase()
-            addUser(user)
-            addUser(user2)
-            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> user.activeKey)) {}
+            super.before
+            post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> Users.avg2.activeKey)) {}
           }
-          post(endpoint, Seq(("userId", user2.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user2.activeKey)) {
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+            Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 201
               jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
                 case payload =>
                   payload.runId must not be empty
-                  payload.uploaderId mustEqual "devtest2"
+                  payload.uploaderId mustEqual user.id
                   payload.pipeline mustEqual "unsupported"
                   payload.nSamples mustEqual 0
                   payload.nLibs mustEqual 0
