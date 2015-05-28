@@ -4,6 +4,8 @@ import java.io.{ File, RandomAccessFile }
 
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
@@ -31,14 +33,36 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     file
   }
 
+  class DoubleUploadsContext extends SpecContext.AfterRunUpload {
+    override def uploadEndpoint = baseEndpoint
+    def pipeline = "unsupported"
+    lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
+
+    def pipeline2 = "gentrap"
+    def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
+    def uploadFile2 = Map("run" -> runFile2)
+    def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
+    lazy val runFile2 = getResourceFile("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+
+    override def subsequentRequestMethods = Seq(
+      () => post(uploadEndpoint, uploadParams2, uploadFile2, uploadHeader2) { response }
+    )
+
+    s"and another user uploads the '$pipeline2' summary file" in {
+      subsequentRequestResponses.head.statusLine.code mustEqual 201
+    }
+  }
+
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val servlet = new RunsController
-  val endpoint = "/runs"
-  addServlet(servlet, s"$endpoint/*")
+  val baseEndpoint = "/runs"
+  addServlet(servlet, s"$baseEndpoint/*")
 
-  s"POST '$endpoint'" >> {
+  s"POST '$baseEndpoint'" >> {
     br
+
+    val endpoint = baseEndpoint
 
     "when the pipeline is not specified" should {
       "return status 400 and the correct message" in {
@@ -212,8 +236,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
   }
 
-  s"GET '$endpoint'" >> {
+  s"GET '$baseEndpoint'" >> {
     br
+
+    val endpoint = baseEndpoint
 
     "when the database is empty" >> inline {
 
@@ -285,26 +311,6 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint, params, headers) { jsonBody must haveSize(0) }
           }
         }
-      }
-    }
-
-    class DoubleUploadsContext extends SpecContext.AfterRunUpload {
-      override def uploadEndpoint = endpoint
-      def pipeline = "unsupported"
-      lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
-
-      def pipeline2 = "gentrap"
-      def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
-      def uploadFile2 = Map("run" -> runFile2)
-      def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
-      lazy val runFile2 = getResourceFile("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
-
-      override def subsequentRequestMethods = Seq(
-        () => post(uploadEndpoint, uploadParams2, uploadFile2, uploadHeader2) { response }
-      )
-
-      s"and another user uploads the '$pipeline2' summary file" in {
-        subsequentRequestResponses.head.statusLine.code mustEqual 201
       }
     }
 
@@ -422,5 +428,4 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
   }
-
 }
