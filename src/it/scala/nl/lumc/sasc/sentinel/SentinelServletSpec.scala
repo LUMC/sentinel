@@ -1,12 +1,15 @@
 package nl.lumc.sasc.sentinel
 
 import java.io.File
+
 import scala.util.Try
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.ClientResponse
 import org.scalatra.test.specs2.MutableScalatraSpec
+import org.specs2.data.Sized
+import org.specs2.matcher.JsonMatchers
 import org.specs2.mutable.{ BeforeAfter, Specification }
 import org.specs2.specification.{ Fragments, Step }
 
@@ -14,7 +17,9 @@ import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
 import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, getTimeNow }
 
-trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner {
+trait SentinelServletSpec extends MutableScalatraSpec
+    with EmbeddedMongodbRunner
+    with JsonMatchers {
 
   import SentinelServletSpec._
 
@@ -36,6 +41,18 @@ trait SentinelServletSpec extends MutableScalatraSpec with EmbeddedMongodbRunner
 
   def apiMessage: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
 
+  // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
+  implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
+    def size(t: Option[JValue]) = t match {
+      case None => -1
+      case Some(jvalue) => jvalue match {
+        case JArray(list) => list.size
+        case JObject(objects) => objects.size
+        case JString(str) => str.length
+        case otherwise => -1
+      }
+    }
+  }
 
   object ExampleContext {
 
