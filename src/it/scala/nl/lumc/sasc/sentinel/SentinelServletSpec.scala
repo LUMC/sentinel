@@ -110,15 +110,12 @@ trait SentinelServletSpec extends MutableScalatraSpec
     trait AfterRequest[T] extends CleanDatabaseWithUser {
       sequential
 
-      private var _requestResponse: T = _
-
       def requestMethod: T
 
-      def requestResponse = _requestResponse
+      lazy val requestResponse = requestMethod
 
       override def beforeAll() = {
         super.beforeAll()
-        _requestResponse = requestMethod
       }
     }
 

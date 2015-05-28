@@ -9,7 +9,7 @@ import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.{ RunDocument, ApiMessage }
+import nl.lumc.sasc.sentinel.models.{CommonErrors, RunDocument, ApiMessage}
 import nl.lumc.sasc.sentinel.utils.getResourceFile
 
 class RunsControllerSpec extends SentinelServletSpec with Mockito {
@@ -216,49 +216,123 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
   s"GET '$endpoint'" >> {
     br
 
+    "when the database is empty" >> inline {
+
+      new SpecContext.CleanDatabaseWithUser {
+
+        "when done by an unverified user with default parameters" should {
+
+          val params = Seq(("userId", Users.unverified.id))
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 403" in {
+            get(endpoint, params, headers) { status mustEqual 403 }
+          }
+
+          "return the correct message" in {
+            get(endpoint, params, headers) {
+              body must /("message" -> CommonErrors.Unauthorized.message)
+            }
+          }
+        }
+
+        "when done by an unauthenticated user with default parameters" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+
+          "return status 401" in {
+            get(endpoint, params, headers) { status mustEqual 401 }
+          }
+
+          "return the authentication challenge header" in {
+            get(endpoint, params, headers) {
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            }
+          }
+
+          "return the correct message" in {
+            get(endpoint, params, headers) {
+              body must /("message" -> CommonErrors.Unauthenticated.message)
+            }
+          }
+        }
+
+        "when done by an authenticated user with default parameters" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 200" in {
+            get(endpoint, params, headers) { status mustEqual 200 }
+          }
+
+          "return an empty JSON list" in {
+            get(endpoint, params, headers) { jsonBody must haveSize(0) }
+          }
+        }
+      }
+    }
+
     class UnsupportedUploadContext extends SpecContext.AfterRunUpload {
       override def uploadEndpoint = endpoint
       def pipeline = "unsupported"
       lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
     }
 
-    "when the database is empty" >> inline {
-
-      new SpecContext.CleanDatabaseWithUser {
-
-        "when done by an authenticated user with default parameters" should {
-
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-
-          "return status 200" in {
-            get(endpoint, params, headers = headers) { status mustEqual 200 }
-          }
-
-          "return an empty JSON list" in {
-            get(endpoint, params, headers = headers) { jsonBody must haveSize(0) }
-          }
-        }
-
-      }
-
-    }
-
     "using an unsupported run summary" >> inline {
 
       new UnsupportedUploadContext {
 
+        "when done by an unverified user with default parameters" should {
+
+          val params = Seq(("userId", Users.unverified.id))
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 403" in {
+            get(endpoint, params, headers) { status mustEqual 403 }
+          }
+
+          "return the correct message" in {
+            get(endpoint, params, headers) {
+              body must /("message" -> CommonErrors.Unauthorized.message)
+            }
+          }
+        }
+
+        "when done by an unauthenticated user with default parameters" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+
+          "return status 401" in {
+            get(endpoint, params, headers) { status mustEqual 401 }
+          }
+
+          "return the authentication challenge header" in {
+            get(endpoint, params, headers) {
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            }
+          }
+
+          "return the correct message" in {
+            get(endpoint, params, headers) {
+              body must /("message" -> CommonErrors.Unauthenticated.message)
+            }
+          }
+        }
+
         "when done by an authenticated user with default parameters" should {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
 
           "return status 200" in {
-            get(endpoint, params, headers = headers) { status mustEqual 200 }
+            get(endpoint, params, headers) { status mustEqual 200 }
           }
 
           "return a JSON list containing a single run object with the correct payload" in {
-            get(endpoint, params, headers = headers) {
+            get(endpoint, params, headers) {
               jsonBody must haveSize(1)
               body must /#(0) */("runId" -> ".+".r)
               body must /#(0) */("uploaderId" -> user.id)
