@@ -13,4 +13,5 @@ case class RunDocument(
   nLibs: Int,
   creationTime: Date,
   refId: Option[ObjectId] = None,
-  annotIds: Option[Seq[ObjectId]] = None)
+  annotIds: Option[Seq[ObjectId]] = None,
+  deletionTime: Option[Date] = None)
