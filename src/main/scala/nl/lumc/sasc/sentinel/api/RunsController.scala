@@ -206,7 +206,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val (validPipelines, invalidPipelines) = pipelines.partition { AllowedPipelineParams.contains }
 
     if (invalidPipelines.nonEmpty)
-      halt(400, ApiMessage("One or more pipeline is invalid", data = Map("Invalid pipelines" -> invalidPipelines)))
+      halt(400, ApiMessage("One or more pipeline is invalid.", data = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
       runs.getRuns(user.id, validPipelines)

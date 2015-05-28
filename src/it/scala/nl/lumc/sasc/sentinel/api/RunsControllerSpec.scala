@@ -83,7 +83,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
-    "using the 'unsupported' pipeline type" >> {
+    "using the 'unsupported' pipeline summary file" >> {
       br
 
       val pipeline = "unsupported"
@@ -220,7 +220,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       new SpecContext.CleanDatabaseWithUser {
 
-        "when done by an unverified user with default parameters" should {
+        "when done by an unverified user" should {
 
           val params = Seq(("userId", Users.unverified.id))
           val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
@@ -229,14 +229,14 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint, params, headers) { status mustEqual 403 }
           }
 
-          "return the correct message" in {
+          "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
               body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
 
-        "when done by an unauthenticated user with default parameters" should {
+        "when the user does not authenticate correctly" should {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
@@ -251,14 +251,14 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "return the correct message" in {
+          "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
               body must /("message" -> CommonErrors.Unauthenticated.message)
             }
           }
         }
 
-        "when done by an authenticated user with default parameters" should {
+        "when the user authenticates correctly" should {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
@@ -274,17 +274,31 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
 
-    class UnsupportedUploadContext extends SpecContext.AfterRunUpload {
+    class DoubleUploadsContext extends SpecContext.AfterRunUpload {
       override def uploadEndpoint = endpoint
       def pipeline = "unsupported"
       lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
+
+      def pipeline2 = "gentrap"
+      def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
+      def uploadFile2 = Map("run" -> runFile2)
+      def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
+      lazy val runFile2 = getResourceFile("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+
+      override def subsequentRequestMethods = Seq(
+        () => post(uploadEndpoint, uploadParams2, uploadFile2, uploadHeader2) { response }
+      )
+
+      s"and another user uploads the '$pipeline2' summary file" in {
+        subsequentRequestResponses.head.statusLine.code mustEqual 201
+      }
     }
 
-    "using an unsupported run summary" >> inline {
+    "using the 'unsupported' and the 'gentrap' run summary files" >> inline {
 
-      new UnsupportedUploadContext {
+      new DoubleUploadsContext {
 
-        "when done by an unverified user with default parameters" should {
+        "when done by an unverified user" should {
 
           val params = Seq(("userId", Users.unverified.id))
           val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
@@ -293,14 +307,14 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint, params, headers) { status mustEqual 403 }
           }
 
-          "return the correct message" in {
+          "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
               body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
 
-        "when done by an unauthenticated user with default parameters" should {
+        "when the user does not authenticate correctly" should {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
@@ -315,14 +329,46 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "return the correct message" in {
+          "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
               body must /("message" -> CommonErrors.Unauthenticated.message)
             }
           }
         }
 
-        "when done by an authenticated user with default parameters" should {
+        "when the user authenticates correctly but gives an incorrect pipeline parameter" should {
+
+          val params = Seq(("userId", user.id), ("pipelines", "nonexistent,unsupported"))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 400" in {
+            get(endpoint, params, headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint, params, headers) {
+              body must /("message" -> "One or more pipeline is invalid.")
+              body must /("data") / "invalid pipelines" /# 0 / "nonexistent"
+            }
+          }
+        }
+
+
+        "when the user authenticates correctly and selects for a pipeline he/she has not uploaded" should {
+
+          val params = Seq(("userId", user.id), ("pipelines", "gentrap"))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 200" in {
+            get(endpoint, params, headers) { status mustEqual 200 }
+          }
+
+          "return an empty JSON list" in {
+            get(endpoint, params, headers) { jsonBody must haveSize(0) }
+          }
+        }
+
+        "when the user authenticates correctly" should {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)

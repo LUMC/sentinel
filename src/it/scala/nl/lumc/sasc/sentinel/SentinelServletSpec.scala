@@ -137,7 +137,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       def uploadHeader = Map(HeaderApiKey -> user.activeKey)
       def requestMethod = () => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
 
-      "after the summary file has been uploaded to an empty database" in {
+      s"after the user uploads the '$pipeline' summary file to an empty database" in {
         requestResponse.statusLine.code mustEqual 201
       }
     }
