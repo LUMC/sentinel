@@ -9,7 +9,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument }
+import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument, User }
 
 trait RunsAdapter extends MongodbConnector {
 
@@ -41,22 +41,24 @@ trait RunsAdapter extends MongodbConnector {
     coll.insert(dbo)
   }
 
-  def getRun(runId: String, userId: String, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
+  def getRun(runId: String, user: User, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
     Try(new ObjectId(runId)) match {
       case Failure(_) => None
       case Success(qid) =>
 
         if (doDownload) {
-          val query = MongoDBObject("_id" -> runId, "metadata.uploaderId" -> userId)
+          val query = MongoDBObject("_id" -> qid, "metadata.uploaderId" -> user.id)
           mongo.gridfs
             .findOne(query)
             .collect { case gfs => Right(gfs) }
         } else {
-          val query = MongoDBObject("runId" -> runId, "uploaderId" -> userId)
+          val query = MongoDBObject("_id" -> qid, "uploaderId" -> user.id)
           coll
             .findOne(query)
             .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
         }
+
+      case otherwise => None
     }
   }
 

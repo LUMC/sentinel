@@ -108,7 +108,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     // TODO: return 410 if run was available but has been deleted
     val user = simpleKeyAuth(params => params.get("userId"))
-    runs.getRun(runId, user.id, doDownload) match {
+    runs.getRun(runId, user, doDownload) match {
       case None => NotFound(CommonErrors.MissingRunId)
       case Some(result) => result match {
         case Left(runDoc) => Ok(runDoc)
