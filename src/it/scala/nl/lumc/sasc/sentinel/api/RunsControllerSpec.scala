@@ -477,6 +477,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint(runId1), Seq(), headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
             }
           }
@@ -499,6 +500,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint(runId1), params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
             }
           }
@@ -515,7 +517,103 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint(runId1), params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthorized.message)
+            }
+          }
+        }
+
+        "when the user authenticates correctly" >> {
+          br
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "and queries a run he/she uploaded" should {
+
+            "return status 200" in {
+              get(endpoint(runId1), params, headers) { status mustEqual 200 }
+            }
+
+            "return a JSON object containing the run data" in {
+              get(endpoint(runId1), params, headers) {
+                contentType mustEqual "application/json"
+                body must /("runId" -> runId1)
+                body must /("uploaderId" -> user.id)
+                body must /("nSamples" -> 0)
+                body must /("nLibs" -> 0)
+                body must /("pipeline" -> "unsupported")
+              }
+            }
+          }
+
+          "and queries a run he/she uploaded and sets the download parameter" should {
+
+            "return status 200" in {
+              get(endpoint(runId1), params :+ ("download", "true"), headers) { status mustEqual 200 }
+            }
+
+            "return the expected Content-Disposition header" in {
+              get(endpoint(runId1), params :+ ("download", "true"), headers) {
+                header must havePair("Content-Disposition" -> ("attachment; filename=" + runFile.getName))
+              }
+            }
+
+            "return the actual summary file" in {
+              get(endpoint(runId1), params :+ ("download", "true"), headers) {
+                contentType mustEqual "application/octet-stream"
+                body mustEqual scala.io.Source.fromFile(runFile).mkString
+              }
+            }
+          }
+
+          "and queries a run he/she uploaded but sets the download parameter to some negative values which" can {
+
+            Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
+              s"be '$dlParam'" should {
+                "return status 200" in {
+                  get(endpoint(runId1), params, headers) { status mustEqual 200 }
+                }
+
+                "return a JSON object containing the run data" in {
+                  get(endpoint(runId1), params, headers) {
+                    contentType mustEqual "application/json"
+                    body must /("runId" -> runId1)
+                    body must /("uploaderId" -> user.id)
+                    body must /("nSamples" -> 0)
+                    body must /("nLibs" -> 0)
+                    body must /("pipeline" -> "unsupported")
+                  }
+                }
+              }
+            }
+          }
+
+          "and queries a run he/she did not upload" should {
+
+            "return status 404" in {
+              get(endpoint(runId2), params, headers) { status mustEqual 404 }
+            }
+
+            "return a JSON object with the correct message" in {
+              get(endpoint(runId2), params, headers) {
+                contentType mustEqual "application/json"
+                body must /("message" -> CommonErrors.MissingRunId.message)
+              }
+            }
+          }
+
+          "and queries a run using an invalid ID" should {
+
+            "return status 404" in {
+              get(endpoint("nonexistentId"), params, headers) { status mustEqual 404 }
+            }
+
+            "return a JSON object with the correct message" in  {
+              get(endpoint("nonexistentId"), params, headers) {
+                contentType mustEqual "application/json"
+                body must /("message" -> CommonErrors.MissingRunId.message)
+              }
             }
           }
         }
