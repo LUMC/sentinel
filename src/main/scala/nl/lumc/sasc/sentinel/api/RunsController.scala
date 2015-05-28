@@ -88,7 +88,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, "User ID or run summary ID not found."),
+      StringResponseMessage(404, CommonErrors.MissingRunId.message),
       StringResponseMessage(410, "Run summary not available anymore."))
     // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
     produces (
