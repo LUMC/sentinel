@@ -38,10 +38,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   error {
     case e: SizeConstraintExceededException =>
       contentType = formats("json")
-      RequestEntityTooLarge(
-        Serialization.write(
-          ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
-      )
+      RequestEntityTooLarge(CommonErrors.RunSummaryTooLarge)
   }
 
   // format: OFF
@@ -138,7 +135,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(400, "Run summary already uploaded by the user."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(413, "Run summary too large.")))
+      StringResponseMessage(413, CommonErrors.RunSummaryTooLarge.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 

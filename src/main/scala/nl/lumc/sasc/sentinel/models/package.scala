@@ -36,6 +36,8 @@ package object models {
 
     val IncorrectAuthMode = ApiMessage("Incorrect authentication mode.")
 
+    val RunSummaryTooLarge = ApiMessage(s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
+
     val Unexpected = ApiMessage("Unexpected error. Please contact the site administrators.")
   }
 }

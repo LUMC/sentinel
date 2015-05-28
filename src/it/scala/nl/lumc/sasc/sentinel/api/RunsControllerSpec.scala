@@ -101,7 +101,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
           contentType mustEqual "application/json"
-          apiMessage mustEqual Some(ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
+          body must /("message" -> CommonErrors.RunSummaryTooLarge.message)
         } before {
           fillFile(tooBigFile, MaxRunSummarySize + 100)
         } after {
