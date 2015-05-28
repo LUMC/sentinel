@@ -35,12 +35,11 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val servlet = new RunsController
-  addServlet(servlet, "/runs/*")
+  val endpoint = "/runs"
+  addServlet(servlet, s"$endpoint/*")
 
-  "POST '/runs'" >> {
+  s"POST '$endpoint'" >> {
     br
-
-    val endpoint = "/runs"
 
     "when the pipeline is not specified" should {
       "return status 400 and the correct message" in {
