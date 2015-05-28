@@ -15,17 +15,17 @@ trait RunsAdapter extends MongodbConnector {
 
   def runsCollectionName = CollectionNames.Runs
 
-  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument]
+  def processRun(fi: FileItem, user: User, pipeline: String): Try[RunDocument]
 
   private lazy val coll = mongo.db(runsCollectionName)
 
-  def storeFile(byteContents: Array[Byte], userId: String, pipeline: String,
+  def storeFile(byteContents: Array[Byte], user: User, pipeline: String,
                 fileName: String, unzipped: Boolean): ObjectId = {
     mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
       f.filename = fileName
       f.contentType = "application/json"
       f.metaData = MongoDBObject(
-        "uploaderId" -> userId,
+        "uploaderId" -> user.id,
         "pipeline" -> pipeline,
         "inputGzipped" -> unzipped
       )
@@ -62,12 +62,12 @@ trait RunsAdapter extends MongodbConnector {
     }
   }
 
-  def getRuns(userId: String, pipelines: Seq[String], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
+  def getRuns(user: User, pipelines: Seq[String], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
     val query =
       if (pipelines.isEmpty)
-        $and("uploaderId" $eq userId)
+        $and("uploaderId" $eq user.id)
       else
-        $and("uploaderId" $eq userId, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
+        $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
     val qResult = coll
       .find(query)
       .sort(MongoDBObject("creationTime" -> -1))

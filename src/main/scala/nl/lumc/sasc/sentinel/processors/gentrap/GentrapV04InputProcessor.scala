@@ -159,25 +159,25 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     }
 
   def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[SampleDocument],
-                userId: String, pipeline: String) =
+                user: User, pipeline: String) =
     RunDocument(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
       creationTime = getTimeNow,
-      uploaderId = userId,
+      uploaderId = user.id,
       pipeline = pipeline,
       nSamples = samples.size,
       nLibs = samples.map(_.libs.size).sum)
 
-  def processRun(fi: FileItem, userId: String, pipeline: String): Try[RunDocument] =
+  def processRun(fi: FileItem, user: User, pipeline: String): Try[RunDocument] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
       (byteContents, unzipped) <- Try(fi.readInputStream())
       json <- Try(parseAndValidate(byteContents))
-      fileId <- Try(storeFile(byteContents, userId, pipeline, fi.getName, unzipped))
+      fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
       runRef <- Try(extractReference(json))
       ref <- Try(getOrStoreReference(runRef))
       refId = ref.refId
@@ -188,7 +188,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
       samples <- Try(extractSamples(json, fileId, refId, annotIds))
       _ <- Try(storeSamples(samples))
-      run <- Try(createRun(fileId, refId, annotIds, samples, userId, pipeline))
+      run <- Try(createRun(fileId, refId, annotIds, samples, user, pipeline))
       _ <- Try(storeRun(run))
     } yield run
 }

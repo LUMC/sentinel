@@ -19,7 +19,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   protected val runs = new RunsAdapter with MongodbConnector {
     val mongo = self.mongo
-    def processRun(fi: FileItem, userId: String, pipeline: String) = Try(throw new NotImplementedError)
+    def processRun(fi: FileItem, user: User, pipeline: String) = Try(throw new NotImplementedError)
   }
   protected val gentrap = new GentrapOutputProcessor(mongo)
 
