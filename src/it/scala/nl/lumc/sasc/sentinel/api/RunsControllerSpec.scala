@@ -454,4 +454,73 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
   }
+
+  s"GET '$baseEndpoint/:runId'" >> {
+    br
+
+    def endpoint(runId: String) = s"$baseEndpoint/$runId"
+
+    "using the 'unsupported' and the 'gentrap' run summary files" >> inline {
+
+      new DoubleUploadsContext {
+
+        lazy val runId1 = parse(requestResponse.body).extract[RunDocument].runId.toString
+        lazy val runId2 = parse(subsequentRequestResponses.head.body).extract[RunDocument].runId.toString
+
+        "when the user ID is not specified" should {
+
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 400" in {
+            get(endpoint(runId1), Seq(), headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint(runId1), Seq(), headers) {
+              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+            }
+          }
+        }
+
+        "when the user does not authenticate correctly" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+
+          "return status 401" in {
+            get(endpoint(runId1), params, headers) { status mustEqual 401 }
+          }
+
+          "return the authentication challenge header" in {
+            get(baseEndpoint, params, headers) {
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint(runId1), params, headers) {
+              body must /("message" -> CommonErrors.Unauthenticated.message)
+            }
+          }
+        }
+
+        "when the authenticated user is not verified" should {
+
+          val params = Seq(("userId", Users.unverified.id))
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+
+          "return status 403" in {
+            get(endpoint(runId1), params, headers) { status mustEqual 403 }
+          }
+
+          "return a JSON object with the correct message" in {
+            get(endpoint(runId1), params, headers) {
+              body must /("message" -> CommonErrors.Unauthorized.message)
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
