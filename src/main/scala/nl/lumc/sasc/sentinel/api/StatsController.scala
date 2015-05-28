@@ -17,7 +17,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")
 
-  protected val runs = new RunsAdapter with MongodbConnector {
+  protected val runs = new RunsAdapter {
     val mongo = self.mongo
     def processRun(fi: FileItem, user: User, pipeline: String) = Try(throw new NotImplementedError)
   }

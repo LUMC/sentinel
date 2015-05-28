@@ -14,7 +14,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val applicationDescription: String = "Operations on user data"
   override protected val applicationName: Option[String] = Some("users")
 
-  val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
+  val users = new UsersAdapter { val mongo = self.mongo }
 
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")

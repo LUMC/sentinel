@@ -23,11 +23,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
   override protected val applicationName = Some("runs")
 
-  val runs = new RunsAdapter with MongodbConnector {
+  val runs = new RunsAdapter {
     val mongo = self.mongo
     def processRun(fi: FileItem, user: User, pipeline: String) = Try(throw new NotImplementedError)
   }
-  val users = new UsersAdapter with MongodbConnector { val mongo = self.mongo }
+  val users = new UsersAdapter { val mongo = self.mongo }
   val unsupported = new UnsupportedInputProcessor(mongo)
   val gentrap = new GentrapV04InputProcessor(mongo)
 

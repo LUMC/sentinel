@@ -11,7 +11,7 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   protected val applicationDescription: String = "Retrieval of annotation file synopses"
   override protected val applicationName = Some("annotations")
 
-  protected val annots = new AnnotationsAdapter with MongodbConnector { val mongo = self.mongo }
+  protected val annots = new AnnotationsAdapter { val mongo = self.mongo }
 
   val annotationsRefIdGetOperation = (apiOperation[List[Annotation]]("annotationsRefIdGet")
     summary "Retrieves a single full annotation item."

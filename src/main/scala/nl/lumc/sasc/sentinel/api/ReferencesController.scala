@@ -11,7 +11,7 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   protected val applicationDescription: String = "Retrieval of reference sequence synopses"
   override protected val applicationName: Option[String] = Some("references")
 
-  protected val refs = new ReferencesAdapter with MongodbConnector { val mongo = self.mongo }
+  protected val refs = new ReferencesAdapter { val mongo = self.mongo }
 
   val referencesRefIdGetOperation = (apiOperation[List[Reference]]("referencesRefIdGet")
     summary "Retrieves a single full reference item."
