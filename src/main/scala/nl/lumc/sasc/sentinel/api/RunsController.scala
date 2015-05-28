@@ -55,16 +55,15 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       pathParam[String]("runId").description("Run summary ID."),
       queryParam[String]("userId").description("Run summary uploader ID."))
     responseMessages (
-      StringResponseMessage(204, "Run summary deleted successfully."),
-      StringResponseMessage(400, "User ID or run summary ID not specified."),
+      StringResponseMessage(202, "Run summary deleted successfully."),
+      StringResponseMessage(400, CommonErrors.UnspecifiedRunId.message),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, "User ID or run summary ID not found.")))
+      StringResponseMessage(404, CommonErrors.MissingRunId.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
-    val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     // TODO: return 404 if user ID or run ID not found
     // TODO: return 401 if unauthenticated
