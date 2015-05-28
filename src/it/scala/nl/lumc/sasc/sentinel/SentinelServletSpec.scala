@@ -35,6 +35,8 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   implicit val formats = DefaultFormats + new CustomObjectIdSerializer
 
+  def contentType = response.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
+
   def jsonBody: Option[JValue] = Try(parse(body)).toOption
 
   def apiMessage: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }

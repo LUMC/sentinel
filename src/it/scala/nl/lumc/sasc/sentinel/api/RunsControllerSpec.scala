@@ -68,6 +68,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       "return status 400 and the correct message" in {
         post(endpoint, Seq(("userId", Users.avg.id))) {
           status mustEqual 400
+          contentType mustEqual "application/json"
           apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
         }
       }
@@ -77,6 +78,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       "return status 400 and the correct message" in {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) {
           status mustEqual 400
+          contentType mustEqual "application/json"
           apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
         }
       }
@@ -87,6 +89,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         val file = getResourceFile("/schema_examples/unsupported.json")
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
           status mustEqual 400
+          contentType mustEqual "application/json"
           apiMessage.collect { case m => m.message } mustEqual Some("Pipeline parameter is invalid.")
         }
       }
@@ -97,6 +100,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         val tooBigFile = createTempFile("tooBig.json")
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
+          contentType mustEqual "application/json"
           apiMessage mustEqual Some(ApiMessage(s"Run summary exceeds $MaxRunSummarySizeMb MB."))
         } before {
           fillFile(tooBigFile, MaxRunSummarySize + 100)
@@ -116,6 +120,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         "return status 400 and the correct message" in {
           post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runFile)) {
             status mustEqual 400
+            contentType mustEqual "application/json"
             apiMessage mustEqual Some(ApiMessage("User ID not specified."))
           }
         }
@@ -125,6 +130,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         "return status 401, the challenge response header, and the correct message" in new ExampleContext.CleanDatabaseWithUser {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile)) {
             status mustEqual 401
+            contentType mustEqual "application/json"
             header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
             apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
           }
@@ -136,6 +142,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> (user.activeKey + "nono"))) {
               status mustEqual 401
+              contentType mustEqual "application/json"
               header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
               apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
             }
@@ -147,6 +154,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> Users.unverified.activeKey)) {
               status mustEqual 403
+              contentType mustEqual "application/json"
               apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
             }
         }
@@ -158,6 +166,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 400
+              contentType mustEqual "application/json"
               apiMessage must beSome.like { case api => api.message mustEqual "File is not JSON-formatted." }
             }
         }
@@ -169,6 +178,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 400
+              contentType mustEqual "application/json"
               apiMessage must beSome.like { case api => api.message mustEqual "JSON run summary is invalid." }
             }
         }
@@ -179,6 +189,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
             Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 201
+              contentType mustEqual "application/json"
               jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
                 case payload =>
                   payload.runId must not be empty
@@ -204,6 +215,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
           post(endpoint, params, fileMap, headers) {
             status mustEqual 400
+            contentType mustEqual "application/json"
             apiMessage must beSome.like { case api => api.message mustEqual "Run summary already uploaded by the user." }
           }
         }
@@ -255,6 +267,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, Seq(), headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
             }
           }
@@ -271,6 +284,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
@@ -293,6 +307,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
             }
           }
@@ -308,7 +323,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
 
           "return an empty JSON list" in {
-            get(endpoint, params, headers) { jsonBody must haveSize(0) }
+            get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
+              jsonBody must haveSize(0)
+            }
           }
         }
       }
@@ -328,6 +346,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, Seq(), headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
             }
           }
@@ -344,6 +363,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
@@ -366,6 +386,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
             }
           }
@@ -382,6 +403,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object with the correct message" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               body must /("message" -> "One or more pipeline is invalid.")
               body must /("data") / "invalid pipelines" /# 0 / "nonexistent"
             }
@@ -399,7 +421,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
 
           "return an empty JSON list" in {
-            get(endpoint, params, headers) { jsonBody must haveSize(0) }
+            get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
+              jsonBody must haveSize(0)
+            }
           }
         }
 
@@ -414,6 +439,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON list containing a single run object with the correct payload" in {
             get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
               jsonBody must haveSize(1)
               body must /#(0) */("runId" -> ".+".r)
               body must /#(0) */("uploaderId" -> user.id)
