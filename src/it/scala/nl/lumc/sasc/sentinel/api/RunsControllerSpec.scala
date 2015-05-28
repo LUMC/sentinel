@@ -4,7 +4,6 @@ import java.io.{ File, RandomAccessFile }
 
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
-import org.bson.types.ObjectId
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
@@ -235,7 +234,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
         }
 
-        "when done by an unverified user" should {
+        "when the authenticated user is not verified" should {
 
           val params = Seq(("userId", Users.unverified.id))
           val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
@@ -328,7 +327,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
         }
 
-        "when done by an unverified user" should {
+        "when the authenticated user is not verified" should {
 
           val params = Seq(("userId", Users.unverified.id))
           val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
