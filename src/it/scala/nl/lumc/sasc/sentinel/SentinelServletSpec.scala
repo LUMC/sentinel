@@ -110,12 +110,21 @@ trait SentinelServletSpec extends MutableScalatraSpec
     trait AfterRequest[T] extends CleanDatabaseWithUser {
       sequential
 
-      def requestMethod: T
+      type Req = () => T
 
-      lazy val requestResponse = requestMethod
+      def requestMethod: Req
+
+      def subsequentRequestMethods: Seq[Req] = Seq.empty[Req]
+
+      lazy val requestResponse: T = requestMethod()
+
+      lazy val subsequentRequestResponses: Seq[T] = subsequentRequestMethods.map(f => f())
 
       override def beforeAll() = {
         super.beforeAll()
+        requestResponse
+        subsequentRequestResponses
+        ()
       }
     }
 
@@ -126,7 +135,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       def uploadParams = Seq(("userId", user.id), ("pipeline", pipeline))
       def uploadFile = Map("run" -> runFile)
       def uploadHeader = Map(HeaderApiKey -> user.activeKey)
-      def requestMethod = post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
+      def requestMethod = () => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response }
 
       "after the summary file has been uploaded to an empty database" in {
         requestResponse.statusLine.code mustEqual 201
