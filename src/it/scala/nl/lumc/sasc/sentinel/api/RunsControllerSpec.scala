@@ -65,7 +65,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     val endpoint = baseEndpoint
 
     "when the pipeline is not specified" should {
-      "return status 400 and the correct message" in {
+      "return status 400 and the expected message" in {
         post(endpoint, Seq(("userId", Users.avg.id))) {
           status mustEqual 400
           contentType mustEqual "application/json"
@@ -75,7 +75,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
 
     "when the request body is empty" should {
-      "return status 400 and the correct message" in {
+      "return status 400 and the expected message" in {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) {
           status mustEqual 400
           contentType mustEqual "application/json"
@@ -85,7 +85,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
 
     "when an invalid pipeline is specified" should {
-      "return status 400 and the correct message" in {
+      "return status 400 and the expected message" in {
         val file = getResourceFile("/schema_examples/unsupported.json")
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
           status mustEqual 400
@@ -96,7 +96,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
 
     s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should {
-      "return status 413 and the correct message" in {
+      "return status 413 and the expected message" in {
         val tooBigFile = createTempFile("tooBig.json")
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
@@ -116,8 +116,53 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       val pipeline = "unsupported"
       lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
 
+      "when a run summary that passes all validation is uploaded" should {
+        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
+            Map(HeaderApiKey -> user.activeKey)) {
+            status mustEqual 201
+            contentType mustEqual "application/json"
+            jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
+              case payload =>
+                payload.runId must not be empty
+                payload.uploaderId mustEqual user.id
+                payload.pipeline mustEqual "unsupported"
+                payload.nSamples mustEqual 0
+                payload.nLibs mustEqual 0
+                payload.annotIds must beNone
+                payload.refId must beNone
+            }
+          }
+        }
+      }
+
+      "when the same run summary is uploaded more than once by different users" should {
+        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
+          def fileMap = Map("run" -> runFile)
+          override def before = {
+            super.before
+            post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> Users.avg2.activeKey)) {}
+          }
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+            Map(HeaderApiKey -> user.activeKey)) {
+            status mustEqual 201
+            jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
+              case payload =>
+                payload.runId must not be empty
+                payload.uploaderId mustEqual user.id
+                payload.pipeline mustEqual "unsupported"
+                payload.nSamples mustEqual 0
+                payload.nLibs mustEqual 0
+                payload.annotIds must beNone
+                payload.refId must beNone
+            }
+          }
+        }
+      }
+
       "when the user ID is not specified" should {
-        "return status 400 and the correct message" in {
+        "return status 400 and the expected message" in {
           post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runFile)) {
             status mustEqual 400
             contentType mustEqual "application/json"
@@ -126,86 +171,32 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         }
       }
 
-      s"when the user does not provide the $HeaderApiKey header" should {
-        "return status 401, the challenge response header, and the correct message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile)) {
-            status mustEqual 401
+      "when a non-JSON file is uploaded" should {
+        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
+          val fileMap = Map("run" -> getResourceFile("/schema_examples/not.json"))
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+            Map(HeaderApiKey -> user.activeKey)) {
+            status mustEqual 400
             contentType mustEqual "application/json"
-            header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+            apiMessage must beSome.like { case api => api.message mustEqual "File is not JSON-formatted." }
           }
         }
       }
 
-      s"when the provided $HeaderApiKey does not match the one owned by the user" should {
-        "return status 401, the challenge response header, and the correct message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
-            Map(HeaderApiKey -> (user.activeKey + "nono"))) {
-              status mustEqual 401
-              contentType mustEqual "application/json"
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-              apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
-            }
-        }
-      }
-
-      "when a user without a verified email address uploads a run summary" should {
-        "return status 403 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runFile),
-            Map(HeaderApiKey -> Users.unverified.activeKey)) {
-              status mustEqual 403
-              contentType mustEqual "application/json"
-              apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
-            }
-        }
-      }
-
-      "when a non-JSON file is uploaded" should {
-        "return status 400 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
-          val fileMap = Map("run" -> getResourceFile("/schema_examples/not.json"))
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 400
-              contentType mustEqual "application/json"
-              apiMessage must beSome.like { case api => api.message mustEqual "File is not JSON-formatted." }
-            }
-        }
-      }
-
       "when an invalid JSON run summary is uploaded" should {
-        "return status 400 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
+        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
           val fileMap = Map("run" -> getResourceFile("/schema_examples/invalid.json"))
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 400
-              contentType mustEqual "application/json"
-              apiMessage must beSome.like { case api => api.message mustEqual "JSON run summary is invalid." }
-            }
-        }
-      }
-
-      "when a run summary that passes all validation is uploaded" should {
-        "return status 201 and the correct payload" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
-            Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 201
-              contentType mustEqual "application/json"
-              jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
-                case payload =>
-                  payload.runId must not be empty
-                  payload.uploaderId mustEqual user.id
-                  payload.pipeline mustEqual "unsupported"
-                  payload.nSamples mustEqual 0
-                  payload.nLibs mustEqual 0
-                  payload.annotIds must beNone
-                  payload.refId must beNone
-              }
-            }
+            status mustEqual 400
+            contentType mustEqual "application/json"
+            apiMessage must beSome.like { case api => api.message mustEqual "JSON run summary is invalid." }
+          }
         }
       }
 
       "when the same run summary is uploaded more than once by the same user" should {
-        "return status 400 and the correct message" in new ExampleContext.CleanDatabaseWithUser {
+        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
           def headers = Map(HeaderApiKey -> user.activeKey)
           def fileMap = Map("run" -> runFile)
@@ -221,27 +212,36 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         }
       }
 
-      "when the same run summary is uploaded more than once by different users" should {
-        "return status 201 and the correct payload" in new ExampleContext.CleanDatabaseWithUser {
-          def fileMap = Map("run" -> runFile)
-          override def before = {
-            super.before
-            post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> Users.avg2.activeKey)) {}
+      s"when the user does not provide the $HeaderApiKey header" should {
+        "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile)) {
+            status mustEqual 401
+            contentType mustEqual "application/json"
+            header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
           }
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 201
-              jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
-                case payload =>
-                  payload.runId must not be empty
-                  payload.uploaderId mustEqual user.id
-                  payload.pipeline mustEqual "unsupported"
-                  payload.nSamples mustEqual 0
-                  payload.nLibs mustEqual 0
-                  payload.annotIds must beNone
-                  payload.refId must beNone
-              }
+        }
+      }
+
+      s"when the provided $HeaderApiKey does not match the one owned by the user" should {
+        "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
+            Map(HeaderApiKey -> (user.activeKey + "nono"))) {
+              status mustEqual 401
+              contentType mustEqual "application/json"
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+              apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+            }
+        }
+      }
+
+      "when a user without a verified email address uploads a run summary" should {
+        "return status 403 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
+          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runFile),
+            Map(HeaderApiKey -> Users.unverified.activeKey)) {
+              status mustEqual 403
+              contentType mustEqual "application/json"
+              apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
             }
         }
       }
@@ -257,6 +257,23 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       new SpecContext.CleanDatabaseWithUser {
 
+        "when the user authenticates correctly" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 200" in {
+            get(endpoint, params, headers) { status mustEqual 200 }
+          }
+
+          "return an empty JSON list" in {
+            get(endpoint, params, headers) {
+              contentType mustEqual "application/json"
+              jsonBody must haveSize(0)
+            }
+          }
+        }
+
         "when the user ID is not specified" should {
 
           val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
@@ -265,27 +282,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
-            }
-          }
-        }
-
-        "when the authenticated user is not verified" should {
-
-          val params = Seq(("userId", Users.unverified.id))
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
-
-          "return status 403" in {
-            get(endpoint, params, headers) { status mustEqual 403 }
-          }
-
-          "return a JSON object with the correct message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
@@ -305,7 +305,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
@@ -313,19 +313,19 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
         }
 
-        "when the user authenticates correctly" should {
+        "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
+          val params = Seq(("userId", Users.unverified.id))
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
 
-          "return status 200" in {
-            get(endpoint, params, headers) { status mustEqual 200 }
+          "return status 403" in {
+            get(endpoint, params, headers) { status mustEqual 403 }
           }
 
-          "return an empty JSON list" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              jsonBody must haveSize(0)
+              body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
@@ -344,27 +344,10 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
-            }
-          }
-        }
-
-        "when the authenticated user is not verified" should {
-
-          val params = Seq(("userId", Users.unverified.id))
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
-
-          "return status 403" in {
-            get(endpoint, params, headers) { status mustEqual 403 }
-          }
-
-          "return a JSON object with the correct message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
@@ -384,7 +367,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
@@ -392,62 +375,76 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           }
         }
 
-        "when the user authenticates correctly but gives an incorrect pipeline parameter" should {
+        "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", user.id), ("pipelines", "nonexistent,unsupported"))
-          val headers = Map(HeaderApiKey -> user.activeKey)
+          val params = Seq(("userId", Users.unverified.id))
+          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
 
-          "return status 400" in {
-            get(endpoint, params, headers) { status mustEqual 400 }
+          "return status 403" in {
+            get(endpoint, params, headers) { status mustEqual 403 }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> "One or more pipeline is invalid.")
-              body must /("data") / "invalid pipelines" /# 0 / "nonexistent"
+              body must /("message" -> CommonErrors.Unauthorized.message)
             }
           }
         }
 
-
-        "when the user authenticates correctly and selects for a pipeline he/she has not uploaded" should {
-
-          val params = Seq(("userId", user.id), ("pipelines", "gentrap"))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-
-          "return status 200" in {
-            get(endpoint, params, headers) { status mustEqual 200 }
-          }
-
-          "return an empty JSON list" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              jsonBody must haveSize(0)
-            }
-          }
-        }
-
-        "when the user authenticates correctly" should {
+        "when the user authenticates correctly" >> {
+          br
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
 
-          "return status 200" in {
-            get(endpoint, params, headers) { status mustEqual 200 }
+          "and queries with the default parameter" should {
+
+            "return status 200" in {
+              get(endpoint, params, headers) { status mustEqual 200 }
+            }
+
+            "return a JSON list containing a single run object with the expected payload" in {
+              get(endpoint, params, headers) {
+                contentType mustEqual "application/json"
+                jsonBody must haveSize(1)
+                body must /#(0) */("runId" -> ".+".r)
+                body must /#(0) */("uploaderId" -> user.id)
+                body must /#(0) */("pipeline" -> "unsupported")
+                body must /#(0) */("nSamples" -> 0)
+                body must /#(0) */("nLibs" -> 0)
+                body must not /# 0 */ "refId"
+                body must not /# 0 */ "annotIds"
+              }
+            }
           }
 
-          "return a JSON list containing a single run object with the correct payload" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              jsonBody must haveSize(1)
-              body must /#(0) */("runId" -> ".+".r)
-              body must /#(0) */("uploaderId" -> user.id)
-              body must /#(0) */("pipeline" -> "unsupported")
-              body must /#(0) */("nSamples" -> 0)
-              body must /#(0) */("nLibs" -> 0)
-              body must not /# 0 */ "refId"
-              body must not /# 0 */ "annotIds"
+          "and selects for a pipeline he/she has not uploaded" should {
+
+            "return status 200" in {
+              get(endpoint, params :+ ("pipelines", "gentrap"), headers) { status mustEqual 200 }
+            }
+
+            "return an empty JSON list" in {
+              get(endpoint, params :+ ("pipelines", "gentrap"), headers) {
+                contentType mustEqual "application/json"
+                jsonBody must haveSize(0)
+              }
+            }
+          }
+
+          "and gives an incorrect pipeline parameter" should {
+
+            "return status 400" in {
+              get(endpoint, params :+ ("pipelines", "nonexistent"), headers) { status mustEqual 400 }
+            }
+
+            "return a JSON object of the expected message" in {
+              get(endpoint, params :+ ("pipelines", "nonexistent"), headers) {
+                contentType mustEqual "application/json"
+                body must /("message" -> "One or more pipeline is invalid.")
+                body must /("data") / "invalid pipelines" /# 0 / "nonexistent"
+              }
             }
           }
         }
@@ -475,7 +472,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint(runId1), Seq(), headers) { status mustEqual 400 }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint(runId1), Seq(), headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.UnspecifiedUserId.message)
@@ -498,7 +495,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint(runId1), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthenticated.message)
@@ -515,7 +512,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             get(endpoint(runId1), params, headers) { status mustEqual 403 }
           }
 
-          "return a JSON object with the correct message" in {
+          "return a JSON object of the expected message" in {
             get(endpoint(runId1), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonErrors.Unauthorized.message)
@@ -529,64 +526,82 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
 
-          "and queries a run he/she uploaded" should {
+          "and queries a run he/she uploaded" >> {
+            br
 
-            "return status 200" in {
-              get(endpoint(runId1), params, headers) { status mustEqual 200 }
-            }
+            def runId = runId1
 
-            "return a JSON object containing the run data" in {
-              get(endpoint(runId1), params, headers) {
-                contentType mustEqual "application/json"
-                body must /("runId" -> runId1)
-                body must /("uploaderId" -> user.id)
-                body must /("nSamples" -> 0)
-                body must /("nLibs" -> 0)
-                body must /("pipeline" -> "unsupported")
+            "with the default parameter" should {
+
+              "return status 200" in {
+                get(endpoint(runId), params, headers) { status mustEqual 200 }
               }
-            }
-          }
 
-          "and queries a run he/she uploaded and sets the download parameter" should {
-
-            "return status 200" in {
-              get(endpoint(runId1), params :+ ("download", "true"), headers) { status mustEqual 200 }
-            }
-
-            "return the expected Content-Disposition header" in {
-              get(endpoint(runId1), params :+ ("download", "true"), headers) {
-                header must havePair("Content-Disposition" -> ("attachment; filename=" + runFile.getName))
-              }
-            }
-
-            "return the actual summary file" in {
-              get(endpoint(runId1), params :+ ("download", "true"), headers) {
-                contentType mustEqual "application/octet-stream"
-                body mustEqual scala.io.Source.fromFile(runFile).mkString
-              }
-            }
-          }
-
-          "and queries a run he/she uploaded but sets the download parameter to some negative values which" can {
-
-            Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
-              s"be '$dlParam'" should {
-                "return status 200" in {
-                  get(endpoint(runId1), params, headers) { status mustEqual 200 }
+              "return a JSON object of the run data" in {
+                get(endpoint(runId), params, headers) {
+                  contentType mustEqual "application/json"
+                  body must /("runId" -> runId)
+                  body must /("uploaderId" -> user.id)
+                  body must /("nSamples" -> 0)
+                  body must /("nLibs" -> 0)
+                  body must /("pipeline" -> "unsupported")
                 }
+              }
+            }
 
-                "return a JSON object containing the run data" in {
-                  get(endpoint(runId1), params, headers) {
-                    contentType mustEqual "application/json"
-                    body must /("runId" -> runId1)
-                    body must /("uploaderId" -> user.id)
-                    body must /("nSamples" -> 0)
-                    body must /("nLibs" -> 0)
-                    body must /("pipeline" -> "unsupported")
+            "and sets the download parameter to some true values which" can {
+
+              Seq("", "1", "yes", "true", "ok") foreach { dlParam =>
+                s"be '$dlParam'" should {
+
+                  val paramsWithDownload = params :+ ("download", dlParam)
+
+                  "return status 200" in {
+                    get(endpoint(runId), paramsWithDownload, headers) { status mustEqual 200 }
+                  }
+
+                  "return the expected Content-Disposition header" in {
+                    get(endpoint(runId), paramsWithDownload, headers) {
+                      header must havePair("Content-Disposition" -> ("attachment; filename=" + runFile.getName))
+                    }
+                  }
+
+                  "return the uploaded summary file" in {
+                    get(endpoint(runId), paramsWithDownload, headers) {
+                      contentType mustEqual "application/octet-stream"
+                      body mustEqual scala.io.Source.fromFile(runFile).mkString
+                    }
                   }
                 }
               }
             }
+
+            "and sets the download parameter to some false values which" can {
+
+              Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
+                s"be '$dlParam'" should {
+
+                  val paramsWithDownload = params :+ ("download", dlParam)
+
+                  "return status 200" in {
+                    get(endpoint(runId), paramsWithDownload, headers) { status mustEqual 200 }
+                  }
+
+                  "return a JSON object of the run data" in {
+                    get(endpoint(runId), paramsWithDownload, headers) {
+                      contentType mustEqual "application/json"
+                      body must /("runId" -> runId)
+                      body must /("uploaderId" -> user.id)
+                      body must /("nSamples" -> 0)
+                      body must /("nLibs" -> 0)
+                      body must /("pipeline" -> "unsupported")
+                    }
+                  }
+                }
+              }
+            }
+
+
           }
 
           "and queries a run he/she did not upload" should {
@@ -595,7 +610,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               get(endpoint(runId2), params, headers) { status mustEqual 404 }
             }
 
-            "return a JSON object with the correct message" in {
+            "return a JSON object of the expected message" in {
               get(endpoint(runId2), params, headers) {
                 contentType mustEqual "application/json"
                 body must /("message" -> CommonErrors.MissingRunId.message)
@@ -603,14 +618,16 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "and queries a run using an invalid ID" should {
+          "and queries a run with an invalid ID" should {
+
+            val invalidId = "nonexistendId"
 
             "return status 404" in {
-              get(endpoint("nonexistentId"), params, headers) { status mustEqual 404 }
+              get(endpoint(invalidId), params, headers) { status mustEqual 404 }
             }
 
-            "return a JSON object with the correct message" in  {
-              get(endpoint("nonexistentId"), params, headers) {
+            "return a JSON object of the expected message" in  {
+              get(endpoint(invalidId), params, headers) {
                 contentType mustEqual "application/json"
                 body must /("message" -> CommonErrors.MissingRunId.message)
               }
