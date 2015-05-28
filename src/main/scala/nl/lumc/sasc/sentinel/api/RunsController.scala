@@ -97,8 +97,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   get("/:runId", operation(runsRunIdGetOperation)) {
-    val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
-    val userId = params.getOrElse("userId", halt(400, CommonErrors.UnspecifiedUserId))
     // Since there is no standard to define boolean in query parameter, we try to capture the common ones
     val doDownload = params.get("download") match {
       case None => false
@@ -107,12 +105,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         case otherwise => true
       }
     }
-    // TODO: return 404 if user ID not found
-    // TODO: return 401 if unauthenticated
-    // TODO: return 403 if unauthorized
+    val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     // TODO: return 410 if run was available but has been deleted
-    // Any processor that extends RunsAdapter can be used
-    runs.getRun(runId, doDownload) match {
+    val user = simpleKeyAuth(params => params.get("userId"))
+    runs.getRun(runId, user.id, doDownload) match {
       case None => NotFound(CommonErrors.MissingRunId)
       case Some(result) => result match {
         case Left(runDoc) => Ok(runDoc)

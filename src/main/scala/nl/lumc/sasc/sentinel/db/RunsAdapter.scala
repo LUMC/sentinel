@@ -41,17 +41,22 @@ trait RunsAdapter extends MongodbConnector {
     coll.insert(dbo)
   }
 
-  def getRun(runId: String, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
+  def getRun(runId: String, userId: String, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
     Try(new ObjectId(runId)) match {
       case Failure(_) => None
       case Success(qid) =>
 
-        if (doDownload) mongo.gridfs
-          .findOne(qid)
-          .collect { case gfs => Right(gfs) }
-        else coll
-          .findOneByID(qid)
-          .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
+        if (doDownload) {
+          val query = MongoDBObject("_id" -> runId, "metadata.uploaderId" -> userId)
+          mongo.gridfs
+            .findOne(query)
+            .collect { case gfs => Right(gfs) }
+        } else {
+          val query = MongoDBObject("runId" -> runId, "uploaderId" -> userId)
+          coll
+            .findOne(query)
+            .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
+        }
     }
   }
 
