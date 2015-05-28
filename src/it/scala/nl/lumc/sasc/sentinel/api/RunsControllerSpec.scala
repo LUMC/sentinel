@@ -219,4 +219,66 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       }
     }
   }
+
+  s"GET '$endpoint'" >> {
+    br
+
+    class UnsupportedUploadContext extends SpecContext.AfterRunUpload {
+      override def uploadEndpoint = endpoint
+      def pipeline = "unsupported"
+      lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
+    }
+
+    "when the database is empty" >> inline {
+
+      new SpecContext.CleanDatabaseWithUser {
+
+        "when done by an authenticated user with default parameters" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 200" in {
+            get(endpoint, params, headers = headers) { status mustEqual 200 }
+          }
+
+          "return an empty JSON list" in {
+            get(endpoint, params, headers = headers) { jsonBody must haveSize(0) }
+          }
+        }
+
+      }
+
+    }
+
+    "using an unsupported run summary" >> inline {
+
+      new UnsupportedUploadContext {
+
+        "when done by an authenticated user with default parameters" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 200" in {
+            get(endpoint, params, headers = headers) { status mustEqual 200 }
+          }
+
+          "return a JSON list containing a single run object with the correct payload" in {
+            get(endpoint, params, headers = headers) {
+              jsonBody must haveSize(1)
+              body must /#(0) */("runId" -> ".+".r)
+              body must /#(0) */("uploaderId" -> user.id)
+              body must /#(0) */("pipeline" -> "unsupported")
+              body must /#(0) */("nSamples" -> 0)
+              body must /#(0) */("nLibs" -> 0)
+              body must not /# 0 */ "refId"
+              body must not /# 0 */ "annotIds"
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
