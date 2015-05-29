@@ -1,8 +1,7 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
-import scalariform.formatter.preferences._
+import com.earldouglas.xwp.XwpPlugin._
 import com.typesafe.sbt.SbtScalariform._
 
 object SentinelBuild extends Build {
@@ -14,6 +13,8 @@ object SentinelBuild extends Build {
   val JavaVersion = "1.8"
   val ScalatraVersion = "2.3.1"
   val Json4sVersion = "3.2.11"
+  val JettyVersion = "9.2.10.v20150310"
+  val JettyRunnerModule = "org.eclipse.jetty" % "jetty-runner" % JettyVersion % "container"
 
   lazy val formattingPreferences = {
     import scalariform.formatter.preferences._
@@ -37,7 +38,9 @@ object SentinelBuild extends Build {
       .setPreference(SpacesWithinPatternBinders, true)
   }
 
-  lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ Seq(
+  val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
+
+  lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++ Seq(
     organization := Organization,
     name := Name,
     version := Version,
@@ -54,6 +57,7 @@ object SentinelBuild extends Build {
     resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
     resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
     ScalariformKeys.preferences := formattingPreferences,
+    dependencyOverrides ++= Set(JettyRunnerModule),
     libraryDependencies ++= Seq(
       "ch.qos.logback"          %  "logback-classic"          % "1.1.2"               % "runtime",
       "com.github.fge"          %  "json-schema-validator"    % "2.2.6",
@@ -65,8 +69,8 @@ object SentinelBuild extends Build {
       "javax.servlet"           %  "javax.servlet-api"        % "3.1.0"               % "container;provided;test;it",
       "net.databinder.dispatch" %% "dispatch-core"            % "0.11.2",
       "net.databinder.dispatch" %% "dispatch-json4s-jackson"  % "0.11.2",
-      "org.eclipse.jetty"       %  "jetty-plus"               % "9.1.5.v20140505"     % "container",
-      "org.eclipse.jetty"       %  "jetty-webapp"             % "9.1.5.v20140505"     % "container",
+      "org.eclipse.jetty"       %  "jetty-plus"               % JettyVersion          % "container",
+      "org.eclipse.jetty"       %  "jetty-webapp"             % JettyVersion          % "container",
       "org.json4s"              %% "json4s-jackson"           % Json4sVersion,
       "org.json4s"              %% "json4s-mongo"             % Json4sVersion,
       "org.json4s"              %% "json4s-ext"               % Json4sVersion,
