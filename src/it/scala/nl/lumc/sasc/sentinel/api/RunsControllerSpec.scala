@@ -638,4 +638,154 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     }
   }
 
+  s"DELETE '$baseEndpoint/:runId'" >> {
+    br
+
+    def endpoint(runId: String) = s"$baseEndpoint/$runId"
+
+    "using the 'unsupported' run summary file" >> inline {
+
+      new UnsupportedUploadContext {
+
+        "when the user ID is not specified" should {
+
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 400" in {
+            delete(endpoint(runId), Seq(), headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object of the expected message" in {
+            delete(endpoint(runId), Seq(), headers) {
+              contentType mustEqual "application/json"
+              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+            }
+          }
+
+          "not remove the run" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
+              status mustEqual 200
+              body must /("runId" -> ".+".r)
+              body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
+              status mustEqual 200
+              jsonBody must haveSize(1)
+              body must /#(0) /("runId" -> ".+".r)
+              body must not /#(0) /("deletionTime" -> ".+".r)
+            }
+          }
+        }
+
+        "when the run ID is not specified" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+
+          "return status 400" in {
+            delete(endpoint(""), params, headers) { status mustEqual 400 }
+          }
+
+          "return a JSON object of the expected message" in {
+            delete(endpoint(""), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("message" -> CommonErrors.UnspecifiedRunId.message)
+            }
+          }
+
+          "not remove the run" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
+              status mustEqual 200
+              body must /("runId" -> ".+".r)
+              body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
+              status mustEqual 200
+              jsonBody must haveSize(1)
+              body must /#(0) /("runId" -> ".+".r)
+              body must not /#(0) /("deletionTime" -> ".+".r)
+            }
+          }
+        }
+
+        "when the user does not authenticate correctly" should {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+
+          "return status 401" in {
+            delete(endpoint(runId), params, headers) { status mustEqual 401 }
+          }
+
+          "return the authentication challenge header" in {
+            delete(endpoint(runId), params, headers) {
+              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            }
+          }
+
+          "return a JSON object of the expected message" in {
+            delete(endpoint(runId), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("message" -> CommonErrors.Unauthenticated.message)
+            }
+          }
+
+          "not remove the run" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              body must /("runId" -> ".+".r)
+              body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              jsonBody must haveSize(1)
+              body must /#(0) /("runId" -> ".+".r)
+              body must not /# 0 /("deletionTime" -> ".+".r)
+            }
+          }
+        }
+      }
+    }
+
+    "when the user authenticates correctly" >> {
+      br
+
+      "with the default parameters should" >> inline {
+
+        new UnsupportedUploadContext {
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+          def userRunId = runId
+
+          "return status 202" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 202
+            }
+          }
+
+          "return a JSON object of the run data with the deletionTime attribute" in {
+            delete(endpoint(userRunId), params, headers) {
+              //contentType mustEqual "application/json"
+              body must /("runId" -> userRunId)
+              body must /("uploaderId" -> user.id)
+              body must /("nSamples" -> 0)
+              body must /("nLibs" -> 0)
+              body must /("pipeline" -> "unsupported")
+              body must /("deletionTime" -> ".+".r)
+            }
+          }
+        }
+      }
+    }
+  }
 }
