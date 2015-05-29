@@ -14,4 +14,4 @@ case class RunDocument(
   creationTime: Date,
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None,
-  deletionTime: Option[Date] = None)
+  deletionTime: Option[Date] = None) extends BaseRunDocument

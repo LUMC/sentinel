@@ -17,7 +17,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends SamplesAdapter
+    extends SamplesAdapter[GentrapSampleDocument]
     with ValidationAdapter
     with RunsAdapter
     with ReferencesAdapter
@@ -92,8 +92,6 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           },
       alnStats = extractAlnStats(libJson))
 
-  type SampleDocument = GentrapSampleDocument
-
   val samplesCollectionName = GentrapSamplesCollectionName
 
   val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
@@ -158,7 +156,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           creationTime = Option(getTimeNow))
     }
 
-  def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[SampleDocument],
+  def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[GentrapSampleDocument],
                 user: User, pipeline: String) =
     RunDocument(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId

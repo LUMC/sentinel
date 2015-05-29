@@ -3,20 +3,20 @@ package nl.lumc.sasc.sentinel.db
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat._
 import com.novus.salat.global._
-import nl.lumc.sasc.sentinel.models.BaseSampleDocument
+import nl.lumc.sasc.sentinel.models.{ BaseRunDocument, BaseSampleDocument }
 
-trait SamplesAdapter extends MongodbConnector {
-
-  type SampleDocument <: BaseSampleDocument
+trait SamplesAdapter[T <: BaseSampleDocument] extends MongodbConnector { this: RunsAdapter =>
 
   def samplesCollectionName: String
 
   private lazy val coll = mongo.db(samplesCollectionName)
 
-  def storeSamples(samples: Seq[SampleDocument])(implicit m: Manifest[SampleDocument]): BulkWriteResult = {
+  def storeSamples(samples: Seq[T])(implicit m: Manifest[T]): BulkWriteResult = {
     val builder = coll.initializeUnorderedBulkOperation
-    val docs = samples.map { case sample => grater[SampleDocument].asDBObject(sample) }
+    val docs = samples.map { case sample => grater[T].asDBObject(sample) }
     docs.foreach { case doc => builder.insert(doc) }
     builder.execute()
   }
+
+  def deleteSamples(run: BaseRunDocument): Unit = ???
 }
