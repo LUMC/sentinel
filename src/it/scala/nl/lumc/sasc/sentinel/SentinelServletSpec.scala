@@ -142,7 +142,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
       def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
 
-      s"after a user uploads the '$pipeline' summary file to an empty database" in {
+      s"after the user uploads the '$pipeline' summary file to an empty database" in {
         priorResponse.statusLine.code mustEqual expectedUploadStatus
       }
     }
