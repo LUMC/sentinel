@@ -51,7 +51,6 @@ trait SimpleKeyAuthSupport[UserType <: AnyRef] {
       response.setHeader("WWW-Authenticate", SimpleKeyAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
-    val a = params
     if (f(params).isEmpty) {
       halt(400, CommonErrors.UnspecifiedUserId)
     }

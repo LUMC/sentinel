@@ -62,11 +62,17 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
+    val user = simpleKeyAuth(params => params.get("userId"))
+    runs.deleteRun(runId, user) match {
+      case None             => NotFound(CommonErrors.MissingRunId)
+      case Some(deletedRun) => Accepted(deletedRun)
+    }
     // TODO: return 404 if user ID or run ID not found
-    // TODO: return 401 if unauthenticated
-    // TODO: return 403 if unauthorized
     // TODO: return 204 if delete successful
   }
+
+  // Helper matcher for "DELETE /:runId" so that we return the correct error message
+  delete("/?") { halt(400, CommonErrors.UnspecifiedRunId) }
 
   // format: OFF
   val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")

@@ -10,6 +10,7 @@ import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument, User }
+import nl.lumc.sasc.sentinel.utils.getTimeNow
 
 trait RunsAdapter extends MongodbConnector {
 
@@ -57,8 +58,6 @@ trait RunsAdapter extends MongodbConnector {
             .findOne(query)
             .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
         }
-
-      case otherwise => None
     }
   }
 
@@ -75,6 +74,26 @@ trait RunsAdapter extends MongodbConnector {
     maxNumReturn match {
       case None      => qResult.toSeq
       case Some(num) => qResult.take(num).toSeq
+    }
+  }
+
+  def deleteRun(runId: String, user: User): Option[RunDocument] = {
+    Try(new ObjectId(runId)) match {
+      case Failure(_) => None
+      case Success(rid) =>
+
+        val deletedDoc = coll
+          .findOne(MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> true)))
+          .map { case dbo => println(dbo); grater[RunDocument].asObject(dbo) }
+
+        if (deletedDoc.isDefined) deletedDoc
+        else {
+          val toDelete = coll
+            .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> false)),
+              update = MongoDBObject("$set" -> MongoDBObject("deletionTime" -> getTimeNow)))
+            .map { case dbo => grater[RunDocument].asObject(dbo) }
+          toDelete
+        }
     }
   }
 
