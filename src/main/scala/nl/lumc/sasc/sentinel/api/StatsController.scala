@@ -6,7 +6,7 @@ import org.scalatra._
 import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, AllowedSeqQcPhaseParams }
+import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, AllowedSeqQcPhaseParams, Pipeline }
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
@@ -19,7 +19,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   protected val runs = new RunsAdapter {
     val mongo = self.mongo
-    def processRun(fi: FileItem, user: User, pipeline: String) = Try(throw new NotImplementedError)
+    def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
   }
   protected val gentrap = new GentrapOutputProcessor(mongo)
 

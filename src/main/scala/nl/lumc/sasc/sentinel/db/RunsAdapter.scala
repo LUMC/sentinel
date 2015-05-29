@@ -9,6 +9,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
+import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument, User }
 import nl.lumc.sasc.sentinel.utils.getTimeNow
 
@@ -16,18 +17,18 @@ trait RunsAdapter extends MongodbConnector {
 
   def runsCollectionName = CollectionNames.Runs
 
-  def processRun(fi: FileItem, user: User, pipeline: String): Try[RunDocument]
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunDocument]
 
   private lazy val coll = mongo.db(runsCollectionName)
 
-  def storeFile(byteContents: Array[Byte], user: User, pipeline: String,
+  def storeFile(byteContents: Array[Byte], user: User, pipeline: Pipeline.Value,
                 fileName: String, unzipped: Boolean): ObjectId = {
     mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
       f.filename = fileName
       f.contentType = "application/json"
       f.metaData = MongoDBObject(
         "uploaderId" -> user.id,
-        "pipeline" -> pipeline,
+        "pipeline" -> pipeline.toString,
         "inputGzipped" -> unzipped
       )
     }.get match {
@@ -61,12 +62,12 @@ trait RunsAdapter extends MongodbConnector {
     }
   }
 
-  def getRuns(user: User, pipelines: Seq[String], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
+  def getRuns(user: User, pipelines: Seq[Pipeline.Value], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
     val query =
       if (pipelines.isEmpty)
         $and("uploaderId" $eq user.id)
       else
-        $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline)))
+        $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline.toString)))
     val qResult = coll
       .find(query)
       .sort(MongoDBObject("creationTime" -> -1))

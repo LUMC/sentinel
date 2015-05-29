@@ -10,6 +10,7 @@ import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.servlet.FileItem
 import scalaz.{ Failure => _, _ }, Scalaz._
 
+import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getTimeNow }
@@ -157,7 +158,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     }
 
   def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[GentrapSampleDocument],
-                user: User, pipeline: String) =
+                user: User, pipeline: Pipeline.Value) =
     RunDocument(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
@@ -168,7 +169,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       nSamples = samples.size,
       nLibs = samples.map(_.libs.size).sum)
 
-  def processRun(fi: FileItem, user: User, pipeline: String): Try[RunDocument] =
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunDocument] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.

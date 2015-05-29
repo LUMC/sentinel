@@ -20,7 +20,7 @@ class StatsControllerSpec extends SentinelServletSpec {
     val endpoint = "/stats/alignments/gentrap"
 
     class GentrapV04MultiSampleSingleLibContext extends SpecContext.PriorRunUpload {
-      def pipeline = "gentrap"
+      def pipelineParam = "gentrap"
       lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
     }
 

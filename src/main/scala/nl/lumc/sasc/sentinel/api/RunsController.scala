@@ -25,7 +25,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
 
   val runs = new RunsAdapter {
     val mongo = self.mongo
-    def processRun(fi: FileItem, user: User, pipeline: String) = Try(throw new NotImplementedError)
+    def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
   }
   val users = new UsersAdapter { val mongo = self.mongo }
   val unsupported = new UnsupportedInputProcessor(mongo)
@@ -158,7 +158,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case None => BadRequest(CommonErrors.InvalidPipeline)
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
-        p.processRun(uploadedRun, user, pipeline) match {
+        p.processRun(uploadedRun, user, AllowedPipelineParams(pipeline)) match {
           case Failure(f) =>
             f match {
               case vexc: RunValidationException =>
@@ -206,7 +206,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       halt(400, ApiMessage("One or more pipeline is invalid.", data = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
-      runs.getRuns(user, validPipelines)
+      runs.getRuns(user, validPipelines.map { AllowedPipelineParams.apply })
     }
   }
 }

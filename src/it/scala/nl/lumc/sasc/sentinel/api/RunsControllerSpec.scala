@@ -33,7 +33,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
   }
 
   class UnsupportedUploadContext extends SpecContext.PriorRunUpload {
-    def pipeline = "unsupported"
+    def pipelineParam = "unsupported"
     lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
     lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
   }

@@ -7,6 +7,7 @@ import scala.util.Try
 
 import org.scalatra.servlet.FileItem
 
+import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
@@ -17,7 +18,7 @@ class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
 
   val validator = createValidator("/schemas/unsupported.json")
 
-  def processRun(fi: FileItem, user: User, pipeline: String) =
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) =
 
     for {
       (byteContents, unzipped) <- Try(fi.readInputStream())

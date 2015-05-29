@@ -132,17 +132,17 @@ trait SentinelServletSpec extends MutableScalatraSpec
     }
 
     trait PriorRunUpload extends PriorRequests {
-      def pipeline: String
+      def pipelineParam: String
       def uploadPayload: Uploadable
       def uploadUser = user
       def expectedUploadStatus = 201
       def uploadEndpoint = "/runs"
-      def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipeline))
+      def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipelineParam))
       def uploadFile = Map("run" -> uploadPayload)
       def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
       def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
 
-      s"after the user uploads the '$pipeline' summary file to an empty database" in {
+      s"after the user uploads the '$pipelineParam' summary file to an empty database" in {
         priorResponse.statusLine.code mustEqual expectedUploadStatus
       }
     }
