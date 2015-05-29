@@ -1,9 +1,8 @@
 package nl.lumc.sasc.sentinel
 
-import java.io.{ File, InputStream, PushbackInputStream }
+import java.io.{ InputStream, PushbackInputStream }
 import java.util.Date
 import java.util.zip.GZIPInputStream
-import java.nio.file.Paths
 import java.security.MessageDigest
 import java.time.Clock
 import javax.crypto.KeyGenerator
@@ -18,15 +17,15 @@ package object utils {
 
   private[this] val GzipMagic = Seq(0x1f, 0x8b)
 
-  def getResourcePath(url: String): String = {
+  def getResourceStream(url: String): InputStream = {
     require(url startsWith "/", "Resource paths must start with '/'")
-    Option(getClass.getResource(url)) match {
-      case Some(u) => Paths.get(u.toURI).toString
+    Option(getClass.getResourceAsStream(url)) match {
+      case Some(s) => s
       case None    => throw new RuntimeException(s"Resource '$url' can not be found.")
     }
   }
 
-  def getResourceFile(url: String): File = new File(getResourcePath(url))
+  def getResourceBytes = getResourceStream _ andThen getByteArray andThen ((res: (Array[Byte], Boolean)) => res._1)
 
   def calcSeqMd5(seq: Seq[String]): String = {
     val digest = MessageDigest.getInstance("MD5")

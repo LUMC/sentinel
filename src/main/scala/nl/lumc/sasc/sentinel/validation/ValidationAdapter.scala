@@ -5,13 +5,13 @@ import java.io.ByteArrayInputStream
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceFile }
+import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceStream }
 
 trait ValidationAdapter {
 
   val validator: RunValidator
 
-  def createValidator(schemaResourceUrl: String) = new RunValidator(getResourceFile(schemaResourceUrl))
+  def createValidator(schemaResourceUrl: String) = new RunValidator(getResourceStream(schemaResourceUrl))
 
   def parseAndValidate(byteContents: Array[Byte]): JValue = {
     val json =

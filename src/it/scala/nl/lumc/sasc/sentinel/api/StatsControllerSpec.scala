@@ -2,7 +2,6 @@ package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats
-import nl.lumc.sasc.sentinel.utils.getResourceFile
 
 class StatsControllerSpec extends SentinelServletSpec {
 
@@ -22,7 +21,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     class GentrapV04MultiSampleSingleLibContext extends SpecContext.PriorRunUpload {
       def pipeline = "gentrap"
-      lazy val runFile = getResourceFile("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
+      lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
     }
 
     "using gentrap v0.4 summary containing 2 samples with 2 libraries total" >> inline {

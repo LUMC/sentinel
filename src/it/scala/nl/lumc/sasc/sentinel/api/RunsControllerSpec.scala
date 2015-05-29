@@ -11,7 +11,6 @@ import org.specs2.mock.Mockito
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.{CommonErrors, RunDocument, ApiMessage}
-import nl.lumc.sasc.sentinel.utils.getResourceFile
 
 class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
@@ -35,7 +34,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
   class UnsupportedUploadContext extends SpecContext.PriorRunUpload {
     def pipeline = "unsupported"
-    lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
+    lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
     lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
   }
 
@@ -43,9 +42,9 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     def pipeline2 = "gentrap"
     def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
-    def uploadFile2 = Map("run" -> runFile2)
+    def uploadFile2 = Map("run" -> uploadPayload2)
     def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
-    lazy val runFile2 = getResourceFile("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+    lazy val uploadPayload2 = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
     lazy val runId2 = parse(priorResponses(1).body).extract[RunDocument].runId.toString
 
     override def priorRequests = super.priorRequests ++ Seq(
@@ -90,7 +89,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
     "when an invalid pipeline is specified" should {
       "return status 400 and the expected message" in {
-        val file = getResourceFile("/schema_examples/unsupported.json")
+        val file = makeUploadable("/schema_examples/unsupported.json")
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
           status mustEqual 400
           contentType mustEqual "application/json"
@@ -118,11 +117,11 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
       br
 
       val pipeline = "unsupported"
-      lazy val runFile = getResourceFile("/schema_examples/unsupported.json")
+      lazy val runUpload = makeUploadable("/schema_examples/unsupported.json")
 
       "when a run summary that passes all validation is uploaded" should {
         "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload),
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 201
             contentType mustEqual "application/json"
@@ -142,7 +141,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when the same run summary is uploaded more than once by different users" should {
         "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
-          def fileMap = Map("run" -> runFile)
+          def fileMap = Map("run" -> runUpload)
           override def before = {
             super.before
             post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
@@ -167,7 +166,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when the user ID is not specified" should {
         "return status 400 and the expected message" in {
-          post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runFile)) {
+          post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runUpload)) {
             status mustEqual 400
             contentType mustEqual "application/json"
             apiMessage mustEqual Some(ApiMessage("User ID not specified."))
@@ -177,7 +176,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when a non-JSON file is uploaded" should {
         "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          val fileMap = Map("run" -> getResourceFile("/schema_examples/not.json"))
+          val fileMap = Map("run" -> makeUploadable("/schema_examples/not.json"))
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 400
@@ -189,7 +188,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when an invalid JSON run summary is uploaded" should {
         "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          val fileMap = Map("run" -> getResourceFile("/schema_examples/invalid.json"))
+          val fileMap = Map("run" -> makeUploadable("/schema_examples/invalid.json"))
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 400
@@ -203,7 +202,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
           def headers = Map(HeaderApiKey -> user.activeKey)
-          def fileMap = Map("run" -> runFile)
+          def fileMap = Map("run" -> runUpload)
           override def before = {
             super.before
             post(endpoint, params, fileMap, headers) {}
@@ -218,7 +217,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       s"when the user does not provide the $HeaderApiKey header" should {
         "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile)) {
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload)) {
             status mustEqual 401
             contentType mustEqual "application/json"
             header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
@@ -229,7 +228,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       s"when the provided $HeaderApiKey does not match the one owned by the user" should {
         "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runFile),
+          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload),
             Map(HeaderApiKey -> (user.activeKey + "nono"))) {
               status mustEqual 401
               contentType mustEqual "application/json"
@@ -241,7 +240,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
       "when a user without a verified email address uploads a run summary" should {
         "return status 403 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runFile),
+          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runUpload),
             Map(HeaderApiKey -> Users.unverified.activeKey)) {
               status mustEqual 403
               contentType mustEqual "application/json"
@@ -563,14 +562,14 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
                   "return the expected Content-Disposition header" in {
                     get(endpoint(userRunId), paramsWithDownload, headers) {
-                      header must havePair("Content-Disposition" -> ("attachment; filename=" + runFile.getName))
+                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
                     }
                   }
 
                   "return the uploaded summary file" in {
                     get(endpoint(userRunId), paramsWithDownload, headers) {
                       contentType mustEqual "application/octet-stream"
-                      body mustEqual scala.io.Source.fromFile(runFile).mkString
+                      body mustEqual new String(uploadPayload.content)
                     }
                   }
                 }

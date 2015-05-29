@@ -1,12 +1,10 @@
 package nl.lumc.sasc.sentinel
 
-import java.io.File
-
 import scala.util.Try
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatra.test.ClientResponse
+import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.specs2.data.Sized
 import org.specs2.matcher.JsonMatchers
@@ -15,7 +13,7 @@ import org.specs2.specification.{ Fragments, Step }
 
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
-import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, getResourceBytes, getTimeNow }
 
 trait SentinelServletSpec extends MutableScalatraSpec
     with EmbeddedMongodbRunner
@@ -40,6 +38,10 @@ trait SentinelServletSpec extends MutableScalatraSpec
   def jsonBody: Option[JValue] = Try(parse(body)).toOption
 
   def apiMessage: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
+
+  def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
+    fileName = resourceUrl.split("/").last,
+    content = getResourceBytes(resourceUrl))
 
   // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
   implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
@@ -131,12 +133,12 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
     trait PriorRunUpload extends PriorRequests {
       def pipeline: String
-      def runFile: File
+      def uploadPayload: Uploadable
       def uploadUser = user
       def expectedUploadStatus = 201
       def uploadEndpoint = "/runs"
       def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipeline))
-      def uploadFile = Map("run" -> runFile)
+      def uploadFile = Map("run" -> uploadPayload)
       def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
       def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
 
