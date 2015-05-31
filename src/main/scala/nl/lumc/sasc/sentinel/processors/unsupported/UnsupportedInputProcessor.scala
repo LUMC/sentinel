@@ -24,7 +24,7 @@ class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
       (byteContents, unzipped) <- Try(fi.readInputStream())
       _ <- Try(parseAndValidate(byteContents))
       fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
-      run = RunDocument(fileId, user.id, pipeline, 0, 0, Date.from(Clock.systemUTC().instant))
+      run = RunDocument(fileId, user.id, pipeline.toString.toLowerCase, 0, 0, Date.from(Clock.systemUTC().instant))
       _ <- Try(storeRun(run))
     } yield run
 }

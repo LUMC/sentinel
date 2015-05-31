@@ -5,13 +5,11 @@ import java.util.Date
 import com.novus.salat.annotations.Salat
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.Pipeline
-
 @Salat abstract class BaseRunDocument {
 
   def runId: ObjectId
   def uploaderId: String
-  def pipeline: Pipeline.Value
+  def pipeline: String
   def nSamples: Int
   def nLibs: Int
   def creationTime: Date
