@@ -93,7 +93,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           },
       alnStats = extractAlnStats(libJson))
 
-  val samplesCollectionName = GentrapSamplesCollectionName
+  def pipelineName = "gentrap"
 
   val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
 

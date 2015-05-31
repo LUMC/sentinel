@@ -10,9 +10,7 @@ import nl.lumc.sasc.sentinel.models.Annotation
 
 trait AnnotationsAdapter extends MongodbConnector {
 
-  def annotationCollectionName = CollectionNames.Annotations
-
-  private lazy val coll = mongo.db(annotationCollectionName)
+  private lazy val coll = mongo.db(collectionNames.Annotations)
 
   def getOrStoreAnnotations(annots: Seq[Annotation]): Seq[Annotation] =
     annots

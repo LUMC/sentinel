@@ -8,9 +8,7 @@ import nl.lumc.sasc.sentinel.models.User
 
 trait UsersAdapter extends MongodbConnector {
 
-  val usersCollectionName = CollectionNames.Users
-
-  private lazy val coll = mongo.db(usersCollectionName)
+  private lazy val coll = mongo.db(collectionNames.Users)
 
   def userExist(userId: String): Boolean = coll.find(MongoDBObject("id" -> userId)).limit(1).size == 1
 

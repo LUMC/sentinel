@@ -10,9 +10,7 @@ import nl.lumc.sasc.sentinel.db.{ MongodbAccessObject, MongodbConnector }
 
 class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends MongodbConnector {
 
-  def samplesCollectionName = GentrapSamplesCollectionName
-
-  private lazy val coll = mongo.db(samplesCollectionName)
+  private lazy val coll = mongo.db(collectionNames.pipelineSamples("gentrap"))
 
   // TODO: Implement random ordering of returned values
   def getAlignmentStats(accLevel: AccLevel.Value,

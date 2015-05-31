@@ -9,9 +9,7 @@ import nl.lumc.sasc.sentinel.models.Reference
 
 trait ReferencesAdapter extends MongodbConnector {
 
-  def referenceCollectionName = CollectionNames.References
-
-  private lazy val coll = mongo.db(referenceCollectionName)
+  private lazy val coll = mongo.db(collectionNames.References)
 
   def getOrStoreReference(ref: Reference): Reference =
     coll.findOne(MongoDBObject("combinedMd5" -> ref.combinedMd5)) match {

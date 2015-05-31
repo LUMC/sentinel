@@ -15,11 +15,9 @@ import nl.lumc.sasc.sentinel.utils.getTimeNow
 
 trait RunsAdapter extends MongodbConnector {
 
-  def runsCollectionName = CollectionNames.Runs
-
   def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunDocument]
 
-  private lazy val coll = mongo.db(runsCollectionName)
+  private lazy val coll = mongo.db(collectionNames.Runs)
 
   def storeFile(byteContents: Array[Byte], user: User, pipeline: Pipeline.Value,
                 fileName: String, unzipped: Boolean): ObjectId = {

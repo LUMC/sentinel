@@ -7,9 +7,9 @@ import nl.lumc.sasc.sentinel.models.{ BaseRunDocument, BaseSampleDocument }
 
 trait SamplesAdapter[T <: BaseSampleDocument] extends MongodbConnector { this: RunsAdapter =>
 
-  def samplesCollectionName: String
+  def pipelineName: String
 
-  private lazy val coll = mongo.db(samplesCollectionName)
+  private lazy val coll = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
   def storeSamples(samples: Seq[T])(implicit m: Manifest[T]): BulkWriteResult = {
     val builder = coll.initializeUnorderedBulkOperation

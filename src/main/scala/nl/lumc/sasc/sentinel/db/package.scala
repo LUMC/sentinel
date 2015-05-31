@@ -6,13 +6,6 @@ import com.mongodb.gridfs.GridFS.DEFAULT_BUCKET
 
 package object db {
 
-  object CollectionNames {
-    val Annotations = "annotations"
-    val References = "references"
-    val Runs = "runs"
-    val Users = "users"
-  }
-
   case class MongodbAccessObject(client: MongoClient, dbName: String, bucketName: String = DEFAULT_BUCKET) {
 
     lazy val db: MongoDB = client(dbName)
@@ -27,6 +20,21 @@ package object db {
 
   trait MongodbConnector {
 
+    import MongodbConnector._
+
+    final def collectionNames = CollectionNames
+
     protected def mongo: MongodbAccessObject
+  }
+
+  object MongodbConnector {
+
+    object CollectionNames {
+      val Annotations = "annotations"
+      val References = "references"
+      val Runs = "runs"
+      val Users = "users"
+      def pipelineSamples(name: String) = s"$name.samples"
+    }
   }
 }
