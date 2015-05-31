@@ -6,14 +6,14 @@ import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 
-import nl.lumc.sasc.sentinel.utils.CustomObjectIdSerializer
+import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, runDocumentSerializer }
 
 abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = DefaultFormats + new CustomObjectIdSerializer
+  protected implicit val jsonFormats: Formats = DefaultFormats + new CustomObjectIdSerializer + runDocumentSerializer
 
   override protected def registerModel(model: Model): Unit = {
     // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
@@ -37,7 +37,14 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
           }
           (propName, interceptedProp)
       }
-      super.registerModel(model.copy(properties = interceptedProp))
+      val newModel =
+        if (model.id == "RunDocument")
+          model.copy(properties = interceptedProp.filter {
+            case (propName, prop) => propName != "sampleIds" || propName != "samples"
+          })
+        else
+          model.copy(properties = interceptedProp)
+      super.registerModel(newModel)
     }
   }
 

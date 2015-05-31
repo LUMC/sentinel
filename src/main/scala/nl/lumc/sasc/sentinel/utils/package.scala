@@ -9,8 +9,10 @@ import javax.crypto.KeyGenerator
 import scala.io.Source
 
 import org.apache.commons.codec.binary.Base64
-
+import org.json4s.FieldSerializer
 import org.scalatra.servlet.FileItem
+
+import nl.lumc.sasc.sentinel.models.RunDocument
 
 /** General utilities */
 package object utils {
@@ -60,6 +62,8 @@ package object utils {
   }
 
   def generateApiKey(): String = new String(Base64.encodeBase64(KeyGen.generateKey().getEncoded))
+
+  val runDocumentSerializer = FieldSerializer[RunDocument](FieldSerializer.ignore("sampleIds"), { case field => field })
 
   object implicits {
 

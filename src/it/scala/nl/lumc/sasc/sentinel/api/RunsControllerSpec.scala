@@ -132,6 +132,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                 payload.pipeline mustEqual "unsupported"
                 payload.nSamples mustEqual 0
                 payload.nLibs mustEqual 0
+                payload.sampleIds must beNone
                 payload.annotIds must beNone
                 payload.refId must beNone
             }
@@ -157,6 +158,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                 payload.pipeline mustEqual "unsupported"
                 payload.nSamples mustEqual 0
                 payload.nLibs mustEqual 0
+                payload.sampleIds must beNone
                 payload.annotIds must beNone
                 payload.refId must beNone
             }
@@ -416,6 +418,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                 body must /#(0) */("pipeline" -> "unsupported")
                 body must /#(0) */("nSamples" -> 0)
                 body must /#(0) */("nLibs" -> 0)
+                body must not /("sampleIds" -> ".+".r)
                 body must not /# 0 */ "refId"
                 body must not /# 0 */ "annotIds"
               }
@@ -545,6 +548,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                   body must /("nSamples" -> 0)
                   body must /("nLibs" -> 0)
                   body must /("pipeline" -> "unsupported")
+                  body must not /("sampleIds" -> ".+".r)
                 }
               }
             }
@@ -592,6 +596,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                       contentType mustEqual "application/json"
                       body must /("runId" -> userRunId)
                       body must /("uploaderId" -> user.id)
+                      body must not /("sampleIds" -> ".+".r)
                       body must /("nSamples" -> 0)
                       body must /("nLibs" -> 0)
                       body must /("pipeline" -> "unsupported")
@@ -778,6 +783,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               //contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
               body must /("uploaderId" -> user.id)
+              body must not /("sampleIds" -> ".+".r)
               body must /("nSamples" -> 0)
               body must /("nLibs" -> 0)
               body must /("pipeline" -> "unsupported")
