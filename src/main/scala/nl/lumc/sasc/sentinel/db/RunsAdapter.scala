@@ -90,7 +90,9 @@ trait RunsAdapter extends MongodbConnector {
         else {
           val docToDelete = coll
             .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> false)),
-              update = MongoDBObject("$set" -> MongoDBObject("deletionTime" -> getTimeNow)))
+              update = MongoDBObject("$set" -> MongoDBObject("deletionTime" -> getTimeNow)),
+              returnNew = true,
+              fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
             .map { case dbo => grater[RunDocument].asObject(dbo) }
           docToDelete.foreach {
             case doc =>
