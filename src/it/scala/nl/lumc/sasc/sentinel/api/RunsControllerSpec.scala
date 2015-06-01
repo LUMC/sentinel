@@ -810,7 +810,51 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
           "return a JSON object of the run data with the deletionTime attribute" in {
             delete(endpoint(userRunId), params, headers) {
-              //contentType mustEqual "application/json"
+              contentType mustEqual "application/json"
+              body must /("runId" -> userRunId)
+              body must /("uploaderId" -> user.id)
+              body must not /("sampleIds" -> ".+".r)
+              body must /("nSamples" -> 0)
+              body must /("nLibs" -> 0)
+              body must /("pipeline" -> "unsupported")
+              body must /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "remove the run record" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+                status mustEqual 404
+                contentType mustEqual "application/json"
+                body must not /("runId" -> ".+".r)
+                body must /("message" -> CommonErrors.MissingRunId.message)
+              }
+          }
+
+          "remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              jsonBody must haveSize(0)
+            }
+          }
+
+          "return status 202 again when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 202
+            }
+          }
+
+          "return a JSON object of the run data with the deletionTime attribute again when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
               body must /("uploaderId" -> user.id)
               body must not /("sampleIds" -> ".+".r)
