@@ -67,8 +67,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case None             => NotFound(CommonErrors.MissingRunId)
       case Some(deletedRun) => Accepted(deletedRun)
     }
-    // TODO: return 404 if user ID or run ID not found
-    // TODO: return 204 if delete successful
   }
 
   // Helper matcher for "DELETE /:runId" so that we return the correct error message

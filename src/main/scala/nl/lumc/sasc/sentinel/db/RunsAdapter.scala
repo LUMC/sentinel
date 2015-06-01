@@ -52,7 +52,8 @@ trait RunsAdapter extends MongodbConnector {
             .findOne(query)
             .collect { case gfs => Right(gfs) }
         } else {
-          val query = MongoDBObject("_id" -> qid, "uploaderId" -> user.id)
+          val query = MongoDBObject("_id" -> qid, "uploaderId" -> user.id,
+            "deletionTime" -> MongoDBObject("$exists" -> false))
           coll
             .findOne(query)
             .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
@@ -67,7 +68,7 @@ trait RunsAdapter extends MongodbConnector {
       else
         $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline.toString)))
     val qResult = coll
-      .find(query)
+      .find($and(query :: ("deletionTime" $exists false)))
       .sort(MongoDBObject("creationTime" -> -1))
       .map { case dbo => grater[RunDocument].asObject(dbo) }
     maxNumReturn match {
@@ -81,17 +82,28 @@ trait RunsAdapter extends MongodbConnector {
       case Failure(_) => None
       case Success(rid) =>
 
-        val deletedDoc = coll
+        val docDeleted = coll
           .findOne(MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> true)))
-          .map { case dbo => println(dbo); grater[RunDocument].asObject(dbo) }
+          .map { case dbo => grater[RunDocument].asObject(dbo) }
 
-        if (deletedDoc.isDefined) deletedDoc
+        if (docDeleted.isDefined) docDeleted
         else {
-          val toDelete = coll
+          val docToDelete = coll
             .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> false)),
               update = MongoDBObject("$set" -> MongoDBObject("deletionTime" -> getTimeNow)))
             .map { case dbo => grater[RunDocument].asObject(dbo) }
-          toDelete
+          docToDelete.foreach {
+            case doc =>
+              val collSamples = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
+              // remove the GridFS entry
+              mongo.gridfs.remove(doc.runId)
+              // and all samples linked to this run
+              doc.sampleIds.foreach {
+                case sids =>
+                  sids.foreach { case id => collSamples.remove(MongoDBObject("_id" -> id)) }
+              }
+          }
+          docToDelete
         }
     }
   }
