@@ -132,7 +132,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                 payload.pipeline mustEqual "unsupported"
                 payload.nSamples mustEqual 0
                 payload.nLibs mustEqual 0
-                payload.sampleIds must beNone
+                payload.sampleIds must beEmpty
                 payload.annotIds must beNone
                 payload.refId must beNone
             }
@@ -158,7 +158,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
                 payload.pipeline mustEqual "unsupported"
                 payload.nSamples mustEqual 0
                 payload.nLibs mustEqual 0
-                payload.sampleIds must beNone
+                payload.sampleIds must beEmpty
                 payload.annotIds must beNone
                 payload.refId must beNone
             }

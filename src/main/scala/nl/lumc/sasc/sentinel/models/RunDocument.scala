@@ -12,7 +12,7 @@ case class RunDocument(
   nSamples: Int,
   nLibs: Int,
   creationTime: Date,
-  sampleIds: Option[Seq[ObjectId]] = None,
+  sampleIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None,
   deletionTime: Option[Date] = None) extends BaseRunDocument

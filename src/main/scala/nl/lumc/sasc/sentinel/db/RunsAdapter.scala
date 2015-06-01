@@ -99,8 +99,7 @@ trait RunsAdapter extends MongodbConnector {
               mongo.gridfs.remove(doc.runId)
               // and all samples linked to this run
               doc.sampleIds.foreach {
-                case sids =>
-                  sids.foreach { case id => collSamples.remove(MongoDBObject("_id" -> id)) }
+                case oid => collSamples.remove(MongoDBObject("_id" -> oid))
               }
           }
           docToDelete
