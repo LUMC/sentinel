@@ -794,7 +794,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     "when the user authenticates correctly" >> {
       br
 
-      "with the default parameters should" >> inline {
+      "with the default parameters for the 'unsupported' pipeline should" >> inline {
 
         new UnsupportedUploadContext {
 
@@ -861,6 +861,86 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               body must /("nSamples" -> 0)
               body must /("nLibs" -> 0)
               body must /("pipeline" -> "unsupported")
+              body must /("deletionTime" -> ".+".r)
+            }
+          }
+        }
+      }
+
+      "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
+
+        new SpecContext.PriorRunUpload {
+          def pipelineParam = "gentrap"
+          lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+          lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
+
+          val params = Seq(("userId", user.id))
+          val headers = Map(HeaderApiKey -> user.activeKey)
+          def userRunId = runId
+
+          "return status 202" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 202
+            }
+          }
+
+          "return a JSON object of the run data with the deletionTime attribute" in {
+            delete(endpoint(userRunId), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("runId" -> userRunId)
+              body must /("uploaderId" -> user.id)
+              body must not /("sampleIds" -> ".+".r)
+              body must /("annotIds" -> ".+".r)
+              body must /("refId" -> ".+".r)
+              body must /("nSamples" -> 1)
+              body must /("nLibs" -> 1)
+              body must /("pipeline" -> "gentrap")
+              body must /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "remove the run record" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              contentType mustEqual "application/json"
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              jsonBody must haveSize(0)
+            }
+          }
+
+          "return status 202 again when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 202
+            }
+          }
+
+          "return a JSON object of the run data with the deletionTime attribute again when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("runId" -> userRunId)
+              body must /("uploaderId" -> user.id)
+              body must not /("sampleIds" -> ".+".r)
+              body must /("annotIds" -> ".+".r)
+              body must /("refId" -> ".+".r)
+              body must /("nSamples" -> 1)
+              body must /("nLibs" -> 1)
+              body must /("pipeline" -> "gentrap")
               body must /("deletionTime" -> ".+".r)
             }
           }
