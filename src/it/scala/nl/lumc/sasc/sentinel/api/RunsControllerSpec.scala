@@ -667,11 +667,21 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "not remove the run" in {
+          "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
               body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              contentType mustEqual "application/octet-stream"
+              body mustEqual new String(uploadPayload.content)
             }
           }
 
@@ -701,11 +711,21 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "not remove the run" in {
+          "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
               body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              contentType mustEqual "application/octet-stream"
+              body mustEqual new String(uploadPayload.content)
             }
           }
 
@@ -741,11 +761,21 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
           }
 
-          "not remove the run" in {
+          "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
               body must not /("deletionTime" -> ".+".r)
+            }
+          }
+
+          "not remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              contentType mustEqual "application/octet-stream"
+              body mustEqual new String(uploadPayload.content)
             }
           }
 
