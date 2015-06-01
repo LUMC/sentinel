@@ -3,12 +3,11 @@ package nl.lumc.sasc.sentinel.api
 import java.io.File
 import scala.util.{ Failure, Success, Try }
 
-import org.json4s.jackson.Serialization
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, MaxRunSummarySize, MaxRunSummarySizeMb, Pipeline }
+import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, MaxRunSummarySize, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor

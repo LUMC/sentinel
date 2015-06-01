@@ -690,7 +690,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               status mustEqual 200
               jsonBody must haveSize(1)
               body must /#(0) /("runId" -> ".+".r)
-              body must not /#(0) /("deletionTime" -> ".+".r)
+              body must not /# 0 /("deletionTime" -> ".+".r)
             }
           }
         }
@@ -734,7 +734,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               status mustEqual 200
               jsonBody must haveSize(1)
               body must /#(0) /("runId" -> ".+".r)
-              body must not /#(0) /("deletionTime" -> ".+".r)
+              body must not /# 0 /("deletionTime" -> ".+".r)
             }
           }
         }
