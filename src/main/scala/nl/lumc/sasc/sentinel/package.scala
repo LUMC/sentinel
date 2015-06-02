@@ -39,8 +39,8 @@ package object sentinel {
   /** Supported library types */
   object LibType extends Enumeration {
     type LibType = Value
-    val Single = Value
-    val Paired = Value
+    val Single = Value("single")
+    val Paired = Value("paired")
   }
 
   /** Allowed library type parameters in HTTP requests */
@@ -51,8 +51,8 @@ package object sentinel {
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
     type AccLevel = Value
-    val Lib = Value
-    val Sample = Value
+    val Lib = Value("lib")
+    val Sample = Value("sample")
   }
 
   /** Allowed accumulation level parameters in HTTP requests */
@@ -63,8 +63,8 @@ package object sentinel {
   /** Supported QC step for sequences */
   object SeqQcPhase extends Enumeration {
     type SeqQcPhase = Value
-    val Raw = Value
-    val Processed = Value
+    val Raw = Value("raw")
+    val Processed = Value("processed")
   }
 
   /** Allowed sequencing QC step parameters in HTTP requests */
