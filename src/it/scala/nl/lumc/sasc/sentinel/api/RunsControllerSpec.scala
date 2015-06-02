@@ -10,7 +10,7 @@ import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.{CommonErrors, RunDocument, ApiMessage}
+import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, ApiMessage, User }
 
 class RunsControllerSpec extends SentinelServletSpec with Mockito {
 
@@ -250,6 +250,33 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             }
         }
       }
+    }
+
+    "using the 'gentrap' pipeline summary run file" >> {
+      br
+
+      def params(implicit user: User) = Seq(("userId", user.id), ("pipeline", "gentrap"))
+      def headers(implicit user: User) = Map(HeaderApiKey -> user.activeKey)
+      lazy val v04SSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+
+      "when the v0.4 run summary (single sample, single lib) is uploaded to an empty database" should {
+        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
+          post(endpoint, params, Map("run" -> v04SSampleSLib), headers) {
+            status mustEqual 201
+            contentType mustEqual "application/json"
+            body must /("runId" -> ".+".r)
+            body must /("uploaderId" -> user.id)
+            body must /("pipeline" -> "gentrap")
+            body must /("nSamples" -> 1)
+            body must /("nLibs" -> 1)
+            body must /("refId" -> ".+".r)
+            body must not /("sampleIds" -> ".+".r)
+            // TODO: use raw JSON matchers when we upgrade specs2
+            jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
+          }
+        }
+      }
+
     }
   }
 
