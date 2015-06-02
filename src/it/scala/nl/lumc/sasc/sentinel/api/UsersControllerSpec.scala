@@ -25,7 +25,7 @@ class UsersControllerSpec extends SentinelServletSpec {
           status mustEqual 201
           body must /("message" -> "New user created.")
           body must /("data") /("uri" -> ("/users/" + userRequest.id))
-          body must /("data") /("apiKey" -> ".+".r)
+          body must /("data") /("apiKey" -> """\S+""".r)
         } before {
           servlet.users.userExist("yeah") must beFalse
         } after { resetDatabase() }

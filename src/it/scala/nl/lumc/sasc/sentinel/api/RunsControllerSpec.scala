@@ -130,7 +130,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             body must /("nLibs" -> 0)
             body must /("nSamples" -> 0)
             body must /("pipeline" -> "unsupported")
-            body must /("runId" -> ".+".r)
+            body must /("runId" -> """\S+""".r)
             body must /("uploaderId" -> user.id)
             body must not /("annotIds" -> ".+".r)
             body must not /("refId" -> ".+".r)
@@ -154,7 +154,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             body must /("nLibs" -> 0)
             body must /("nSamples" -> 0)
             body must /("pipeline" -> "unsupported")
-            body must /("runId" -> ".+".r)
+            body must /("runId" -> """\S+""".r)
             body must /("uploaderId" -> user.id)
             body must not /("annotIds" -> ".+".r)
             body must not /("refId" -> ".+".r)
@@ -261,12 +261,12 @@ class RunsControllerSpec extends SentinelServletSpec {
           post(endpoint, params, Map("run" -> v04SSampleSLib), headers) {
             status mustEqual 201
             contentType mustEqual "application/json"
-            body must /("runId" -> ".+".r)
+            body must /("runId" -> """\S+""".r)
             body must /("uploaderId" -> user.id)
             body must /("pipeline" -> "gentrap")
             body must /("nSamples" -> 1)
             body must /("nLibs" -> 1)
-            body must /("refId" -> ".+".r)
+            body must /("runId" -> """\S+""".r)
             body must not /("sampleIds" -> ".+".r)
             // TODO: use raw JSON matchers when we upgrade specs2
             jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
@@ -437,7 +437,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               get(endpoint, params, headers) {
                 contentType mustEqual "application/json"
                 jsonBody must haveSize(1)
-                body must /#(0) */("runId" -> ".+".r)
+                body must /#(0) */("runId" -> """\S+""".r)
                 body must /#(0) */("uploaderId" -> user.id)
                 body must /#(0) */("pipeline" -> "unsupported")
                 body must /#(0) */("nSamples" -> 0)
@@ -694,7 +694,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
-              body must /("runId" -> ".+".r)
+              body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -713,7 +713,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> ".+".r)
+              body must /#(0) /("runId" -> """\S+""".r)
               body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -738,7 +738,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
-              body must /("runId" -> ".+".r)
+              body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -757,7 +757,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> ".+".r)
+              body must /#(0) /("runId" -> """\S+""".r)
               body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -788,7 +788,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "not remove the run record" in {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
-              body must /("runId" -> ".+".r)
+              body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -807,7 +807,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
               jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> ".+".r)
+              body must /#(0) /("runId" -> """\S+""".r)
               body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
@@ -915,7 +915,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               body must /("uploaderId" -> user.id)
               body must not /("sampleIds" -> ".+".r)
               body must /("annotIds" -> ".+".r)
-              body must /("refId" -> ".+".r)
+              body must /("refId" -> """\S+""".r)
               body must /("nSamples" -> 1)
               body must /("nLibs" -> 1)
               body must /("pipeline" -> "gentrap")
