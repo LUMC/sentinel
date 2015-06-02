@@ -26,7 +26,7 @@ trait AnnotationsAdapter extends MongodbConnector {
   def getAnnotations(maxNumReturn: Option[Int] = None): Seq[Annotation] = {
     val qResult = coll
       .find()
-      .sort(MongoDBObject("creationTime" -> -1))
+      .sort(MongoDBObject("creationTimeUtc" -> -1))
       .map { case dbo => grater[Annotation].asObject(dbo) }
     maxNumReturn match {
       case None      => qResult.toSeq

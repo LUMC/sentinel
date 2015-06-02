@@ -22,7 +22,7 @@ trait ReferencesAdapter extends MongodbConnector {
   def getReferences(maxNumReturn: Option[Int] = None): Seq[Reference] = {
     val qResult = coll
       .find()
-      .sort(MongoDBObject("creationTime" -> -1))
+      .sort(MongoDBObject("creationTimeUtc" -> -1))
       .map { case dbo => grater[Reference].asObject(dbo) }
     maxNumReturn match {
       case None      => qResult.toSeq

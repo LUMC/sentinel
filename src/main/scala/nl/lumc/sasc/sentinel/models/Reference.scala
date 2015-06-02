@@ -10,4 +10,4 @@ case class Reference(
   contigMd5s: Seq[String],
   combinedMd5: String,
   name: Option[String] = None,
-  creationTime: Option[Date] = None)
+  creationTimeUtc: Option[Date] = None)

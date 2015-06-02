@@ -57,6 +57,6 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
       activeKey = generateApiKey(),
       emailVerified = false,
       isAdmin = false,
-      creationTime = getTimeNow,
+      creationTimeUtc = getTimeNow,
       _id = new ObjectId)
 }

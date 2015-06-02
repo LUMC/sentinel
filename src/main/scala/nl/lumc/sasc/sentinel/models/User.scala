@@ -12,9 +12,9 @@ case class User(
     activeKey: String,
     emailVerified: Boolean,
     isAdmin: Boolean,
-    creationTime: Date,
+    creationTimeUtc: Date,
     _id: ObjectId = new ObjectId,
-    updateTime: Option[Date] = None) {
+    updateTimeUtc: Option[Date] = None) {
 
   def passwordMatches(candidate: String): Boolean = BCrypt.checkpw(candidate, hashedPassword)
 

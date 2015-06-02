@@ -53,7 +53,7 @@ trait RunsAdapter extends MongodbConnector {
             .collect { case gfs => Right(gfs) }
         } else {
           val query = MongoDBObject("_id" -> qid, "uploaderId" -> user.id,
-            "deletionTime" -> MongoDBObject("$exists" -> false))
+            "deletionTimeUtc" -> MongoDBObject("$exists" -> false))
           coll
             .findOne(query)
             .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
@@ -68,8 +68,8 @@ trait RunsAdapter extends MongodbConnector {
       else
         $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline.toString)))
     val qResult = coll
-      .find($and(query :: ("deletionTime" $exists false)))
-      .sort(MongoDBObject("creationTime" -> -1))
+      .find($and(query :: ("deletionTimeUtc" $exists false)))
+      .sort(MongoDBObject("creationTimeUtc" -> -1))
       .map { case dbo => grater[RunDocument].asObject(dbo) }
     maxNumReturn match {
       case None      => qResult.toSeq
@@ -83,14 +83,14 @@ trait RunsAdapter extends MongodbConnector {
       case Success(rid) =>
 
         val docDeleted = coll
-          .findOne(MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> true)))
+          .findOne(MongoDBObject("_id" -> rid, "deletionTimeUtc" -> MongoDBObject("$exists" -> true)))
           .map { case dbo => grater[RunDocument].asObject(dbo) }
 
         if (docDeleted.isDefined) docDeleted
         else {
           val docToDelete = coll
-            .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTime" -> MongoDBObject("$exists" -> false)),
-              update = MongoDBObject("$set" -> MongoDBObject("deletionTime" -> getTimeNow)),
+            .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
+              update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getTimeNow)),
               returnNew = true,
               fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
             .map { case dbo => grater[RunDocument].asObject(dbo) }

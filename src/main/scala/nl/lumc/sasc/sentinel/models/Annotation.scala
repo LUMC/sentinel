@@ -10,4 +10,4 @@ case class Annotation(
   annotMd5: String,
   extension: Option[String],
   fileName: Option[String] = None,
-  creationTime: Option[Date] = None)
+  creationTimeUtc: Option[Date] = None)

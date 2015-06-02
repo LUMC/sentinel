@@ -126,7 +126,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 201
             contentType mustEqual "application/json"
-            body must /("creationTime" -> ".+".r)
+            body must /("creationTimeUtc" -> ".+".r)
             body must /("nLibs" -> 0)
             body must /("nSamples" -> 0)
             body must /("pipeline" -> "unsupported")
@@ -150,7 +150,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 201
-            body must /("creationTime" -> ".+".r)
+            body must /("creationTimeUtc" -> ".+".r)
             body must /("nLibs" -> 0)
             body must /("nSamples" -> 0)
             body must /("pipeline" -> "unsupported")
@@ -695,7 +695,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
-              body must not /("deletionTime" -> ".+".r)
+              body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -714,7 +714,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 200
               jsonBody must haveSize(1)
               body must /#(0) /("runId" -> ".+".r)
-              body must not /# 0 /("deletionTime" -> ".+".r)
+              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
         }
@@ -739,7 +739,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
-              body must not /("deletionTime" -> ".+".r)
+              body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -758,7 +758,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 200
               jsonBody must haveSize(1)
               body must /#(0) /("runId" -> ".+".r)
-              body must not /# 0 /("deletionTime" -> ".+".r)
+              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
         }
@@ -789,7 +789,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
               body must /("runId" -> ".+".r)
-              body must not /("deletionTime" -> ".+".r)
+              body must not /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -808,7 +808,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 200
               jsonBody must haveSize(1)
               body must /#(0) /("runId" -> ".+".r)
-              body must not /# 0 /("deletionTime" -> ".+".r)
+              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
         }
@@ -832,7 +832,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return a JSON object of the run data with the deletionTime attribute" in {
+          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
@@ -841,7 +841,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               body must /("nSamples" -> 0)
               body must /("nLibs" -> 0)
               body must /("pipeline" -> "unsupported")
-              body must /("deletionTime" -> ".+".r)
+              body must /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -876,7 +876,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return a JSON object of the run data with the deletionTime attribute again when repeated" in {
+          "return a JSON object of the run data with the deletionTimeUtc attribute again when repeated" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
@@ -885,7 +885,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               body must /("nSamples" -> 0)
               body must /("nLibs" -> 0)
               body must /("pipeline" -> "unsupported")
-              body must /("deletionTime" -> ".+".r)
+              body must /("deletionTimeUtc" -> ".+".r)
             }
           }
         }
@@ -908,7 +908,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return a JSON object of the run data with the deletionTime attribute" in {
+          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
@@ -919,7 +919,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               body must /("nSamples" -> 1)
               body must /("nLibs" -> 1)
               body must /("pipeline" -> "gentrap")
-              body must /("deletionTime" -> ".+".r)
+              body must /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -954,7 +954,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return a JSON object of the run data with the deletionTime attribute again when repeated" in {
+          "return a JSON object of the run data with the deletionTimeUtc attribute again when repeated" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("runId" -> userRunId)
@@ -965,7 +965,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               body must /("nSamples" -> 1)
               body must /("nLibs" -> 1)
               body must /("pipeline" -> "gentrap")
-              body must /("deletionTime" -> ".+".r)
+              body must /("deletionTimeUtc" -> ".+".r)
             }
           }
         }

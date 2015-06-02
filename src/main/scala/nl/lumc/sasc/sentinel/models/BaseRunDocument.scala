@@ -12,7 +12,7 @@ import org.bson.types.ObjectId
   def pipeline: String
   def nSamples: Int
   def nLibs: Int
-  def creationTime: Date
-  def deletionTime: Option[Date]
+  def creationTimeUtc: Date
+  def deletionTimeUtc: Option[Date]
 }
 

@@ -11,8 +11,8 @@ case class RunDocument(
   pipeline: String,
   nSamples: Int,
   nLibs: Int,
-  creationTime: Date,
+  creationTimeUtc: Date,
   sampleIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None,
-  deletionTime: Option[Date] = None) extends BaseRunDocument
+  deletionTimeUtc: Option[Date] = None) extends BaseRunDocument

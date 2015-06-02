@@ -130,7 +130,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       refId = new ObjectId,
       combinedMd5 = combinedMd5,
       contigMd5s = contigMd5s,
-      creationTime = Option(getTimeNow))
+      creationTimeUtc = Option(getTimeNow))
   }
 
   def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
@@ -154,7 +154,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
               else Some(ext.toLowerCase)
           },
           fileName = filePath.collect { case path => getName(path) },
-          creationTime = Option(getTimeNow))
+          creationTimeUtc = Option(getTimeNow))
     }
 
   def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[GentrapSampleDocument],
@@ -164,7 +164,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       refId = Option(refId),
       annotIds = Option(annotIds),
       sampleIds = samples.map(_.id),
-      creationTime = getTimeNow,
+      creationTimeUtc = getTimeNow,
       uploaderId = user.id,
       pipeline = pipeline.toString.toLowerCase,
       nSamples = samples.size,
