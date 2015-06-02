@@ -38,7 +38,7 @@ object SentinelBuild extends Build {
       .setPreference(SpacesWithinPatternBinders, true)
   }
 
-  val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
+  lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
 
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++ Seq(
     organization := Organization,
@@ -51,6 +51,8 @@ object SentinelBuild extends Build {
     },
     scalaVersion := ScalaVersion,
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
+    testOptions in Test += Tests.Argument("console", "junitxml"),
+    testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
     resolvers += Classpaths.typesafeReleases,
     resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
