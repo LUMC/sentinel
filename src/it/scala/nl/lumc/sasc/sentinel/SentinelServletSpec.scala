@@ -120,7 +120,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
 
-    trait PriorRequests extends CleanDatabaseWithUser {
+    trait PriorRequests extends BeforeAllAfterAll {
       sequential
 
       type Req = () => ClientResponse
@@ -131,16 +131,35 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       lazy val priorResponse: ClientResponse = priorResponses.head
 
+      lazy val priorJsonBody: Option[JValue] = Try(parse(priorResponse.body)).toOption
+
+      lazy val priorContentType = priorResponse.mediaType
+        .getOrElse(failure("'Content-Type' not found in response header."))
+
       lazy val priorResponses: Seq[ClientResponse] = priorRequests.map(f => f())
 
-      override def beforeAll() = {
-        super.beforeAll()
+      def beforeAll() = {
         priorResponses
         ()
       }
+
+      def afterAll() = {}
     }
 
-    trait PriorRunUpload extends PriorRequests {
+    trait PriorRequestsClean extends PriorRequests with CleanDatabaseWithUser {
+
+      override def beforeAll() = {
+        super[CleanDatabaseWithUser].beforeAll()
+        super[PriorRequests].beforeAll()
+      }
+
+      override def afterAll() = {
+        super[PriorRequests].afterAll()
+        super[CleanDatabaseWithUser].afterAll()
+      }
+    }
+
+    trait PriorRunUploadClean extends PriorRequestsClean {
       def pipelineParam: String
       def uploadPayload: Uploadable
       def uploadUser = user

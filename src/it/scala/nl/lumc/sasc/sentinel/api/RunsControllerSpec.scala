@@ -32,7 +32,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     file
   }
 
-  class UnsupportedUploadContext extends SpecContext.PriorRunUpload {
+  class UnsupportedUploadContext extends SpecContext.PriorRunUploadClean {
     def pipelineParam = "unsupported"
     lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
     lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
@@ -893,7 +893,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
       "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
 
-        new SpecContext.PriorRunUpload {
+        new SpecContext.PriorRunUploadClean {
           def pipelineParam = "gentrap"
           lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
           lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
