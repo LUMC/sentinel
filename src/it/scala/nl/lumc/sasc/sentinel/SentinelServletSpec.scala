@@ -56,6 +56,15 @@ trait SentinelServletSpec extends MutableScalatraSpec
     }
   }
 
+  implicit def jsonIsSized: Sized[JValue] =  new Sized[JValue] {
+    def size(t: JValue) = t match {
+      case JArray(list) => list.size
+      case JObject(objects) => objects.size
+      case JString(str) => str.length
+      case otherwise => -1
+    }
+  }
+
   object Users {
     val avg = User("avg", "avg@test.id", "pwd1", "key1", emailVerified = true, isAdmin = false, getTimeNow)
     val avg2 = User("avg2", "avg2@test.id", "pwd2", "key2", emailVerified = true, isAdmin = false, getTimeNow)
