@@ -2,12 +2,10 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
 import org.json4s.jackson.Serialization.write
-import org.scalatra.test.specs2._
-import org.specs2.execute.Failure
 import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.{ ApiMessage, UserRequest }
+import nl.lumc.sasc.sentinel.models.UserRequest
 
 class UsersControllerSpec extends SentinelServletSpec with Mockito {
 
@@ -20,6 +18,23 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
   "POST '/users'" >> {
 
     br
+
+    "when the user is succesfully created" should {
+      "return status 201 and the correct message" in {
+        val userRequest = UserRequest("yeah", "mail@mail.com", "Mypass123", "Mypass123")
+        val payload = toByteArray(userRequest)
+        post("/users", payload) {
+          status mustEqual 201
+          apiMessage.isDefined must beTrue
+          apiMessage.get.message mustEqual "New user created."
+          val msgData = (jsonBody.get \ "data").extract[Map[String, String]]
+          msgData("uri") mustEqual "/users/yeah"
+          msgData.keySet must contain("apiKey")
+        } before {
+          servlet.users.userExist("yeah") must beFalse
+        } after { resetDatabase() }
+      }
+    }
 
     "when the request body is empty" should {
       "return status 400 and the correct message" in {
@@ -111,23 +126,6 @@ class UsersControllerSpec extends SentinelServletSpec with Mockito {
           apiMessage mustEqual Some(ApiMessage("User ID already taken."))
         } before {
           servlet.users.addUser(userRequest.user)
-        } after { resetDatabase() }
-      }
-    }
-
-    "when the user is succesfully created" should {
-      "return status 201 and the correct message" in {
-        val userRequest = UserRequest("yeah", "mail@mail.com", "Mypass123", "Mypass123")
-        val payload = toByteArray(userRequest)
-        post("/users", payload) {
-          status mustEqual 201
-          apiMessage.isDefined must beTrue
-          apiMessage.get.message mustEqual "New user created."
-          val msgData = (jsonBody.get \ "data").extract[Map[String, String]]
-          msgData("uri") mustEqual "/users/yeah"
-          msgData.keySet must contain("apiKey")
-        } before {
-          servlet.users.userExist("yeah") must beFalse
         } after { resetDatabase() }
       }
     }
