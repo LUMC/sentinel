@@ -67,7 +67,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
-          body must /("data") / "User ID too short."
+          body must /("data") / "User ID shorter than 3 characters."
         }
       }
     }
@@ -78,7 +78,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
-          body must /("data") / "Password too short."
+          body must /("data") / "Password shorter than 6 characters."
         }
       }
     }

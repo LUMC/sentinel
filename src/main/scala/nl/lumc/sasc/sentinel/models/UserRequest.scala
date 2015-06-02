@@ -19,11 +19,11 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
   lazy val validationMessages: Seq[String] = {
     val msgBuffer = scala.collection.mutable.Buffer.empty[String]
     if (!idLengthValid)
-      msgBuffer += "User ID too short."
+      msgBuffer += s"User ID shorter than $MinUserIdLength characters."
     if (!passwordConfirmed)
       msgBuffer += "Different passwords given."
     if (!passwordLengthValid)
-      msgBuffer += "Password too short."
+      msgBuffer += s"Password shorter than $MinPasswordLength characters."
     if (!passwordMixValid)
       msgBuffer += "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
     if (!emailValid)
@@ -31,11 +31,11 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
     msgBuffer.toSeq
   }
 
-  def idLengthValid = id.length >= 3
+  def idLengthValid = id.length >= MinUserIdLength
 
   def passwordConfirmed = password == confirmPassword
 
-  def passwordLengthValid = password.length >= 6
+  def passwordLengthValid = password.length >= MinPasswordLength
 
   def passwordMixValid = passwordCheckers.forall(_.findFirstIn(password).isDefined)
 
