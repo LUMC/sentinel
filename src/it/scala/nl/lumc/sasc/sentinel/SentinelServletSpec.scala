@@ -84,8 +84,8 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       lazy val mongo = dao
 
-      def user = Users.avg
-      def users = Users.all
+      implicit def user: User = Users.avg
+      implicit def users: Set[User] = Users.all
 
       override def before = {
         super.before
@@ -111,8 +111,8 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       lazy val mongo = dao
 
-      def user = Users.avg
-      def users = Users.all
+      implicit def user: User = Users.avg
+      implicit def users: Set[User] = Users.all
 
       override def beforeAll() = {
         super.beforeAll()
