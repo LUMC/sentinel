@@ -14,12 +14,16 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
 
   private val hasNumbers = "[0-9]+".r
 
+  private val hasNonWord = """\W+""".r
+
   private val passwordCheckers = Set(hasUpperCase, hasLowerCase, hasNumbers)
 
   lazy val validationMessages: Seq[String] = {
     val msgBuffer = scala.collection.mutable.Buffer.empty[String]
     if (!idLengthValid)
       msgBuffer += s"User ID shorter than $MinUserIdLength characters."
+    if (!idContentsValid)
+      msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars.mkString("', '") + "'.")
     if (!passwordConfirmed)
       msgBuffer += "Different passwords given."
     if (!passwordLengthValid)
@@ -32,6 +36,10 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
   }
 
   def idLengthValid = id.length >= MinUserIdLength
+
+  private lazy val invalidIdChars = hasNonWord.findAllIn(id).toSeq
+
+  def idContentsValid = invalidIdChars.isEmpty
 
   def passwordConfirmed = password == confirmPassword
 

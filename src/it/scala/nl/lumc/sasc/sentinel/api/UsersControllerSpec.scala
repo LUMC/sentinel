@@ -72,6 +72,22 @@ class UsersControllerSpec extends SentinelServletSpec {
       }
     }
 
+    "when the user ID contains disallowed characters which" can {
+
+      Seq(" ", ".", "*23#%") foreach { nonchar =>
+        s"be '$nonchar'" should {
+          "return status 400 and the correct message" in {
+            val payload = toByteArray(UserRequest("yeah" + nonchar, "mail@mail.com", "Mypass123", "Mypass123"))
+            post(baseEndpoint, payload) {
+              status mustEqual 400
+              body must /("message" -> "Invalid user request.")
+              body must /("data") / "User ID contains disallowed characters: .+".r
+            }
+          }
+        }
+      }
+    }
+
     "when the password is less than 6 characters" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "My1aB", "My1aB"))
