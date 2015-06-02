@@ -6,14 +6,13 @@ import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.mongo.ObjectIdSerializer
 import org.scalatra.servlet.FileItem
 import scalaz.{ Failure => _, _ }, Scalaz._
 
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ calcSeqMd5, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcSeqMd5, getTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
@@ -24,7 +23,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     with ReferencesAdapter
     with AnnotationsAdapter {
 
-  implicit val jsonFormats = DefaultFormats + new ObjectIdSerializer
+  implicit val formats = SentinelJsonFormats
 
   private def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
 

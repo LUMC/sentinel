@@ -13,7 +13,7 @@ import org.specs2.specification.{ Fragments, Step }
 
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
-import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, getResourceBytes, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getTimeNow }
 
 trait SentinelServletSpec extends MutableScalatraSpec
     with EmbeddedMongodbRunner
@@ -31,7 +31,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
     super[EmbeddedMongodbRunner].stop()
   }
 
-  implicit val formats = DefaultFormats + new CustomObjectIdSerializer
+  implicit val formats = SentinelJsonFormats
 
   def contentType = response.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
 

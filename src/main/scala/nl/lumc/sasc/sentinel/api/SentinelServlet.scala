@@ -6,14 +6,14 @@ import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 
-import nl.lumc.sasc.sentinel.utils.{ CustomObjectIdSerializer, runDocumentSerializer }
+import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
 abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = DefaultFormats + new CustomObjectIdSerializer + runDocumentSerializer
+  protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
   override protected def registerModel(model: Model): Unit = {
     // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
