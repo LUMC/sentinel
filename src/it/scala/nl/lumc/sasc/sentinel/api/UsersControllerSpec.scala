@@ -11,16 +11,17 @@ class UsersControllerSpec extends SentinelServletSpec {
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val servlet = new UsersController
-  addServlet(servlet, "/users/*")
+  val baseEndpoint = "/users"
+  addServlet(servlet, s"$baseEndpoint/*")
 
-  "POST '/users'" >> {
+  s"POST '$baseEndpoint'" >> {
     br
 
     "when the user is succesfully created" should {
       "return status 201 and the correct message" in {
         val userRequest = UserRequest("yeah", "mail@mail.com", "Mypass123", "Mypass123")
         val payload = toByteArray(userRequest)
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 201
           body must /("message" -> "New user created.")
           body must /("data") /("uri" -> ("/users/" + userRequest.id))
@@ -33,7 +34,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
     "when the request body is empty" should {
       "return status 400 and the correct message" in {
-        post("/users", body = Array.empty[Byte]) {
+        post(baseEndpoint, body = Array.empty[Byte]) {
           status mustEqual 400
           body must /("message" -> "Malformed user request.")
         }
@@ -42,7 +43,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
     "when the request body is not valid JSON" should {
       "return status 400 and the correct message" in {
-        post("/users", Array[Byte](10, 20, 30)) {
+        post(baseEndpoint, Array[Byte](10, 20, 30)) {
           status mustEqual 400
           body must /("message" -> "Malformed user request.")
         }
@@ -52,7 +53,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the passwords do not match" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "Mypass456"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "Different passwords given."
@@ -63,7 +64,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the user ID is less than 3 characters" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("hm", "mail@mail.com", "Mypass123", "Mypass123"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "User ID too short."
@@ -74,7 +75,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password is less than 6 characters" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "My1aB", "My1aB"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "Password too short."
@@ -85,7 +86,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain uppercase" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "mypass123", "mypass123"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
@@ -96,7 +97,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain lowercase" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MYPASS123", "MYPASS123"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
@@ -107,7 +108,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain numbers" should {
       "return status 400 and the correct message" in {
         val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "Mypass", "Mypass"))
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 400
           body must /("message" -> "Invalid user request.")
           body must /("data") / "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
@@ -119,7 +120,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       "return status 409 and the correct message" in {
         val userRequest = UserRequest("yeah", "mail@mail.com", "Mypass123", "Mypass123")
         val payload = toByteArray(userRequest)
-        post("/users", payload) {
+        post(baseEndpoint, payload) {
           status mustEqual 409
           body must /("message" -> "User ID already taken.")
         } before {
