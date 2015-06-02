@@ -6,7 +6,7 @@ import org.scalatra._
 import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.{ AllowedLibTypeParams, AllowedAccLevelParams, AllowedSeqQcPhaseParams, Pipeline }
+import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
@@ -111,11 +111,13 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = splitParam(params.getAs[String]("runIds"))
     val refIds = splitParam(params.getAs[String]("refIds"))
     val annotIds = splitParam(params.getAs[String]("annotIds"))
-    val libType = params.getAs[String]("libType").getOrElse("paired")
-    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse("raw")
-    // TODO: return 400 if library type is invalid
+    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
+    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
+
+    val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
+    val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
+
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
-    // TODO: return 200 and sequence stats
-    gentrap.getSeqStats(AllowedLibTypeParams(libType), AllowedSeqQcPhaseParams(seqQcPhase))
+    gentrap.getSeqStats(lib, qc)
   }
 }
