@@ -53,6 +53,14 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedAccLevelParams.keySet.toList)
+        .optional,
+      queryParam[String]("libType")
+        .description(
+          """The types of sequence libraries to return. Possible values are `single` for single end
+            | libraries and `paired` for paired end libraries (default: `paired`). This parameter is ignored if
+            | `accLevel` is set to `sample` since a sample may contain mixed library types.
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional)
     responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message))
   // format: ON
@@ -61,7 +69,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = splitParam(params.getAs[String]("runIds"))
     val refIds = splitParam(params.getAs[String]("refIds"))
     val annotIds = splitParam(params.getAs[String]("annotIds"))
-    val accLevel = params.getAs[String]("accLevel").getOrElse("sample")
+    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
+    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
 
     AllowedAccLevelParams.get(accLevel) match {
