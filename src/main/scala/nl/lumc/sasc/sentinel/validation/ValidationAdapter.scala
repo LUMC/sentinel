@@ -11,7 +11,7 @@ trait ValidationAdapter {
 
   val validator: RunValidator
 
-  def createValidator(schemaResourceUrl: String) = new RunValidator(getResourceStream(schemaResourceUrl))
+  def createValidator(schemaResourceUrl: String) = RunValidator(getResourceStream(schemaResourceUrl))
 
   def parseAndValidate(byteContents: Array[Byte]): JValue = {
     val json =

@@ -1,12 +1,12 @@
 package nl.lumc.sasc.sentinel.validation
 
+import scala.collection.JavaConverters._
+
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.core.report.{ ProcessingMessage, ProcessingReport }
 import com.github.fge.jsonschema.main._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-
-import scala.collection.JavaConverters._
 
 /**
  * Validator for incoming JSON payloads.
@@ -43,13 +43,6 @@ class RunValidator(rawSchema: JValue) {
   def validationMessages(instance: JValue): Seq[ProcessingMessage] = validate(instance)
     .iterator().asScala.toSeq
 
-  /**
-   * Checks whether the given JSON is valid.
-   *
-   * @param instance JSON instance to validate.
-   * @return [[Boolean]], true when JSON is valid, false otherwise.
-   */
-  def isValid(instance: JValue): Boolean = validationMessages(instance).isEmpty
 }
 
 object RunValidator {
@@ -57,7 +50,7 @@ object RunValidator {
   import scala.language.implicitConversions
 
   /** Constructor for new [[RunValidator]] objects. */
-  def apply(url: String) = new RunValidator(url)
+  def apply(in: JsonInput) = new RunValidator(in)
 
   /** Implicit conversion from a [[JValue]] object to a [[JsonNode]] object; used internally by the validator. */
   implicit def toJsonNode(jv: JValue): JsonNode = asJsonNode(jv)
