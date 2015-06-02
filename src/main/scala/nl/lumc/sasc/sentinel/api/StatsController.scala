@@ -73,11 +73,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     // TODO: return 404 if run ID, ref ID, and/or annotID is not found
 
-    AllowedAccLevelParams.get(accLevel) match {
-      case None => BadRequest(CommonErrors.InvalidAccLevel)
-      case Some(accEnum) =>
-        gentrap.getAlignmentStats(accEnum, runIds, refIds, annotIds)
-    }
+    val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
+    val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
+
+    gentrap.getAlignmentStats(acc, runIds, refIds, annotIds)
   }
 
   // format: OFF

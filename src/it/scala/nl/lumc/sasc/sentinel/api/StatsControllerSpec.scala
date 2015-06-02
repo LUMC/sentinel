@@ -24,6 +24,42 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     val endpoint = s"$baseEndpoint/alignments/gentrap"
 
+    "when an invalid accumulation level is specified should" >> inline {
+
+      new PriorRequestsContext {
+        def request = () => get(endpoint, Seq(("accLevel", "yalala"))) { response }
+        def priorRequests: Seq[Req] = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorContentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
+    "when an invalid library type is specified should" >> inline {
+
+      new PriorRequestsContext {
+        def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
+        def priorRequests: Seq[Req] = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorContentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Library type parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
     "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
 
       new PriorRunUploadCleanContext {
