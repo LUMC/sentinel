@@ -1,5 +1,7 @@
 package nl.lumc.sasc.sentinel
 
+import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
+
 package object models {
 
   case class ApiMessage(message: String, data: Any = None)

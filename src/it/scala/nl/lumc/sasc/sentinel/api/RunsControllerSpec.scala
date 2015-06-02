@@ -7,9 +7,10 @@ import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, User }
+import nl.lumc.sasc.sentinel.settings._
 
 class RunsControllerSpec extends SentinelServletSpec {
 

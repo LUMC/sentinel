@@ -14,9 +14,11 @@ package object sentinel {
   /** Header API key */
   val HeaderApiKey = "X-SENTINEL-KEY"
 
-  /** Maximum run summary size in MB */
-  val MaxRunSummarySizeMb = 16
-  val MaxRunSummarySize = MaxRunSummarySizeMb * 1024 * 1024
+  object settings {
+
+    val MaxRunSummarySizeMb = 16
+    val MaxRunSummarySize = MaxRunSummarySizeMb * 1024 * 1024
+  }
 
   /** Supported pipeline summary schemas */
   object Pipeline extends Enumeration {

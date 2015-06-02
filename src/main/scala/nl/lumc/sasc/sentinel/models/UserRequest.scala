@@ -3,6 +3,7 @@ package nl.lumc.sasc.sentinel.models
 import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
 
+import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.utils.{ generateApiKey, getTimeNow }
 
 case class UserRequest(id: String, email: String, password: String, confirmPassword: String) {

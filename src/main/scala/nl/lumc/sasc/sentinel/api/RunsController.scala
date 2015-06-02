@@ -7,11 +7,12 @@ import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, MaxRunSummarySize, Pipeline }
+import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
 import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
+import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 
