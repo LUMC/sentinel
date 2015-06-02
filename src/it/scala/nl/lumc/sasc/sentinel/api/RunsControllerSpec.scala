@@ -6,13 +6,12 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.specs2.mock.Mockito
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, ApiMessage, User }
+import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, User }
 
-class RunsControllerSpec extends SentinelServletSpec with Mockito {
+class RunsControllerSpec extends SentinelServletSpec {
 
   sequential
 
@@ -35,7 +34,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
   class UnsupportedUploadContext extends SpecContext.PriorRunUpload {
     def pipelineParam = "unsupported"
     lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
-    lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
+    lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
   }
 
   class UnsupportedThenGentrapUploadContext extends UnsupportedUploadContext {
@@ -45,7 +44,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
     def uploadFile2 = Map("run" -> uploadPayload2)
     def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
     lazy val uploadPayload2 = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
-    lazy val runId2 = parse(priorResponses(1).body).extract[RunDocument].runId.toString
+    lazy val runId2 = (parse(priorResponses(1).body) \ "runId").extract[String]
 
     override def priorRequests = super.priorRequests ++ Seq(
       () => post(uploadEndpoint, uploadParams2, uploadFile2, uploadHeader2) { response }
@@ -72,7 +71,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         post(endpoint, Seq(("userId", Users.avg.id))) {
           status mustEqual 400
           contentType mustEqual "application/json"
-          apiMessage mustEqual Some(ApiMessage("Pipeline not specified."))
+          body must /("message" -> "Pipeline not specified.")
         }
       }
     }
@@ -82,7 +81,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) {
           status mustEqual 400
           contentType mustEqual "application/json"
-          apiMessage mustEqual Some(ApiMessage("Run summary file not specified."))
+          body must /("message" -> "Run summary file not specified.")
         }
       }
     }
@@ -93,7 +92,8 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
           status mustEqual 400
           contentType mustEqual "application/json"
-          apiMessage.collect { case m => m.message } mustEqual Some("Pipeline parameter is invalid.")
+          body must /("message" -> "Pipeline parameter is invalid.")
+          body must /("data" -> "Valid values are .+".r)
         }
       }
     }
@@ -104,7 +104,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
         post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
           status mustEqual 413
           contentType mustEqual "application/json"
-          body must /("message" -> CommonErrors.RunSummaryTooLarge.message)
+          body must /("message" -> """Run summary exceeded maximum allowed size of \d+ MB.""".r)
         } before {
           fillFile(tooBigFile, MaxRunSummarySize + 100)
         } after {
@@ -125,17 +125,15 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 201
             contentType mustEqual "application/json"
-            jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
-              case payload =>
-                payload.runId must not be empty
-                payload.uploaderId mustEqual user.id
-                payload.pipeline mustEqual "unsupported"
-                payload.nSamples mustEqual 0
-                payload.nLibs mustEqual 0
-                payload.sampleIds must beEmpty
-                payload.annotIds must beNone
-                payload.refId must beNone
-            }
+            body must /("creationTime" -> ".+".r)
+            body must /("nLibs" -> 0)
+            body must /("nSamples" -> 0)
+            body must /("pipeline" -> "unsupported")
+            body must /("runId" -> ".+".r)
+            body must /("uploaderId" -> user.id)
+            body must not /("annotIds" -> ".+".r)
+            body must not /("refId" -> ".+".r)
+            body must not /("sampleIds" -> ".+".r)
           }
         }
       }
@@ -151,17 +149,15 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 201
-            jsonBody.collect { case json => json.extract[RunDocument] } must beSome.like {
-              case payload =>
-                payload.runId must not be empty
-                payload.uploaderId mustEqual user.id
-                payload.pipeline mustEqual "unsupported"
-                payload.nSamples mustEqual 0
-                payload.nLibs mustEqual 0
-                payload.sampleIds must beEmpty
-                payload.annotIds must beNone
-                payload.refId must beNone
-            }
+            body must /("creationTime" -> ".+".r)
+            body must /("nLibs" -> 0)
+            body must /("nSamples" -> 0)
+            body must /("pipeline" -> "unsupported")
+            body must /("runId" -> ".+".r)
+            body must /("uploaderId" -> user.id)
+            body must not /("annotIds" -> ".+".r)
+            body must not /("refId" -> ".+".r)
+            body must not /("sampleIds" -> ".+".r)
           }
         }
       }
@@ -171,7 +167,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runUpload)) {
             status mustEqual 400
             contentType mustEqual "application/json"
-            apiMessage mustEqual Some(ApiMessage("User ID not specified."))
+            body must /("message" -> "User ID not specified.")
           }
         }
       }
@@ -183,7 +179,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 400
             contentType mustEqual "application/json"
-            apiMessage must beSome.like { case api => api.message mustEqual "File is not JSON-formatted." }
+            body must /("message" -> "File is not JSON-formatted.")
           }
         }
       }
@@ -195,7 +191,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             Map(HeaderApiKey -> user.activeKey)) {
             status mustEqual 400
             contentType mustEqual "application/json"
-            apiMessage must beSome.like { case api => api.message mustEqual "JSON run summary is invalid." }
+            body must /("message" -> "JSON run summary is invalid.")
           }
         }
       }
@@ -212,7 +208,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
           post(endpoint, params, fileMap, headers) {
             status mustEqual 400
             contentType mustEqual "application/json"
-            apiMessage must beSome.like { case api => api.message mustEqual "Run summary already uploaded by the user." }
+            body must /("message" -> "Run summary already uploaded by the user.")
           }
         }
       }
@@ -223,7 +219,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             status mustEqual 401
             contentType mustEqual "application/json"
             header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+            body must /("message" -> "Authentication required to access resource.")
           }
         }
       }
@@ -235,7 +231,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
               status mustEqual 401
               contentType mustEqual "application/json"
               header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-              apiMessage mustEqual Some(ApiMessage("Authentication required to access resource."))
+              body must /("message" -> "Authentication required to access resource.")
             }
         }
       }
@@ -246,7 +242,7 @@ class RunsControllerSpec extends SentinelServletSpec with Mockito {
             Map(HeaderApiKey -> Users.unverified.activeKey)) {
               status mustEqual 403
               contentType mustEqual "application/json"
-              apiMessage mustEqual Some(ApiMessage("Unauthorized to access resource."))
+              body must /("message" -> "Unauthorized to access resource.")
             }
         }
       }

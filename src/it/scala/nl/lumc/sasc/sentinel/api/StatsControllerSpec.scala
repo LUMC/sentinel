@@ -1,7 +1,6 @@
 package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats
 
 class StatsControllerSpec extends SentinelServletSpec {
 
@@ -38,9 +37,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
           "return a JSON list with 2 objects" >> {
             get(endpoint) {
-              jsonBody must beSome
-              val contents = jsonBody.get.extract[List[GentrapAlignmentStats]]
-              contents must haveSize(2)
+              jsonBody must haveSize(2)
             }
           }
         }
