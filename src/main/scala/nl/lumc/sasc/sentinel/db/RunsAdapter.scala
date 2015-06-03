@@ -41,25 +41,19 @@ trait RunsAdapter extends MongodbConnector {
     coll.insert(dbo)
   }
 
-  def getRun(runId: String, user: User, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] = {
-    Try(new ObjectId(runId)) match {
-      case Failure(_) => None
-      case Success(qid) =>
-
-        if (doDownload) {
-          val query = MongoDBObject("_id" -> qid, "metadata.uploaderId" -> user.id)
-          mongo.gridfs
-            .findOne(query)
-            .collect { case gfs => Right(gfs) }
-        } else {
-          val query = MongoDBObject("_id" -> qid, "uploaderId" -> user.id,
-            "deletionTimeUtc" -> MongoDBObject("$exists" -> false))
-          coll
-            .findOne(query)
-            .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
-        }
+  def getRun(runId: ObjectId, user: User, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] =
+    if (doDownload) {
+      val query = MongoDBObject("_id" -> runId, "metadata.uploaderId" -> user.id)
+      mongo.gridfs
+        .findOne(query)
+        .collect { case gfs => Right(gfs) }
+    } else {
+      val query = MongoDBObject("_id" -> runId, "uploaderId" -> user.id,
+        "deletionTimeUtc" -> MongoDBObject("$exists" -> false))
+      coll
+        .findOne(query)
+        .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }
     }
-  }
 
   def getRuns(user: User, pipelines: Seq[Pipeline.Value], maxNumReturn: Option[Int] = None): Seq[RunDocument] = {
     val query =
