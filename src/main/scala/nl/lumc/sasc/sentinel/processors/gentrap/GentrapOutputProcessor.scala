@@ -14,26 +14,6 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
   private lazy val coll = mongo.db(collectionNames.pipelineSamples("gentrap"))
 
-  // TODO: Implement random ordering of returned values
-  def getAlignmentStats(accLevel: AccLevel.Value,
-                        runs: Seq[String] = Seq(),
-                        references: Seq[String] = Seq(),
-                        annotations: Seq[String] = Seq()): Seq[GentrapAlignmentStats] = {
-
-    val queryBuilder = MongoDBObject.newBuilder
-    if (runs.size > 0) queryBuilder += "runId" -> runs
-
-    coll
-      .find(queryBuilder.result(), MongoDBObject("alnStats" -> 1))
-      .map {
-        case dbo =>
-          dbo.get("alnStats") match {
-            case alnStats: BasicDBObject => grater[GentrapAlignmentStats].asObject(alnStats)
-          }
-      }
-      .toSeq
-  }
-
   /**
    * Match operation builder for collection aggregations.
    *
@@ -63,6 +43,58 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   }
 
   /**
+   * Match operation builder for aggregation after unwinding the libs array of a Sample document.
+   *
+   * The returned aggregation operator for this function is meant to be used only after the libs array of a Sample
+   * document has been unwound. This is because the returned operator relies on the 'libs' attribute value not being
+   * an array anymore.
+   *
+   * @param libType Library type to filter in.
+   * @return [[DBObject]] representing the `$match` aggregation operation.
+   */
+  private[processors] def buildMatchPostUnwindOp(libType: LibType.Value): DBObject =
+    if (libType == LibType.Paired)
+      MongoDBObject("$match" -> MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> true)))
+    else if (libType == LibType.Single)
+      MongoDBObject("$match" -> MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> false)))
+    else
+      throw new RuntimeException("Unexpected library type value: " + libType.toString)
+
+  /** Projection operation for selecting only libraries */
+  private[processors] val opProjectLibs = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "libs" -> 1))
+
+  /** Unwind operation to break open libs array */
+  private[processors] val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
+
+  // TODO: Implement random ordering of returned values
+  def getAlignmentStats(accLevel: AccLevel.Value,
+                        libType: LibType.Value,
+                        runs: Seq[ObjectId] = Seq(),
+                        references: Seq[ObjectId] = Seq(),
+                        annotations: Seq[ObjectId] = Seq()): Seq[GentrapAlignmentStats] = {
+
+    // Match operation to filter for run, reference, and/or annotation IDs
+    val opMatchFilters = buildMatchOp(runs, references, annotations)
+
+    val operations =
+      if (accLevel == AccLevel.Sample)
+        Seq(opMatchFilters, MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "alnStats" -> 1)))
+      else if (accLevel == AccLevel.Lib) {
+        val opProjectStats = MongoDBObject("$project" -> MongoDBObject("alnStats" -> "$libs.alnStats"))
+        Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
+      } else
+        throw new RuntimeException("Unexpected accumulation level value: " + accLevel.toString)
+
+    coll
+      .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
+      .map {
+        case astat => astat.get("alnStats") match {
+          case alnStats: BasicDBObject => grater[GentrapAlignmentStats].asObject(alnStats)
+        }
+      }.toSeq
+  }
+
+  /**
    * Retrieves sequence statistics from database sample entries.
    *
    * Each sample entry in the database contains an array of library entries, which in turn contain the sequence
@@ -89,11 +121,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
 
-    // Projection operation for selecting only libraries
-    val opProjectLibs = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "libs" -> 1))
-
-    // Unwind operation to break open libs array
-    val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
+    // Match operation for selecting library type
+    val opMatchLibType = buildMatchPostUnwindOp(libType)
 
     // Projection operation for retrieving innermost stats object
     val opProjectStats = {
@@ -110,16 +139,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
           "read2" -> ("$libs." + attrName + ".read2.stats")))
     }
 
-    // Match operation for selecting library type
-    val opMatchLibType =
-      if (libType == LibType.Paired)
-        MongoDBObject("$match" -> MongoDBObject("read2" -> MongoDBObject("$exists" -> true)))
-      else if (libType == LibType.Single)
-        MongoDBObject("$match" -> MongoDBObject("read2" -> MongoDBObject("$exists" -> false)))
-      else
-        throw new RuntimeException("Unexpected library type value: " + libType.toString)
-
-    val operations = Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opProjectStats, opMatchLibType)
+    val operations = Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
 
     coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))

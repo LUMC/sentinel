@@ -61,21 +61,32 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional)
-    responseMessages StringResponseMessage(400, CommonErrors.InvalidAccLevel.message))
+    responseMessages (
+      StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
+      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
   get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
-    val runIds = splitParam(params.getAs[String]("runIds"))
-    val refIds = splitParam(params.getAs[String]("refIds"))
-    val annotIds = splitParam(params.getAs[String]("annotIds"))
-    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
-    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
-    // TODO: return 404 if run ID, ref ID, and/or annotID is not found
+    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
+    if (invalidRunIds.nonEmpty)
+      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
 
+    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
+    if (invalidRefIds.nonEmpty)
+      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
+
+    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
+    if (invalidAnnotIds.nonEmpty)
+      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
+
+    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
     val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
+
+    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
 
-    gentrap.getAlignmentStats(acc, runIds, refIds, annotIds)
+    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds)
   }
 
   // format: OFF
