@@ -61,7 +61,7 @@ var devUser = {
     activeKey: "dev",
     emailVerified: true,
     isAdmin: true,
-    creationTime: new Date()
+    creationTimeUtc: new Date()
 }
 db.users.insert(devUser);
 
