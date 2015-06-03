@@ -15,6 +15,7 @@ import nl.lumc.sasc.sentinel.processors.unsupported.UnsupportedInputProcessor
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
+import nl.lumc.sasc.sentinel.utils.implicits._
 
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with FileUploadSupport
@@ -62,10 +63,12 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
-    val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
+    val runId = params
+      .getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
+      .getObjectId
+      .getOrElse(halt(404, CommonErrors.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
-    val rid = tryMakeObjectId(runId).getOrElse(halt(404, CommonErrors.MissingRunId))
-    runs.deleteRun(rid, user) match {
+    runs.deleteRun(runId, user) match {
       case None => NotFound(CommonErrors.MissingRunId)
       case Some((deletedRun, deletionPerformed)) =>
         if (deletionPerformed) Ok(deletedRun)

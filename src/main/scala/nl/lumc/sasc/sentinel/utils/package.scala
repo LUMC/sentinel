@@ -78,5 +78,9 @@ package object utils {
     implicit class RichFileItem(fi: FileItem) {
       def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
     }
+
+    implicit class DatabaseId(id: String) {
+      def getObjectId: Option[ObjectId] = tryMakeObjectId(id).toOption
+    }
   }
 }
