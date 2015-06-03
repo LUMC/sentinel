@@ -1,7 +1,11 @@
 package nl.lumc.sasc.sentinel.api
 
+import org.scalatra.test.{ ClientResponse, Uploadable }
+
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.SentinelServletSpec.SchemaExamples
+import nl.lumc.sasc.sentinel.models.User
 
 class StatsControllerSpec extends SentinelServletSpec {
 
@@ -115,6 +119,55 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
+  class StatsSeqGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
+
+    def priorRequests = Seq(request)
+
+    "return status 200" in {
+      priorResponse.status mustEqual 200
+    }
+
+    s"return a JSON list containing $expNumItems objects" in {
+      priorResponse.contentType mustEqual "application/json"
+      priorResponse.jsonBody must haveSize(expNumItems)
+    }
+
+    "each of which" should {
+      Range(0, expNumItems) foreach { idx =>
+        val item = idx + 1
+        s"have the expected attributes (object #$item)" in {
+          // read 1
+          priorResponse.body must /#(idx) */ "read1" /("nReads" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBases" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBasesA" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBasesT" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBasesG" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBasesC" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read1" /("nBasesN" -> bePositiveNum)
+          // TODO: use raw JSON matchers when we upgrade specs2
+          priorResponse.jsonBody must beSome.like { case json =>
+            (json(idx) \ "read1" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
+            (json(idx) \ "read1" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
+          }
+
+          // read 2
+          priorResponse.body must /#(idx) */ "read2" /("nReads" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBases" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBasesA" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBasesT" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBasesG" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBasesC" -> bePositiveNum)
+          priorResponse.body must /#(idx) */ "read2" /("nBasesN" -> bePositiveNum)
+          // TODO: use raw JSON matchers when we upgrade specs2
+          priorResponse.jsonBody must beSome.like { case json =>
+            (json(idx) \ "read2" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
+            (json(idx) \ "read2" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
+          }
+        }
+      }
+    }
+  }
+
   s"GET '$baseEndpoint/sequences/gentrap'" >> {
     br
 
@@ -165,57 +218,46 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "when using the default parameter should" >> inline {
 
-          new Context.PriorRequests {
+          new StatsSeqGentrapOkTests(() => get(endpoint) { response }, 2)
+        }
+      }
+    }
 
-            def request = () => get(endpoint) { response }
-            def priorRequests = Seq(request)
+    "using multiple gentrap files uploaded by different users" >> inline {
 
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
+      new Context.PriorRequestsClean {
 
-            "return a JSON list containing 2 objects" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(2)
-            }
+        def uploadEndpoint = "/runs"
+        def pipeline = "gentrap"
 
-            "each of which" should {
-              Seq(0, 1) foreach { idx =>
-                val item = idx + 1
-                s"have the expected attributes (object #$item)" in {
-                  // read 1
-                  priorResponse.body must /#(idx) */ "read1" /("nReads" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBases" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBasesA" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBasesT" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBasesG" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBasesC" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read1" /("nBasesN" -> bePositiveNum)
-                  // TODO: use raw JSON matchers when we upgrade specs2
-                  priorResponse.jsonBody must beSome.like { case json =>
-                    (json(idx) \ "read1" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
-                    (json(idx) \ "read1" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
-                  }
-
-                  // read 2
-                  priorResponse.body must /#(idx) */ "read2" /("nReads" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBases" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBasesA" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBasesT" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBasesG" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBasesC" -> bePositiveNum)
-                  priorResponse.body must /#(idx) */ "read2" /("nBasesN" -> bePositiveNum)
-                  // TODO: use raw JSON matchers when we upgrade specs2
-                  priorResponse.jsonBody must beSome.like { case json =>
-                    (json(idx) \ "read2" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
-                    (json(idx) \ "read2" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
-                  }
-                }
-              }
-            }
-          }
+        def makeUpload(uploader: User, uploaded: Uploadable): Req = {
+          val params = Seq(("userId", uploader.id), ("pipeline", pipeline))
+          val headers = Map(HeaderApiKey -> uploader.activeKey)
+          () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib)
+        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMLib)
+        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSLib)
+
+        def priorRequests = Seq(upload1, upload2, upload3)
+
+        "after the first file is uploaded" in {
+          priorResponses.head.status mustEqual 201
+        }
+
+        "after the second file is uploaded" in {
+          priorResponses(1).status mustEqual 201
+        }
+
+        "after the third file is uploaded" in {
+          priorResponses(2).status mustEqual 201
+        }
+
+        "when using the default parameter should" >> inline {
+
+          new StatsSeqGentrapOkTests(() => get(endpoint) { response }, 10)
+        }
       }
     }
   }

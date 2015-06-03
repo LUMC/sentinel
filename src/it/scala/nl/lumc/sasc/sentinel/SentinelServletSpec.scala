@@ -12,7 +12,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.{ Fragments, Step }
 
 import nl.lumc.sasc.sentinel.db.UsersAdapter
-import nl.lumc.sasc.sentinel.models.{ ApiMessage, User }
+import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getTimeNow }
 
 trait SentinelServletSpec extends MutableScalatraSpec
@@ -164,9 +164,13 @@ object SentinelServletSpec {
 
       object V04 {
 
+        // 1 sample, 1 lib
         lazy val SSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+        // 1 sample, 2 libs
         lazy val SSampleMLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_multi_lib.json")
+        // 3 samples, (3, 2, 1) libs
         lazy val MSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
+        // 2 samples (1, 1) libs
         lazy val MSampleMLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
       }
     }
