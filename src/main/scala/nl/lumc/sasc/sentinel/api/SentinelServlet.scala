@@ -7,6 +7,7 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 
 import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
+import nl.lumc.sasc.sentinel.utils.implicits._
 
 abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
 

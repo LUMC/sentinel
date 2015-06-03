@@ -2,7 +2,6 @@ package nl.lumc.sasc.sentinel.api
 
 import scala.util.Try
 
-import org.scalatra._
 import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
@@ -10,7 +9,7 @@ import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
-import nl.lumc.sasc.sentinel.utils.splitParam
+import nl.lumc.sasc.sentinel.utils.{ separateObjectIds, splitParam }
 
 class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
@@ -112,20 +111,28 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
       StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
-      StringResponseMessage(404, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs not found.")))
+      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
   get("/sequences/gentrap", operation(statsSequencesGentrapGetOperation)) {
-    val runIds = splitParam(params.getAs[String]("runIds"))
-    val refIds = splitParam(params.getAs[String]("refIds"))
-    val annotIds = splitParam(params.getAs[String]("annotIds"))
-    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
-    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
+    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
+    if (invalidRunIds.nonEmpty)
+      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
 
+    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
+    if (invalidRefIds.nonEmpty)
+      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
+
+    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
+    if (invalidAnnotIds.nonEmpty)
+      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
+
+    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
+
+    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
     val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
 
-    // TODO: return 404 if run ID, ref ID, and/or annotID is not found
-    gentrap.getSeqStats(lib, qc)
+    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds)
   }
 }
