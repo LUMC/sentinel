@@ -32,7 +32,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     file
   }
 
-  class UnsupportedUploadContext extends SpecContext.PriorRunUploadClean {
+  class UnsupportedUploadContext extends Context.PriorRunUploadClean {
     def pipelineParam = "unsupported"
     lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
     lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
@@ -67,49 +67,57 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     val endpoint = baseEndpoint
 
-    "when the pipeline is not specified" should {
-      "return status 400 and the expected message" in {
-        post(endpoint, Seq(("userId", Users.avg.id))) {
-          status mustEqual 400
-          contentType mustEqual "application/json"
-          body must /("message" -> "Pipeline not specified.")
+    "when the pipeline is not specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => post(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Pipeline not specified.")
         }
       }
     }
 
-    "when the request body is empty" should {
-      "return status 400 and the expected message" in {
-        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) {
-          status mustEqual 400
-          contentType mustEqual "application/json"
-          body must /("message" -> "Run summary file not specified.")
+    "when the request body is empty" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Run summary file not specified.")
         }
       }
     }
 
-    "when an invalid pipeline is specified" should {
-      "return status 400 and the expected message" in {
-        val file = makeUploadable("/schema_examples/unsupported.json")
-        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), Map("run" -> file)) {
-          status mustEqual 400
-          contentType mustEqual "application/json"
-          body must /("message" -> "Pipeline parameter is invalid.")
-          body must /("data" -> "Valid values are .+".r)
-        }
-      }
-    }
+    "when an invalid pipeline is specified should" >> inline {
 
-    s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should {
-      "return status 413 and the expected message" in {
-        val tooBigFile = createTempFile("tooBig.json")
-        post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported")), Map("run" -> tooBigFile)) {
-          status mustEqual 413
-          contentType mustEqual "application/json"
-          body must /("message" -> """Run summary exceeded maximum allowed size of \d+ MB.""".r)
-        } before {
-          fillFile(tooBigFile, MaxRunSummarySize + 100)
-        } after {
-          deleteQuietly(tooBigFile)
+      val fileMap = Map("run" -> makeUploadable("/schema_examples/unsupported.json"))
+
+      new Context.PriorRequests {
+
+        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), fileMap) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Pipeline parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
         }
       }
     }
@@ -120,131 +128,284 @@ class RunsControllerSpec extends SentinelServletSpec {
       val pipeline = "unsupported"
       lazy val runUpload = makeUploadable("/schema_examples/unsupported.json")
 
-      "when a run summary that passes all validation is uploaded" should {
-        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload),
-            Map(HeaderApiKey -> user.activeKey)) {
-            status mustEqual 201
-            contentType mustEqual "application/json"
-            body must /("creationTimeUtc" -> ".+".r)
-            body must /("nLibs" -> 0)
-            body must /("nSamples" -> 0)
-            body must /("pipeline" -> "unsupported")
-            body must /("runId" -> """\S+""".r)
-            body must /("uploaderId" -> user.id)
-            body must not /("annotIds" -> ".+".r)
-            body must not /("refId" -> ".+".r)
-            body must not /("sampleIds" -> ".+".r)
+      "when a run summary that passes all validation is uploaded should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
+            Map("run" -> runUpload), Map(HeaderApiKey -> user.activeKey)) { response }
+          def priorRequests = Seq(request)
+
+          "return status 201" in {
+            priorResponse.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("creationTimeUtc" -> ".+".r)
+            priorResponse.body must /("nLibs" -> 0)
+            priorResponse.body must /("nSamples" -> 0)
+            priorResponse.body must /("pipeline" -> "unsupported")
+            priorResponse.body must /("runId" -> """\S+""".r)
+            priorResponse.body must /("uploaderId" -> user.id)
+            priorResponse.body must not /("annotIds" -> ".+".r)
+            priorResponse.body must not /("refId" -> ".+".r)
+            priorResponse.body must not /("sampleIds" -> ".+".r)
           }
         }
       }
 
-      "when the same run summary is uploaded more than once by different users" should {
-        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
+      "when the same run summary is uploaded more than once by different users should" >> inline {
+
+        new Context.PriorRequestsClean {
+
           def fileMap = Map("run" -> runUpload)
-          override def before = {
-            super.before
+          def request1 = () =>
             post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> Users.avg2.activeKey)) {}
+              Map(HeaderApiKey -> Users.avg2.activeKey)) { response }
+          def request2 = () =>
+            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> user.activeKey)) { response }
+          def priorRequests = Seq(request1, request2)
+
+          "return status 201 for the first upload" in {
+            priorResponses.head.status mustEqual 201
           }
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user.activeKey)) {
-            status mustEqual 201
-            body must /("creationTimeUtc" -> ".+".r)
-            body must /("nLibs" -> 0)
-            body must /("nSamples" -> 0)
-            body must /("pipeline" -> "unsupported")
-            body must /("runId" -> """\S+""".r)
-            body must /("uploaderId" -> user.id)
-            body must not /("annotIds" -> ".+".r)
-            body must not /("refId" -> ".+".r)
-            body must not /("sampleIds" -> ".+".r)
+
+          "return a JSON object of the uploaded run for the first upload" in {
+            priorResponses.head.contentType mustEqual  "application/json"
+            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
+            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nSamples" -> 0)
+            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("runId" -> """\S+""".r)
+            priorResponses.head.body must /("uploaderId" -> Users.avg2.id)
+            priorResponses.head.body must not /("annotIds" -> ".+".r)
+            priorResponses.head.body must not /("refId" -> ".+".r)
+            priorResponses.head.body must not /("sampleIds" -> ".+".r)
+          }
+
+          "return status 201 for the second upload" in {
+            priorResponses.last.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run for the second upload" in {
+            priorResponses.last.contentType mustEqual  "application/json"
+            priorResponses.last.body must /("creationTimeUtc" -> ".+".r)
+            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("nSamples" -> 0)
+            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("runId" -> """\S+""".r)
+            priorResponses.last.body must /("uploaderId" -> user.id)
+            priorResponses.last.body must not /("annotIds" -> ".+".r)
+            priorResponses.last.body must not /("refId" -> ".+".r)
+            priorResponses.last.body must not /("sampleIds" -> ".+".r)
           }
         }
       }
 
-      "when the user ID is not specified" should {
-        "return status 400 and the expected message" in {
-          post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runUpload)) {
-            status mustEqual 400
-            contentType mustEqual "application/json"
-            body must /("message" -> "User ID not specified.")
+      "when the user ID is not specified should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def request = () => post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runUpload)) { response }
+          def priorRequests = Seq(request)
+
+          "return status 400" in {
+            priorResponse.status mustEqual 400
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "User ID not specified.")
           }
         }
       }
 
-      "when a non-JSON file is uploaded" should {
-        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          val fileMap = Map("run" -> makeUploadable("/schema_examples/not.json"))
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user.activeKey)) {
-            status mustEqual 400
-            contentType mustEqual "application/json"
-            body must /("message" -> "File is not JSON-formatted.")
+      "when a non-JSON file is uploaded should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def fileMap = Map("run" -> makeUploadable("/schema_examples/not.json"))
+          def request = () =>
+            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> user.activeKey)) { response }
+          def priorRequests = Seq(request)
+
+          "return status 400" in {
+            priorResponse.status mustEqual 400
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "File is not JSON-formatted.")
           }
         }
       }
 
-      "when an invalid JSON run summary is uploaded" should {
-        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          val fileMap = Map("run" -> makeUploadable("/schema_examples/invalid.json"))
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-            Map(HeaderApiKey -> user.activeKey)) {
-            status mustEqual 400
-            contentType mustEqual "application/json"
-            body must /("message" -> "JSON run summary is invalid.")
+      "when an invalid JSON run summary is uploaded should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def fileMap = Map("run" -> makeUploadable("/schema_examples/invalid.json"))
+          def request = () =>
+            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> user.activeKey)) { response }
+          def priorRequests = Seq(request)
+
+          "return status 400" in {
+            priorResponse.status mustEqual 400
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "JSON run summary is invalid.")
           }
         }
       }
 
-      "when the same run summary is uploaded more than once by the same user" should {
-        "return status 400 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
+      "when the same run summary is uploaded more than once by the same users should" >> inline {
+
+        new Context.PriorRequestsClean {
+
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
           def headers = Map(HeaderApiKey -> user.activeKey)
           def fileMap = Map("run" -> runUpload)
-          override def before = {
-            super.before
-            post(endpoint, params, fileMap, headers) {}
+
+          def request1 = () => post(endpoint, params, fileMap, headers) { response }
+          def request2 = () => post(endpoint, params, fileMap, headers) { response }
+          def priorRequests = Seq(request1, request2)
+
+          "return status 201 for the first upload" in {
+            priorResponses.head.status mustEqual 201
           }
-          post(endpoint, params, fileMap, headers) {
-            status mustEqual 400
-            contentType mustEqual "application/json"
-            body must /("message" -> "Run summary already uploaded by the user.")
+
+          "return a JSON object of the uploaded run for the first upload" in {
+            priorResponses.head.contentType mustEqual  "application/json"
+            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
+            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nSamples" -> 0)
+            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("runId" -> """\S+""".r)
+            priorResponses.head.body must /("uploaderId" -> user.id)
+            priorResponses.head.body must not /("annotIds" -> ".+".r)
+            priorResponses.head.body must not /("refId" -> ".+".r)
+            priorResponses.head.body must not /("sampleIds" -> ".+".r)
+          }
+
+          "return status 400 for the second upload" in {
+            priorResponses.last.status mustEqual 400
+          }
+
+          "return a JSON object containing the expected message for the second upload" in {
+            priorResponses.last.contentType mustEqual  "application/json"
+            priorResponses.last.body must /("message" -> "Run summary already uploaded by the user.")
+          }
+
+        }
+      }
+
+      s"when the user does not provide the $HeaderApiKey header should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def fileMap = Map("run" -> runUpload)
+          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap) { response }
+          def priorRequests = Seq(request)
+
+          "return status 401" in {
+            priorResponse.status mustEqual 401
+          }
+
+          "return the challenge response header key" in {
+            priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+          }
+
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "Authentication required to access resource.")
           }
         }
       }
 
-      s"when the user does not provide the $HeaderApiKey header" should {
-        "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload)) {
-            status mustEqual 401
-            contentType mustEqual "application/json"
-            header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            body must /("message" -> "Authentication required to access resource.")
+      s"when the provided $HeaderApiKey does not match the one owned by the user should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", user.id), ("pipeline", pipeline))
+          def fileMap = Map("run" -> runUpload)
+          def headers = Map(HeaderApiKey -> (user.activeKey + "nono"))
+          def request = () => post(endpoint, params, fileMap, headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 401" in {
+            priorResponse.status mustEqual 401
+          }
+
+          "return the challenge response header key" in {
+            priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+          }
+
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "Authentication required to access resource.")
           }
         }
       }
 
-      s"when the provided $HeaderApiKey does not match the one owned by the user" should {
-        "return status 401, the challenge response header, and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), Map("run" -> runUpload),
-            Map(HeaderApiKey -> (user.activeKey + "nono"))) {
-              status mustEqual 401
-              contentType mustEqual "application/json"
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-              body must /("message" -> "Authentication required to access resource.")
-            }
+      s"when an unverified user uploads a run summary" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", Users.unverified.id), ("pipeline", pipeline))
+          def fileMap = Map("run" -> runUpload)
+          def headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          def request = () => post(endpoint, params, fileMap, headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 403" in {
+            priorResponse.status mustEqual 403
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "Unauthorized to access resource.")
+          }
         }
       }
 
-      "when a user without a verified email address uploads a run summary" should {
-        "return status 403 and the expected message" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, Seq(("userId", Users.unverified.id), ("pipeline", pipeline)), Map("run" -> runUpload),
-            Map(HeaderApiKey -> Users.unverified.activeKey)) {
-              status mustEqual 403
-              contentType mustEqual "application/json"
-              body must /("message" -> "Unauthorized to access resource.")
-            }
+      s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          lazy val bigFile = createTempFile("bigFile.json")
+
+          override def beforeAll() = {
+            fillFile(bigFile, MaxRunSummarySize + 100)
+            super.beforeAll()
+          }
+
+          override def afterAll() = {
+            super.afterAll()
+            deleteQuietly(bigFile)
+          }
+
+          def params = Seq(("userId", user.id), ("pipeline", pipeline))
+          def fileMap = Map("run" -> bigFile)
+          def headers = Map(HeaderApiKey -> user.activeKey)
+          def request = () => post(endpoint, params, fileMap, headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 413" in {
+            priorResponse.status mustEqual 413
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
+          }
         }
       }
     }
@@ -256,20 +417,28 @@ class RunsControllerSpec extends SentinelServletSpec {
       def headers(implicit user: User) = Map(HeaderApiKey -> user.activeKey)
       lazy val v04SSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
 
-      "when the v0.4 run summary (single sample, single lib) is uploaded to an empty database" should {
-        "return status 201 and the expected payload" in new ExampleContext.CleanDatabaseWithUser {
-          post(endpoint, params, Map("run" -> v04SSampleSLib), headers) {
-            status mustEqual 201
-            contentType mustEqual "application/json"
-            body must /("runId" -> """\S+""".r)
-            body must /("uploaderId" -> user.id)
-            body must /("pipeline" -> "gentrap")
-            body must /("nSamples" -> 1)
-            body must /("nLibs" -> 1)
-            body must /("runId" -> """\S+""".r)
-            body must not /("sampleIds" -> ".+".r)
+      "when the v0.4 run summary (single sample, single lib) is uploaded to an empty database should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def request = () => post(endpoint, params, Map("run" -> v04SSampleSLib), headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 201" in {
+            priorResponse.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("runId" -> """\S+""".r)
+            priorResponse.body must /("uploaderId" -> user.id)
+            priorResponse.body must /("pipeline" -> "gentrap")
+            priorResponse.body must /("nSamples" -> 1)
+            priorResponse.body must /("nLibs" -> 1)
+            priorResponse.body must /("runId" -> """\S+""".r)
+            priorResponse.body must not /("sampleIds" -> ".+".r)
             // TODO: use raw JSON matchers when we upgrade specs2
-            jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
+            priorResponse.jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
           }
         }
       }
@@ -284,7 +453,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     "when the database is empty" >> inline {
 
-      new SpecContext.CleanDatabaseWithUser {
+      new Context.CleanDatabaseWithUser {
 
         "when the user authenticates correctly" should {
 
@@ -893,7 +1062,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
       "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
 
-        new SpecContext.PriorRunUploadClean {
+        new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
           lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
           lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
