@@ -19,6 +19,8 @@ import nl.lumc.sasc.sentinel.models.RunDocument
 /** General utilities */
 package object utils {
 
+  import implicits._
+
   private[this] val GzipMagic = Seq(0x1f, 0x8b)
 
   def getResourceStream(url: String): InputStream = {
@@ -56,6 +58,13 @@ package object utils {
   }
 
   def tryMakeObjectId(id: String): Try[ObjectId] = Try(new ObjectId(id))
+
+  def separateObjectIds(strs: Seq[String]): (Seq[ObjectId], Seq[String]) = {
+    val (oids, noids) = strs
+      .map { case str => (str.getObjectId, str) }
+      .partition { case (x, y) => x.isDefined }
+    (oids.map(_._1.get), noids.map(_._2))
+  }
 
   def getTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
