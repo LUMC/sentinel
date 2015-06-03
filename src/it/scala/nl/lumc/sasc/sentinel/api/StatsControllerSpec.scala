@@ -4,7 +4,7 @@ import nl.lumc.sasc.sentinel.SentinelServletSpec
 
 class StatsControllerSpec extends SentinelServletSpec {
 
-  import SpecContext.{ PriorRequests => PriorRequestsContext, PriorRunUploadClean => PriorRunUploadCleanContext }
+  import Context.{ PriorRequests => PriorRequestsContext, PriorRunUploadClean => PriorRunUploadCleanContext }
 
   sequential
 
@@ -35,7 +35,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         }
 
         "return a JSON object containing the expected message" in {
-          priorContentType mustEqual "application/json"
+          priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
           priorResponse.body must /("data" -> "Valid values are .+".r)
         }
@@ -46,14 +46,14 @@ class StatsControllerSpec extends SentinelServletSpec {
 
       new PriorRequestsContext {
         def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
-        def priorRequests: Seq[Req] = Seq(request)
+        def priorRequests = Seq(request)
 
         "return status 400" in  {
           priorResponse.status mustEqual 400
         }
 
         "return a JSON object containing the expected message" in {
-          priorContentType mustEqual "application/json"
+          priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
           priorResponse.body must /("data" -> "Valid values are .+".r)
         }
@@ -79,8 +79,8 @@ class StatsControllerSpec extends SentinelServletSpec {
             }
 
             "return a JSON list containing 2 objects" in {
-              priorContentType mustEqual "application/json"
-              priorJsonBody must haveSize(2)
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.jsonBody must haveSize(2)
             }
 
             "each of which" should {
@@ -104,7 +104,7 @@ class StatsControllerSpec extends SentinelServletSpec {
                   priorResponse.body must /#(idx) /("median5PrimeBias" -> bePositiveNum)
                   priorResponse.body must /#(idx) /("median3PrimeBias" -> bePositiveNum)
                   // TODO: use raw JSON matchers when we upgrade specs2
-                  priorJsonBody must beSome.like { case json =>
+                  priorResponse.jsonBody must beSome.like { case json =>
                     (json(idx) \ "normalizedTranscriptCoverage").extract[Seq[Long]].size must beGreaterThan(idx)
                   }
                 }
@@ -125,14 +125,14 @@ class StatsControllerSpec extends SentinelServletSpec {
 
       new PriorRequestsContext {
         def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
-        def priorRequests: Seq[Req] = Seq(request)
+        def priorRequests = Seq(request)
 
         "return status 400" in  {
           priorResponse.status mustEqual 400
         }
 
         "return a JSON object containing the expected message" in {
-          priorContentType mustEqual "application/json"
+          priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
           priorResponse.body must /("data" -> "Valid values are .+".r)
         }
@@ -150,7 +150,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         }
 
         "return a JSON object containing the expected message" in {
-          priorContentType mustEqual "application/json"
+          priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
           priorResponse.body must /("data" -> "Valid values are .+".r)
         }
@@ -169,15 +169,15 @@ class StatsControllerSpec extends SentinelServletSpec {
           new PriorRequestsContext {
 
             def request = () => get(endpoint) { response }
-            override def priorRequests: Seq[Req] = Seq(request)
+            def priorRequests = Seq(request)
 
             "return status 200" in {
               priorResponse.status mustEqual 200
             }
 
             "return a JSON list containing 2 objects" in {
-              priorContentType mustEqual "application/json"
-              priorJsonBody must haveSize(2)
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.jsonBody must haveSize(2)
             }
 
             "each of which" should {
@@ -193,7 +193,7 @@ class StatsControllerSpec extends SentinelServletSpec {
                   priorResponse.body must /#(idx) */ "read1" /("nBasesC" -> bePositiveNum)
                   priorResponse.body must /#(idx) */ "read1" /("nBasesN" -> bePositiveNum)
                   // TODO: use raw JSON matchers when we upgrade specs2
-                  priorJsonBody must beSome.like { case json =>
+                  priorResponse.jsonBody must beSome.like { case json =>
                     (json(idx) \ "read1" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
                     (json(idx) \ "read1" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
                   }
@@ -207,7 +207,7 @@ class StatsControllerSpec extends SentinelServletSpec {
                   priorResponse.body must /#(idx) */ "read2" /("nBasesC" -> bePositiveNum)
                   priorResponse.body must /#(idx) */ "read2" /("nBasesN" -> bePositiveNum)
                   // TODO: use raw JSON matchers when we upgrade specs2
-                  priorJsonBody must beSome.like { case json =>
+                  priorResponse.jsonBody must beSome.like { case json =>
                     (json(idx) \ "read2" \ "nBasesByQual").extract[Seq[Long]].size must beGreaterThan(idx)
                     (json(idx) \ "read2" \ "medianQualByPosition").extract[Seq[Long]].size must beGreaterThan(idx)
                   }
