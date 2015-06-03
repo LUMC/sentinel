@@ -8,7 +8,7 @@ import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.specs2.data.Sized
 import org.specs2.matcher.JsonMatchers
-import org.specs2.mutable.{ BeforeAfter, Specification }
+import org.specs2.mutable.Specification
 import org.specs2.specification.{ Fragments, Step }
 
 import nl.lumc.sasc.sentinel.db.UsersAdapter
@@ -33,11 +33,16 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   implicit val formats = SentinelJsonFormats
 
-  def contentType = response.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
+  implicit class RichClientResponse(httpres: ClientResponse) {
 
-  def jsonBody: Option[JValue] = Try(parse(body)).toOption
+    lazy val jsonBody: Option[JValue] = Try(parse(httpres.body)).toOption
 
-  def apiMessage: Option[ApiMessage] = jsonBody.collect { case json => json.extract[ApiMessage] }
+    lazy val contentType = httpres.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
+  }
+
+  def contentType = response.contentType
+
+  def jsonBody = response.jsonBody
 
   def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
     fileName = resourceUrl.split("/").last,
@@ -73,28 +78,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
     def all = Set(avg, avg2, admin, unverified)
   }
 
-  object ExampleContext {
-
-    trait CleanDatabase extends BeforeAfter {
-      def before = resetDatabase()
-      def after = resetDatabase()
-    }
-
-    trait CleanDatabaseWithUser extends CleanDatabase with UsersAdapter {
-
-      lazy val mongo = dao
-
-      implicit def user: User = Users.avg
-      implicit def users: Set[User] = Users.all
-
-      override def before = {
-        super.before
-        users.foreach { addUser }
-      }
-    }
-  }
-
-  object SpecContext {
+  object Context {
 
     trait BeforeAllAfterAll extends Specification {
       override def map(fs: =>Fragments) = Step(beforeAll()) ^ fs ^ Step(afterAll())
@@ -130,11 +114,6 @@ trait SentinelServletSpec extends MutableScalatraSpec
       def priorRequests: Seq[Req]
 
       lazy val priorResponse: ClientResponse = priorResponses.head
-
-      lazy val priorJsonBody: Option[JValue] = Try(parse(priorResponse.body)).toOption
-
-      lazy val priorContentType = priorResponse.mediaType
-        .getOrElse(failure("'Content-Type' not found in response header."))
 
       lazy val priorResponses: Seq[ClientResponse] = priorRequests.map(f => f())
 
@@ -175,8 +154,4 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
   }
-}
-
-object SentinelServletSpec {
-
 }
