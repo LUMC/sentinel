@@ -7,7 +7,9 @@ import java.security.MessageDigest
 import java.time.Clock
 import javax.crypto.KeyGenerator
 import scala.io.Source
+import scala.util.Try
 
+import org.bson.types.ObjectId
 import org.apache.commons.codec.binary.Base64
 import org.json4s._
 import org.scalatra.servlet.FileItem
@@ -52,6 +54,8 @@ package object utils {
     if (inMagic == GzipMagic) (readAll(new GZIPInputStream(pb)), true)
     else (readAll(pb), false)
   }
+
+  def tryMakeObjectId(id: String): Try[ObjectId] = Try(new ObjectId(id))
 
   def getTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
