@@ -77,35 +77,30 @@ trait RunsAdapter extends MongodbConnector {
     }
   }
 
-  def deleteRun(runId: String, user: User): Option[RunDocument] = {
-    Try(new ObjectId(runId)) match {
-      case Failure(_) => None
-      case Success(rid) =>
+  def deleteRun(runId: ObjectId, user: User): Option[(RunDocument, Boolean)] = {
+    val docDeleted = coll
+      .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> true)))
+      .map { case dbo => (grater[RunDocument].asObject(dbo), false) }
 
-        val docDeleted = coll
-          .findOne(MongoDBObject("_id" -> rid, "deletionTimeUtc" -> MongoDBObject("$exists" -> true)))
-          .map { case dbo => grater[RunDocument].asObject(dbo) }
-
-        if (docDeleted.isDefined) docDeleted
-        else {
-          val docToDelete = coll
-            .findAndModify(query = MongoDBObject("_id" -> rid, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
-              update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getTimeNow)),
-              returnNew = true,
-              fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
-            .map { case dbo => grater[RunDocument].asObject(dbo) }
-          docToDelete.foreach {
-            case doc =>
-              val collSamples = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
-              // remove the GridFS entry
-              mongo.gridfs.remove(doc.runId)
-              // and all samples linked to this run
-              doc.sampleIds.foreach {
-                case oid => collSamples.remove(MongoDBObject("_id" -> oid))
-              }
+    if (docDeleted.isDefined) docDeleted
+    else {
+      val docToDelete = coll
+        .findAndModify(query = MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
+          update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getTimeNow)),
+          returnNew = true,
+          fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
+        .map { case dbo => (grater[RunDocument].asObject(dbo), true) }
+      docToDelete.foreach {
+        case (doc, _) =>
+          val collSamples = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
+          // remove the GridFS entry
+          mongo.gridfs.remove(doc.runId)
+          // and all samples linked to this run
+          doc.sampleIds.foreach {
+            case oid => collSamples.remove(MongoDBObject("_id" -> oid))
           }
-          docToDelete
-        }
+      }
+      docToDelete
     }
   }
 

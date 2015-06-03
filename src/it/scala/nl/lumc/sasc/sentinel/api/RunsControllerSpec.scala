@@ -994,24 +994,23 @@ class RunsControllerSpec extends SentinelServletSpec {
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
           def userRunId = runId
+          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
+          override def priorRequests = super.priorRequests.toStream :+ request
 
-          "return status 202" in {
-            delete(endpoint(userRunId), params, headers) {
-              status mustEqual 202
-            }
+          "return status 200" in {
+            priorResponses.last.status mustEqual 200
           }
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            delete(endpoint(userRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("runId" -> userRunId)
-              body must /("uploaderId" -> user.id)
-              body must not /("sampleIds" -> ".+".r)
-              body must /("nSamples" -> 0)
-              body must /("nLibs" -> 0)
-              body must /("pipeline" -> "unsupported")
-              body must /("deletionTimeUtc" -> ".+".r)
-            }
+            priorResponses.last.contentType mustEqual "application/json"
+            priorResponses.last.body must /("runId" -> userRunId)
+            priorResponses.last.body must /("uploaderId" -> user.id)
+            priorResponses.last.body must not /("sampleIds" -> ".+".r)
+            priorResponses.last.body must /("nSamples" -> 0)
+            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
           }
 
           "remove the run record" in {
@@ -1039,22 +1038,16 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return status 202 again when repeated" in {
+          "return status 410 when repeated" in {
             delete(endpoint(userRunId), params, headers) {
-              status mustEqual 202
+              status mustEqual 410
             }
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute again when repeated" in {
+          "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("runId" -> userRunId)
-              body must /("uploaderId" -> user.id)
-              body must not /("sampleIds" -> ".+".r)
-              body must /("nSamples" -> 0)
-              body must /("nLibs" -> 0)
-              body must /("pipeline" -> "unsupported")
-              body must /("deletionTimeUtc" -> ".+".r)
+              body must /("message" -> "Run summary already deleted.")
             }
           }
         }
@@ -1070,25 +1063,26 @@ class RunsControllerSpec extends SentinelServletSpec {
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
           def userRunId = runId
+          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
+          override def priorRequests = super.priorRequests.toStream :+ request
 
-          "return status 202" in {
-            delete(endpoint(userRunId), params, headers) {
-              status mustEqual 202
-            }
+          "return status 200" in {
+            priorResponses.last.status mustEqual 200
           }
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
             delete(endpoint(userRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("runId" -> userRunId)
-              body must /("uploaderId" -> user.id)
-              body must not /("sampleIds" -> ".+".r)
-              body must /("annotIds" -> ".+".r)
-              body must /("refId" -> """\S+""".r)
-              body must /("nSamples" -> 1)
-              body must /("nLibs" -> 1)
-              body must /("pipeline" -> "gentrap")
-              body must /("deletionTimeUtc" -> ".+".r)
+              priorResponses.last.contentType mustEqual "application/json"
+              priorResponses.last.body must /("runId" -> userRunId)
+              priorResponses.last.body must /("uploaderId" -> user.id)
+              priorResponses.last.body must not /("sampleIds" -> ".+".r)
+              priorResponses.last.body must /("annotIds" -> ".+".r)
+              priorResponses.last.body must /("refId" -> """\S+""".r)
+              priorResponses.last.body must /("nSamples" -> 1)
+              priorResponses.last.body must /("nLibs" -> 1)
+              priorResponses.last.body must /("pipeline" -> "gentrap")
+              priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
             }
           }
 
@@ -1117,24 +1111,16 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
 
-          "return status 202 again when repeated" in {
+          "return status 410 again when repeated" in {
             delete(endpoint(userRunId), params, headers) {
-              status mustEqual 202
+              status mustEqual 410
             }
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute again when repeated" in {
+          "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(userRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("runId" -> userRunId)
-              body must /("uploaderId" -> user.id)
-              body must not /("sampleIds" -> ".+".r)
-              body must /("annotIds" -> ".+".r)
-              body must /("refId" -> ".+".r)
-              body must /("nSamples" -> 1)
-              body must /("nLibs" -> 1)
-              body must /("pipeline" -> "gentrap")
-              body must /("deletionTimeUtc" -> ".+".r)
+              body must /("message" -> "Run summary already deleted.")
             }
           }
         }

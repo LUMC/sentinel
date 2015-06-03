@@ -52,20 +52,24 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       pathParam[String]("runId").description("Run summary ID."),
       queryParam[String]("userId").description("Run summary uploader ID."))
     responseMessages (
-      StringResponseMessage(202, "Run summary deleted successfully."),
+      StringResponseMessage(200, "Run summary deleted successfully."),
       StringResponseMessage(400, CommonErrors.UnspecifiedRunId.message),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingRunId.message)))
+      StringResponseMessage(404, CommonErrors.MissingRunId.message),
+      StringResponseMessage(410, "Run summary already deleted.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
-    runs.deleteRun(runId, user) match {
-      case None             => NotFound(CommonErrors.MissingRunId)
-      case Some(deletedRun) => Accepted(deletedRun)
+    val rid = tryMakeObjectId(runId).getOrElse(halt(404, CommonErrors.MissingRunId))
+    runs.deleteRun(rid, user) match {
+      case None => NotFound(CommonErrors.MissingRunId)
+      case Some((deletedRun, deletionPerformed)) =>
+        if (deletionPerformed) Ok(deletedRun)
+        else Gone(ApiMessage("Run summary already deleted."))
     }
   }
 
@@ -106,7 +110,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       }
     }
     val runId = params.getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
-    // TODO: return 410 if run was available but has been deleted
     val user = simpleKeyAuth(params => params.get("userId"))
     runs.getRun(runId, user, doDownload) match {
       case None => NotFound(CommonErrors.MissingRunId)
