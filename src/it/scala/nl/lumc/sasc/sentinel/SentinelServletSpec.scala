@@ -44,10 +44,6 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   def jsonBody = response.jsonBody
 
-  def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
-    fileName = resourceUrl.split("/").last,
-    content = getResourceBytes(resourceUrl))
-
   // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
   implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
     def size(t: Option[JValue]) = t match {
@@ -153,5 +149,30 @@ trait SentinelServletSpec extends MutableScalatraSpec
         priorResponse.statusLine.code mustEqual expectedUploadStatus
       }
     }
+  }
+}
+
+object SentinelServletSpec {
+
+  def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
+    fileName = resourceUrl.split("/").last,
+    content = getResourceBytes(resourceUrl))
+
+  object SchemaExamples {
+
+    object Gentrap {
+
+      object V04 {
+
+        lazy val SSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+        lazy val SSampleMLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_multi_lib.json")
+        lazy val MSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
+        lazy val MSampleMLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
+      }
+    }
+
+    lazy val Unsupported = makeUploadable("/schema_examples/unsupported.json")
+    lazy val Invalid = makeUploadable("/schema_examples/invalid.json")
+    lazy val Not = makeUploadable("/schema_examples/not.json")
   }
 }

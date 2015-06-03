@@ -1,7 +1,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
-import org.scalatra.test.Uploadable
+import nl.lumc.sasc.sentinel.SentinelServletSpec.SchemaExamples
 
 class StatsControllerSpec extends SentinelServletSpec {
 
@@ -64,7 +64,7 @@ class StatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSLib
 
         "when using the default parameter should" >> inline {
 
@@ -161,7 +161,7 @@ class StatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSLib
 
         "when using the default parameter should" >> inline {
 

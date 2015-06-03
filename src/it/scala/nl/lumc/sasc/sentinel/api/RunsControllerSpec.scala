@@ -7,8 +7,8 @@ import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.SentinelServletSpec
+import nl.lumc.sasc.sentinel.{ HeaderApiKey, SentinelServletSpec }
+import nl.lumc.sasc.sentinel.SentinelServletSpec.SchemaExamples
 import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, User }
 import nl.lumc.sasc.sentinel.settings._
 
@@ -34,7 +34,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
   class UnsupportedUploadContext extends Context.PriorRunUploadClean {
     def pipelineParam = "unsupported"
-    lazy val uploadPayload = makeUploadable("/schema_examples/unsupported.json")
+    def uploadPayload = SchemaExamples.Unsupported
     lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
   }
 
@@ -44,7 +44,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
     def uploadFile2 = Map("run" -> uploadPayload2)
     def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
-    lazy val uploadPayload2 = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+    def uploadPayload2 = SchemaExamples.Gentrap.V04.SSampleSLib
     lazy val runId2 = (parse(priorResponses(1).body) \ "runId").extract[String]
 
     override def priorRequests = super.priorRequests ++ Seq(
@@ -103,7 +103,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     "when an invalid pipeline is specified should" >> inline {
 
-      val fileMap = Map("run" -> makeUploadable("/schema_examples/unsupported.json"))
+      val fileMap = Map("run" -> SchemaExamples.Unsupported)
 
       new Context.PriorRequests {
 
@@ -126,14 +126,14 @@ class RunsControllerSpec extends SentinelServletSpec {
       br
 
       val pipeline = "unsupported"
-      lazy val runUpload = makeUploadable("/schema_examples/unsupported.json")
+      def fileMap = Map("run" -> SchemaExamples.Unsupported)
 
       "when a run summary that passes all validation is uploaded should" >> inline {
 
         new Context.PriorRequestsClean {
 
           def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
-            Map("run" -> runUpload), Map(HeaderApiKey -> user.activeKey)) { response }
+            fileMap, Map(HeaderApiKey -> user.activeKey)) { response }
           def priorRequests = Seq(request)
 
           "return status 201" in {
@@ -159,7 +159,6 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> runUpload)
           def request1 = () =>
             post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> Users.avg2.activeKey)) { response }
@@ -208,7 +207,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def request = () => post(endpoint, Seq(("pipeline", pipeline)), Map("run" -> runUpload)) { response }
+          def request = () => post(endpoint, Seq(("pipeline", pipeline)), fileMap) { response }
           def priorRequests = Seq(request)
 
           "return status 400" in {
@@ -226,7 +225,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> makeUploadable("/schema_examples/not.json"))
+          def fileMap = Map("run" -> SchemaExamples.Not)
           def request = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -247,7 +246,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> makeUploadable("/schema_examples/invalid.json"))
+          def fileMap = Map("run" -> SchemaExamples.Invalid)
           def request = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -270,7 +269,6 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
           def headers = Map(HeaderApiKey -> user.activeKey)
-          def fileMap = Map("run" -> runUpload)
 
           def request1 = () => post(endpoint, params, fileMap, headers) { response }
           def request2 = () => post(endpoint, params, fileMap, headers) { response }
@@ -309,7 +307,6 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> runUpload)
           def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap) { response }
           def priorRequests = Seq(request)
 
@@ -334,7 +331,6 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def params = Seq(("userId", user.id), ("pipeline", pipeline))
-          def fileMap = Map("run" -> runUpload)
           def headers = Map(HeaderApiKey -> (user.activeKey + "nono"))
           def request = () => post(endpoint, params, fileMap, headers) { response }
           def priorRequests = Seq(request)
@@ -360,7 +356,6 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def params = Seq(("userId", Users.unverified.id), ("pipeline", pipeline))
-          def fileMap = Map("run" -> runUpload)
           def headers = Map(HeaderApiKey -> Users.unverified.activeKey)
           def request = () => post(endpoint, params, fileMap, headers) { response }
           def priorRequests = Seq(request)
@@ -415,13 +410,13 @@ class RunsControllerSpec extends SentinelServletSpec {
 
       def params(implicit user: User) = Seq(("userId", user.id), ("pipeline", "gentrap"))
       def headers(implicit user: User) = Map(HeaderApiKey -> user.activeKey)
-      lazy val v04SSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
 
       "when the v0.4 run summary (single sample, single lib) is uploaded to an empty database should" >> inline {
 
         new Context.PriorRequestsClean {
 
-          def request = () => post(endpoint, params, Map("run" -> v04SSampleSLib), headers) { response }
+          def request = () =>
+            post(endpoint, params, Map("run" -> SchemaExamples.Gentrap.V04.SSampleSLib), headers) { response }
           def priorRequests = Seq(request)
 
           "return status 201" in {
@@ -1057,7 +1052,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
-          lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_lib.json")
+          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
           lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
 
           val params = Seq(("userId", user.id))
