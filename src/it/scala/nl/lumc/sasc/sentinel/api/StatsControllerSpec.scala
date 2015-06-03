@@ -1,10 +1,9 @@
 package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.SentinelServletSpec
+import org.scalatra.test.Uploadable
 
 class StatsControllerSpec extends SentinelServletSpec {
-
-  import Context.{ PriorRequests => PriorRequestsContext, PriorRunUploadClean => PriorRunUploadCleanContext }
 
   sequential
 
@@ -26,7 +25,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "when an invalid accumulation level is specified should" >> inline {
 
-      new PriorRequestsContext {
+      new Context.PriorRequests {
         def request = () => get(endpoint, Seq(("accLevel", "yalala"))) { response }
         def priorRequests: Seq[Req] = Seq(request)
 
@@ -44,7 +43,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "when an invalid library type is specified should" >> inline {
 
-      new PriorRequestsContext {
+      new Context.PriorRequests {
         def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
         def priorRequests = Seq(request)
 
@@ -62,14 +61,14 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
 
-      new PriorRunUploadCleanContext {
+      new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
         lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
 
         "when using the default parameter should" >> inline {
 
-          new PriorRequestsContext {
+          new Context.PriorRequests {
 
             def request = () => get(endpoint) { response }
             override def priorRequests: Seq[Req] = Seq(request)
@@ -123,7 +122,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "when an invalid library type is specified should" >> inline {
 
-      new PriorRequestsContext {
+      new Context.PriorRequests {
         def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
         def priorRequests = Seq(request)
 
@@ -141,7 +140,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "when an invalid sequencing QC phase is specified should" >> inline {
 
-      new PriorRequestsContext {
+      new Context.PriorRequests {
         def request = () => get(endpoint, Seq(("qcPhase", "yalala"))) { response }
         def priorRequests: Seq[Req] = Seq(request)
 
@@ -159,14 +158,14 @@ class StatsControllerSpec extends SentinelServletSpec {
 
     "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
 
-      new PriorRunUploadCleanContext {
+      new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
         lazy val uploadPayload = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
 
         "when using the default parameter should" >> inline {
 
-          new PriorRequestsContext {
+          new Context.PriorRequests {
 
             def request = () => get(endpoint) { response }
             def priorRequests = Seq(request)
