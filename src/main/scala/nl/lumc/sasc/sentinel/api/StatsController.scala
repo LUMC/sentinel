@@ -67,7 +67,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
-  get("/alignments/gentrap", operation(statsAlignmentsGentrapGetOperation)) {
+  get("/gentrap/alignments", operation(statsAlignmentsGentrapGetOperation)) {
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
@@ -125,7 +125,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
-  get("/sequences/gentrap", operation(statsSequencesGentrapGetOperation)) {
+  get("/gentrap/sequences", operation(statsSequencesGentrapGetOperation)) {
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))

@@ -141,10 +141,10 @@ class StatsControllerSpec extends SentinelServletSpec {
   // FIXME: Since specs2 converts all JsonNumber to Doubles, we have to do the comparison as doubles as well
   def bePositiveNum = beGreaterThan(0: Double) ^^ { (t: String) => t.toDouble }
 
-  s"GET '$baseEndpoint/alignments/gentrap'" >> {
+  s"GET '$baseEndpoint/gentrap/alignments'" >> {
     br
 
-    val endpoint = s"$baseEndpoint/alignments/gentrap"
+    val endpoint = s"$baseEndpoint/gentrap/alignments"
 
     "when an invalid accumulation level is specified should" >> inline {
 
@@ -289,10 +289,10 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/sequences/gentrap'" >> {
+  s"GET '$baseEndpoint/gentrap/sequences'" >> {
     br
 
-    val endpoint = s"$baseEndpoint/sequences/gentrap"
+    val endpoint = s"$baseEndpoint/gentrap/sequences"
 
     "when an invalid library type is specified should" >> inline {
 
