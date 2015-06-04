@@ -76,9 +76,10 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     )
   }
 
-  private def extractLibDocument(name: String, libJson: JValue): GentrapLibDocument =
+  private def extractLibDocument(libJson: JValue, name: String, sampleName: String): GentrapLibDocument =
     GentrapLibDocument(
-      name = (libJson \ "name").extractOpt[String],
+      name = Option(name),
+      sampleName = Option(sampleName),
       rawSeq = GentrapSeqDocument(
         read1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
         read2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption),
@@ -110,7 +111,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
             referenceId = refId,
             annotationIds = annotIds,
             libs = libJsons
-              .map { case (libName, libJson) => extractLibDocument(libName, libJson) }
+              .map { case (libName, libJson) => extractLibDocument(libJson, libName, sampleName) }
               .toSeq,
             // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
             alnStats =
