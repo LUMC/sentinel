@@ -231,6 +231,11 @@ class StatsControllerSpec extends SentinelServletSpec {
 
           new StatsAlnGentrapOkTests(() => get(endpoint) { response }, 6)
         }
+
+        "when accumulation level is set to 'lib' should" >> inline {
+
+          new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("accLevel", "lib"))) { response }, 10)
+        }
       }
     }
   }
