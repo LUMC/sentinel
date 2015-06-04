@@ -7,6 +7,7 @@ import org.bson.types.ObjectId
 
 @Salat abstract class BaseRunDocument {
 
+  def name: Option[String]
   def runId: ObjectId
   def uploaderId: String
   def pipeline: String

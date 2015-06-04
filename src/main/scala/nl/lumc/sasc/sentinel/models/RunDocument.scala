@@ -15,4 +15,5 @@ case class RunDocument(
   sampleIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None,
-  deletionTimeUtc: Option[Date] = None) extends BaseRunDocument
+  deletionTimeUtc: Option[Date] = None,
+  name: Option[String] = None) extends BaseRunDocument

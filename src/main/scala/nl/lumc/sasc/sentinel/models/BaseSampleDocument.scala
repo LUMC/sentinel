@@ -5,6 +5,8 @@ import org.bson.types.ObjectId
 
 @Salat abstract class BaseSampleDocument {
 
+  def runName: Option[String]
+
   def name: Option[String]
 
   def runId: ObjectId

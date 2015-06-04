@@ -4,10 +4,12 @@ import nl.lumc.sasc.sentinel.{ LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.models._
 
 case class GentrapLibDocument(
-    name: Option[String],
     rawSeq: GentrapSeqDocument,
     processedSeq: Option[GentrapSeqDocument],
-    alnStats: GentrapAlignmentStats) extends BaseLibDocument {
+    alnStats: GentrapAlignmentStats,
+    name: Option[String],
+    sampleName: Option[String] = None,
+    runName: Option[String] = None) extends BaseLibDocument {
 
   lazy val rawStats: SeqStats = SeqStats(rawSeq.read1.stats, rawSeq.read2.collect { case r2 => r2.stats })
 
