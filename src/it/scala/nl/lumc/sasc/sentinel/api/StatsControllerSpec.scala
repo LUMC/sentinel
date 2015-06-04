@@ -19,6 +19,84 @@ class StatsControllerSpec extends SentinelServletSpec {
   addServlet(statsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
 
+  s"GET '$baseEndpoint/runs'" >> {
+    br
+
+    val endpoint = s"$baseEndpoint/runs"
+
+    "using multiple summary files from 2 different pipelines uploaded by different users" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def uploadEndpoint = "/runs"
+
+        def makeUpload(uploader: User, uploaded: Uploadable, pipeline: String): Req = {
+          val params = Seq(("userId", uploader.id), ("pipeline", pipeline))
+          val headers = Map(HeaderApiKey -> uploader.activeKey)
+          () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
+        }
+
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib, "gentrap")
+        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMLib, "gentrap")
+        def upload3 = makeUpload(Users.avg2, SchemaExamples.Unsupported, "unsupported")
+        def upload4 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSLib, "gentrap")
+
+        def priorRequests = Seq(upload1, upload2, upload3, upload4)
+
+        "after the first file is uploaded" in {
+          priorResponses.head.status mustEqual 201
+        }
+
+        "after the second file is uploaded" in {
+          priorResponses(1).status mustEqual 201
+        }
+
+        "after the third file is uploaded" in {
+          priorResponses(2).status mustEqual 201
+        }
+
+        "after the fourth file is uploaded" in {
+          priorResponses(3).status mustEqual 201
+        }
+
+        "when using the default parameter should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON list containing 2 objects" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.jsonBody must haveSize(2)
+            }
+
+            "which" should {
+
+              "contain statistics over the first pipeline" in {
+                priorResponse.body must /#(0) /("name" -> "gentrap")
+                priorResponse.body must /#(0) /("nLibs" -> 10)
+                priorResponse.body must /#(0) /("nRuns" -> 3)
+                priorResponse.body must /#(0) /("nSamples" -> 6)
+              }
+
+              "contain statistics over the second pipeline" in {
+                priorResponse.body must /#(1) /("name" -> "unsupported")
+                priorResponse.body must /#(1) /("nLibs" -> 0)
+                priorResponse.body must /#(1) /("nRuns" -> 1)
+                priorResponse.body must /#(1) /("nSamples" -> 0)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   class StatsAlnGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
 
     def priorRequests = Seq(request)

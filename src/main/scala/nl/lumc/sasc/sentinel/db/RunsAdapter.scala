@@ -98,7 +98,7 @@ trait RunsAdapter extends MongodbConnector {
     }
   }
 
-  final def getGlobalRunStats(): Seq[PipelineRunStats] = {
+  final def getGlobalRunStats(): Seq[PipelineRunStats] =
     coll
       .aggregate(List(
         MongoDBObject("$project" ->
@@ -108,9 +108,9 @@ trait RunsAdapter extends MongodbConnector {
             "_id" -> "$pipeline",
             "nRuns" -> MongoDBObject("$sum" -> 1),
             "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
-            "nLibs" -> MongoDBObject("$sum" -> "$nLibs")))),
+            "nLibs" -> MongoDBObject("$sum" -> "$nLibs"))),
+        MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
         AggregationOptions(AggregationOptions.CURSOR))
       .map { case pstat => grater[PipelineRunStats].asObject(pstat) }
       .toSeq
-  }
 }
