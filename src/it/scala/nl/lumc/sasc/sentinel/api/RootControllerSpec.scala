@@ -1,30 +1,57 @@
 package nl.lumc.sasc.sentinel.api
 
-import org.scalatra.test.specs2._
+import akka.actor.ActorSystem
+import org.specs2.mock.Mockito
 
-class RootControllerSpec extends MutableScalatraSpec {
+import nl.lumc.sasc.sentinel.{ CurrentApiVersion, SentinelServletSpec }
 
-  addServlet(new RootController, "/*")
+class RootControllerSpec extends SentinelServletSpec with Mockito {
 
-  "GET '/'" should {
+  implicit val system = mock[ActorSystem]
+  implicit val swagger = new SentinelSwagger
+  addServlet(new RootController, s"/*")
+  addServlet(new ResourcesApp, "/api-docs/*")
 
-    "return status 301" in {
-      get("/") {
-        status mustEqual 301
+  s"GET '/' should" >> inline {
+
+    val endpoint = "/"
+
+    new Context.PriorRequests {
+
+      def request = () => get(endpoint) { response }
+      def priorRequests = Seq(request)
+
+      "return status 301" in {
+        priorResponse.status mustEqual 301
       }
-    }
 
-    "redirect to /api-docs" in {
-      get("/") {
-        header("Location") must endWith("/api-docs")
+      "redirect to /api-docs" in {
+        priorResponse.header("Location") must endWith("/api-docs")
       }
-    }
 
-    "have JSON content type" in {
-      get("/") {
-        header("Content-Type") must contain("application/json")
+      "return an empty body" in {
+        priorResponse.body must beEmpty
       }
     }
   }
 
+  "GET '/api-docs' should" >> inline {
+
+    val endpoint = "/api-docs"
+
+    new Context.PriorRequests {
+
+      def request = () => get(endpoint) { response }
+      def priorRequests = Seq(request)
+
+      "return status 200" in {
+        priorResponse.status mustEqual 200
+      }
+
+      "return a JSON object containing the API version" in {
+        priorResponse.contentType mustEqual "application/json"
+        priorResponse.body must /("apiVersion" -> CurrentApiVersion)
+      }
+    }
+  }
 }
