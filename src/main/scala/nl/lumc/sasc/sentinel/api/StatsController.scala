@@ -31,7 +31,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val statsAlignmentsGentrapGetOperation = (apiOperation[List[GentrapAlignmentStats]]("statsAlignmentsGentrapGet")
+  val statsGentrapAlignmentsGetOperation = (apiOperation[Seq[GentrapAlignmentStats]]("statsGentrapAlignmentsGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
     parameters (
       queryParam[Boolean]("randomize")
@@ -73,7 +73,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
-  get("/gentrap/alignments", operation(statsAlignmentsGentrapGetOperation)) {
+  get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
     val randomize = params.get("randomize") match {
       case None => true
@@ -105,7 +105,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val statsSequencesGentrapGetOperation = (apiOperation[List[SeqStats]]("statsSequencesGentrapGet")
+  val statsGentrapSequencesGetOperation = (apiOperation[Seq[SeqStats]]("statsGentrapSequencesGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
     parameters (
       queryParam[Boolean]("randomize")
@@ -146,7 +146,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
-  get("/gentrap/sequences", operation(statsSequencesGentrapGetOperation)) {
+  get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
     val randomize = params.get("randomize") match {
       case None => true
