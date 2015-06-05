@@ -4,13 +4,12 @@ import org.json4s._
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 
+import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
+
 /** Servlet for the "/" endpoint */
 class RootController extends ScalatraServlet with JacksonJsonSupport {
 
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
-
-  protected implicit val jsonFormats: Formats = DefaultFormats
+  protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
   before() {
     contentType = formats("json")

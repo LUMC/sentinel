@@ -21,24 +21,4 @@ object SentinelSwagger {
 }
 
 class ResourcesApp(implicit protected val system: ActorSystem, val swagger: SentinelSwagger) extends ScalatraServlet
-    with JacksonSwaggerBase {
-
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
-
-  before() {
-    response.headers += ("Access-Control-Allow-Origin" -> "*")
-  }
-
-  protected def buildFullUrl(path: String) = if (path.startsWith("http")) path else {
-    val port = request.getServerPort
-    val h = request.getServerName
-    val prot = if (port == 443) "https" else "http"
-    val (proto, host) = if (port != 80 && port != 443) ("http", h + ":" + port.toString) else (prot, h)
-    "%s://%s%s%s".format(
-      proto,
-      host,
-      request.getContextPath,
-      path)
-  }
-}
+  with JacksonSwaggerBase
