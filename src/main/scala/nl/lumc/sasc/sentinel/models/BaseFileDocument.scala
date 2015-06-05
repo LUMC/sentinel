@@ -8,3 +8,5 @@ import com.novus.salat.annotations.Salat
 
   def md5: String
 }
+
+case class FileDocument(path: String, md5: String) extends BaseFileDocument

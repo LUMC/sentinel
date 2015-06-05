@@ -6,8 +6,6 @@ package object models {
 
   case class ApiMessage(message: String, data: Any = None)
 
-  case class UserPatch(email: String, isConfirmed: Boolean)
-
   object CommonErrors {
 
     val InvalidPipeline = ApiMessage("Pipeline parameter is invalid.",
