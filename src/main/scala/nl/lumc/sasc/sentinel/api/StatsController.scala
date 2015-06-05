@@ -34,6 +34,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsAlignmentsGentrapGetOperation = (apiOperation[List[GentrapAlignmentStats]]("statsAlignmentsGentrapGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
     parameters (
+      queryParam[Boolean]("randomize")
+        .description(
+          """Whether to randomize the returned items or not. If not randomized, the returned results are sorted based
+            | on upload time, most recent first (default: `true`).
+          """.stripMargin.replaceAll("\n", ""))
+        .optional,
       queryParam[List[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
@@ -68,6 +74,15 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: ON
 
   get("/gentrap/alignments", operation(statsAlignmentsGentrapGetOperation)) {
+
+    val randomize = params.get("randomize") match {
+      case None => true
+      case Some(p) => p.toLowerCase match {
+        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
+        case otherwise => true
+      }
+    }
+
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
@@ -86,13 +101,19 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
 
-    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds)
+    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds, randomize)
   }
 
   // format: OFF
   val statsSequencesGentrapGetOperation = (apiOperation[List[SeqStats]]("statsSequencesGentrapGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
     parameters (
+      queryParam[Boolean]("randomize")
+        .description(
+          """Whether to randomize the returned items or not. If not randomized, the returned results are sorted based
+            | on upload time, most recent first (default: `true`).
+          """.stripMargin.replaceAll("\n", ""))
+        .optional,
       queryParam[List[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
@@ -126,6 +147,15 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: ON
 
   get("/gentrap/sequences", operation(statsSequencesGentrapGetOperation)) {
+
+    val randomize = params.get("randomize") match {
+      case None => true
+      case Some(p) => p.toLowerCase match {
+        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
+        case otherwise => true
+      }
+    }
+
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
@@ -144,6 +174,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
     val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
 
-    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds)
+    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds, randomize)
   }
 }

@@ -99,7 +99,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
   class StatsAlnGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
 
-    def priorRequests = Seq(request)
+    def priorRequests = Stream(request)
 
     "return status 200" in {
       priorResponse.status mustEqual 200
@@ -138,6 +138,7 @@ class StatsControllerSpec extends SentinelServletSpec {
       }
     }
   }
+
   // FIXME: Since specs2 converts all JsonNumber to Doubles, we have to do the comparison as doubles as well
   def bePositiveNum = beGreaterThan(0: Double) ^^ { (t: String) => t.toDouble }
 
@@ -235,6 +236,33 @@ class StatsControllerSpec extends SentinelServletSpec {
         "when accumulation level is set to 'lib' should" >> inline {
 
           new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("accLevel", "lib"))) { response }, 10)
+        }
+
+        "when queried multiple times using the default parameter should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint) { response }
+            def priorRequests = Stream.fill(10)(request)
+
+            "return the items in random order" in {
+              // if the items are returned in the same order, the 'body' string will be the same so the set size == 1
+              priorResponses.map(_.body).distinct.size must beGreaterThan(1)
+            }
+          }
+        }
+
+        "when queried multiple times with randomize set to 'no' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("randomize", "no"))) { response }
+            def priorRequests = Stream.fill(10)(request)
+
+            "return the items in the nonrandom order" in {
+              priorResponses.map(_.body).distinct.size mustEqual 1
+            }
+          }
         }
       }
     }
@@ -378,6 +406,33 @@ class StatsControllerSpec extends SentinelServletSpec {
         "when using the default parameter should" >> inline {
 
           new StatsSeqGentrapOkTests(() => get(endpoint) { response }, 10)
+        }
+
+        "when queried multiple times using the default parameter should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint) { response }
+            def priorRequests = Stream.fill(10)(request)
+
+            "return the items in random order" in {
+              // if the items are returned in the same order, the 'body' string will be the same so the set size == 1
+              priorResponses.map(_.body).distinct.size must beGreaterThan(1)
+            }
+          }
+        }
+
+        "when queried multiple times with randomize set to 'no' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("randomize", "no"))) { response }
+            def priorRequests = Stream.fill(10)(request)
+
+            "return the items in the nonrandom order" in {
+              priorResponses.map(_.body).distinct.size mustEqual 1
+            }
+          }
         }
       }
     }

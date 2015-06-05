@@ -1,5 +1,7 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
+import scala.util.Random.shuffle
+
 import com.novus.salat._
 import com.novus.salat.global._
 import com.mongodb.casbah.Imports._
@@ -66,12 +68,12 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   /** Unwind operation to break open libs array */
   private[processors] val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
 
-  // TODO: Implement random ordering of returned values
   def getAlignmentStats(accLevel: AccLevel.Value,
                         libType: LibType.Value,
                         runs: Seq[ObjectId] = Seq(),
                         references: Seq[ObjectId] = Seq(),
-                        annotations: Seq[ObjectId] = Seq()): Seq[GentrapAlignmentStats] = {
+                        annotations: Seq[ObjectId] = Seq(),
+                        randomize: Boolean = true): Seq[GentrapAlignmentStats] = {
 
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
@@ -85,13 +87,17 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       } else
         throw new RuntimeException("Unexpected accumulation level value: " + accLevel.toString)
 
-    coll
+    lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map {
         case astat => astat.get("alnStats") match {
           case alnStats: BasicDBObject => grater[GentrapAlignmentStats].asObject(alnStats)
         }
       }.toSeq
+
+    // TODO: switch to database-level randomization when SERVER-533 is resolved
+    if (randomize) shuffle(results)
+    else results
   }
 
   /**
@@ -110,13 +116,15 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    *                   by reference IDs.
    * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
    *                    filtered by annotation IDs.
+   * @param randomize Whether to randomize the returned items' order or not.
    * @return a sequence of [[SeqStats]] objects.
    */
   def getSeqStats(libType: LibType.Value,
                   qcPhase: SeqQcPhase.Value,
                   runs: Seq[ObjectId] = Seq(),
                   references: Seq[ObjectId] = Seq(),
-                  annotations: Seq[ObjectId] = Seq()): Seq[SeqStats] = {
+                  annotations: Seq[ObjectId] = Seq(),
+                  randomize: Boolean = true): Seq[SeqStats] = {
 
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
@@ -141,9 +149,13 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
     val operations = Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
 
-    coll
+    lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map { case pstat => grater[SeqStats].asObject(pstat) }
       .toSeq
+
+    // TODO: switch to database-level randomization when SERVER-533 is resolved
+    if (randomize) shuffle(results)
+    else results
   }
 }
