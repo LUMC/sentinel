@@ -3,7 +3,6 @@ package nl.lumc.sasc.sentinel.api
 import org.scalatra.test.{ ClientResponse, Uploadable }
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.api.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.User
 
 class StatsControllerSpec extends SentinelServletSpec {
