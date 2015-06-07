@@ -3,7 +3,7 @@ package nl.lumc.sasc.sentinel.api
 import akka.actor.ActorSystem
 import org.specs2.mock.Mockito
 
-import nl.lumc.sasc.sentinel.{ CurrentApiVersion, SentinelServletSpec }
+import nl.lumc.sasc.sentinel.CurrentApiVersion
 
 class RootControllerSpec extends SentinelServletSpec with Mockito {
 

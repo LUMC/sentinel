@@ -1,16 +1,17 @@
-package nl.lumc.sasc.sentinel
+package nl.lumc.sasc.sentinel.api
 
 import scala.util.Try
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.scalatra.test.specs2.MutableScalatraSpec
+import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.specs2.data.Sized
 import org.specs2.matcher.JsonMatchers
 import org.specs2.mutable.Specification
 import org.specs2.specification.{ Fragments, Step }
 
+import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getTimeNow }

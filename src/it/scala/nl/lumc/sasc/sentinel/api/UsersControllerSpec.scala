@@ -2,7 +2,6 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s.jackson.Serialization.write
 
-import nl.lumc.sasc.sentinel.SentinelServletSpec
 import nl.lumc.sasc.sentinel.models.UserRequest
 
 class UsersControllerSpec extends SentinelServletSpec {
