@@ -169,16 +169,35 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
           Map("run" -> SchemaExamples.Gentrap.V04.SSampleSLib), headers) { response}
         def priorRequests = Seq(upload)
         def annotIds = (parse(priorResponse.body) \ "annotIds").extract[Seq[String]]
+        def runId = (parse(priorResponse.body) \ "runId").extract[String]
 
         "after the run summary file is uploaded" in {
           priorResponse.status mustEqual 201
+        }
+
+        "when an annotation entry with an invalid ID is queried should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint("yalala")) { response }
+            def priorRequests = Seq(request)
+
+            "return status 404" in {
+              priorResponse.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("message" -> "Annotation ID can not be found.")
+            }
+          }
         }
 
         "when a nonexistent annotation entry is queried should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint("yalala")) { response }
+            def request = () => get(endpoint(runId)) { response }
             def priorRequests = Seq(request)
 
             "return status 404" in {
