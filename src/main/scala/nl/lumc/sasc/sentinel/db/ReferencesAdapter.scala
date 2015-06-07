@@ -30,12 +30,8 @@ trait ReferencesAdapter extends MongodbConnector {
     }
   }
 
-  def getReference(refId: String): Option[Reference] = {
-    Try(new ObjectId(refId)) match {
-      case Failure(_) => None
-      case Success(qid) => coll
-        .findOneByID(qid)
-        .collect { case dbo => grater[Reference].asObject(dbo) }
-    }
-  }
+  def getReference(refId: ObjectId): Option[Reference] =
+    coll
+      .findOneByID(refId)
+      .collect { case dbo => grater[Reference].asObject(dbo) }
 }

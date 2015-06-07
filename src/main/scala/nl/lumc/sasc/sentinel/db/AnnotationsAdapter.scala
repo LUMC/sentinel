@@ -34,12 +34,8 @@ trait AnnotationsAdapter extends MongodbConnector {
     }
   }
 
-  def getAnnotation(annotId: String): Option[Annotation] = {
-    Try(new ObjectId(annotId)) match {
-      case Failure(_) => None
-      case Success(qid) => coll
-        .findOneByID(qid)
-        .collect { case dbo => grater[Annotation].asObject(dbo) }
-    }
-  }
+  def getAnnotation(annotId: ObjectId): Option[Annotation] =
+    coll
+      .findOneByID(annotId)
+      .collect { case dbo => grater[Annotation].asObject(dbo) }
 }

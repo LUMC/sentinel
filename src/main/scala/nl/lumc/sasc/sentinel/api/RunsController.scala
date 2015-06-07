@@ -63,8 +63,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
-    val runId = params
-      .getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
+    val runId = params("runId")
       .getObjectId
       .getOrElse(halt(404, CommonErrors.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
@@ -112,8 +111,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         case otherwise => true
       }
     }
-    val runId = params
-      .getOrElse("runId", halt(400, CommonErrors.UnspecifiedRunId))
+    val runId = params("runId")
       .getObjectId
       .getOrElse(halt(404, CommonErrors.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
