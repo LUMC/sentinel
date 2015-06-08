@@ -6,10 +6,12 @@ import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
 
+import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 
-class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
+class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
+    with AuthenticationSupport { self =>
 
   protected val applicationDescription: String = "Operations on user data"
   override protected val applicationName: Option[String] = Some("users")
@@ -41,10 +43,12 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val usersUserIdGetOperation = (apiOperation[JValue]("usersUserIdGet")
+  val usersUserIdGetOperation = (apiOperation[UserResponse]("usersUserIdGet")
     summary "Retrieves record of the given user ID."
     notes "This endpoint is only available to the particular user and administrators."
-    parameters pathParam[String]("userId").description("User ID.")
+    parameters (
+      pathParam[String]("userRecordId").description("User record ID to return."),
+      queryParam[String]("userId").description("User ID."))
     responseMessages (
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
@@ -52,13 +56,19 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  get("/:userId", operation(usersUserIdGetOperation)) {
-    val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
-    // TODO: return 404 if user ID not found
-    // TODO: return 401 if not authenticated
-    // TODO: return 403 if unauthorized
-    // TODO: return 200 and user record
+  get("/:userRecordId", operation(usersUserIdGetOperation)) {
+    val userRecordId = params("userRecordId")
+    val user = simpleKeyAuth(params => params.get("userId"))
+    if (user.isAdmin || user.id == userRecordId) {
+      users.getUser(userRecordId) match {
+        case Some(u) => Ok(u.toResponse)
+        case None    => NotFound(CommonErrors.MissingUserId)
+      }
+    } else halt(403, CommonErrors.Unauthorized)
   }
+
+  // Helper endpoint to capture GET request with unspecified user ID
+  get("/?") { halt(400, CommonErrors.UnspecifiedUserId) }
 
   // format: OFF
   val usersUserIdPostOperation = (apiOperation[ApiMessage]("usersPost")

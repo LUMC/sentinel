@@ -22,10 +22,8 @@ class BasicAuthStrategy(protected override val app: SentinelServlet { def users:
         else None
     }
 
-  override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    if (!user.emailVerified)
-      app halt Forbidden(CommonErrors.Unauthorized)
-  }
+  override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
+    if (!user.emailVerified) app halt Forbidden(CommonErrors.Unauthorized)
 
   protected def getUserId(user: User)(implicit request: HttpServletRequest, response: HttpServletResponse): String = user.id
 }
@@ -40,7 +38,7 @@ trait BasicAuthSupport[UserType <: AnyRef] {
 
   protected def basicAuth()(implicit request: HttpServletRequest, response: HttpServletResponse) = {
 
-    def askAuth(): Unit = {
+    def askAuth() = {
       response.setHeader("WWW-Authenticate", BasicAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }

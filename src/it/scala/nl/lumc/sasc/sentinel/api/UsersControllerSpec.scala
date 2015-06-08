@@ -2,6 +2,7 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s.jackson.Serialization.write
 
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.UserRequest
 
 class UsersControllerSpec extends SentinelServletSpec {
@@ -228,6 +229,186 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponses.last.body must /("message" -> "User ID already taken.")
+        }
+      }
+    }
+  }
+
+  s"GET '$baseEndpoint/:userId'" >> {
+    br
+
+    def endpoint(userId: String) = s"$baseEndpoint/$userId"
+
+    "when the user ID is not specified should" >> inline {
+
+      new Context.PriorRequests {
+
+        def request = () => get(endpoint("")) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User ID not specified.")
+        }
+      }
+    }
+
+    s"when the user does not provide the $HeaderApiKey header should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def request = () => get(endpoint(Users.avg.id), Seq(("userId", Users.avg.id))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in {
+          priorResponse.status mustEqual 401
+        }
+
+        "return the challenge response header key" in {
+          priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Authentication required to access resource.")
+        }
+      }
+    }
+
+    s"when the provided $HeaderApiKey does not match the one owned by the user should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def params = Seq(("userId", Users.avg.id))
+        def headers = Map(HeaderApiKey -> (user.activeKey + "nono"))
+        def request = () => get(endpoint(Users.avg.id), params, headers) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in {
+          priorResponse.status mustEqual 401
+        }
+
+        "return the challenge response header key" in {
+          priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Authentication required to access resource.")
+        }
+      }
+    }
+
+    s"when an unverified user uploads a run summary" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def params = Seq(("userId", Users.unverified.id))
+        def headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+        def request = () => get(endpoint(Users.unverified.id), params, headers) { response }
+        def priorRequests = Seq(request)
+
+        "return status 403" in {
+          priorResponse.status mustEqual 403
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Unauthorized to access resource.")
+        }
+      }
+    }
+
+    "when the user authenticates correctly" >> {
+      br
+
+      "and the user requests his/her own record should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", Users.avg.id))
+          def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+          def request = () => get(endpoint(Users.avg.id), params, headers = headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 200" in {
+            priorResponse.status mustEqual 200
+          }
+
+          "return a JSON object containing the expected attributes" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("id" -> Users.avg.id)
+            priorResponse.body must /("email" -> Users.avg.email)
+            priorResponse.body must /("activeKey" -> Users.avg.activeKey)
+          }
+        }
+      }
+
+      "and the user is an admin that requests another user's record should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", Users.admin.id))
+          def headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          def request = () => get(endpoint(Users.avg.id), params, headers = headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 200" in {
+            priorResponse.status mustEqual 200
+          }
+
+          "return a JSON object containing the expected attributes" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("id" -> Users.avg.id)
+            priorResponse.body must /("email" -> Users.avg.email)
+            priorResponse.body must /("activeKey" -> Users.avg.activeKey)
+          }
+        }
+      }
+
+      "and the user is an admin that requests his/her own record should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", Users.admin.id))
+          def headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          def request = () => get(endpoint(Users.admin.id), params, headers = headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 200" in {
+            priorResponse.status mustEqual 200
+          }
+
+          "return a JSON object containing the expected attributes" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("id" -> Users.admin.id)
+            priorResponse.body must /("email" -> Users.admin.email)
+            priorResponse.body must /("activeKey" -> Users.admin.activeKey)
+          }
+        }
+      }
+
+      "and the user is not an admin and requests someone else's record should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", Users.avg.id))
+          def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+          def request = () => get(endpoint(Users.avg2.id), params, headers = headers) { response }
+          def priorRequests = Seq(request)
+
+          "return status 403" in {
+            priorResponse.status mustEqual 403
+          }
+
+          "return a JSON object containing the expected message" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("message" -> "Unauthorized to access resource.")
+          }
         }
       }
     }

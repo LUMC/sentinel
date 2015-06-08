@@ -23,7 +23,16 @@ case class User(
 
   // NOTE: This is kept super simple now since it's not yet our priority
   def keyMatches(candidate: String): Boolean = candidate == activeKey
+
+  lazy val toResponse = UserResponse(id, email, emailVerified, activeKey, updateTimeUtc)
 }
+
+case class UserResponse(
+  id: String,
+  email: String,
+  emailVerified: Boolean,
+  activeKey: String,
+  updateTimeUtc: Option[Date])
 
 case class UserRequest(id: String, email: String, password: String, confirmPassword: String) {
 

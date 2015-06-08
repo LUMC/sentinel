@@ -25,14 +25,11 @@ class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: User
         else None
     }
 
-  override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) = {
-    if (!user.emailVerified)
-      app halt Forbidden(CommonErrors.Unauthorized)
-  }
+  override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
+    if (!user.emailVerified) app halt Forbidden(CommonErrors.Unauthorized)
 
-  override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) {
+  override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) =
     app halt Unauthorized(CommonErrors.Unauthenticated, Map("WWW-Authenticate" -> challenge))
-  }
 }
 
 object SimpleKeyAuthStrategy {
@@ -51,9 +48,7 @@ trait SimpleKeyAuthSupport[UserType <: AnyRef] {
       response.setHeader("WWW-Authenticate", SimpleKeyAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
-    if (f(params).isEmpty) {
-      halt(400, CommonErrors.UnspecifiedUserId)
-    }
+    if (f(params).isEmpty) { halt(400, CommonErrors.UnspecifiedUserId) }
     if (Option(request.getHeader(HeaderApiKey)).isEmpty) { askAuth() }
     scentry.authenticate(SimpleKeyAuthStrategy.name).getOrElse { askAuth() }
   }
