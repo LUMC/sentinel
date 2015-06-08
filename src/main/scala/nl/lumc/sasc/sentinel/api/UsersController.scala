@@ -50,6 +50,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       pathParam[String]("userRecordId").description("User record ID to return."),
       queryParam[String]("userId").description("User ID."))
     responseMessages (
+      StringResponseMessage(400, "User record ID not specified."),
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(404, CommonErrors.MissingUserId.message)))
@@ -68,7 +69,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // Helper endpoint to capture GET request with unspecified user ID
-  get("/?") { halt(400, CommonErrors.UnspecifiedUserId) }
+  get("/?") { halt(400, ApiMessage("User record ID not specified.")) }
 
   // format: OFF
   val usersUserIdPostOperation = (apiOperation[ApiMessage]("usersPost")

@@ -239,11 +239,29 @@ class UsersControllerSpec extends SentinelServletSpec {
 
     def endpoint(userId: String) = s"$baseEndpoint/$userId"
 
-    "when the user ID is not specified should" >> inline {
+    "when the user record ID is not specified should" >> inline {
 
       new Context.PriorRequests {
 
         def request = () => get(endpoint("")) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User record ID not specified.")
+        }
+      }
+    }
+
+    "when the user ID is not specified should" >> inline {
+
+      new Context.PriorRequests {
+
+        def request = () => get(endpoint(Users.avg.id)) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
