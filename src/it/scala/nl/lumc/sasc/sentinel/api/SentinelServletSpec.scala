@@ -68,10 +68,10 @@ trait SentinelServletSpec extends MutableScalatraSpec
   }
 
   object Users {
-    val avg = User("avg", "avg@test.id", "pwd1", "key1", emailVerified = true, isAdmin = false, getTimeNow)
-    val avg2 = User("avg2", "avg2@test.id", "pwd2", "key2", emailVerified = true, isAdmin = false, getTimeNow)
-    val admin = User("admin", "admin@test.id", "pwd3", "key3", emailVerified = true, isAdmin = true, getTimeNow)
-    val unverified = User("unv", "unv@test.id", "pwd4", "key4", emailVerified = false, isAdmin = false, getTimeNow)
+    val avg = User("avg", "avg@test.id", "pwd1", "key1", verified = true, isAdmin = false, getTimeNow)
+    val avg2 = User("avg2", "avg2@test.id", "pwd2", "key2", verified = true, isAdmin = false, getTimeNow)
+    val admin = User("admin", "admin@test.id", "pwd3", "key3", verified = true, isAdmin = true, getTimeNow)
+    val unverified = User("unv", "unv@test.id", "pwd4", "key4", verified = false, isAdmin = false, getTimeNow)
     def all = Set(avg, avg2, admin, unverified)
   }
 

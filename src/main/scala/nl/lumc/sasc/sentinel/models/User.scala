@@ -13,7 +13,7 @@ case class User(
     email: String,
     hashedPassword: String,
     activeKey: String,
-    emailVerified: Boolean,
+    verified: Boolean,
     isAdmin: Boolean,
     creationTimeUtc: Date,
     _id: ObjectId = new ObjectId,
@@ -24,7 +24,7 @@ case class User(
   // NOTE: This is kept super simple now since it's not yet our priority
   def keyMatches(candidate: String): Boolean = candidate == activeKey
 
-  lazy val toResponse = UserResponse(id, email, emailVerified, activeKey, updateTimeUtc)
+  lazy val toResponse = UserResponse(id, email, verified, activeKey, updateTimeUtc)
 }
 
 case class UserResponse(
@@ -83,7 +83,7 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
       email = email,
       hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt()),
       activeKey = generateApiKey(),
-      emailVerified = false,
+      verified = false,
       isAdmin = false,
       creationTimeUtc = getTimeNow,
       _id = new ObjectId)

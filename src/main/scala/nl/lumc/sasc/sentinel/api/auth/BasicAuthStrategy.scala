@@ -23,7 +23,7 @@ class BasicAuthStrategy(protected override val app: SentinelServlet { def users:
     }
 
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
-    if (!user.emailVerified) app halt Forbidden(CommonErrors.Unauthorized)
+    if (!user.verified) app halt Forbidden(CommonErrors.Unauthorized)
 
   protected def getUserId(user: User)(implicit request: HttpServletRequest, response: HttpServletResponse): String = user.id
 }

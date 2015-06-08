@@ -28,7 +28,7 @@ trait AuthenticationSupport extends ScentrySupport[User]
   //       still needs to be implemented, so we are implementing something minimum
   protected def fromSession = {
     case id: String =>
-      User(id, "", "", "", emailVerified = false, isAdmin = false, getTimeNow)
+      User(id, "", "", "", verified = false, isAdmin = false, getTimeNow)
   }
   protected def toSession = { case user: User => user.id }
 

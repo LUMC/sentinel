@@ -26,7 +26,7 @@ class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: User
     }
 
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
-    if (!user.emailVerified) app halt Forbidden(CommonErrors.Unauthorized)
+    if (!user.verified) app halt Forbidden(CommonErrors.Unauthorized)
 
   override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) =
     app halt Unauthorized(CommonErrors.Unauthenticated, Map("WWW-Authenticate" -> challenge))
