@@ -1,13 +1,17 @@
 package nl.lumc.sasc.sentinel.api
 
+import com.google.common.base.Charsets
+import com.google.common.io.BaseEncoding
 import org.json4s.jackson.Serialization.write
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.UserRequest
+import nl.lumc.sasc.sentinel.models.{UserPatch, UserRequest}
 
 class UsersControllerSpec extends SentinelServletSpec {
 
   private def toByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
+  private def makeBasicAuthHeader(userId: String, password: String): String =
+    "Basic " + BaseEncoding.base64().encode(s"$userId:$password".getBytes(Charsets.UTF_8))
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val servlet = new UsersController
@@ -234,10 +238,10 @@ class UsersControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/:userId'" >> {
+  s"GET '$baseEndpoint/:userRecordId'" >> {
     br
 
-    def endpoint(userId: String) = s"$baseEndpoint/$userId"
+    def endpoint(userRecordId: String) = s"$baseEndpoint/$userRecordId"
 
     "when the user record ID is not specified should" >> inline {
 
@@ -321,7 +325,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       }
     }
 
-    s"when an unverified user uploads a run summary" >> inline {
+    s"when an unverified user requests a user record" >> inline {
 
       new Context.PriorRequestsClean {
 
@@ -426,6 +430,488 @@ class UsersControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
             priorResponse.body must /("message" -> "Unauthorized to access resource.")
+          }
+        }
+      }
+    }
+  }
+
+  s"PATCH '$baseEndpoint/:userRecordId'" >> {
+    br
+
+    def endpoint(userRecordId: String) = s"$baseEndpoint/$userRecordId"
+
+    "when the user record ID is not specified should" >> inline {
+
+      new Context.PriorRequests {
+
+        def request = () => patch(endpoint("")) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User record ID not specified.")
+        }
+      }
+    }
+
+    "when the user ID is not specified should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def payload = toByteArray(Seq(UserPatch("replace", "/password", "newPass123")))
+        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in {
+          priorResponse.status mustEqual 401
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Authentication required to access resource.")
+        }
+      }
+    }
+
+    //"when the specified user record ID does not exist should" >> inline {}
+
+    //"when the specified user ID does not exist should" >> inline {}
+
+    "when the patch document is non-JSON should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def request = () => patch(endpoint(Users.avg.id), Array[Byte](10, 20 ,30)) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "File is not JSON-formatted.")
+        }
+      }
+    }
+
+    "when the patch document is empty should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def payload = toByteArray(Seq())
+        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid user patch.")
+          priorResponse.body must /("data" -> "Operations can not be empty.")
+        }
+      }
+    }
+
+    "when the patch document contains an invalid entry should" >> inline {
+
+      new Context.PriorRequestsClean {
+
+        def payload = toByteArray(Seq("yalala", UserPatch("replace", "/password", "newPass123")))
+        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "JSON run summary is invalid.")
+        }
+      }
+    }
+
+    "when the patch document contains disallowed 'op' values which" can {
+
+      Seq("add", "remove", "test") foreach { case op =>
+
+        s"be '$op' should" >> inline {
+
+          new Context.PriorRequestsClean {
+
+            def payload = toByteArray(
+              Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
+            def request = () => patch(endpoint(Users.avg.id), payload) { response }
+            def priorRequests = Seq(request)
+
+            "return status 400" in {
+              priorResponse.status mustEqual 400
+            }
+
+            "return a JSON object containing the expected message" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("message" -> "Invalid user patch.")
+            }
+          }
+        }
+      }
+    }
+
+    "using basic HTTP authentication" >> {
+      br
+
+      "when done by an admin user" >> {
+        br
+
+        def headers = Map("Authorization" -> makeBasicAuthHeader(Users.admin.id, "0PwdAdmin"))
+
+        "when the password does not match should" >> inline {
+
+          def headers = Map("Authorization" -> makeBasicAuthHeader(Users.admin.id, "0PwdAdmin_nomatch"))
+
+          new Context.PriorRequestsClean {
+
+            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+            def priorRequests = Seq(request)
+
+            "return status 401" in {
+              priorResponse.status mustEqual 401
+            }
+
+            "return the challenge response header key" in {
+              priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
+            }
+
+            "return a JSON object containing the expected message" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("message" -> "Authentication required to access resource.")
+            }
+
+            "not change the user record" in {
+              servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beFalse }
+            }
+          }
+        }
+
+        "when he/she authenticates correctly" >> {
+          br
+
+          "when the patch contains an op with path '/verified' should" >> inline {
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+              def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 204" in {
+                priorResponse.status mustEqual 204
+              }
+
+              "return an empty body" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must beEmpty
+              }
+
+              "change the user verified status" in {
+                servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beTrue }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/password' should" >> inline {
+
+            val newPass = "newPass123"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 204" in {
+                priorResponse.status mustEqual 204
+              }
+
+              "return an empty body" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must beEmpty
+              }
+
+              "change the user password" in {
+                servlet.users.getUser(Users.avg.id) must beSome.like { case user =>
+                  user.passwordMatches(newPass) must beTrue
+                  user.passwordMatches("0PwdAvg") must beFalse
+                }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/email' should" >> inline {
+
+            val newEmail = "new@email.com"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 204" in {
+                priorResponse.status mustEqual 204
+              }
+
+              "return an empty body" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must beEmpty
+              }
+
+              "change the user email" in {
+                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.email mustEqual newEmail }
+              }
+            }
+          }
+        }
+      }
+
+      "when done by an non-admin user to his/her own account" >> {
+        br
+
+        def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
+
+        "when the password does not match should" >> inline {
+
+          def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg_nomatch"))
+
+          new Context.PriorRequestsClean {
+
+            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+            def priorRequests = Seq(request)
+
+            "return status 401" in {
+              priorResponse.status mustEqual 401
+            }
+
+            "return the challenge response header key" in {
+              priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
+            }
+
+            "return a JSON object containing the expected message" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("message" -> "Authentication required to access resource.")
+            }
+
+            "not change the user record" in {
+              servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beFalse }
+            }
+          }
+        }
+
+        "when he/she authenticates correctly" >> {
+          br
+
+          "when the patch contains an op with path '/verified' should" >> inline {
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/verified", false)))
+              def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
+              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 403" in {
+                priorResponse.status mustEqual 403
+              }
+
+              "return a JSON object containing the expected message" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must /("message" -> "Unauthorized to access resource.")
+              }
+
+              "not change the user record" in {
+                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.verified must beTrue }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/password' should" >> inline {
+
+            val newPass = "newPass123"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 204" in {
+                priorResponse.status mustEqual 204
+              }
+
+              "return a JSON object containing the expected message" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must beEmpty
+              }
+
+              "not change the user password" in {
+                servlet.users.getUser(Users.avg.id) must beSome.like { case user =>
+                  user.passwordMatches(newPass) must beTrue
+                  user.passwordMatches("0PwdAvg") must beFalse
+                }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/email' should" >> inline {
+
+            val newEmail = "new@email.com"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 204" in {
+                priorResponse.status mustEqual 204
+              }
+
+              "return an empty body" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must beEmpty
+              }
+
+              "change the user email" in {
+                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.email mustEqual newEmail }
+              }
+            }
+          }
+        }
+      }
+
+      "when done by an unverified user" >> {
+        br
+
+        def password = "0PwdUnverified"
+        def userRecord = Users.unverified
+        def headers = Map("Authorization" -> makeBasicAuthHeader(userRecord.id, password))
+
+        "when the password does not match should" >> inline {
+
+          def headers = Map("Authorization" -> makeBasicAuthHeader(userRecord.id, (password + "_nomatch")))
+
+          new Context.PriorRequestsClean {
+
+            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+            def request = () => patch(endpoint(user.id), payload, headers) { response }
+            def priorRequests = Seq(request)
+
+            "return status 401" in {
+              priorResponse.status mustEqual 401
+            }
+
+            "return the challenge response header key" in {
+              priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
+            }
+
+            "return a JSON object containing the expected message" in {
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("message" -> "Authentication required to access resource.")
+            }
+
+            "not change the user record" in {
+              servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.verified must beFalse }
+            }
+          }
+        }
+
+        "when he/she authenticates correctly" >> {
+          br
+
+          "when the patch contains an op with path '/verified' should" >> inline {
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+              def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 403" in {
+                priorResponse.status mustEqual 403
+              }
+
+              "return a JSON object containing the expected message" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must /("message" -> "Unauthorized to access resource.")
+              }
+
+              "not change the user record" in {
+                servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.verified must beFalse }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/password' should" >> inline {
+
+            val newPass = "newPass123"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+              def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 403" in {
+                priorResponse.status mustEqual 403
+              }
+
+              "return a JSON object containing the expected message" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must /("message" -> "Unauthorized to access resource.")
+              }
+
+              "not change the user password" in {
+                servlet.users.getUser(userRecord.id) must beSome.like { case user =>
+                  user.passwordMatches(newPass) must beFalse
+                  user.passwordMatches(password) must beTrue
+                }
+              }
+            }
+          }
+
+          "when the patch contains an op with path '/email' should" >> inline {
+
+            val newEmail = "new@email.com"
+
+            new Context.PriorRequestsClean {
+
+              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+              def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
+              def priorRequests = Seq(request)
+
+              "return status 403" in {
+                priorResponse.status mustEqual 403
+              }
+
+              "return a JSON object containing the expected message" in {
+                priorResponse.contentType mustEqual "application/json"
+                priorResponse.body must /("message" -> "Unauthorized to access resource.")
+              }
+
+              "not change the user email" in {
+                servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.email must not be equalTo(newEmail) }
+              }
+            }
           }
         }
       }

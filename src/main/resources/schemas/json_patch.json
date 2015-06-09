@@ -2,9 +2,6 @@
     "title": "JSON Patch",
     "description": "A JSON Schema describing a JSON Patch",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "notes": [
-        "Only required members are accounted for, other members are ignored"
-    ],
     "type": "array",
     "items": {
         "description": "one JSON Patch operation",

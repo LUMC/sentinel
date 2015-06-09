@@ -12,8 +12,10 @@ import scala.util.Try
 import org.bson.types.ObjectId
 import org.apache.commons.codec.binary.Base64
 import org.json4s._
+import org.mindrot.jbcrypt.BCrypt
 import org.scalatra.servlet.FileItem
 
+import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models.RunDocument
 
 /** General utilities */
@@ -79,6 +81,66 @@ package object utils {
   val RunDocumentSerializer = FieldSerializer[RunDocument](FieldSerializer.ignore("sampleIds"), { case field => field })
 
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer
+
+  object users {
+
+    def hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
+
+    object Validator {
+
+      lazy val HasUpperCase = "[A-Z]+".r
+
+      lazy val HasLowerCase = "[a-z]+".r
+
+      lazy val HasNumbers = "[0-9]+".r
+
+      lazy val HasNonWord = """\W+""".r
+
+      lazy val PasswordCheckers = Set(HasUpperCase, HasLowerCase, HasNumbers)
+
+      def idMessages(id: String): Seq[String] = {
+        val msgBuffer = scala.collection.mutable.Buffer.empty[String]
+        if (!idLengthValid(id))
+          msgBuffer += s"User ID shorter than $MinUserIdLength characters."
+        if (!idContentsValid(id))
+          msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars(id).mkString("', '") + "'.")
+        msgBuffer.toSeq
+      }
+
+      def passwordMessages(password: String, confirmPassword: String): Seq[String] = {
+        val msgBuffer = scala.collection.mutable.Buffer.empty[String]
+        if (!passwordConfirmed(password, confirmPassword))
+          msgBuffer += "Different passwords given."
+        if (!passwordLengthValid(password))
+          msgBuffer += s"Password shorter than $MinPasswordLength characters."
+        if (!passwordMixValid(password))
+          msgBuffer += "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
+        msgBuffer.toSeq
+      }
+
+      def emailMessages(email: String): Seq[String] = {
+        val msgBuffer = scala.collection.mutable.Buffer.empty[String]
+        if (!emailValid(email))
+          msgBuffer += "Email invalid."
+        msgBuffer.toSeq
+      }
+
+      def idLengthValid(id: String) = id.length >= MinUserIdLength
+
+      def invalidIdChars(id: String) = HasNonWord.findAllIn(id).toSeq
+
+      def idContentsValid(id: String) = invalidIdChars(id).isEmpty
+
+      def passwordConfirmed(password: String, confirmPassword: String) = password == confirmPassword
+
+      def passwordLengthValid(password: String) = password.length >= MinPasswordLength
+
+      def passwordMixValid(password: String) = PasswordCheckers.forall(_.findFirstIn(password).isDefined)
+
+      def emailValid(email: String) = email matches """^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"""
+
+    }
+  }
 
   object implicits {
 

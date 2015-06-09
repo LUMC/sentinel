@@ -1,5 +1,8 @@
 package nl.lumc.sasc.sentinel.api
 
+import nl.lumc.sasc.sentinel.utils.RunValidationException
+import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
+
 import scala.util.{ Failure, Success, Try }
 
 import org.scalatra._
@@ -17,30 +20,71 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   override protected val applicationName: Option[String] = Some("users")
 
   val users = new UsersAdapter { val mongo = self.mongo }
+  val patchValidator = new ValidationAdapter {
+    override val validator: RunValidator = createValidator("/schemas/json_patch.json")
+  }
 
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
-    summary "Updates an existing user record."
+    summary
+      """Updates an existing user record using the JSON patch specification. Only the `replace` operation on the
+        | following user attributes are supported: `password`, `email`.
+      """.stripMargin
     parameters (
       pathParam[String]("userId").description("User ID."),
-      bodyParam[UserPatch]("patchOp").description("Patch operations to apply."))
+      bodyParam[Seq[UserPatch]]("ops").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
-      StringResponseMessage(400, "User ID not specified or patch operations invalid."),
+      StringResponseMessage(400, "User ID not specified."),
+      StringResponseMessage(400, "Patch document is invalid or malformed."),
       StringResponseMessage(401, CommonErrors.Unauthenticated.message),
       StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+      StringResponseMessage(404, CommonErrors.MissingUserId.message),
+      StringResponseMessage(422, "Patch operation not supported.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  patch("/:userId", operation(usersUserIdPatchOperation)) {
-    val userId = params.getAs[String]("userId").getOrElse(halt(400, CommonErrors.UnspecifiedUserId))
-    // TODO: return 400 if patch operation invalid
-    // TODO: return 404 if user ID not found
-    // TODO: return 401 if not authenticated
-    // TODO: return 403 if unauthorized
-    // TODO: return 200 and user record
+  patch("/:userRecordId", operation(usersUserIdPatchOperation)) {
+
+    val userRecordId = params("userRecordId")
+
+    val patchOps = Try(patchValidator.parseAndValidate(request.body.getBytes)) match {
+      case Failure(f) =>
+        f match {
+          case vexc: RunValidationException =>
+            halt(400, ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+          case otherwise =>
+            halt(500, CommonErrors.Unexpected)
+        }
+      case Success(jv) =>
+        val patches = jv.extractOpt[Seq[UserPatch]] match {
+          case Some(ps) if ps.nonEmpty => ps
+          case otherwise               => halt(400, ApiMessage("Invalid user patch.", data = "Operations can not be empty."))
+        }
+
+        if (patches.exists(_.validationMessages.nonEmpty)) {
+          halt(400, ApiMessage("Invalid user patch.",
+            data = patches
+              .collect { case up: UserPatch if up.validationMessages.nonEmpty => up.validationMessages }
+              .flatten))
+        } else patches
+    }
+
+    val user = basicAuth()
+
+    if (!user.isAdmin && patchOps.exists(p => p.path == "/verified")) halt(403, CommonErrors.Unauthorized)
+    else if (userRecordId == user.id || user.isAdmin) {
+      users.patchAndUpdateUser(userRecordId, patchOps) match {
+        case Some(_)   => NoContent()
+        case otherwise => InternalServerError()
+      }
+    } else halt(403, CommonErrors.Unauthorized)
   }
+
+  // Helper endpoint to capture PATCH request with unspecified user ID
+  patch("/?") { halt(400, ApiMessage("User record ID not specified.")) }
+
+  options("/:userId") { response.setHeader("Accept-Patch", formats("json")) }
 
   // format: OFF
   val usersUserIdGetOperation = (apiOperation[UserResponse]("usersUserIdGet")

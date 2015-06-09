@@ -22,6 +22,10 @@ class BasicAuthStrategy(protected override val app: SentinelServlet { def users:
         else None
     }
 
+  override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) {
+    app halt (401, CommonErrors.Unauthenticated, headers = Map("WWW-Authenticate" -> challenge))
+  }
+
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
     if (!user.verified) app halt Forbidden(CommonErrors.Unauthorized)
 
@@ -42,10 +46,8 @@ trait BasicAuthSupport[UserType <: AnyRef] {
       response.setHeader("WWW-Authenticate", BasicAuthStrategy.challenge)
       halt(401, CommonErrors.Unauthenticated)
     }
-
     val baReq = new org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest(request)
-    if (!baReq.providesAuth) { askAuth() }
-    if (!baReq.isBasicAuth) { halt(400, CommonErrors.IncorrectAuthMode) }
+    if (!baReq.providesAuth || !baReq.isBasicAuth) { askAuth() }
     scentry.authenticate(BasicAuthStrategy.name).getOrElse { askAuth() }
   }
 }

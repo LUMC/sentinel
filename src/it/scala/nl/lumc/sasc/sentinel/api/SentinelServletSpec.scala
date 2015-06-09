@@ -15,6 +15,7 @@ import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.users.hashPassword
 
 trait SentinelServletSpec extends MutableScalatraSpec
     with EmbeddedMongodbRunner
@@ -45,6 +46,10 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   def jsonBody = response.jsonBody
 
+  def patch[A](uri: String, params: Iterable[(String, String)], body: Array[Byte], headers: Map[String, String])
+              (f: => A): A =
+    submit("PATCH", uri, params, headers, body) { f }
+
   // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
   implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
     def size(t: Option[JValue]) = t match {
@@ -68,10 +73,14 @@ trait SentinelServletSpec extends MutableScalatraSpec
   }
 
   object Users {
-    val avg = User("avg", "avg@test.id", "pwd1", "key1", verified = true, isAdmin = false, getTimeNow)
-    val avg2 = User("avg2", "avg2@test.id", "pwd2", "key2", verified = true, isAdmin = false, getTimeNow)
-    val admin = User("admin", "admin@test.id", "pwd3", "key3", verified = true, isAdmin = true, getTimeNow)
-    val unverified = User("unv", "unv@test.id", "pwd4", "key4", verified = false, isAdmin = false, getTimeNow)
+    val avg =
+      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false, getTimeNow)
+    val avg2 =
+      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false, getTimeNow)
+    val admin =
+      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true, getTimeNow)
+    val unverified =
+      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false, getTimeNow)
     def all = Set(avg, avg2, admin, unverified)
   }
 
