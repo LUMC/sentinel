@@ -46,6 +46,11 @@ class GentrapValidationSpec extends Specification with JsonLoader with Mockito {
         val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
         ipv04.validator.validationMessages(summary) must beEmpty
       }
+
+      "summaries with multiple samples and multiple libraries containing mixed library types" in {
+        val summary = loadJson("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib_mixedlib.json")
+        ipv04.validator.validationMessages(summary) must beEmpty
+      }
     }
   }
 }
