@@ -252,11 +252,11 @@ class StatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when queried multiple times with randomize set to 'no' should" >> inline {
+        "when queried multiple times with sorted set to 'yes' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("randomize", "no"))) { response }
+            def request = () => get(endpoint, Seq(("sorted", "yes"))) { response }
             def priorRequests = Stream.fill(10)(request)
 
             "return the items in the nonrandom order" in {
@@ -422,11 +422,11 @@ class StatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when queried multiple times with randomize set to 'no' should" >> inline {
+        "when queried multiple times with sorted set to 'yes' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("randomize", "no"))) { response }
+            def request = () => get(endpoint, Seq(("sorted", "yes"))) { response }
             def priorRequests = Stream.fill(10)(request)
 
             "return the items in the nonrandom order" in {

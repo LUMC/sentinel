@@ -34,12 +34,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsGentrapAlignmentsGetOperation = (apiOperation[Seq[GentrapAlignmentStats]]("statsGentrapAlignmentsGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
     parameters (
-      queryParam[Boolean]("randomize")
-        .description(
-          """Whether to randomize the returned items or not. If not randomized, the returned results are sorted based
-            | on upload time, most recent first (default: `true`).
-          """.stripMargin.replaceAll("\n", ""))
-        .optional,
       queryParam[List[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
@@ -66,7 +60,14 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | `accLevel` is set to `sample` since a sample may contain mixed library types.
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
-        .optional)
+        .optional,
+      queryParam[Boolean]("sorted")
+      .description(
+        """Whether to try sort the returned items or not. If set to false, the returned
+          | results are randomized. If set to true, the returned items are guaranteed to be sorted. The sort order is
+          | most often the items' creation time (most recent first), though this is not guaranteed (default: `false`).
+        """.stripMargin.replaceAll("\n", ""))
+      .optional)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
@@ -75,8 +76,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
-    val randomize = params.get("randomize") match {
-      case None => true
+    val sorted = params.get("sorted") match {
+      case None => false
       case Some(p) => p.toLowerCase match {
         case "0" | "no" | "false" | "null" | "none" | "nothing" => false
         case otherwise => true
@@ -101,19 +102,13 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
     val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
 
-    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds, randomize)
+    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds, sorted)
   }
 
   // format: OFF
   val statsGentrapSequencesGetOperation = (apiOperation[Seq[SeqStats]]("statsGentrapSequencesGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
     parameters (
-      queryParam[Boolean]("randomize")
-        .description(
-          """Whether to randomize the returned items or not. If not randomized, the returned results are sorted based
-            | on upload time, most recent first (default: `true`).
-          """.stripMargin.replaceAll("\n", ""))
-        .optional,
       queryParam[List[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
@@ -139,6 +134,13 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
+        .optional,
+      queryParam[Boolean]("sorted")
+        .description(
+          """Whether to try sort the returned items or not. If set to false, the returned
+            | results are randomized. If set to true, the returned items are guaranteed to be sorted. The sort order is
+            | most often the items' creation time (most recent first), though this is not guaranteed (default: `false`).
+          """.stripMargin.replaceAll("\n", ""))
         .optional)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
@@ -148,8 +150,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
-    val randomize = params.get("randomize") match {
-      case None => true
+    val sorted = params.get("sorted") match {
+      case None => false
       case Some(p) => p.toLowerCase match {
         case "0" | "no" | "false" | "null" | "none" | "nothing" => false
         case otherwise => true
@@ -174,6 +176,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
     val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
 
-    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds, randomize)
+    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds, sorted)
   }
 }

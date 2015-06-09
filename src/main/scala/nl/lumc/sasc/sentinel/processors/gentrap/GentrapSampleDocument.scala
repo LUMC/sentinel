@@ -1,10 +1,12 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import org.bson.types.ObjectId
+import java.util.Date
 
 import com.novus.salat.annotations.Key
+import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.utils.getTimeNow
 
 case class GentrapSampleDocument(
   runId: ObjectId,
@@ -14,4 +16,5 @@ case class GentrapSampleDocument(
   alnStats: GentrapAlignmentStats,
   @Key("_id") id: ObjectId = new ObjectId,
   name: Option[String] = None,
-  runName: Option[String] = None) extends BaseSampleDocument
+  runName: Option[String] = None,
+  creationTimeUtc: Date = getTimeNow) extends BaseSampleDocument

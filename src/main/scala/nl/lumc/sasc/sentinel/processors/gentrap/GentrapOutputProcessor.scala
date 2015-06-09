@@ -62,6 +62,9 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     else
       throw new RuntimeException("Unexpected library type value: " + libType.toString)
 
+  /** Sort operation for sample documents */
+  private[processors] val opSortSample = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
+
   /** Projection operation for selecting only libraries */
   private[processors] val opProjectLibs = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "libs" -> 1))
 
@@ -73,17 +76,24 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
                         runs: Seq[ObjectId] = Seq(),
                         references: Seq[ObjectId] = Seq(),
                         annotations: Seq[ObjectId] = Seq(),
-                        randomize: Boolean = true): Seq[GentrapAlignmentStats] = {
+                        timeSorted: Boolean = false): Seq[GentrapAlignmentStats] = {
 
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
 
     val operations =
-      if (accLevel == AccLevel.Sample)
-        Seq(opMatchFilters, MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "alnStats" -> 1)))
-      else if (accLevel == AccLevel.Lib) {
+      if (accLevel == AccLevel.Sample) {
+        val opProjectAlnStats = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "alnStats" -> 1))
+        if (timeSorted)
+          Seq(opMatchFilters, opSortSample, opProjectAlnStats)
+        else
+          Seq(opMatchFilters, opProjectAlnStats)
+      } else if (accLevel == AccLevel.Lib) {
         val opProjectStats = MongoDBObject("$project" -> MongoDBObject("alnStats" -> "$libs.alnStats"))
-        Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
+        if (timeSorted)
+          Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
+        else
+          Seq(opMatchFilters, opSortSample, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
       } else
         throw new RuntimeException("Unexpected accumulation level value: " + accLevel.toString)
 
@@ -96,8 +106,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       }.toSeq
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
-    if (randomize) shuffle(results)
-    else results
+    if (timeSorted) results
+    else shuffle(results)
   }
 
   /**
@@ -116,7 +126,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    *                   by reference IDs.
    * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
    *                    filtered by annotation IDs.
-   * @param randomize Whether to randomize the returned items' order or not.
+   * @param timeSorted Whether to time-sort the returned items or not.
    * @return a sequence of [[SeqStats]] objects.
    */
   def getSeqStats(libType: LibType.Value,
@@ -124,7 +134,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
                   runs: Seq[ObjectId] = Seq(),
                   references: Seq[ObjectId] = Seq(),
                   annotations: Seq[ObjectId] = Seq(),
-                  randomize: Boolean = true): Seq[SeqStats] = {
+                  timeSorted: Boolean = false): Seq[SeqStats] = {
 
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
@@ -147,7 +157,11 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
           "read2" -> ("$libs." + attrName + ".read2.stats")))
     }
 
-    val operations = Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
+    val operations =
+      if (timeSorted)
+        Seq(opMatchFilters, opSortSample, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
+      else
+        Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
 
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
@@ -155,7 +169,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .toSeq
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
-    if (randomize) shuffle(results)
-    else results
+    if (timeSorted) results
+    else shuffle(results)
   }
 }
