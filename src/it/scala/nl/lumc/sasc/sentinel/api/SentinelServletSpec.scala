@@ -182,6 +182,9 @@ object SentinelServletSpec {
         lazy val MSampleSLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_lib.json")
         // 2 samples (1, 1) libs
         lazy val MSampleMLib = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib.json")
+        // 3 samples (3: single, 1: single, 2: paired) libs
+        lazy val MSampleMLibMixedLib =
+          makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_lib_singles.json")
       }
     }
 

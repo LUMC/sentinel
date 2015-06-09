@@ -54,13 +54,17 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    * @param libType Library type to filter in.
    * @return [[DBObject]] representing the `$match` aggregation operation.
    */
-  private[processors] def buildMatchPostUnwindOp(libType: LibType.Value): DBObject =
-    if (libType == LibType.Paired)
-      MongoDBObject("$match" -> MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> true)))
-    else if (libType == LibType.Single)
-      MongoDBObject("$match" -> MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> false)))
-    else
-      throw new RuntimeException("Unexpected library type value: " + libType.toString)
+  private[processors] def buildMatchPostUnwindOp(libType: Option[LibType.Value]): DBObject = {
+
+    val query = libType match {
+      case None                 => MongoDBObject.empty
+      case Some(LibType.Paired) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> true))
+      case Some(LibType.Single) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> false))
+      case otherwise            => throw new RuntimeException("Unexpected library type value: " + libType.toString)
+    }
+
+    MongoDBObject("$match" -> query)
+  }
 
   /** Sort operation for sample documents */
   private[processors] val opSortSample = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
@@ -72,7 +76,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   private[processors] val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
 
   def getAlignmentStats(accLevel: AccLevel.Value,
-                        libType: LibType.Value,
+                        libType: Option[LibType.Value],
                         runs: Seq[ObjectId] = Seq(),
                         references: Seq[ObjectId] = Seq(),
                         annotations: Seq[ObjectId] = Seq(),
@@ -129,7 +133,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    * @param timeSorted Whether to time-sort the returned items or not.
    * @return a sequence of [[SeqStats]] objects.
    */
-  def getSeqStats(libType: LibType.Value,
+  def getSeqStats(libType: Option[LibType.Value],
                   qcPhase: SeqQcPhase.Value,
                   runs: Seq[ObjectId] = Seq(),
                   references: Seq[ObjectId] = Seq(),

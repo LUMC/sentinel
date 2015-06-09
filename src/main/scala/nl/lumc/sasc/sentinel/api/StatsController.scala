@@ -56,8 +56,9 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       queryParam[String]("libType")
         .description(
           """The types of sequence libraries to return. Possible values are `single` for single end
-            | libraries and `paired` for paired end libraries (default: `paired`). This parameter is ignored if
-            | `accLevel` is set to `sample` since a sample may contain mixed library types.
+            | libraries or `paired` for paired end libraries. If not set, both library types are included. This
+            | parameter is considered to be unset if `accLevel` is set to `sample` regardless of user input since a
+            | single sample may contain mixed library types.
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional,
@@ -99,10 +100,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
     val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
 
-    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
-    val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
+    val libType = params.getAs[String]("libType")
+      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
 
-    gentrap.getAlignmentStats(acc, lib, runIds, refIds, annotIds, sorted)
+    gentrap.getAlignmentStats(acc, libType, runIds, refIds, annotIds, sorted)
   }
 
   // format: OFF
@@ -124,7 +125,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       queryParam[String]("libType")
         .description(
           """The types of sequence libraries to return. Possible values are `single` for single end
-            | libraries and `paired` for paired end libraries (default: `paired`).
+            | libraries or `paired` for paired end libraries. If not set, both library types are included.
           """.stripMargin.replaceAll("\n", ""))
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional,
@@ -170,12 +171,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     if (invalidAnnotIds.nonEmpty)
       halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
 
-    val libType = params.getAs[String]("libType").getOrElse(LibType.Paired.toString)
-    val lib = AllowedLibTypeParams.getOrElse(libType, halt(400, CommonErrors.InvalidLibType))
+    val libType = params.getAs[String]("libType")
+      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
 
     val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
     val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
 
-    gentrap.getSeqStats(lib, qc, runIds, refIds, annotIds, sorted)
+    gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted)
   }
 }
