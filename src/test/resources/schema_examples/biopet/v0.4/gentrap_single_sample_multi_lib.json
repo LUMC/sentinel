@@ -3,7 +3,7 @@
         "executables": {
             "addorreplacereadgroups": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "aggrbasecount": {
@@ -12,27 +12,27 @@
             },
             "biopetflagstat": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "collectalignmentsummarymetrics": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "collectgcbiasmetrics": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "collectinsertsizemetrics": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "collectrnaseqmetrics": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "cutadapt": {
@@ -45,7 +45,7 @@
             },
             "fastqsync": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "gsnap": {
@@ -66,12 +66,12 @@
             },
             "mergesamfiles": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "mergetables": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "pdflatex": {
@@ -88,7 +88,7 @@
             },
             "reordersam": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "samtoolsflagstat": {
@@ -101,7 +101,7 @@
             },
             "seqstat": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "seqtkseq": {
@@ -114,7 +114,7 @@
             },
             "sortsam": {
                 "jar_md5": null,
-                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                 "version": null
             },
             "wigtobigwig": {
@@ -959,22 +959,22 @@
                 "executables": {
                     "biopetflagstat": {
                         "jar_md5": null,
-                        "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                        "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                         "version": null
                     },
                     "collectalignmentsummarymetrics": {
                         "jar_md5": null,
-                        "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                        "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                         "version": null
                     },
                     "collectgcbiasmetrics": {
                         "jar_md5": null,
-                        "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                        "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                         "version": null
                     },
                     "collectinsertsizemetrics": {
                         "jar_md5": null,
-                        "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                        "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                         "version": null
                     },
                     "md5sum": {
@@ -989,7 +989,7 @@
                 "files": {
                     "insert_size_metrics": {
                         "output_histogram": {
-                            "md5": "1844b405aa14bcaf0f40ecb8bc266e57",
+                            "md5": "df6114711955ee70cb8b23c45dc5aae6",
                             "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/metrics/S1.insertsizemetrics.pdf"
                         }
                     },
@@ -1141,11 +1141,11 @@
                             "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                         },
                         "metrics": {
-                            "md5": "260e280321eda0b0a4c3b586e22a52c5",
+                            "md5": "1a70d05ec5bfde280acb02a562a5f330",
                             "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/S1.rna_metrics"
                         },
                         "output_chart": {
-                            "md5": "f02823df4bf70c01dc2fdbc4a55f15f5",
+                            "md5": "dbe003a214fc214cb32ad8ec5123acaf",
                             "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/S1.coverage_bias.pdf"
                         }
                     }
@@ -1288,22 +1288,22 @@
                         "executables": {
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "md5sum": {
@@ -1318,7 +1318,7 @@
                         "files": {
                             "insert_size_metrics": {
                                 "output_histogram": {
-                                    "md5": "f07610e4390ad07be61082dda6398bda",
+                                    "md5": "ca9a613927f5d8600107100940a76863",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/metrics/S1-lib1.insertsizemetrics.pdf"
                                 }
                             },
@@ -1464,7 +1464,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "gzip": {
@@ -1477,7 +1477,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -1542,7 +1542,7 @@
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
-                                    "md5": "4de281f5bb29e288a5fd6c86ac58d2bd",
+                                    "md5": "a48cda204a8b11d6b19e4ff82edaabc2",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/flexiprep/S17_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
@@ -1634,7 +1634,7 @@
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
-                                    "md5": "628388a73197f5396cfa1ae12d4c9ff9",
+                                    "md5": "e60decbe1431bf0d9103a6085921a2f3",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/flexiprep/S17_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
@@ -1688,11 +1688,11 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/OM/S17_L1_2.fq.gz"
                                 },
                                 "output_R1": {
-                                    "md5": "4de281f5bb29e288a5fd6c86ac58d2bd",
+                                    "md5": "a48cda204a8b11d6b19e4ff82edaabc2",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/flexiprep/S17_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
-                                    "md5": "628388a73197f5396cfa1ae12d4c9ff9",
+                                    "md5": "e60decbe1431bf0d9103a6085921a2f3",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/flexiprep/S17_L1_2.qc.fq.gz"
                                 }
                             }
@@ -4869,11 +4869,11 @@
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
-                                    "md5": "88d022c1726b7055ab9af25bc68551dd",
+                                    "md5": "f3999f5e163796978ca14dfb447e02b6",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/S1-lib1.rna_metrics"
                                 },
                                 "output_chart": {
-                                    "md5": "0b0ff31f9ed66366f714532bbf96df4a",
+                                    "md5": "32f355240b539589e79e6e10ee01af9c",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib1/S1-lib1.coverage_bias.pdf"
                                 }
                             }
@@ -5010,27 +5010,27 @@
                         "executables": {
                             "addorreplacereadgroups": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "cutadapt": {
@@ -5043,7 +5043,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "gsnap": {
@@ -5060,7 +5060,7 @@
                             },
                             "reordersam": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "samtoolsflagstat": {
@@ -5069,7 +5069,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -5082,7 +5082,7 @@
                             },
                             "sortsam": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "zcat": {
@@ -5121,22 +5121,22 @@
                         "executables": {
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "md5sum": {
@@ -5151,7 +5151,7 @@
                         "files": {
                             "insert_size_metrics": {
                                 "output_histogram": {
-                                    "md5": "566316ea524b7f6a2ec44c024d21ac3b",
+                                    "md5": "ed92c2298bdc33a4059d731e67fc62c6",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/metrics/S1-lib2.insertsizemetrics.pdf"
                                 }
                             },
@@ -5297,7 +5297,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "gzip": {
@@ -5310,7 +5310,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -5375,7 +5375,7 @@
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
-                                    "md5": "b2644f6d07c75e39d083bc8854f314ee",
+                                    "md5": "a00feeeacdf285357ddfda2e8c5c0acb",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
@@ -5467,7 +5467,7 @@
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
-                                    "md5": "0a509260b497bd8359da6a51513aae53",
+                                    "md5": "b9f1ec82a37a8036fe5be8e348f71445",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/flexiprep/S1_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
@@ -5521,11 +5521,11 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/OM/S1_L1_2.fq.gz"
                                 },
                                 "output_R1": {
-                                    "md5": "b2644f6d07c75e39d083bc8854f314ee",
+                                    "md5": "a00feeeacdf285357ddfda2e8c5c0acb",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
-                                    "md5": "0a509260b497bd8359da6a51513aae53",
+                                    "md5": "b9f1ec82a37a8036fe5be8e348f71445",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/flexiprep/S1_L1_2.qc.fq.gz"
                                 }
                             }
@@ -8702,11 +8702,11 @@
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
-                                    "md5": "9016913a5490f83464652f013d4931e4",
+                                    "md5": "7ff63b92edceaaf41d57538d3be6026f",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/S1-lib2.rna_metrics"
                                 },
                                 "output_chart": {
-                                    "md5": "e38b99d7d8baabc888a37869ead1f92e",
+                                    "md5": "88d6b956edf108050f12faf087573a8c",
                                     "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_ssamplemlib/sample_S1/lib_lib2/S1-lib2.coverage_bias.pdf"
                                 }
                             }
@@ -8843,27 +8843,27 @@
                         "executables": {
                             "addorreplacereadgroups": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "cutadapt": {
@@ -8876,7 +8876,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "gsnap": {
@@ -8893,7 +8893,7 @@
                             },
                             "reordersam": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "samtoolsflagstat": {
@@ -8902,7 +8902,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -8915,7 +8915,7 @@
                             },
                             "sortsam": {
                                 "jar_md5": null,
-                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
+                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
                                 "version": null
                             },
                             "zcat": {

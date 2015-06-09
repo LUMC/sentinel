@@ -3,7 +3,7 @@
         "executables": {
             "addorreplacereadgroups": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "aggrbasecount": {
@@ -12,27 +12,27 @@
             },
             "biopetflagstat": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "collectalignmentsummarymetrics": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "collectgcbiasmetrics": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "collectinsertsizemetrics": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "collectrnaseqmetrics": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "cufflinks": {
@@ -49,7 +49,7 @@
             },
             "fastqsync": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "gsnap": {
@@ -74,7 +74,7 @@
             },
             "mergetables": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "pdflatex": {
@@ -85,17 +85,13 @@
                 "md5": "9d7adebf2a5f6bc60907cafc6a1a7567",
                 "version": null
             },
-            "plotheatmap": {
-                "md5": "20407213dfc5925bff1c2b6fb67493c8",
-                "version": null
-            },
             "rawbasecounter": {
                 "md5": null,
                 "version": null
             },
             "reordersam": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "samtoolsflagstat": {
@@ -104,7 +100,7 @@
             },
             "seqstat": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "seqtkseq": {
@@ -117,7 +113,7 @@
             },
             "sortsam": {
                 "jar_md5": null,
-                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                 "version": null
             },
             "wigtobigwig": {
@@ -133,55 +129,39 @@
             "pipeline": {
                 "annotation_bed": {
                     "md5": "519351d169e8f22a6d9e437f4afde4c3",
-                    "path": "/sentinel/gentrap/ucsc_refseq.bed"
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.bed"
                 },
                 "annotation_gtf": {
                     "md5": "d0e7c22453f532f910980c88da6bf7d3",
-                    "path": "/sentinel/gentrap/ucsc_refseq.gtf"
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.gtf"
                 },
                 "annotation_refflat": {
                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                 },
                 "gene_bases_count": {
-                    "md5": "37e04be3535514f7e530228267f8680e",
-                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.bases_per_gene"
-                },
-                "gene_bases_count_heatmap": {
-                    "md5": "05553581524661c3dd2798d63a579a5f",
-                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_bases_per_gene.png"
+                    "md5": "971481d7e788afdcf72605aa7149cbce",
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/expression_estimates/all_samples.bases_per_gene"
                 },
                 "gene_fpkm_cufflinks_strict": {
-                    "md5": "cb7db4c9c2aa841345aced37915e20b3",
-                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.genes_fpkm_cufflinks_strict"
-                },
-                "gene_fpkm_cufflinks_strict_heatmap": {
-                    "md5": "4e9f989a56ad2025cb2036cb2f189e93",
-                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_genes_fpkm_cufflinks_strict.png"
+                    "md5": "b082f594a40438b3474e393c2d9bec95",
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/expression_estimates/all_samples.genes_fpkm_cufflinks_strict"
                 },
                 "gene_fragments_count": {
-                    "md5": "d73a65ad3a0603f5033a6976dbefcb74",
-                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.fragments_per_gene"
-                },
-                "gene_fragments_count_heatmap": {
-                    "md5": "7957854e050258f5f1a53ba9dc950d9c",
-                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_fragments_per_gene.png"
+                    "md5": "1a514d2a88ed56383b89711e1f294c08",
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/expression_estimates/all_samples.fragments_per_gene"
                 },
                 "isoform_fpkm_cufflinks_strict": {
-                    "md5": "1fa864fc9cec39f5f6a0db9611ccc25e",
-                    "path": "/sentinel/gentrap/output/expression_estimates/all_samples.isoforms_fpkm_cufflinks_strict"
-                },
-                "isoform_fpkm_cufflinks_strict_heatmap": {
-                    "md5": "41d2023eb25955f7e34d22ea4608dfd6",
-                    "path": "/sentinel/gentrap/output/heatmaps/heatmap_isoforms_fpkm_cufflinks_strict.png"
+                    "md5": "2aa3652c190d610118bd6fb54be252ca",
+                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/expression_estimates/all_samples.isoforms_fpkm_cufflinks_strict"
                 },
                 "reference_dict": {
-                    "md5": "ea407876cabc02d2692f8c53e46abf99",
-                    "path": "/usr/local/Genomes/H.Sapiens/hg19_nohap/hg19_nohap.dict"
+                    "md5": "a638e59286395100d32645c992992402",
+                    "path": "/usr/local/Genomes/H.Sapiens/GRCh38/GCA_000001405.15_GRCh38_no_alt_analysis_set.dict"
                 },
                 "reference_fasta": {
-                    "md5": "31959d015d03eb1676d3742700dbe265",
-                    "path": "/usr/local/Genomes/H.Sapiens/hg19_nohap/hg19_nohap.fa"
+                    "md5": "a6da8681616c05eb542f1d91606a7b2f",
+                    "path": "/usr/local/Genomes/H.Sapiens/GRCh38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fa"
                 }
             }
         },
@@ -196,340 +176,784 @@
             "reference": {
                 "contigs": {
                     "chr1": {
-                        "md5": "1b22b98cdeb4a9304cb5d48026a85128",
-                        "size": 249250621
+                        "md5": "6aef897c3d6ff0c78aff06ac189178dd",
+                        "size": 248956422
                     },
                     "chr10": {
-                        "md5": "988c28e000e84c26d552359af1ea2e1d",
-                        "size": 135534747
+                        "md5": "c0eeee7acfdaf31b770a509bdaa6e51a",
+                        "size": 133797422
                     },
                     "chr11": {
-                        "md5": "98c59049a2df285c76ffb1c6db8f8b96",
-                        "size": 135006516
+                        "md5": "1511375dc2dd1b633af8cf439ae90cec",
+                        "size": 135086622
                     },
-                    "chr11_gl000202_random": {
-                        "md5": "06cbf126247d89664a4faebad130fe9c",
-                        "size": 40103
+                    "chr11_KI270721v1_random": {
+                        "md5": "9654b5d3f36845bb9d19a6dbd15d2f22",
+                        "size": 100316
                     },
                     "chr12": {
-                        "md5": "51851ac0e1a115847ad36449b0015864",
-                        "size": 133851895
+                        "md5": "96e414eace405d8c27a6d35ba19df56f",
+                        "size": 133275309
                     },
                     "chr13": {
-                        "md5": "283f8d7892baa81b510a015719ca7b0b",
-                        "size": 115169878
+                        "md5": "a5437debe2ef9c9ef8f3ea2874ae1d82",
+                        "size": 114364328
                     },
                     "chr14": {
-                        "md5": "98f3cae32b2a2e9524bc19813927542e",
-                        "size": 107349540
+                        "md5": "e0f0eecc3bcab6178c62b6211565c807",
+                        "size": 107043718
                     },
-                    "chr15": {
-                        "md5": "e5645a794a8238215b2cd77acb95a078",
-                        "size": 102531392
+                    "chr14_GL000009v2_random": {
+                        "md5": "862f555045546733591ff7ab15bcecbe",
+                        "size": 201709
                     },
-                    "chr16": {
-                        "md5": "fc9b1a7b42b97a864f56b348b06095e6",
-                        "size": 90354753
-                    },
-                    "chr17": {
-                        "md5": "351f64d4f4f9ddd45b35336ad97aa6de",
-                        "size": 81195210
-                    },
-                    "chr17_gl000203_random": {
-                        "md5": "96358c325fe0e70bee73436e8bb14dbd",
-                        "size": 37498
-                    },
-                    "chr17_gl000204_random": {
-                        "md5": "efc49c871536fa8d79cb0a06fa739722",
-                        "size": 81310
-                    },
-                    "chr17_gl000205_random": {
-                        "md5": "d22441398d99caf673e9afb9a1908ec5",
-                        "size": 174588
-                    },
-                    "chr17_gl000206_random": {
-                        "md5": "43f69e423533e948bfae5ce1d45bd3f1",
-                        "size": 41001
-                    },
-                    "chr18": {
-                        "md5": "b15d4b2d29dde9d3e4f93d1d0f2cbc9c",
-                        "size": 78077248
-                    },
-                    "chr18_gl000207_random": {
-                        "md5": "f3814841f1939d3ca19072d9e89f3fd7",
-                        "size": 4262
-                    },
-                    "chr19": {
-                        "md5": "1aacd71f30db8e561810913e0b72636d",
-                        "size": 59128983
-                    },
-                    "chr19_gl000208_random": {
-                        "md5": "aa81be49bf3fe63a79bdc6a6f279abf6",
-                        "size": 92689
-                    },
-                    "chr19_gl000209_random": {
-                        "md5": "f40598e2a5a6b26e84a3775e0d1e2c81",
-                        "size": 159169
-                    },
-                    "chr1_gl000191_random": {
-                        "md5": "d75b436f50a8214ee9c2a51d30b2c2cc",
-                        "size": 106433
-                    },
-                    "chr1_gl000192_random": {
-                        "md5": "325ba9e808f669dfeee210fdd7b470ac",
-                        "size": 547496
-                    },
-                    "chr2": {
-                        "md5": "a0d9851da00400dec1098a9255ac712e",
-                        "size": 243199373
-                    },
-                    "chr20": {
-                        "md5": "0dec9660ec1efaaf33281c0d5ea2560f",
-                        "size": 63025520
-                    },
-                    "chr21": {
-                        "md5": "2979a6085bfe28e3ad6f552f361ed74d",
-                        "size": 48129895
-                    },
-                    "chr21_gl000210_random": {
-                        "md5": "851106a74238044126131ce2a8e5847c",
-                        "size": 27682
-                    },
-                    "chr22": {
-                        "md5": "a718acaa6135fdca8357d5bfe94211dd",
-                        "size": 51304566
-                    },
-                    "chr3": {
-                        "md5": "641e4338fa8d52a5b781bd2a2c08d3c3",
-                        "size": 198022430
-                    },
-                    "chr4": {
-                        "md5": "23dccd106897542ad87d2765d28a19a1",
-                        "size": 191154276
-                    },
-                    "chr4_gl000193_random": {
-                        "md5": "dbb6e8ece0b5de29da56601613007c2a",
-                        "size": 189789
-                    },
-                    "chr4_gl000194_random": {
+                    "chr14_GL000194v1_random": {
                         "md5": "6ac8f815bf8e845bb3031b73f812c012",
                         "size": 191469
                     },
-                    "chr5": {
-                        "md5": "0740173db9ffd264d728f32784845cd7",
-                        "size": 180915260
-                    },
-                    "chr6": {
-                        "md5": "1d3a93a248d92a729ee764823acbbc6b",
-                        "size": 171115067
-                    },
-                    "chr7": {
-                        "md5": "618366e953d6aaad97dbe4777c29375e",
-                        "size": 159138663
-                    },
-                    "chr7_gl000195_random": {
-                        "md5": "5d9ec007868d517e73543b005ba48535",
-                        "size": 182896
-                    },
-                    "chr8": {
-                        "md5": "96f514a9929e410c6651697bded59aec",
-                        "size": 146364022
-                    },
-                    "chr8_gl000196_random": {
-                        "md5": "d92206d1bb4c3b4019c43c0875c06dc0",
-                        "size": 38914
-                    },
-                    "chr8_gl000197_random": {
-                        "md5": "6f5efdd36643a9b8c8ccad6f2f1edc7b",
-                        "size": 37175
-                    },
-                    "chr9": {
-                        "md5": "3e273117f15e0a400f01055d9f393768",
-                        "size": 141213431
-                    },
-                    "chr9_gl000198_random": {
-                        "md5": "868e7784040da90d900d2d1b667a1383",
-                        "size": 90085
-                    },
-                    "chr9_gl000199_random": {
-                        "md5": "569af3b73522fab4b40995ae4944e78e",
-                        "size": 169874
-                    },
-                    "chr9_gl000200_random": {
-                        "md5": "75e4c8d17cd4addf3917d1703cacaf25",
-                        "size": 187035
-                    },
-                    "chr9_gl000201_random": {
-                        "md5": "dfb7e7ec60ffdcb85cb359ea28454ee9",
-                        "size": 36148
-                    },
-                    "chrM": {
-                        "md5": "d2ed829b8a1628d16cbeee88e88e39eb",
-                        "size": 16571
-                    },
-                    "chrUn_gl000211": {
-                        "md5": "7daaa45c66b288847b9b32b964e623d3",
-                        "size": 166566
-                    },
-                    "chrUn_gl000212": {
-                        "md5": "563531689f3dbd691331fd6c5730a88b",
-                        "size": 186858
-                    },
-                    "chrUn_gl000213": {
-                        "md5": "9d424fdcc98866650b58f004080a992a",
-                        "size": 164239
-                    },
-                    "chrUn_gl000214": {
-                        "md5": "46c2032c37f2ed899eb41c0473319a69",
-                        "size": 137718
-                    },
-                    "chrUn_gl000215": {
-                        "md5": "5eb3b418480ae67a997957c909375a73",
-                        "size": 172545
-                    },
-                    "chrUn_gl000216": {
-                        "md5": "642a232d91c486ac339263820aef7fe0",
-                        "size": 172294
-                    },
-                    "chrUn_gl000217": {
-                        "md5": "6d243e18dea1945fb7f2517615b8f52e",
-                        "size": 172149
-                    },
-                    "chrUn_gl000218": {
-                        "md5": "1d708b54644c26c7e01c2dad5426d38c",
-                        "size": 161147
-                    },
-                    "chrUn_gl000219": {
-                        "md5": "f977edd13bac459cb2ed4a5457dba1b3",
-                        "size": 179198
-                    },
-                    "chrUn_gl000220": {
-                        "md5": "fc35de963c57bf7648429e6454f1c9db",
-                        "size": 161802
-                    },
-                    "chrUn_gl000221": {
-                        "md5": "3238fb74ea87ae857f9c7508d315babb",
-                        "size": 155397
-                    },
-                    "chrUn_gl000222": {
-                        "md5": "6fe9abac455169f50470f5a6b01d0f59",
-                        "size": 186861
-                    },
-                    "chrUn_gl000223": {
-                        "md5": "399dfa03bf32022ab52a846f7ca35b30",
-                        "size": 180455
-                    },
-                    "chrUn_gl000224": {
-                        "md5": "d5b2fc04f6b41b212a4198a07f450e20",
-                        "size": 179693
-                    },
-                    "chrUn_gl000225": {
+                    "chr14_GL000225v1_random": {
                         "md5": "63945c3e6962f28ffd469719a747e73c",
                         "size": 211173
                     },
-                    "chrUn_gl000226": {
+                    "chr14_KI270722v1_random": {
+                        "md5": "51f46c9093929e6edc3b4dfd50d803fc",
+                        "size": 194050
+                    },
+                    "chr14_KI270723v1_random": {
+                        "md5": "74a4b480675592095fb0c577c515b5df",
+                        "size": 38115
+                    },
+                    "chr14_KI270724v1_random": {
+                        "md5": "c3fcb15dddf45f91ef7d94e2623ce13b",
+                        "size": 39555
+                    },
+                    "chr14_KI270725v1_random": {
+                        "md5": "edc6402e58396b90b8738a5e37bf773d",
+                        "size": 172810
+                    },
+                    "chr14_KI270726v1_random": {
+                        "md5": "fbe54a3197e2b469ccb2f4b161cfbe86",
+                        "size": 43739
+                    },
+                    "chr15": {
+                        "md5": "f036bd11158407596ca6bf3581454706",
+                        "size": 101991189
+                    },
+                    "chr15_KI270727v1_random": {
+                        "md5": "84fe18a7bf03f3b7fc76cbac8eb583f1",
+                        "size": 448248
+                    },
+                    "chr16": {
+                        "md5": "db2d37c8b7d019caaf2dd64ba3a6f33a",
+                        "size": 90338345
+                    },
+                    "chr16_KI270728v1_random": {
+                        "md5": "369ff74cf36683b3066a2ca929d9c40d",
+                        "size": 1872759
+                    },
+                    "chr17": {
+                        "md5": "f9a0fb01553adb183568e3eb9d8626db",
+                        "size": 83257441
+                    },
+                    "chr17_GL000205v2_random": {
+                        "md5": "458e71cd53dd1df4083dc7983a6c82c4",
+                        "size": 185591
+                    },
+                    "chr17_KI270729v1_random": {
+                        "md5": "2756f6ee4f5780acce31e995443508b6",
+                        "size": 280839
+                    },
+                    "chr17_KI270730v1_random": {
+                        "md5": "48f98ede8e28a06d241ab2e946c15e07",
+                        "size": 112551
+                    },
+                    "chr18": {
+                        "md5": "11eeaa801f6b0e2e36a1138616b8ee9a",
+                        "size": 80373285
+                    },
+                    "chr19": {
+                        "md5": "85f9f4fc152c58cb7913c06d6b98573a",
+                        "size": 58617616
+                    },
+                    "chr1_KI270706v1_random": {
+                        "md5": "62def1a794b3e18192863d187af956e6",
+                        "size": 175055
+                    },
+                    "chr1_KI270707v1_random": {
+                        "md5": "78135804eb15220565483b7cdd02f3be",
+                        "size": 32032
+                    },
+                    "chr1_KI270708v1_random": {
+                        "md5": "1e95e047b98ed92148dd84d6c037158c",
+                        "size": 127682
+                    },
+                    "chr1_KI270709v1_random": {
+                        "md5": "4e2db2933ea96aee8dab54af60ecb37d",
+                        "size": 66860
+                    },
+                    "chr1_KI270710v1_random": {
+                        "md5": "9949f776680c6214512ee738ac5da289",
+                        "size": 40176
+                    },
+                    "chr1_KI270711v1_random": {
+                        "md5": "af383f98cf4492c1f1c4e750c26cbb40",
+                        "size": 42210
+                    },
+                    "chr1_KI270712v1_random": {
+                        "md5": "c38a0fecae6a1838a405406f724d6838",
+                        "size": 176043
+                    },
+                    "chr1_KI270713v1_random": {
+                        "md5": "cb78d48cc0adbc58822a1c6fe89e3569",
+                        "size": 40745
+                    },
+                    "chr1_KI270714v1_random": {
+                        "md5": "42f7a452b8b769d051ad738ee9f00631",
+                        "size": 41717
+                    },
+                    "chr2": {
+                        "md5": "f98db672eb0993dcfdabafe2a882905c",
+                        "size": 242193529
+                    },
+                    "chr20": {
+                        "md5": "b18e6c531b0bd70e949a7fc20859cb01",
+                        "size": 64444167
+                    },
+                    "chr21": {
+                        "md5": "974dc7aec0b755b19f031418fdedf293",
+                        "size": 46709983
+                    },
+                    "chr22": {
+                        "md5": "ac37ec46683600f808cdd41eac1d55cd",
+                        "size": 50818468
+                    },
+                    "chr22_KI270731v1_random": {
+                        "md5": "8176d9a20401e8d9f01b7ca8b51d9c08",
+                        "size": 150754
+                    },
+                    "chr22_KI270732v1_random": {
+                        "md5": "d837bab5e416450df6e1038ae6cd0817",
+                        "size": 41543
+                    },
+                    "chr22_KI270733v1_random": {
+                        "md5": "f1fa05d48bb0c1f87237a28b66f0be0b",
+                        "size": 179772
+                    },
+                    "chr22_KI270734v1_random": {
+                        "md5": "1d17410ae2569c758e6dd51616412d32",
+                        "size": 165050
+                    },
+                    "chr22_KI270735v1_random": {
+                        "md5": "eb6b07b73dd9a47252098ed3d9fb78b8",
+                        "size": 42811
+                    },
+                    "chr22_KI270736v1_random": {
+                        "md5": "2ff189f33cfa52f321accddf648c5616",
+                        "size": 181920
+                    },
+                    "chr22_KI270737v1_random": {
+                        "md5": "2ea8bc113a8193d1d700b584b2c5f42a",
+                        "size": 103838
+                    },
+                    "chr22_KI270738v1_random": {
+                        "md5": "854ec525c7b6a79e7268f515b6a9877c",
+                        "size": 99375
+                    },
+                    "chr22_KI270739v1_random": {
+                        "md5": "760fbd73515fedcc9f37737c4a722d6a",
+                        "size": 73985
+                    },
+                    "chr2_KI270715v1_random": {
+                        "md5": "b65a8af1d7bbb7f3c77eea85423452bb",
+                        "size": 161471
+                    },
+                    "chr2_KI270716v1_random": {
+                        "md5": "2828e63b8edc5e845bf48e75fbad2926",
+                        "size": 153799
+                    },
+                    "chr3": {
+                        "md5": "76635a41ea913a405ded820447d067b0",
+                        "size": 198295559
+                    },
+                    "chr3_GL000221v1_random": {
+                        "md5": "3238fb74ea87ae857f9c7508d315babb",
+                        "size": 155397
+                    },
+                    "chr4": {
+                        "md5": "3210fecf1eb92d5489da4346b3fddc6e",
+                        "size": 190214555
+                    },
+                    "chr4_GL000008v2_random": {
+                        "md5": "a999388c587908f80406444cebe80ba3",
+                        "size": 209709
+                    },
+                    "chr5": {
+                        "md5": "a811b3dc9fe66af729dc0dddf7fa4f13",
+                        "size": 181538259
+                    },
+                    "chr5_GL000208v1_random": {
+                        "md5": "aa81be49bf3fe63a79bdc6a6f279abf6",
+                        "size": 92689
+                    },
+                    "chr6": {
+                        "md5": "5691468a67c7e7a7b5f2a3a683792c29",
+                        "size": 170805979
+                    },
+                    "chr7": {
+                        "md5": "cc044cc2256a1141212660fb07b6171e",
+                        "size": 159345973
+                    },
+                    "chr8": {
+                        "md5": "c67955b5f7815a9a1edfaa15893d3616",
+                        "size": 145138636
+                    },
+                    "chr9": {
+                        "md5": "6c198acf68b5af7b9d676dfdd531b5de",
+                        "size": 138394717
+                    },
+                    "chr9_KI270717v1_random": {
+                        "md5": "796773a1ee67c988b4de887addbed9e7",
+                        "size": 40062
+                    },
+                    "chr9_KI270718v1_random": {
+                        "md5": "b0c463c8efa8d64442b48e936368dad5",
+                        "size": 38054
+                    },
+                    "chr9_KI270719v1_random": {
+                        "md5": "cd5e932cfc4c74d05bb64e2126873a3a",
+                        "size": 176845
+                    },
+                    "chr9_KI270720v1_random": {
+                        "md5": "8c2683400a4aeeb40abff96652b9b127",
+                        "size": 39050
+                    },
+                    "chrEBV": {
+                        "md5": "6743bd63b3ff2b5b8985d8933c53290a",
+                        "size": 171823
+                    },
+                    "chrM": {
+                        "md5": "c68f52674c9fb33aef52dcf399755519",
+                        "size": 16569
+                    },
+                    "chrUn_GL000195v1": {
+                        "md5": "5d9ec007868d517e73543b005ba48535",
+                        "size": 182896
+                    },
+                    "chrUn_GL000213v1": {
+                        "md5": "9d424fdcc98866650b58f004080a992a",
+                        "size": 164239
+                    },
+                    "chrUn_GL000214v1": {
+                        "md5": "46c2032c37f2ed899eb41c0473319a69",
+                        "size": 137718
+                    },
+                    "chrUn_GL000216v2": {
+                        "md5": "725009a7e3f5b78752b68afa922c090c",
+                        "size": 176608
+                    },
+                    "chrUn_GL000218v1": {
+                        "md5": "1d708b54644c26c7e01c2dad5426d38c",
+                        "size": 161147
+                    },
+                    "chrUn_GL000219v1": {
+                        "md5": "f977edd13bac459cb2ed4a5457dba1b3",
+                        "size": 179198
+                    },
+                    "chrUn_GL000220v1": {
+                        "md5": "fc35de963c57bf7648429e6454f1c9db",
+                        "size": 161802
+                    },
+                    "chrUn_GL000224v1": {
+                        "md5": "d5b2fc04f6b41b212a4198a07f450e20",
+                        "size": 179693
+                    },
+                    "chrUn_GL000226v1": {
                         "md5": "1c1b2cd1fccbc0a99b6a447fa24d1504",
                         "size": 15008
                     },
-                    "chrUn_gl000227": {
-                        "md5": "a4aead23f8053f2655e468bcc6ecdceb",
-                        "size": 128374
+                    "chrUn_KI270302v1": {
+                        "md5": "ee6dff38036f7d03478c70717643196e",
+                        "size": 2274
                     },
-                    "chrUn_gl000228": {
-                        "md5": "c5a17c97e2c1a0b6a9cc5a6b064b714f",
-                        "size": 129120
+                    "chrUn_KI270303v1": {
+                        "md5": "2cb746c78e0faa11e628603a4bc9bd58",
+                        "size": 1942
                     },
-                    "chrUn_gl000229": {
-                        "md5": "d0f40ec87de311d8e715b52e4c7062e1",
-                        "size": 19913
+                    "chrUn_KI270304v1": {
+                        "md5": "9423c1b46a48aa6331a77ab5c702ac9d",
+                        "size": 2165
                     },
-                    "chrUn_gl000230": {
-                        "md5": "b4eb71ee878d3706246b7c1dbef69299",
-                        "size": 43691
+                    "chrUn_KI270305v1": {
+                        "md5": "f9acea3395b6992cf3418b6689b98cf9",
+                        "size": 1472
                     },
-                    "chrUn_gl000231": {
-                        "md5": "ba8882ce3a1efa2080e5d29b956568a4",
-                        "size": 27386
+                    "chrUn_KI270310v1": {
+                        "md5": "af6cb123af7007793bac06485a2a20e9",
+                        "size": 1201
                     },
-                    "chrUn_gl000232": {
-                        "md5": "3e06b6741061ad93a8587531307057d8",
-                        "size": 40652
+                    "chrUn_KI270311v1": {
+                        "md5": "59594f9012d8ce21ed5d1119c051a2ba",
+                        "size": 12399
                     },
-                    "chrUn_gl000233": {
-                        "md5": "7fed60298a8d62ff808b74b6ce820001",
-                        "size": 45941
+                    "chrUn_KI270312v1": {
+                        "md5": "26499f2fe4c65621fd8f4ecafbad31d7",
+                        "size": 998
                     },
-                    "chrUn_gl000234": {
-                        "md5": "93f998536b61a56fd0ff47322a911d4b",
-                        "size": 40531
+                    "chrUn_KI270315v1": {
+                        "md5": "ecc43e822dc011fae1fcfd9981c46e9c",
+                        "size": 2276
                     },
-                    "chrUn_gl000235": {
-                        "md5": "118a25ca210cfbcdfb6c2ebb249f9680",
-                        "size": 34474
+                    "chrUn_KI270316v1": {
+                        "md5": "6adde7a9fe7bd6918f12d0f0924aa8ba",
+                        "size": 1444
                     },
-                    "chrUn_gl000236": {
-                        "md5": "fdcd739913efa1fdc64b6c0cd7016779",
-                        "size": 41934
+                    "chrUn_KI270317v1": {
+                        "md5": "cd4b1fda800f6ec9ea8001994dbf6499",
+                        "size": 37690
                     },
-                    "chrUn_gl000237": {
-                        "md5": "e0c82e7751df73f4f6d0ed30cdc853c0",
-                        "size": 45867
+                    "chrUn_KI270320v1": {
+                        "md5": "d898b9c5a0118e76481bf5695272959e",
+                        "size": 4416
                     },
-                    "chrUn_gl000238": {
-                        "md5": "131b1efc3270cc838686b54e7c34b17b",
-                        "size": 39939
+                    "chrUn_KI270322v1": {
+                        "md5": "7d459255d1c54369e3b64e719061a5a5",
+                        "size": 21476
                     },
-                    "chrUn_gl000239": {
-                        "md5": "99795f15702caec4fa1c4e15f8a29c07",
-                        "size": 33824
+                    "chrUn_KI270329v1": {
+                        "md5": "f023f927ae84c5cc48dc4dce11ba90f2",
+                        "size": 1040
                     },
-                    "chrUn_gl000240": {
-                        "md5": "445a86173da9f237d7bcf41c6cb8cc62",
-                        "size": 41933
+                    "chrUn_KI270330v1": {
+                        "md5": "c2c590706a339007b00c59e0b8937e78",
+                        "size": 1652
                     },
-                    "chrUn_gl000241": {
-                        "md5": "ef4258cdc5a45c206cea8fc3e1d858cf",
-                        "size": 42152
+                    "chrUn_KI270333v1": {
+                        "md5": "57baf650c47bba9b3a8b7c6d0fb55ad6",
+                        "size": 2699
                     },
-                    "chrUn_gl000242": {
-                        "md5": "2f8694fc47576bc81b5fe9e7de0ba49e",
-                        "size": 43523
+                    "chrUn_KI270334v1": {
+                        "md5": "53afe12d1371f250a3d1de655345d374",
+                        "size": 1368
                     },
-                    "chrUn_gl000243": {
-                        "md5": "cc34279a7e353136741c9fce79bc4396",
-                        "size": 43341
+                    "chrUn_KI270335v1": {
+                        "md5": "eb27188639503b524d2659a23b8262ea",
+                        "size": 1048
                     },
-                    "chrUn_gl000244": {
-                        "md5": "0996b4475f353ca98bacb756ac479140",
-                        "size": 39929
+                    "chrUn_KI270336v1": {
+                        "md5": "69ad2d85d870c8b0269434581e86e30e",
+                        "size": 1026
                     },
-                    "chrUn_gl000245": {
-                        "md5": "89bc61960f37d94abf0df2d481ada0ec",
-                        "size": 36651
+                    "chrUn_KI270337v1": {
+                        "md5": "16fc8d71a2662a6cfec7bdeec3d810c6",
+                        "size": 1121
                     },
-                    "chrUn_gl000246": {
-                        "md5": "e4afcd31912af9d9c2546acf1cb23af2",
-                        "size": 38154
+                    "chrUn_KI270338v1": {
+                        "md5": "301ef75a6b2996d745eb3464bd352b57",
+                        "size": 1428
                     },
-                    "chrUn_gl000247": {
-                        "md5": "7de00226bb7df1c57276ca6baabafd15",
-                        "size": 36422
+                    "chrUn_KI270340v1": {
+                        "md5": "56b462bac20d385cdfcde0155fe4c3a1",
+                        "size": 1428
                     },
-                    "chrUn_gl000248": {
-                        "md5": "5a8e43bec9be36c7b49c84d585107776",
-                        "size": 39786
+                    "chrUn_KI270362v1": {
+                        "md5": "bc82401ffd9a5ae711fa0ea34da8d2f0",
+                        "size": 3530
                     },
-                    "chrUn_gl000249": {
-                        "md5": "1d78abec37c15fe29a275eb08d5af236",
-                        "size": 38502
+                    "chrUn_KI270363v1": {
+                        "md5": "6edd17a912f391022edbc192d49f2489",
+                        "size": 1803
+                    },
+                    "chrUn_KI270364v1": {
+                        "md5": "6ff66a8e589ca27d93b5bac0e5b13a87",
+                        "size": 2855
+                    },
+                    "chrUn_KI270366v1": {
+                        "md5": "44a0b65b7ba6bcff37eca202e7d966ea",
+                        "size": 8320
+                    },
+                    "chrUn_KI270371v1": {
+                        "md5": "a0af3d778dfeb7963e8e6d84c0c54fba",
+                        "size": 2805
+                    },
+                    "chrUn_KI270372v1": {
+                        "md5": "53a9d5e8fd28bce5da5efcfd9114dbf2",
+                        "size": 1650
+                    },
+                    "chrUn_KI270373v1": {
+                        "md5": "b174fe53be245a840cd6324e39b88ced",
+                        "size": 1451
+                    },
+                    "chrUn_KI270374v1": {
+                        "md5": "dbc92c9a92e558946e58b4909ec95dd5",
+                        "size": 2656
+                    },
+                    "chrUn_KI270375v1": {
+                        "md5": "d678250c97e9b94aa390fa46e70a6d83",
+                        "size": 2378
+                    },
+                    "chrUn_KI270376v1": {
+                        "md5": "59e8fc80b78d62325082334b43dffdba",
+                        "size": 1136
+                    },
+                    "chrUn_KI270378v1": {
+                        "md5": "fc13bda7dbd914c92fb7e49489d1350f",
+                        "size": 1048
+                    },
+                    "chrUn_KI270379v1": {
+                        "md5": "3218bef25946cd95de585dfc7750f63b",
+                        "size": 1045
+                    },
+                    "chrUn_KI270381v1": {
+                        "md5": "2a9297cfd3b3807195ab9ad07e775d99",
+                        "size": 1930
+                    },
+                    "chrUn_KI270382v1": {
+                        "md5": "e7085cdcee6ad62f359744e13d3209fc",
+                        "size": 4215
+                    },
+                    "chrUn_KI270383v1": {
+                        "md5": "694d75683e4a9554bcc1291edbcaee43",
+                        "size": 1750
+                    },
+                    "chrUn_KI270384v1": {
+                        "md5": "b06e44ea15d0a57618d6ca7d2e6ac5d2",
+                        "size": 1658
+                    },
+                    "chrUn_KI270385v1": {
+                        "md5": "112a8b1df94ef0498a0bfe2d2ea5cc23",
+                        "size": 990
+                    },
+                    "chrUn_KI270386v1": {
+                        "md5": "b9b1baaa7abf206f6b70cf31654172db",
+                        "size": 1788
+                    },
+                    "chrUn_KI270387v1": {
+                        "md5": "22a12462264340c25e912b8485cdfa91",
+                        "size": 1537
+                    },
+                    "chrUn_KI270388v1": {
+                        "md5": "76f9f3315fa4b831e93c36cd88196480",
+                        "size": 1216
+                    },
+                    "chrUn_KI270389v1": {
+                        "md5": "2c9b08c57c27e714d4d5259fd91b6983",
+                        "size": 1298
+                    },
+                    "chrUn_KI270390v1": {
+                        "md5": "7a64d89ea14990c16d20f4d6e7283e10",
+                        "size": 2387
+                    },
+                    "chrUn_KI270391v1": {
+                        "md5": "1fa5cf03b3eac0f1b4a64948fd09de53",
+                        "size": 1484
+                    },
+                    "chrUn_KI270392v1": {
+                        "md5": "59b3ca8de65fb171683f8a06d3b4bf0d",
+                        "size": 971
+                    },
+                    "chrUn_KI270393v1": {
+                        "md5": "3724e1d70677d6b5c4bcf17fd40da111",
+                        "size": 1308
+                    },
+                    "chrUn_KI270394v1": {
+                        "md5": "d5171e863a3d8f832f0559235987b1e5",
+                        "size": 970
+                    },
+                    "chrUn_KI270395v1": {
+                        "md5": "7c03ca4756c1620f318fb189214388d8",
+                        "size": 1143
+                    },
+                    "chrUn_KI270396v1": {
+                        "md5": "9069bed3c2efe7cc87227d619ad5816f",
+                        "size": 1880
+                    },
+                    "chrUn_KI270411v1": {
+                        "md5": "fc240322d91d43c04f349cc58fda3eca",
+                        "size": 2646
+                    },
+                    "chrUn_KI270412v1": {
+                        "md5": "7bb9612f733fb7f098be79499d46350c",
+                        "size": 1179
+                    },
+                    "chrUn_KI270414v1": {
+                        "md5": "753e02ef3b1c590e0e3376ad2ebb5836",
+                        "size": 2489
+                    },
+                    "chrUn_KI270417v1": {
+                        "md5": "cd26758fda713f9c96e51d541f50c2d0",
+                        "size": 2043
+                    },
+                    "chrUn_KI270418v1": {
+                        "md5": "1537ec12b9c58d137a2d4cb9db896bbc",
+                        "size": 2145
+                    },
+                    "chrUn_KI270419v1": {
+                        "md5": "58455e7a788f0dc82034d1fb109f6f5c",
+                        "size": 1029
+                    },
+                    "chrUn_KI270420v1": {
+                        "md5": "bac954a897539c91982a7e3985a49910",
+                        "size": 2321
+                    },
+                    "chrUn_KI270422v1": {
+                        "md5": "3fce80eb4c0554376b591699031feb56",
+                        "size": 1445
+                    },
+                    "chrUn_KI270423v1": {
+                        "md5": "bdf5a85c001731dccfb150db2bfe58ac",
+                        "size": 981
+                    },
+                    "chrUn_KI270424v1": {
+                        "md5": "747c8f94f34d5de4ad289bc604708210",
+                        "size": 2140
+                    },
+                    "chrUn_KI270425v1": {
+                        "md5": "665a46879bbb48294b0cfa87b61e71f6",
+                        "size": 1884
+                    },
+                    "chrUn_KI270429v1": {
+                        "md5": "ee8962dbef9396884f649e566b78bf06",
+                        "size": 1361
+                    },
+                    "chrUn_KI270435v1": {
+                        "md5": "1655c75415b9c29e143a815f44286d05",
+                        "size": 92983
+                    },
+                    "chrUn_KI270438v1": {
+                        "md5": "e765271939b854dd6826aa764e930c87",
+                        "size": 112505
+                    },
+                    "chrUn_KI270442v1": {
+                        "md5": "796289c4cda40e358991f9e672490015",
+                        "size": 392061
+                    },
+                    "chrUn_KI270448v1": {
+                        "md5": "0f40827c265cb813b6e723da6c9b926b",
+                        "size": 7992
+                    },
+                    "chrUn_KI270465v1": {
+                        "md5": "bb1b2323414425c46531b3c3d22ae00d",
+                        "size": 1774
+                    },
+                    "chrUn_KI270466v1": {
+                        "md5": "530b7033716a5d72dd544213c513fd12",
+                        "size": 1233
+                    },
+                    "chrUn_KI270467v1": {
+                        "md5": "db34e0dc109a4afd499b5ec6aaae9754",
+                        "size": 3920
+                    },
+                    "chrUn_KI270468v1": {
+                        "md5": "0a603090f06108ed7aff75df0767b822",
+                        "size": 4055
+                    },
+                    "chrUn_KI270507v1": {
+                        "md5": "311894d0a815eb07c5cac49da851cb4a",
+                        "size": 5353
+                    },
+                    "chrUn_KI270508v1": {
+                        "md5": "7d42a358d472b9cbdfdf30c8742473d0",
+                        "size": 1951
+                    },
+                    "chrUn_KI270509v1": {
+                        "md5": "1cdeb8c823d839e1d1735b5bc9a14856",
+                        "size": 2318
+                    },
+                    "chrUn_KI270510v1": {
+                        "md5": "cd7348b3b5d9d0dfef6aed2af75ce920",
+                        "size": 2415
+                    },
+                    "chrUn_KI270511v1": {
+                        "md5": "907ca34a4a2a6673632ebaf513a4c1a4",
+                        "size": 8127
+                    },
+                    "chrUn_KI270512v1": {
+                        "md5": "ba1021c82d1230af856f59079e2f71b4",
+                        "size": 22689
+                    },
+                    "chrUn_KI270515v1": {
+                        "md5": "dd7527ee8e0bdb0a43ca0b2a5456c8c3",
+                        "size": 6361
+                    },
+                    "chrUn_KI270516v1": {
+                        "md5": "1cbaaafbbf016906a5bf5886f5a0ecb7",
+                        "size": 1300
+                    },
+                    "chrUn_KI270517v1": {
+                        "md5": "913440c38d95c618617ca69bb9296170",
+                        "size": 3253
+                    },
+                    "chrUn_KI270518v1": {
+                        "md5": "3fd898b62ca859f50fb8b83e7706352b",
+                        "size": 2186
+                    },
+                    "chrUn_KI270519v1": {
+                        "md5": "8d754e9c9afd904fba0a2cd577fcc9a1",
+                        "size": 138126
+                    },
+                    "chrUn_KI270521v1": {
+                        "md5": "af5bef7cefec7bd7efa729ac6c5be088",
+                        "size": 7642
+                    },
+                    "chrUn_KI270522v1": {
+                        "md5": "070b4678e22501029c2e3297115216bc",
+                        "size": 5674
+                    },
+                    "chrUn_KI270528v1": {
+                        "md5": "d75c9235f0b8c449fc4352997c56b086",
+                        "size": 2983
+                    },
+                    "chrUn_KI270529v1": {
+                        "md5": "4caf890f2586daab8e4b2e2db904f05f",
+                        "size": 1899
+                    },
+                    "chrUn_KI270530v1": {
+                        "md5": "04549369e1197c626669a10164613635",
+                        "size": 2168
+                    },
+                    "chrUn_KI270538v1": {
+                        "md5": "d60b72221cc7af871f2c757577e4c92a",
+                        "size": 91309
+                    },
+                    "chrUn_KI270539v1": {
+                        "md5": "19e3a982e67eafef39c5a3e4163f1e17",
+                        "size": 993
+                    },
+                    "chrUn_KI270544v1": {
+                        "md5": "e62a14b14467cdf48b5a236c66918f0f",
+                        "size": 1202
+                    },
+                    "chrUn_KI270548v1": {
+                        "md5": "866b0db8e9cf66208c2c064bd09ce0a2",
+                        "size": 1599
+                    },
+                    "chrUn_KI270579v1": {
+                        "md5": "fe62fb1964002717cc1b034630e89b1f",
+                        "size": 31033
+                    },
+                    "chrUn_KI270580v1": {
+                        "md5": "1df30dae0f605811d927dcea58e729fc",
+                        "size": 1553
+                    },
+                    "chrUn_KI270581v1": {
+                        "md5": "9f26945f9f9b3f865c9ebe953cbbc1a9",
+                        "size": 7046
+                    },
+                    "chrUn_KI270582v1": {
+                        "md5": "6fd9804a7478d2e28160fe9f017689cb",
+                        "size": 6504
+                    },
+                    "chrUn_KI270583v1": {
+                        "md5": "b127e2e6dbe358ff192b271b8c6ee690",
+                        "size": 1400
+                    },
+                    "chrUn_KI270584v1": {
+                        "md5": "d93636c9d54abd013cfc0d4c01334032",
+                        "size": 4513
+                    },
+                    "chrUn_KI270587v1": {
+                        "md5": "36be47659719f47b95caa51744aa8f70",
+                        "size": 2969
+                    },
+                    "chrUn_KI270588v1": {
+                        "md5": "37ffa850e69b342a8f8979bd3ffc77d4",
+                        "size": 6158
+                    },
+                    "chrUn_KI270589v1": {
+                        "md5": "211c215414693fe0a2399cf82e707e03",
+                        "size": 44474
+                    },
+                    "chrUn_KI270590v1": {
+                        "md5": "e8a57f147561b361091791b9010cd28b",
+                        "size": 4685
+                    },
+                    "chrUn_KI270591v1": {
+                        "md5": "d6af509d69835c9ac25a30086e5a4051",
+                        "size": 5796
+                    },
+                    "chrUn_KI270593v1": {
+                        "md5": "f4a5bfa203e9e81acb640b18fb11e78e",
+                        "size": 3041
+                    },
+                    "chrUn_KI270741v1": {
+                        "md5": "86eaea8a15a3950e37442eaaa5c9dc92",
+                        "size": 157432
+                    },
+                    "chrUn_KI270742v1": {
+                        "md5": "2f31c013a4a8301deb8ab7ed1ca1cd99",
+                        "size": 186739
+                    },
+                    "chrUn_KI270743v1": {
+                        "md5": "3b62d9d3100f530d509e4efebd98502c",
+                        "size": 210658
+                    },
+                    "chrUn_KI270744v1": {
+                        "md5": "e90aee46b947ff8c32291a6843fde3f9",
+                        "size": 168472
+                    },
+                    "chrUn_KI270745v1": {
+                        "md5": "1386fe3de6f82956f2124e19353ff9c1",
+                        "size": 41891
+                    },
+                    "chrUn_KI270746v1": {
+                        "md5": "c470486a0a858e14aa21d7866f83cc17",
+                        "size": 66486
+                    },
+                    "chrUn_KI270747v1": {
+                        "md5": "62375d812ece679c9fd2f3d08d4e22a4",
+                        "size": 198735
+                    },
+                    "chrUn_KI270748v1": {
+                        "md5": "4f6c6ab005c852a4352aa33e7cc88ded",
+                        "size": 93321
+                    },
+                    "chrUn_KI270749v1": {
+                        "md5": "c899a7b4e911d371283f3f4058ca08b7",
+                        "size": 158759
+                    },
+                    "chrUn_KI270750v1": {
+                        "md5": "c022ba92f244b7dc54ea90c4eef4d554",
+                        "size": 148850
+                    },
+                    "chrUn_KI270751v1": {
+                        "md5": "1b758bbdee0e9ca882058d916cba9d29",
+                        "size": 150742
+                    },
+                    "chrUn_KI270752v1": {
+                        "md5": "e0880631848337bd58559d9b1519da63",
+                        "size": 27745
+                    },
+                    "chrUn_KI270753v1": {
+                        "md5": "25075fb2a1ecada67c0eb2f1fe0c7ec9",
+                        "size": 62944
+                    },
+                    "chrUn_KI270754v1": {
+                        "md5": "fe9e16233cecbc244f06f3acff3d03b8",
+                        "size": 40191
+                    },
+                    "chrUn_KI270755v1": {
+                        "md5": "4a7da6a658955bd787af8add3ccb5751",
+                        "size": 36723
+                    },
+                    "chrUn_KI270756v1": {
+                        "md5": "2996b120a5a5e15dab6555f0bf92e374",
+                        "size": 79590
+                    },
+                    "chrUn_KI270757v1": {
+                        "md5": "174c73b60b41d8a1ef0fbaa4b3bdf0d3",
+                        "size": 71251
                     },
                     "chrX": {
-                        "md5": "7e0e2e580297b7764e31dbc80c2540dd",
-                        "size": 155270560
+                        "md5": "2b3a55ff7f58eb308420c8a9b11cac50",
+                        "size": 156040895
                     },
                     "chrY": {
-                        "md5": "1e86411d73e6f00a10590f976be01623",
-                        "size": 59373566
+                        "md5": "ce3e31103314a704255f3cd90369ecce",
+                        "size": 57227415
+                    },
+                    "chrY_KI270740v1_random": {
+                        "md5": "69e42252aead509bf56f1ea6fda91405",
+                        "size": 37240
                     }
                 }
             },
@@ -539,8 +963,8 @@
     },
     "meta": {
         "last_commit_hash": "8a617e00",
-        "version": "0.3.1",
-        "pipeline": "gentrap"
+        "pipeline": "gentrap",
+        "version": "0.3.1"
     },
     "samples": {
         "S1": {
@@ -548,24 +972,24 @@
                 "files": {
                     "pipeline": {
                         "alignment": {
-                            "md5": "39706221df3edaa34823316b9554bfa2",
-                            "path": "/sentinel/gentrap/output/sample_S1/S1.bam"
+                            "md5": "59a86e684915ae03421a0e32f771a17e",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/S1.bam"
                         },
                         "gene_bases_count": {
                             "md5": "b65d00cb6f80c6a10c4ef285b64ef808",
-                            "path": "/sentinel/gentrap/output/sample_S1/S1.bases_per_gene"
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/S1.bases_per_gene"
                         },
                         "gene_fpkm_cufflinks_strict": {
-                            "md5": "834f145967e075177aaa0817b878b6bb",
-                            "path": "/sentinel/gentrap/output/sample_S1/cufflinks_strict/S1.genes_fpkm_cufflinks_strict"
+                            "md5": "96b65ac39cd55edd94ad5c6089fad2b4",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/cufflinks_strict/S1.genes_fpkm_cufflinks_strict"
                         },
                         "gene_fragments_count": {
                             "md5": "324016772d4bc9168630ef7cc909d9f6",
-                            "path": "/sentinel/gentrap/output/sample_S1/S1.fragments_per_gene"
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/S1.fragments_per_gene"
                         },
                         "isoform_fpkm_cufflinks_strict": {
-                            "md5": "e71a7bf154372fa5e21de9e92b16c04a",
-                            "path": "/sentinel/gentrap/output/sample_S1/cufflinks_strict/S1.isoforms_fpkm_cufflinks_strict"
+                            "md5": "8a96199bee742b8229084b4d663dd03a",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/cufflinks_strict/S1.isoforms_fpkm_cufflinks_strict"
                         }
                     }
                 },
@@ -582,22 +1006,22 @@
                         "executables": {
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "md5sum": {
@@ -612,14 +1036,14 @@
                         "files": {
                             "insert_size_metrics": {
                                 "output_histogram": {
-                                    "md5": "37348ede7322bb40b613f3f1ef8341ea",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/metrics/S1-lib1.insertsizemetrics.pdf"
+                                    "md5": "345644bbe4a82deda7bf3db21c21a8ba",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/metrics/S1-lib1.insertsizemetrics.pdf"
                                 }
                             },
                             "pipeline": {
                                 "input_bam": {
-                                    "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.bam"
+                                    "md5": "59a86e684915ae03421a0e32f771a17e",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/S1-lib1.bam"
                                 }
                             }
                         },
@@ -758,7 +1182,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "gzip": {
@@ -771,7 +1195,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -795,89 +1219,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "dac44462377eb49c2dadfcc233b4d71e",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "9802e653b47bcf0e621b498673907ceb",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "9623b7aa3fe12d30ddb1000289572303",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "64239d0a6b637460612cb6b1b80dc93a",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "9f14120de3eaae3625092c54f8c206cd",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "633e8756c7538190d48faf32504b320e",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "4a2b964cbec48551104a2a92536982ab",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "66ccd5cfb39384ea7f9a5f1f06cd8458",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "49541f77dff9c2b3de9fa399c035c51e",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.fastqc/S1_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
-                                    "md5": "173787154984521dc9b35894f28fe633",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
+                                    "md5": "06101b49866a633aad1c9f19236bbd15",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "7b16ef66fe7636a8e6c100a881c49578",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "458039d962d398682ad3b1a01c5cde51",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "c668997fe48efe063178ca9589937832",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "98a45c0e3e634dd8b2bfb382f8f2b384",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "ae8e91360906dc7e9b462ad614a8e4c4",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "b44e13c471ef0a94a8afcd50e156133a",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "c731fec50cd9419e8360322a4863ef96",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "47a3d4464cf487e157685036c4a0925c",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "14ccf1313d2add00fee25b5768c737ae",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fastqc/S1_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2": {
@@ -887,89 +1311,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "700b13f323f3144260b3e270bf27e19c",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "42dc663f92a543adf070c4f9fe837d59",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "a9e02ec68cac0cea70378a16544eb1e5",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "db03bd42ea6ba8fda82b01ce993b8386",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "2d4322483fe030c3fb9515e8716c5f82",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "1f3110b8ad42b63af317d2983b421468",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "7d1c4d6c7ea056a545523883283bb514",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "371d108e3695fea439e72c017aada82a",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "49541f77dff9c2b3de9fa399c035c51e",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.fastqc/S1_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
-                                    "md5": "5b74e86fe355d7c30aabab52f539a9d2",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
+                                    "md5": "c1d8793f9a954593ca6423b182a74fc8",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "8b3ca9fb6c5ecbf1511efb4ee947ab9b",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "a82619145cbda6147dac68c648abf735",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "6c966aceec5f7a92f4a9060b044c3115",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "c64aa1ed9c5d6b07d6f0d6d467d8b9cd",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "2b5d561e54d50753f0f5532677540398",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "98a7bfa34e0a53edb109745978f67c79",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "89d98fbb9874f927566d1a9f2cd15c1a",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "36ce78e96621e9a6bae439e610cc2661",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "052af5378828d43b6218905a3c82bb4f",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fastqc/S1_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "pipeline": {
@@ -982,12 +1406,12 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/OM/S1_L1_2.fq.gz"
                                 },
                                 "output_R1": {
-                                    "md5": "173787154984521dc9b35894f28fe633",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
+                                    "md5": "06101b49866a633aad1c9f19236bbd15",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
-                                    "md5": "5b74e86fe355d7c30aabab52f539a9d2",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
+                                    "md5": "c1d8793f9a954593ca6423b182a74fc8",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/flexiprep/S1_L1_2.qc.fq.gz"
                                 }
                             }
                         },
@@ -3775,68 +4199,6 @@
                                         0
                                     ],
                                     "num_n": 13791,
-                                    "num_by_qual": [
-                                        0,
-                                        0,
-                                        599407,
-                                        0,
-                                        0,
-                                        167864,
-                                        244373,
-                                        1044935,
-                                        977025,
-                                        418133,
-                                        553063,
-                                        297964,
-                                        341186,
-                                        496034,
-                                        329354,
-                                        950872,
-                                        718691,
-                                        1022089,
-                                        2417341,
-                                        1311856,
-                                        2834774,
-                                        1381403,
-                                        2187122,
-                                        4095405,
-                                        4907278,
-                                        5889276,
-                                        9231327,
-                                        9385324,
-                                        6561917,
-                                        14124555,
-                                        21659902,
-                                        39934082,
-                                        26835441,
-                                        53924594,
-                                        114143734,
-                                        227288345,
-                                        78368965,
-                                        161610178,
-                                        90511998,
-                                        176963032,
-                                        191718724,
-                                        406711825,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0
-                                    ],
                                     "num_total": 1662159388
                                 },
                                 "reads": {
@@ -4215,22 +4577,22 @@
                         "files": {
                             "pipeline": {
                                 "alignment": {
-                                    "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.bam"
+                                    "md5": "59a86e684915ae03421a0e32f771a17e",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/S1-lib1.bam"
                                 }
                             },
                             "rna_metrics": {
                                 "annotation": {
                                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
-                                    "md5": "35f33032390fe9f5a7d6bea4d40fb4c8",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.rna_metrics"
+                                    "md5": "31dac16244a7d6b4e65675ffbd5ac53e",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/S1-lib1.rna_metrics"
                                 },
                                 "output_chart": {
-                                    "md5": "0406fbc899561dd75650c3d80461d807",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.coverage_bias.pdf"
+                                    "md5": "0e664331d49c44ab02587457182f4150",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/S1-lib1.coverage_bias.pdf"
                                 }
                             }
                         },
@@ -4247,107 +4609,107 @@
                                 "median_5prime_to_3prime_bias": 0.270256,
                                 "median_cv_coverage": 0.69242,
                                 "normalized_transcript_cov": [
-                                    0.047646,
-                                    0.107133,
-                                    0.192412,
-                                    0.286422,
-                                    0.388169,
-                                    0.471828,
-                                    0.543577,
-                                    0.615682,
-                                    0.680452,
-                                    0.740145,
-                                    0.781092,
-                                    0.812283,
-                                    0.846296,
-                                    0.876319,
-                                    0.906819,
-                                    0.933885,
-                                    0.957376,
-                                    0.963175,
-                                    0.975794,
-                                    0.977964,
-                                    0.991733,
-                                    0.994777,
-                                    1.017155,
-                                    1.027276,
-                                    1.02711,
-                                    1.052166,
-                                    1.076202,
-                                    1.09606,
-                                    1.104638,
-                                    1.09074,
-                                    1.094859,
-                                    1.104485,
-                                    1.107645,
-                                    1.089802,
-                                    1.097157,
-                                    1.100268,
-                                    1.109762,
-                                    1.099035,
-                                    1.092674,
-                                    1.100577,
-                                    1.096426,
-                                    1.095887,
-                                    1.085231,
-                                    1.087915,
-                                    1.113345,
-                                    1.125601,
-                                    1.136631,
-                                    1.133722,
-                                    1.115531,
-                                    1.113678,
-                                    1.121162,
-                                    1.119916,
-                                    1.118135,
-                                    1.126621,
-                                    1.134631,
-                                    1.136319,
-                                    1.128231,
-                                    1.123079,
-                                    1.129026,
-                                    1.135561,
-                                    1.140156,
-                                    1.152606,
-                                    1.159066,
-                                    1.18105,
-                                    1.191686,
-                                    1.203376,
-                                    1.2101,
-                                    1.204104,
-                                    1.189207,
-                                    1.19605,
-                                    1.190413,
-                                    1.18022,
-                                    1.182539,
-                                    1.188154,
-                                    1.197725,
-                                    1.197775,
-                                    1.193997,
-                                    1.196097,
-                                    1.206346,
-                                    1.21181,
-                                    1.212744,
-                                    1.204712,
-                                    1.200625,
-                                    1.198627,
-                                    1.185541,
-                                    1.166189,
-                                    1.147593,
-                                    1.136359,
-                                    1.118648,
-                                    1.086186,
-                                    1.037099,
-                                    1.000642,
-                                    0.94635,
-                                    0.908225,
-                                    0.868832,
-                                    0.792066,
-                                    0.701745,
-                                    0.594556,
-                                    0.470126,
-                                    0.323608,
-                                    0.128868
+                                    0.045275,
+                                    0.098092,
+                                    0.181112,
+                                    0.272617,
+                                    0.359361,
+                                    0.428533,
+                                    0.492936,
+                                    0.561574,
+                                    0.620039,
+                                    0.669327,
+                                    0.708172,
+                                    0.739655,
+                                    0.764798,
+                                    0.798653,
+                                    0.826652,
+                                    0.8488,
+                                    0.867009,
+                                    0.874299,
+                                    0.885608,
+                                    0.896935,
+                                    0.911965,
+                                    0.920834,
+                                    0.941891,
+                                    0.95487,
+                                    0.956002,
+                                    0.982105,
+                                    1.012354,
+                                    1.037768,
+                                    1.047408,
+                                    1.039911,
+                                    1.041728,
+                                    1.050861,
+                                    1.051604,
+                                    1.034315,
+                                    1.039506,
+                                    1.046956,
+                                    1.051012,
+                                    1.045606,
+                                    1.040156,
+                                    1.04904,
+                                    1.04707,
+                                    1.049835,
+                                    1.043331,
+                                    1.046833,
+                                    1.077086,
+                                    1.090244,
+                                    1.104313,
+                                    1.106409,
+                                    1.08866,
+                                    1.086071,
+                                    1.095028,
+                                    1.102173,
+                                    1.102,
+                                    1.112282,
+                                    1.122216,
+                                    1.129028,
+                                    1.122139,
+                                    1.118068,
+                                    1.126861,
+                                    1.134778,
+                                    1.145534,
+                                    1.169608,
+                                    1.180903,
+                                    1.197187,
+                                    1.211723,
+                                    1.231691,
+                                    1.247334,
+                                    1.250396,
+                                    1.241072,
+                                    1.252903,
+                                    1.252992,
+                                    1.244881,
+                                    1.241856,
+                                    1.253256,
+                                    1.268566,
+                                    1.274388,
+                                    1.276835,
+                                    1.280567,
+                                    1.2946,
+                                    1.301897,
+                                    1.303306,
+                                    1.299968,
+                                    1.295061,
+                                    1.292499,
+                                    1.281488,
+                                    1.265922,
+                                    1.245424,
+                                    1.236953,
+                                    1.22108,
+                                    1.187731,
+                                    1.13304,
+                                    1.106019,
+                                    1.047982,
+                                    1.004352,
+                                    0.959523,
+                                    0.880647,
+                                    0.78247,
+                                    0.665116,
+                                    0.531149,
+                                    0.36407,
+                                    0.145422
                                 ],
                                 "pct_coding_bases": 0.329213,
                                 "pct_correct_strand_reads": 0,
@@ -4366,27 +4728,27 @@
                         "executables": {
                             "addorreplacereadgroups": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "cutadapt": {
@@ -4399,7 +4761,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "gsnap": {
@@ -4416,7 +4778,7 @@
                             },
                             "reordersam": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "samtoolsflagstat": {
@@ -4425,7 +4787,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -4438,7 +4800,7 @@
                             },
                             "sortsam": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "zcat": {
@@ -4457,8 +4819,8 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/OM/S1_L1_2.fq.gz"
                                 },
                                 "output_bamfile": {
-                                    "md5": "39706221df3edaa34823316b9554bfa2",
-                                    "path": "/sentinel/gentrap/output/sample_S1/lib_lib1/S1-lib1.final.bam"
+                                    "md5": "59a86e684915ae03421a0e32f771a17e",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S1/lib_lib1/S1-lib1.final.bam"
                                 }
                             }
                         },
@@ -4479,24 +4841,24 @@
                 "files": {
                     "pipeline": {
                         "alignment": {
-                            "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                            "path": "/sentinel/gentrap/output/sample_S28/S28.bam"
+                            "md5": "9a9ef7e0c01f5a3ac81c7f9fe81e3391",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/S28.bam"
                         },
                         "gene_bases_count": {
                             "md5": "1ad20b5a98d4ef784866aeb5f22ad81e",
-                            "path": "/sentinel/gentrap/output/sample_S28/S28.bases_per_gene"
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/S28.bases_per_gene"
                         },
                         "gene_fpkm_cufflinks_strict": {
-                            "md5": "5f8cd2693eeb566c7d89269ecfb4edc0",
-                            "path": "/sentinel/gentrap/output/sample_S28/cufflinks_strict/S28.genes_fpkm_cufflinks_strict"
+                            "md5": "f684be0c4a413196b8c917a6f9fb7e9b",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/cufflinks_strict/S28.genes_fpkm_cufflinks_strict"
                         },
                         "gene_fragments_count": {
                             "md5": "7f23093d07893a885ea6b31a61b7d9d6",
-                            "path": "/sentinel/gentrap/output/sample_S28/S28.fragments_per_gene"
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/S28.fragments_per_gene"
                         },
                         "isoform_fpkm_cufflinks_strict": {
-                            "md5": "0c73e870462ff75e1ee321bb687a446e",
-                            "path": "/sentinel/gentrap/output/sample_S28/cufflinks_strict/S28.isoforms_fpkm_cufflinks_strict"
+                            "md5": "98f3c87eef4ce39c640925d3610e217b",
+                            "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/cufflinks_strict/S28.isoforms_fpkm_cufflinks_strict"
                         }
                     }
                 },
@@ -4513,22 +4875,22 @@
                         "executables": {
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "md5sum": {
@@ -4543,14 +4905,14 @@
                         "files": {
                             "insert_size_metrics": {
                                 "output_histogram": {
-                                    "md5": "026a2ebf4c2e2e4329098e3b2da27e06",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/metrics/S28-lib1.insertsizemetrics.pdf"
+                                    "md5": "a156f1fb04a21e0d68e84b8ac0471973",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/metrics/S28-lib1.insertsizemetrics.pdf"
                                 }
                             },
                             "pipeline": {
                                 "input_bam": {
-                                    "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.bam"
+                                    "md5": "9a9ef7e0c01f5a3ac81c7f9fe81e3391",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/S28-lib1.bam"
                                 }
                             }
                         },
@@ -4689,7 +5051,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "gzip": {
@@ -4702,7 +5064,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -4726,89 +5088,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "186d0a4ec37e9b17a21335eb5ae6bc23",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "54a8b98f4fcf1789ec56ca9937d6049e",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "8d26bf5dc17cca57d8e16ddbb4acc4e3",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "0cd239d9a85fba09a1f644c4d5156a6f",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "c60fab069460448d64235d47fef2aee3",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "8c313dfc7a79d5f630848eca3e4fb3cb",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "70cec4ec35b69b5c5bdcc93f6efd03fe",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "08cedd764ae2f0f7438853d8cf9ba2a3",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "30f35451cbfb5efe0bd0c97252c44ec6",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.fastqc/S28_L1_1.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R1_qc": {
                                 "fastq_file": {
-                                    "md5": "6e12468cfa2e4e87517901f535417513",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
+                                    "md5": "097278f3f9edcb02eb9da2b27ce63059",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "cdd62b4b0f8fb70ff29d2699fcfaf3d1",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "0447cd45596eeca634e6ee9fff6bcab1",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "5ca2c16da574c10e91fd8970a4dd4bf2",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "80c59a1f8ed60c568c0aafe696064d8b",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "6e7d444dcc961cc7dbcbb07e97dacb09",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "362278a9e99d6afd226346b58293849f",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "fc28fd283448474546134345b1a46466",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "e19f43d18bc1a552ea5d220748831529",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "696215d66dbe4545e77e4d5169651452",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fastqc/S28_L1_1.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2": {
@@ -4818,89 +5180,89 @@
                                 },
                                 "fastqc_data": {
                                     "md5": "2d1c2de7f3c2ec092ddee33d858873b1",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "674bddedd9f919af7b5304fd32d14c7a",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "2f66b581a07dc9e98f9f7ad2133b2bd5",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "1e367332a2e99549b15a536684e1a639",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "d4ab2b0eba4a27af2028cd5d593d9722",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "8833e268482f3ef48cd3af61717634a0",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "ff4fe981da584d6070c843afb6a2d696",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "7c18be5b8b3f004c53aaba71b231c9fe",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "30f35451cbfb5efe0bd0c97252c44ec6",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.fastqc/S28_L1_2.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "fastqc_R2_qc": {
                                 "fastq_file": {
-                                    "md5": "1ff98d9bb76db6e7ef89bb225fcc2833",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
+                                    "md5": "9d72bb9b4c8fd19806991fff64a0569a",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
                                 },
                                 "fastqc_data": {
                                     "md5": "c96c88aaf519447bb0ab9d499b5f84e3",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/fastqc_data.txt"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/fastqc_data.txt"
                                 },
                                 "plot_duplication_levels": {
                                     "md5": "da361851ec39fcc15991e5486320e48f",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/duplication_levels.png"
                                 },
                                 "plot_kmer_profiles": {
                                     "md5": "cc55249b942ae5c0a55b838f65e0cb1c",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/kmer_profiles.png"
                                 },
                                 "plot_per_base_gc_content": {
                                     "md5": "60a1a33900ac0785b2b741fb77938f97",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_gc_content.png"
                                 },
                                 "plot_per_base_n_content": {
                                     "md5": "8e59fc408364e01922a3d902c6f849bf",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_n_content.png"
                                 },
                                 "plot_per_base_quality": {
                                     "md5": "143ac8f0c78eb4cee1a22fdc3959928d",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_quality.png"
                                 },
                                 "plot_per_base_sequence_content": {
                                     "md5": "6dbfe81da5aad4f29774e5d2af4d1ee6",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_base_sequence_content.png"
                                 },
                                 "plot_per_sequence_gc_content": {
                                     "md5": "2053ae2e2695ead4537fb231e51b4fe5",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_gc_content.png"
                                 },
                                 "plot_per_sequence_quality": {
                                     "md5": "0a3564a7514bea19cb981792fa36331b",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/per_sequence_quality.png"
                                 },
                                 "plot_sequence_length_distribution": {
                                     "md5": "0acd28d7387798dc304d2eab3638ef72",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fastqc/S28_L1_2.qc.fq_fastqc/Images/sequence_length_distribution.png"
                                 }
                             },
                             "pipeline": {
@@ -4913,12 +5275,12 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/SC/S28_L1_2.fq.gz"
                                 },
                                 "output_R1": {
-                                    "md5": "6e12468cfa2e4e87517901f535417513",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
+                                    "md5": "097278f3f9edcb02eb9da2b27ce63059",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_1.qc.fq.gz"
                                 },
                                 "output_R2": {
-                                    "md5": "1ff98d9bb76db6e7ef89bb225fcc2833",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
+                                    "md5": "9d72bb9b4c8fd19806991fff64a0569a",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/flexiprep/S28_L1_2.qc.fq.gz"
                                 }
                             }
                         },
@@ -8084,22 +8446,22 @@
                         "files": {
                             "pipeline": {
                                 "alignment": {
-                                    "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.bam"
+                                    "md5": "9a9ef7e0c01f5a3ac81c7f9fe81e3391",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/S28-lib1.bam"
                                 }
                             },
                             "rna_metrics": {
                                 "annotation": {
                                     "md5": "08ee5b6e1f884fefa8ff68d42188c905",
-                                    "path": "/sentinel/gentrap/ucsc_refseq.refFlat"
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/ucsc_refseq.refFlat"
                                 },
                                 "metrics": {
-                                    "md5": "fbfe039d11dd72afc426495bbb8869ad",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.rna_metrics"
+                                    "md5": "bdf3cc4df0d4758f1842cce2367752a1",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/S28-lib1.rna_metrics"
                                 },
                                 "output_chart": {
-                                    "md5": "e51fbc0bb281202c72adc4c5ea8c7205",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.coverage_bias.pdf"
+                                    "md5": "337e688bd7d78e81bddeda5fc335fe03",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/S28-lib1.coverage_bias.pdf"
                                 }
                             }
                         },
@@ -8116,107 +8478,107 @@
                                 "median_5prime_to_3prime_bias": 0.383438,
                                 "median_cv_coverage": 0.678908,
                                 "normalized_transcript_cov": [
-                                    0.047646,
-                                    0.107133,
-                                    0.192412,
-                                    0.286422,
-                                    0.388169,
-                                    0.471828,
-                                    0.543577,
-                                    0.615682,
-                                    0.680452,
-                                    0.740145,
-                                    0.781092,
-                                    0.812283,
-                                    0.846296,
-                                    0.876319,
-                                    0.906819,
-                                    0.933885,
-                                    0.957376,
-                                    0.963175,
-                                    0.975794,
-                                    0.977964,
-                                    0.991733,
-                                    0.994777,
-                                    1.017155,
-                                    1.027276,
-                                    1.02711,
-                                    1.052166,
-                                    1.076202,
-                                    1.09606,
-                                    1.104638,
-                                    1.09074,
-                                    1.094859,
-                                    1.104485,
-                                    1.107645,
-                                    1.089802,
-                                    1.097157,
-                                    1.100268,
-                                    1.109762,
-                                    1.099035,
-                                    1.092674,
-                                    1.100577,
-                                    1.096426,
-                                    1.095887,
-                                    1.085231,
-                                    1.087915,
-                                    1.113345,
-                                    1.125601,
-                                    1.136631,
-                                    1.133722,
-                                    1.115531,
-                                    1.113678,
-                                    1.121162,
-                                    1.119916,
-                                    1.118135,
-                                    1.126621,
-                                    1.134631,
-                                    1.136319,
-                                    1.128231,
-                                    1.123079,
-                                    1.129026,
-                                    1.135561,
-                                    1.140156,
-                                    1.152606,
-                                    1.159066,
-                                    1.18105,
-                                    1.191686,
-                                    1.203376,
-                                    1.2101,
-                                    1.204104,
-                                    1.189207,
-                                    1.19605,
-                                    1.190413,
-                                    1.18022,
-                                    1.182539,
-                                    1.188154,
-                                    1.197725,
-                                    1.197775,
-                                    1.193997,
-                                    1.196097,
-                                    1.206346,
-                                    1.21181,
-                                    1.212744,
-                                    1.204712,
-                                    1.200625,
-                                    1.198627,
-                                    1.185541,
-                                    1.166189,
-                                    1.147593,
-                                    1.136359,
-                                    1.118648,
-                                    1.086186,
-                                    1.037099,
-                                    1.000642,
-                                    0.94635,
-                                    0.908225,
-                                    0.868832,
-                                    0.792066,
-                                    0.701745,
-                                    0.594556,
-                                    0.470126,
-                                    0.323608,
-                                    0.128868
+                                    0.04803,
+                                    0.114762,
+                                    0.214822,
+                                    0.324193,
+                                    0.437589,
+                                    0.532757,
+                                    0.612669,
+                                    0.68354,
+                                    0.743756,
+                                    0.800045,
+                                    0.83983,
+                                    0.873453,
+                                    0.905271,
+                                    0.92664,
+                                    0.961486,
+                                    0.98576,
+                                    1.007072,
+                                    1.015716,
+                                    1.029742,
+                                    1.035308,
+                                    1.044045,
+                                    1.051132,
+                                    1.06354,
+                                    1.074391,
+                                    1.070075,
+                                    1.091304,
+                                    1.111226,
+                                    1.128982,
+                                    1.136906,
+                                    1.129905,
+                                    1.129161,
+                                    1.135204,
+                                    1.13196,
+                                    1.121328,
+                                    1.124264,
+                                    1.127417,
+                                    1.135336,
+                                    1.121765,
+                                    1.106546,
+                                    1.112305,
+                                    1.102657,
+                                    1.108198,
+                                    1.100414,
+                                    1.108053,
+                                    1.122904,
+                                    1.127525,
+                                    1.14358,
+                                    1.140415,
+                                    1.12606,
+                                    1.121523,
+                                    1.130876,
+                                    1.126833,
+                                    1.13532,
+                                    1.139641,
+                                    1.156896,
+                                    1.157864,
+                                    1.152782,
+                                    1.151606,
+                                    1.140883,
+                                    1.138245,
+                                    1.147307,
+                                    1.150266,
+                                    1.158039,
+                                    1.169716,
+                                    1.167314,
+                                    1.166101,
+                                    1.169962,
+                                    1.166069,
+                                    1.148552,
+                                    1.157204,
+                                    1.16094,
+                                    1.145355,
+                                    1.133624,
+                                    1.139618,
+                                    1.145133,
+                                    1.146769,
+                                    1.143633,
+                                    1.148444,
+                                    1.150725,
+                                    1.143905,
+                                    1.149097,
+                                    1.138807,
+                                    1.135794,
+                                    1.133016,
+                                    1.120138,
+                                    1.097907,
+                                    1.08085,
+                                    1.070874,
+                                    1.052967,
+                                    1.029,
+                                    0.983981,
+                                    0.945418,
+                                    0.882655,
+                                    0.842082,
+                                    0.799202,
+                                    0.727756,
+                                    0.647287,
+                                    0.546331,
+                                    0.430601,
+                                    0.289354,
+                                    0.108324
                                 ],
                                 "pct_coding_bases": 0.39208,
                                 "pct_correct_strand_reads": 0,
@@ -8235,27 +8597,27 @@
                         "executables": {
                             "addorreplacereadgroups": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "biopetflagstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectalignmentsummarymetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectgcbiasmetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "collectinsertsizemetrics": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "cutadapt": {
@@ -8268,7 +8630,7 @@
                             },
                             "fastqsync": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "gsnap": {
@@ -8285,7 +8647,7 @@
                             },
                             "reordersam": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "samtoolsflagstat": {
@@ -8294,7 +8656,7 @@
                             },
                             "seqstat": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "seqtkseq": {
@@ -8307,7 +8669,7 @@
                             },
                             "sortsam": {
                                 "jar_md5": null,
-                                "java_md5": "ff48f0ebba4e56bac6c9d05288bc481d",
+                                "java_md5": "8e29b961f094eda2ebb3593d46f09a36",
                                 "version": null
                             },
                             "zcat": {
@@ -8326,8 +8688,8 @@
                                     "path": "/share/isilon/system/local/NGSTestSets/Illumina_HiSeq/paired_end/mixed_strand/RNAseq/1/SC/S28_L1_2.fq.gz"
                                 },
                                 "output_bamfile": {
-                                    "md5": "01d3e20990a6fb3fcc76e5afe9aca255",
-                                    "path": "/sentinel/gentrap/output/sample_S28/lib_lib1/S28-lib1.final.bam"
+                                    "md5": "9a9ef7e0c01f5a3ac81c7f9fe81e3391",
+                                    "path": "/data/DIV5/SASC/warindrarto/gentrap/integration_testing/nonstrand_specific/out_msampleslib/sample_S28/lib_lib1/S28-lib1.final.bam"
                                 }
                             }
                         },

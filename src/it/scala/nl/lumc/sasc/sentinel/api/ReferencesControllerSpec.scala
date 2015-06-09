@@ -131,20 +131,17 @@ class ReferencesControllerSpec extends SentinelServletSpec {
               priorResponse.status mustEqual 200
             }
 
-            "return a JSON list containing 2 objects" in {
+            "return a JSON list containing 1 object" in {
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(2)
+              priorResponse.jsonBody must haveSize(1)
             }
 
-            "each of which" should {
-              Range(0, 2) foreach { idx =>
-              val item = idx + 1
-                s"have the expected attributes" in {
-                  priorResponse.body must /#(idx) /("refId" -> """\S+""".r)
-                  priorResponse.body must /#(idx) /("combinedMd5" -> """\S+""".r)
-                  priorResponse.jsonBody must beSome.like { case json =>
-                    (json(idx) \ "contigMd5s").extract[Seq[String]].size must beGreaterThan(0)
-                  }
+            "which should" should {
+              s"have the expected attributes" in {
+                priorResponse.body must /#(0) /("refId" -> """\S+""".r)
+                priorResponse.body must /#(0) /("combinedMd5" -> """\S+""".r)
+                priorResponse.jsonBody must beSome.like { case json =>
+                  (json(0) \ "contigMd5s").extract[Seq[String]].size must beGreaterThan(0)
                 }
               }
             }
