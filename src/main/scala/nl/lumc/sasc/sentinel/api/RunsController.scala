@@ -179,7 +179,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   // format: OFF
-  val runsGetOperation = (apiOperation[List[RunDocument]]("runsGet")
+  val runsGetOperation = (apiOperation[Seq[RunDocument]]("runsGet")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
@@ -189,7 +189,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
-      queryParam[List[String]]("pipelines")
+      queryParam[Seq[String]]("pipelines")
         .description(
           """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `unsupported`. If not
             | specified, all run summaries are returned.""".stripMargin.replaceAll("\n", ""))

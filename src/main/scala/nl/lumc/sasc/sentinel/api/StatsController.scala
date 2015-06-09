@@ -34,15 +34,15 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsGentrapAlignmentsGetOperation = (apiOperation[Seq[GentrapAlignmentStats]]("statsGentrapAlignmentsGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
     parameters (
-      queryParam[List[String]]("runIds")
+      queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("refIds")
+      queryParam[Seq[String]]("refIds")
         .description("Include only Gentrap runs based on the given reference ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("annotIds")
+      queryParam[Seq[String]]("annotIds")
         .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
         .multiValued
         .optional,
@@ -109,15 +109,15 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsGentrapSequencesGetOperation = (apiOperation[Seq[SeqStats]]("statsGentrapSequencesGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
     parameters (
-      queryParam[List[String]]("runIds")
+      queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("refIds")
+      queryParam[Seq[String]]("refIds")
         .description("Include only Gentrap runs based on the given reference ID(s).")
         .multiValued
         .optional,
-      queryParam[List[String]]("annotIds")
+      queryParam[Seq[String]]("annotIds")
         .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
         .multiValued
         .optional,
