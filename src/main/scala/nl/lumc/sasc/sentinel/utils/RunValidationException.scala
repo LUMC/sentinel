@@ -1,6 +1,7 @@
 package nl.lumc.sasc.sentinel.utils
 
-import com.github.fge.jsonschema.core.report.ProcessingMessage
+import com.github.fge.jsonschema.core.report.ProcessingReport
 
-class RunValidationException(msg: String, val validationErrors: Seq[ProcessingMessage]) extends RuntimeException(msg)
+class RunValidationException(msg: String, val report: Option[ProcessingReport] = None)
+  extends RuntimeException(msg)
 

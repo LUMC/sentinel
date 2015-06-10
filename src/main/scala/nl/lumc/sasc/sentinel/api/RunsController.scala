@@ -160,7 +160,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
           case Failure(f) =>
             f match {
               case vexc: RunValidationException =>
-                BadRequest(ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+                BadRequest(ApiMessage(vexc.getMessage,
+                  data = vexc.report.collect { case r => r.toString }))
               case dexc: com.mongodb.DuplicateKeyException =>
                 BadRequest(ApiMessage("Run summary already uploaded by the user."))
               case otherwise =>

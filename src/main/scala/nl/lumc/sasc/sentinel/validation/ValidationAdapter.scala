@@ -19,10 +19,11 @@ trait ValidationAdapter {
         parse(new ByteArrayInputStream(byteContents))
       } catch {
         case exc: Exception =>
-          throw new RunValidationException("File is not JSON-formatted.", Seq())
+          throw new RunValidationException("File is not JSON-formatted.")
       }
-    val msgs = validator.validationMessages(json)
-    if (msgs.nonEmpty) throw new RunValidationException("JSON run summary is invalid.", msgs)
+    val valResult = validator.validate(json)
+    if (!valResult.isSuccess)
+      throw new RunValidationException("JSON run summary is invalid.", Option(valResult))
     else json
   }
 }

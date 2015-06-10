@@ -52,7 +52,8 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       case Failure(f) =>
         f match {
           case vexc: RunValidationException =>
-            halt(400, ApiMessage(vexc.getMessage, data = vexc.validationErrors.map(_.getMessage)))
+            halt(400, ApiMessage(vexc.getMessage,
+              data = vexc.report.collect { case r => r.toString }))
           case otherwise =>
             halt(500, CommonErrors.Unexpected)
         }
