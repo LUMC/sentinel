@@ -77,14 +77,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
-    val sorted = params.get("sorted") match {
-      case None => false
-      case Some(p) => p.toLowerCase match {
-        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
-        case otherwise => true
-      }
-    }
-
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
@@ -102,6 +94,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val libType = params.getAs[String]("libType")
       .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
+
+    val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     gentrap.getAlignmentStats(acc, libType, runIds, refIds, annotIds, sorted)
   }
@@ -151,14 +145,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
-    val sorted = params.get("sorted") match {
-      case None => false
-      case Some(p) => p.toLowerCase match {
-        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
-        case otherwise => true
-      }
-    }
-
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
       halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
@@ -176,6 +162,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
     val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
+
+    val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted)
   }

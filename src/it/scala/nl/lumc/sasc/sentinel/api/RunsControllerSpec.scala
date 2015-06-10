@@ -744,7 +744,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
             "and sets the download parameter to some true values which" can {
 
-              Seq("", "1", "yes", "true", "ok") foreach { dlParam =>
+              Seq("1", "yes", "true", "ok") foreach { dlParam =>
                 s"be '$dlParam'" should {
 
                   val paramsWithDownload = params :+ ("download", dlParam)

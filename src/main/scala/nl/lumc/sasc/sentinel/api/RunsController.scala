@@ -103,14 +103,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   get("/:runId", operation(runsRunIdGetOperation)) {
-    // Since there is no standard to define boolean in query parameter, we try to capture the common ones
-    val doDownload = params.get("download") match {
-      case None => false
-      case Some(p) => p.toLowerCase match {
-        case "0" | "no" | "false" | "null" | "none" | "nothing" => false
-        case otherwise => true
-      }
-    }
+    val doDownload = params.getAs[Boolean]("download").getOrElse(false)
     val runId = params("runId")
       .getObjectId
       .getOrElse(halt(404, CommonErrors.MissingRunId))
