@@ -41,13 +41,13 @@ print("\nAdding MongoDB users ...");
 db.dropUser("sentinel-owner");
 db.createUser({
     user: "sentinel-owner",
-    pwd: "sentinel-owner",
+    pwd: "owner",
     roles: [ "dbOwner" ]
 });
 db.dropUser("sentinel-api");
 db.createUser({
     user: "sentinel-api",
-    pwd: "sentinel-api",
+    pwd: "api",
     roles: [ "readWrite" ]
 });
 
@@ -59,7 +59,7 @@ var devUser = {
     // log2 10 hashing round of `dev`
     hashedPassword: "$2a$10$dNNzi9ieIj1Lk/ED184tPOHJeYDCIc/9bvCJUggC8Gl.4d4pEsdn6",
     activeKey: "dev",
-    emailVerified: true,
+    verified: true,
     isAdmin: true,
     creationTimeUtc: new Date()
 }
