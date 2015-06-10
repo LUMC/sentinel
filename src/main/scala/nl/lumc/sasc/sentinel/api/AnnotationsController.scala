@@ -9,7 +9,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
 
 class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
-  protected val applicationDescription: String = "Retrieval of annotation file synopses"
+  protected val applicationDescription: String = "Retrieval of annotation file records"
   override protected val applicationName = Some("annotations")
 
   protected val annots = new AnnotationsAdapter { val mongo = self.mongo }

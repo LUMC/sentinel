@@ -26,10 +26,12 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
-    summary
-      """Updates an existing user record using the JSON patch specification. Only the `replace` operation on the
-        | following user attributes are supported: `password`, `email`.
-      """.stripMargin
+    summary "Updates an existing user record."
+    notes
+      """This endpoint is used for updating an existing user record. Operations are defined using a subset of the JSON
+        | patch specification. Only the `replace` operation on the following user attributes are supported: `password`,
+        | `email`.
+      """.stripMargin.replaceAll("\n", "")
     parameters (
       pathParam[String]("userId").description("User ID."),
       bodyParam[Seq[UserPatch]]("ops").description("Patch operations to apply."))
