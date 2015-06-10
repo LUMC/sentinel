@@ -36,6 +36,23 @@ package object sentinel {
     .map(enum => enum.toString.toLowerCase -> enum)
     .toMap
 
+  /** Supported aggregation parameters */
+  object AggrStat extends Enumeration {
+    type AggrStat = Value
+    val Sum = Value("sum")
+    val Min = Value("min")
+    val Max = Value("max")
+    val Mean = Value("mean")
+    val Median = Value("median")
+    val Variance = Value("variance")
+    val Stdev = Value("stdev")
+  }
+
+  /** Allowed aggregation parameters in HTTP request */
+  val AllowedAggrStatParams = AggrStat.values
+    .map(enum => enum.toString.toLowerCase -> enum)
+    .toMap
+
   /** Supported library types */
   object LibType extends Enumeration {
     type LibType = Value
