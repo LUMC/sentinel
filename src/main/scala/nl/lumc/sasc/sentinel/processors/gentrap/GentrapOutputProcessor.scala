@@ -22,10 +22,11 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    * @param runs Run IDs to filter in. If empty, no run ID filtering is done.
    * @param references Reference IDs to filter in. If empty, no reference ID filtering is done.
    * @param annotations Annotation IDs to filter in. If empty, no annotation ID filtering is done.
+   * @param withKey Whether to return only the `query` object with the `$match` key or not.
    * @return a [[DBObject]] representing the `$match` aggregation operation.
    */
   private[processors] def buildMatchOp(runs: Seq[ObjectId], references: Seq[ObjectId],
-                                       annotations: Seq[ObjectId]): DBObject = {
+                                       annotations: Seq[ObjectId], withKey: Boolean = true): DBObject = {
     val matchBuffer = new ListBuffer[MongoDBObject]()
 
     if (runs.nonEmpty)
@@ -38,10 +39,12 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       matchBuffer += MongoDBObject("annotationIds" ->
         MongoDBObject("$elemMatch" -> MongoDBObject("$in" -> annotations)))
 
-    MongoDBObject("$match" -> {
+    val query =
       if (matchBuffer.nonEmpty) MongoDBObject("$and" -> matchBuffer.toSeq)
       else MongoDBObject.empty
-    })
+
+    if (withKey) MongoDBObject("$match" -> query)
+    else query
   }
 
   /**
@@ -74,6 +77,99 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
   /** Unwind operation to break open libs array */
   private[processors] val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
+
+  /** Map function for mapReduce on alnStats */
+  private[processors] def mapFuncAlnStats(attr: String, accLevel: AccLevel.Value,
+                                          libType: Option[LibType.Value]): JSFunction = {
+
+    val jsArrayStr = accLevel match {
+      case AccLevel.Sample => "[this]"
+      case AccLevel.Lib    => "this.libs"
+      case otherwise       => throw new NotImplementedError
+    }
+
+    val jsSingleStr = libType match {
+      case None                 => "undefined"
+      case Some(LibType.Paired) => "false"
+      case Some(LibType.Single) => "true"
+      case otherwise            => throw new NotImplementedError
+    }
+
+    s"""function map() {
+    |  $jsArrayStr.forEach(function(item) {
+    |
+    |    var passFilter = item.alnStats.$attr !== null && item.alnStats.$attr !== undefined;
+    |
+    |    if ($jsSingleStr === undefined) {
+    |      passFilter = passFilter && true
+    |    } else if ($jsSingleStr === true) {
+    |      passFilter = passFilter && (item.rawSeq.read2 === undefined)
+    |    } else {
+    |      passFilter = passFilter && (item.rawSeq.read2 !== undefined)
+    |    }
+    |
+    |    if (passFilter) {
+    |      emit("$attr",
+    |        {
+    |          sum: item.alnStats.$attr,
+    |          min: item.alnStats.$attr,
+    |          max: item.alnStats.$attr,
+    |          arr: [item.alnStats.$attr],
+    |          count: 1,
+    |          diff: 0
+    |        });
+    |    }
+    |  });
+    |}
+    """.stripMargin
+  }
+
+  /** Reduce runction for mapReduce */
+  private[processors] val reduceFunc =
+    """function reduce(key, values) {
+      |
+      |  var a = values[0];
+      |
+      |  for (var i = 1; i < values.length; i++){
+      |    var b = values[i];
+      |
+      |    // temp helpers
+      |    var delta = a.sum / a.count - b.sum / b.count;
+      |    var weight = (a.count * b.count) / (a.count + b.count);
+      |
+      |    // do the reducing
+      |    a.diff += b.diff + delta * delta * weight;
+      |    a.sum += b.sum;
+      |    a.count += b.count;
+      |    a.arr = a.arr.concat(b.arr);
+      |    a.min = Math.min(a.min, b.min);
+      |    a.max = Math.max(a.max, b.max);
+      |  }
+      |
+      |  return a;
+      |}
+    """.stripMargin
+
+  /** Finalize function for mapReduce */
+  private[processors] val finalizeFunc =
+    """function finalize(key, value) {
+      |
+      |  value.mean = value.sum / value.count;
+      |  value.variance = value.diff / value.count;
+      |  value.stdev = Math.sqrt(value.variance);
+      |
+      |  value.arr.sort();
+      |  if (value.arr.length % 2 === 0) {
+      |      var half = value.arr.length / 2;
+      |      value.median = (value.arr[half - 1] + value.arr[half]) / 2;
+      |  } else {
+      |      value.median = value.arr[(value.arr.length - 1) / 2];
+      |  }
+      |  delete value.arr;
+      |
+      |  return value;
+      |}
+    """.stripMargin
 
   def getAlignmentStats(accLevel: AccLevel.Value,
                         libType: Option[LibType.Value],
@@ -112,6 +208,54 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     // TODO: switch to database-level randomization when SERVER-533 is resolved
     if (timeSorted) results
     else shuffle(results)
+  }
+
+  def getAlignmentAggregateStats(accLevel: AccLevel.Value,
+                                 libType: Option[LibType.Value],
+                                 runs: Seq[ObjectId] = Seq(),
+                                 references: Seq[ObjectId] = Seq(),
+                                 annotations: Seq[ObjectId] = Seq()): GentrapAlignmentAggregateStats = {
+
+    val query = buildMatchOp(runs, references, annotations, withKey = false)
+
+    def mapRecResults(attr: String) = coll
+      .mapReduce(
+        mapFunction = mapFuncAlnStats(attr, accLevel, libType),
+        reduceFunction = reduceFunc,
+        output = MapReduceInlineOutput,
+        finalizeFunction = Option(finalizeFunc),
+        query = Option(query))
+      .toSeq
+      .headOption
+      .collect {
+        case res =>
+          MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty))
+      }
+
+    // TODO: generate the attribute names programmatically (using macros?)
+    val attrs = Seq("nReads",
+      "nReadsAligned",
+      "rateReadsMismatch",
+      "rateIndel",
+      "nBasesAligned",
+      "nBasesUtr",
+      "nBasesCoding",
+      "nBasesIntron",
+      "nBasesIntergenic",
+      "nBasesRibosomal",
+      "median5PrimeBias",
+      "median3PrimeBias",
+      "pctChimeras",
+      "nSingletons",
+      "maxInsertSize",
+      "medianInsertSize",
+      "stdevInsertSize")
+
+    val aggrStats = attrs.par
+      .flatMap { mapRecResults }
+      .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
+
+    grater[GentrapAlignmentAggregateStats].asObject(aggrStats)
   }
 
   /**

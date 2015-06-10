@@ -2,6 +2,7 @@ package nl.lumc.sasc.sentinel.api
 
 import scala.util.Try
 
+import org.json4s._
 import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
@@ -98,6 +99,74 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     gentrap.getAlignmentStats(acc, libType, runIds, refIds, annotIds, sorted)
+  }
+
+  // format: OFF
+  val statsGentrapAlignmentsAggregatesGetOperation = (
+    apiOperation[GentrapAlignmentAggregateStats]("statsGentrapAlignmentsAggregatesGet")
+      summary "Retrieves the aggregate alignment statistics of Gentrap pipeline runs."
+      parameters (
+      queryParam[Seq[String]]("runIds")
+        .description("Include only Gentrap runs with the given run ID(s).")
+        .multiValued
+        .optional,
+      queryParam[Seq[String]]("refIds")
+        .description("Include only Gentrap runs based on the given reference ID(s).")
+        .multiValued
+        .optional,
+      queryParam[Seq[String]]("annotIds")
+        .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
+        .multiValued
+        .optional,
+      queryParam[String]("accLevel")
+        .description(
+          """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
+            | accumulation or `sample` for sample-level accumulation (default: `sample`).
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedAccLevelParams.keySet.toList)
+        .optional,
+      queryParam[String]("libType")
+        .description(
+          """The types of sequence libraries to return. Possible values are `single` for single end
+            | libraries or `paired` for paired end libraries. If not set, both library types are included. This
+            | parameter is considered to be unset if `accLevel` is set to `sample` regardless of user input since a
+            | single sample may contain mixed library types.
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .optional)
+      responseMessages (
+      StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
+      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
+  // format: ON
+
+  get("/gentrap/alignments/aggregates", operation(statsGentrapAlignmentsAggregatesGetOperation)) {
+
+    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
+    if (invalidRunIds.nonEmpty)
+      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
+
+    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
+    if (invalidRefIds.nonEmpty)
+      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
+
+    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
+    if (invalidAnnotIds.nonEmpty)
+      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
+
+    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
+    val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
+
+    val libType = params.getAs[String]("libType")
+      .collect { case libn => AllowedLibTypeParams.getOrElse(libn, halt(400, CommonErrors.InvalidLibType)) }
+    val lib = acc match {
+      case AccLevel.Lib => libType
+      case otherwise    => None
+    }
+
+    val results = gentrap.getAlignmentAggregateStats(acc, lib, runIds, refIds, annotIds)
+
+    transformMapReduceResult(results)
   }
 
   // format: OFF

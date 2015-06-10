@@ -456,6 +456,243 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
+  s"GET '$baseEndpoint/gentrap/alignments/aggregates'" >> {
+    br
+
+    val endpoint = s"$baseEndpoint/gentrap/alignments/aggregates"
+
+    "when an invalid accumulation level is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("accLevel", "yalala"))) { response }
+        def priorRequests: Seq[Req] = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
+    "when an invalid library type is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Library type parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
+    "when an invalid run ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("runIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+        }
+      }
+    }
+
+    "when an invalid reference ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("refIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+        }
+      }
+    }
+
+    "when an invalid annotation ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("annotIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+        }
+      }
+    }
+
+    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+
+      new Context.PriorRunUploadClean {
+
+        def pipelineParam = "gentrap"
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+
+        "when using the default parameter should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              val nSingleSample = 2
+              val nPairedSample = 1
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("nReads") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("rateIndel") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("pctChimeras") /("count" -> nPairedSample)
+              priorResponse.body must /("nSingletons") /("count" -> nPairedSample)
+              priorResponse.body must /("maxInsertSize") /("count" -> nPairedSample)
+              priorResponse.body must /("medianInsertSize") /("count" -> nPairedSample)
+              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedSample)
+            }
+          }
+        }
+
+        "when accLevel is set to 'lib' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("accLevel", "lib"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              val nSingleLib = 4
+              val nPairedLib = 2
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("pctChimeras") /("count" -> nPairedLib)
+              priorResponse.body must /("nSingletons") /("count" -> nPairedLib)
+              priorResponse.body must /("maxInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("medianInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedLib)
+            }
+          }
+        }
+
+        "when accLevel is set to 'lib' and libType set to 'paired' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("accLevel", "lib"), ("libType", "paired"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              val nSingleLib = 0
+              val nPairedLib = 2
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("pctChimeras") /("count" -> nPairedLib)
+              priorResponse.body must /("nSingletons") /("count" -> nPairedLib)
+              priorResponse.body must /("maxInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("medianInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedLib)
+            }
+          }
+        }
+
+        "when accLevel is set to 'lib' and libType set to 'single' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("accLevel", "lib"), ("libType", "single"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              val nSingleLib = 4
+              val nPairedLib = 0
+              priorResponse.contentType mustEqual "application/json"
+              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+            }
+          }
+        }
+      }
+    }
+  }
+
   class StatsSeqGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
 
     def priorRequests = Seq(request)
