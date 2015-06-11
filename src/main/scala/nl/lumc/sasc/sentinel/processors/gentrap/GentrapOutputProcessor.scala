@@ -5,10 +5,10 @@ import scala.util.Random.shuffle
 import com.novus.salat._
 import com.novus.salat.global._
 import com.mongodb.casbah.Imports._
-import nl.lumc.sasc.sentinel.models.SeqStats
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.db.{ MongodbAccessObject, MongodbConnector }
+import nl.lumc.sasc.sentinel.models._
 
 import scala.collection.mutable.ListBuffer
 
@@ -124,6 +124,61 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     """.stripMargin
   }
 
+  /** Map function for mapReduce on seqStats */
+  private[processors] def mapFuncSeqStats(attr: String, readName: String, qcPhase: SeqQcPhase.Value,
+                                          libType: Option[LibType.Value]): JSFunction = {
+
+    val jsSingleStr = libType match {
+      case None                 => "undefined"
+      case Some(LibType.Paired) => "false"
+      case Some(LibType.Single) => "true"
+      case otherwise            => throw new NotImplementedError
+    }
+
+    val jsSeqName = qcPhase match {
+      case SeqQcPhase.Raw       => "rawSeq"
+      case SeqQcPhase.Processed => "processedSeq"
+      case otherwise            => throw new NotImplementedError
+    }
+
+    s"""function map() {
+    |  this.libs.forEach(function(item) {
+    |
+    |    var passFilter = item.$jsSeqName !== null && item.$jsSeqName !== undefined;
+    |
+    |    if (passFilter) {
+    |      passFilter = passFilter && (item.$jsSeqName.$readName !== null && item.$jsSeqName.$readName !== undefined);
+    |    }
+    |
+    |    if (passFilter) {
+    |      passFilter = passFilter && (item.$jsSeqName.$readName.stats.$attr !== null && item.$jsSeqName.$readName.stats.$attr !== undefined);
+    |    }
+    |
+    |    if (passFilter) {
+    |     if ($jsSingleStr === undefined) {
+    |       passFilter = passFilter && true;
+    |     } else if ($jsSingleStr === true) {
+    |       passFilter = passFilter && (item.$jsSeqName.read2 === undefined);
+    |     } else {
+    |       passFilter = passFilter && (item.$jsSeqName.read2 !== undefined);
+    |     }
+    |   }
+    |
+    |    if (passFilter) {
+    |      emit("$attr",
+    |        {
+    |          sum: item.$jsSeqName.$readName.stats.$attr,
+    |          min: item.$jsSeqName.$readName.stats.$attr,
+    |          max: item.$jsSeqName.$readName.stats.$attr,
+    |          arr: [item.$jsSeqName.$readName.stats.$attr],
+    |          count: 1,
+    |          diff: 0
+    |        });
+    |      }
+    |  });
+    |}
+    """.stripMargin
+  }
   /** Reduce runction for mapReduce */
   private[processors] val reduceFunc =
     """function reduce(key, values) {
@@ -319,5 +374,48 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     // TODO: switch to database-level randomization when SERVER-533 is resolved
     if (timeSorted) results
     else shuffle(results)
+  }
+
+  def getSeqAggregateStats(libType: Option[LibType.Value],
+                           qcPhase: SeqQcPhase.Value,
+                           runs: Seq[ObjectId] = Seq(),
+                           references: Seq[ObjectId] = Seq(),
+                           annotations: Seq[ObjectId] = Seq()): Option[SeqAggregateStats] = {
+
+    val query = buildMatchOp(runs, references, annotations, withKey = false)
+
+    def mapRecResults(attr: String, readName: String) = coll
+      .mapReduce(
+        mapFunction = mapFuncSeqStats(attr, readName, qcPhase, libType),
+        reduceFunction = reduceFunc,
+        output = MapReduceInlineOutput,
+        finalizeFunction = Option(finalizeFunc),
+        query = Option(query))
+      .toSeq
+      .headOption
+      .collect { case res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
+
+    // TODO: generate the attribute names programmatically (using macros?)
+    val attrs = Seq("nReads",
+      "nBases",
+      "nBasesA",
+      "nBasesT",
+      "nBasesG",
+      "nBasesC",
+      "nBasesN")
+
+    val readNames = Seq("read1", "read2")
+
+    val aggrStats = readNames.par
+      .map {
+        case rn =>
+          val res = attrs.par
+            .flatMap { case an => mapRecResults(an, rn) }
+            .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
+          if (res.nonEmpty) (rn, Option(grater[ReadAggregateStats].asObject(res)))
+          else (rn, None)
+      }.seq.toMap
+
+    aggrStats("read1").collect { case r1 => SeqAggregateStats(read1 = r1, read2 = aggrStats("read2")) }
   }
 }

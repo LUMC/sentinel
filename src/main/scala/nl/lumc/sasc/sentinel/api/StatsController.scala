@@ -2,7 +2,7 @@ package nl.lumc.sasc.sentinel.api
 
 import scala.util.Try
 
-import org.json4s._
+import org.scalatra._
 import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
@@ -235,5 +235,69 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted)
+  }
+
+  // format: OFF
+  val statsGentrapSequencesAggregatesGetOperation =
+    (apiOperation[SeqAggregateStats]("statsGentrapSequencesAggregationsGet")
+      summary "Retrieves the aggregate sequencing statistics of Gentrap pipeline runs."
+      parameters (
+      queryParam[Seq[String]]("runIds")
+        .description("Include only Gentrap runs with the given run ID(s).")
+        .multiValued
+        .optional,
+      queryParam[Seq[String]]("refIds")
+        .description("Include only Gentrap runs based on the given reference ID(s).")
+        .multiValued
+        .optional,
+      queryParam[Seq[String]]("annotIds")
+        .description("Include only Gentrap runs that uses at least one of the given annotation ID(s).")
+        .multiValued
+        .optional,
+      queryParam[String]("libType")
+        .description(
+          """The types of sequence libraries to return. Possible values are `single` for single end
+            | libraries or `paired` for paired end libraries. If not set, both library types are included.
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .optional,
+      queryParam[String]("qcPhase")
+        .description(
+          """Selects for the sequencing QC phase to return. Possible values are `raw` for raw data before any QC
+            | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
+          """.stripMargin.replaceAll("\n", ""))
+        .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
+        .optional)
+      responseMessages (
+      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
+      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid."),
+      StringResponseMessage(404, CommonErrors.MissingDataPoints.message)))
+  // format: ON
+
+  get("/gentrap/sequences/aggregates", operation(statsGentrapSequencesAggregatesGetOperation)) {
+
+    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
+    if (invalidRunIds.nonEmpty)
+      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
+
+    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
+    if (invalidRefIds.nonEmpty)
+      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
+
+    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
+    if (invalidAnnotIds.nonEmpty)
+      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
+
+    val libType = params.getAs[String]("libType")
+      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
+
+    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
+    val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
+
+    gentrap.getSeqAggregateStats(libType, qc, runIds, refIds, annotIds) match {
+      case None      => NotFound(CommonErrors.MissingDataPoints)
+      case Some(res) => Ok(transformMapReduceResult(res))
+    }
   }
 }

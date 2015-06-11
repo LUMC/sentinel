@@ -30,6 +30,8 @@ package object models {
 
     val MissingRunId = ApiMessage("Run summary ID can not be found.")
 
+    val MissingDataPoints = ApiMessage("No data points for aggregation found.")
+
     val Unauthenticated = ApiMessage("Authentication required to access resource.")
 
     val Unauthorized = ApiMessage("Unauthorized to access resource.")

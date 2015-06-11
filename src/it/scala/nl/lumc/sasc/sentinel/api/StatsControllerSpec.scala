@@ -976,4 +976,238 @@ class StatsControllerSpec extends SentinelServletSpec {
       }
     }
   }
+
+  s"GET '$baseEndpoint/gentrap/sequences/aggregates'" >> {
+    br
+
+    val endpoint = s"$baseEndpoint/gentrap/sequences/aggregates"
+
+    "when an invalid library type is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("libType", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Library type parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
+    "when an invalid sequencing QC phase is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("qcPhase", "yalala"))) { response }
+        def priorRequests: Seq[Req] = Seq(request)
+
+        "return status 400" in {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
+          priorResponse.body must /("data" -> "Valid values are .+".r)
+        }
+      }
+    }
+
+    "when an invalid run ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("runIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+        }
+      }
+    }
+
+    "when an invalid reference ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("refIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+        }
+      }
+    }
+
+    "when an invalid annotation ID is specified should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("annotIds", "yalala"))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 400" in  {
+          priorResponse.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+        }
+      }
+    }
+
+    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+
+      new Context.PriorRunUploadClean {
+
+        def pipelineParam = "gentrap"
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+
+        "when using the default parameter should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              priorResponse.contentType mustEqual "application/json"
+              // read1
+              priorResponse.body must /("read1") / "nBases"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nReads"  /("count" -> 6)
+              // read2
+              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+            }
+          }
+        }
+
+        "when libType is set to 'paired' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("libType", "paired"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              priorResponse.contentType mustEqual "application/json"
+              // read1
+              priorResponse.body must /("read1") / "nBases"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nReads"  /("count" -> 2)
+              // read2
+              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+            }
+          }
+        }
+
+        "when libType is set to 'single' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("libType", "single"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              priorResponse.contentType mustEqual "application/json"
+              // read1
+              priorResponse.body must /("read1") / "nBases"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nReads"  /("count" -> 4)
+              // read2
+              priorResponse.body must not / "read2"
+            }
+          }
+        }
+
+        "when qcPhase is set to 'processed' should" >> inline {
+
+          new Context.PriorRequests {
+
+            def request = () => get(endpoint, Seq(("qcPhase", "raw"))) { response }
+            def priorRequests = Seq(request)
+
+            "return status 200" in {
+              priorResponse.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected attributes" in {
+              priorResponse.contentType mustEqual "application/json"
+              // read1
+              priorResponse.body must /("read1") / "nBases"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nReads"  /("count" -> 6)
+              // read2
+              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+            }
+
+            "return a different object than when qcPhase is set to 'processed'" in {
+              get(endpoint, Seq(("qcPhase", "processed"))) {
+                response.body must not be equalTo(priorResponse.body)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
