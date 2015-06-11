@@ -102,7 +102,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val statsGentrapAlignmentsAggregatesGetOperation = (
+  val statsGentrapAlignmentsAggregateGetOperation = (
     apiOperation[GentrapAlignmentAggregateStats]("statsGentrapAlignmentsAggregatesGet")
       summary "Retrieves the aggregate alignment statistics of Gentrap pipeline runs."
       parameters (
@@ -140,7 +140,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
-  get("/gentrap/alignments/aggregates", operation(statsGentrapAlignmentsAggregatesGetOperation)) {
+  get("/gentrap/alignments/aggregate", operation(statsGentrapAlignmentsAggregateGetOperation)) {
 
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)
@@ -239,7 +239,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val statsGentrapSequencesAggregatesGetOperation =
+  val statsGentrapSequencesAggregateGetOperation =
     (apiOperation[SeqAggregateStats]("statsGentrapSequencesAggregationsGet")
       summary "Retrieves the aggregate sequencing statistics of Gentrap pipeline runs."
       parameters (
@@ -276,7 +276,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(404, CommonErrors.MissingDataPoints.message)))
   // format: ON
 
-  get("/gentrap/sequences/aggregates", operation(statsGentrapSequencesAggregatesGetOperation)) {
+  get("/gentrap/sequences/aggregate", operation(statsGentrapSequencesAggregateGetOperation)) {
 
     val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
     if (invalidRunIds.nonEmpty)

@@ -456,10 +456,10 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/gentrap/alignments/aggregates'" >> {
+  s"GET '$baseEndpoint/gentrap/alignments/aggregate'" >> {
     br
 
-    val endpoint = s"$baseEndpoint/gentrap/alignments/aggregates"
+    val endpoint = s"$baseEndpoint/gentrap/alignments/aggregate"
 
     "when an invalid accumulation level is specified should" >> inline {
 
@@ -994,10 +994,10 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/gentrap/sequences/aggregates'" >> {
+  s"GET '$baseEndpoint/gentrap/sequences/aggregate'" >> {
     br
 
-    val endpoint = s"$baseEndpoint/gentrap/sequences/aggregates"
+    val endpoint = s"$baseEndpoint/gentrap/sequences/aggregate"
 
     "when an invalid library type is specified should" >> inline {
 
