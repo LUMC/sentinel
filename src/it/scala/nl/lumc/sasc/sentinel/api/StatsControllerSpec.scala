@@ -548,6 +548,23 @@ class StatsControllerSpec extends SentinelServletSpec {
       }
     }
 
+    "when the database is empty should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint) { response }
+        def priorRequests = Seq(request)
+
+        "return status 404" in  {
+          priorResponse.status mustEqual 404
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "No data points for aggregation found.")
+        }
+      }
+    }
+
     "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
 
       new Context.PriorRunUploadClean {
@@ -1065,6 +1082,23 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+        }
+      }
+    }
+
+    "when the database is empty should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint) { response }
+        def priorRequests = Seq(request)
+
+        "return status 404" in  {
+          priorResponse.status mustEqual 404
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "No data points for aggregation found.")
         }
       }
     }

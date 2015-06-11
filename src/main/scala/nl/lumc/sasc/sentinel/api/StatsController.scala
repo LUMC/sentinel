@@ -164,9 +164,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       case otherwise    => None
     }
 
-    val results = gentrap.getAlignmentAggregateStats(acc, lib, runIds, refIds, annotIds)
-
-    transformMapReduceResult(results)
+    gentrap.getAlignmentAggregateStats(acc, lib, runIds, refIds, annotIds) match {
+      case None      => NotFound(CommonErrors.MissingDataPoints)
+      case Some(res) => Ok(transformMapReduceResult(res))
+    }
   }
 
   // format: OFF
@@ -234,7 +235,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
-    gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted)
+    Ok(gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF

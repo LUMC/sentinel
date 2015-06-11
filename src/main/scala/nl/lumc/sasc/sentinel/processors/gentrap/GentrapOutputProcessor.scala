@@ -269,7 +269,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
                                  libType: Option[LibType.Value],
                                  runs: Seq[ObjectId] = Seq(),
                                  references: Seq[ObjectId] = Seq(),
-                                 annotations: Seq[ObjectId] = Seq()): GentrapAlignmentAggregateStats = {
+                                 annotations: Seq[ObjectId] = Seq()): Option[GentrapAlignmentAggregateStats] = {
 
     val query = buildMatchOp(runs, references, annotations, withKey = false)
 
@@ -310,7 +310,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .flatMap { mapRecResults }
       .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
 
-    grater[GentrapAlignmentAggregateStats].asObject(aggrStats)
+    if (aggrStats.isEmpty) None
+    else Some(grater[GentrapAlignmentAggregateStats].asObject(aggrStats))
   }
 
   /**
