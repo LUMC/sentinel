@@ -8,5 +8,5 @@ import com.novus.salat.annotations.Salat
 
   def sampleName: Option[String]
 
-  def name: Option[String]
+  def libName: Option[String]
 }

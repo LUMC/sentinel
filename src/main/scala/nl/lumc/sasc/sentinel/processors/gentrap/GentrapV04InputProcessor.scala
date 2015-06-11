@@ -76,9 +76,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     )
   }
 
-  private def extractLibDocument(libJson: JValue, name: String, sampleName: String): GentrapLibDocument =
+  private def extractLibDocument(libJson: JValue, libName: String, sampleName: String): GentrapLibDocument =
     GentrapLibDocument(
-      name = Option(name),
+      libName = Option(libName),
       sampleName = Option(sampleName),
       rawSeq = GentrapSeqDocument(
         read1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
@@ -106,7 +106,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
         case (sampleName, sampleJson) =>
           val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
           GentrapSampleDocument(
-            name = Option(sampleName),
+            sampleName = Option(sampleName),
             runId = runId,
             referenceId = refId,
             annotationIds = annotIds,

@@ -7,7 +7,7 @@ case class GentrapLibDocument(
     rawSeq: GentrapSeqDocument,
     processedSeq: Option[GentrapSeqDocument],
     alnStats: GentrapAlignmentStats,
-    name: Option[String],
+    libName: Option[String],
     sampleName: Option[String] = None,
     runName: Option[String] = None) extends BaseLibDocument {
 

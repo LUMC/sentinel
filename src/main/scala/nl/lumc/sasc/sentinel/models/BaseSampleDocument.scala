@@ -9,7 +9,7 @@ import org.bson.types.ObjectId
 
   def runName: Option[String]
 
-  def name: Option[String]
+  def sampleName: Option[String]
 
   def runId: ObjectId
 
