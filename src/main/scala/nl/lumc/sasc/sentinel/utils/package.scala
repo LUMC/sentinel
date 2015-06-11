@@ -144,7 +144,7 @@ package object utils {
 
   object implicits {
 
-    import scala.language.implicitConversions
+    import scala.language.{ higherKinds, implicitConversions }
 
     implicit class RichFileItem(fi: FileItem) {
       def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
@@ -152,6 +152,10 @@ package object utils {
 
     implicit class DatabaseId(id: String) {
       def getObjectId: Option[ObjectId] = tryMakeObjectId(id).toOption
+    }
+
+    implicit class EnumableString(raw: String) {
+      def asEnum[T <: Enumeration#Value](enm: Map[String, T]): Option[T] = enm.get(raw)
     }
   }
 }

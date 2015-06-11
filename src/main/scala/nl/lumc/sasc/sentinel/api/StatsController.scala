@@ -11,6 +11,7 @@ import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.utils.{ separateObjectIds, splitParam }
+import nl.lumc.sasc.sentinel.utils.implicits._
 
 class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
@@ -28,7 +29,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   )
 
   get("/runs", operation(statsRunsGetOperation)) {
-    runs.getGlobalRunStats()
+    Ok(runs.getGlobalRunStats())
   }
 
   // format: OFF
@@ -78,27 +79,32 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
-    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
-    if (invalidRunIds.nonEmpty)
-      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
-
-    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
-    if (invalidRefIds.nonEmpty)
-      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
-
-    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
-    if (invalidAnnotIds.nonEmpty)
-      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
-
-    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
-    val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
-
-    val libType = params.getAs[String]("libType")
-      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
-
+    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
+    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
+    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
-    gentrap.getAlignmentStats(acc, libType, runIds, refIds, annotIds, sorted)
+    val accLevel = params.getAs[String]("accLevel")
+      .collect {
+        case p => p
+          .asEnum(AllowedAccLevelParams)
+          .getOrElse(halt(400, CommonErrors.InvalidAccLevel))
+      }.getOrElse(AccLevel.Sample)
+
+    val libType = {
+      val lt = params.getAs[String]("libType")
+        .collect {
+          case p => p
+            .asEnum(AllowedLibTypeParams)
+            .getOrElse(halt(400, CommonErrors.InvalidLibType))
+        }
+      accLevel match {
+        case AccLevel.Sample => None
+        case AccLevel.Lib    => lt
+      }
+    }
+
+    Ok(gentrap.getAlignmentStats(accLevel, libType, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF
@@ -142,29 +148,31 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments/aggregate", operation(statsGentrapAlignmentsAggregateGetOperation)) {
 
-    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
-    if (invalidRunIds.nonEmpty)
-      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
+    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
+    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
+    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
 
-    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
-    if (invalidRefIds.nonEmpty)
-      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
+    val accLevel = params.getAs[String]("accLevel")
+      .collect {
+        case p => p
+          .asEnum(AllowedAccLevelParams)
+          .getOrElse(halt(400, CommonErrors.InvalidAccLevel))
+      }.getOrElse(AccLevel.Sample)
 
-    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
-    if (invalidAnnotIds.nonEmpty)
-      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
-
-    val accLevel = params.getAs[String]("accLevel").getOrElse(AccLevel.Sample.toString)
-    val acc = AllowedAccLevelParams.getOrElse(accLevel, halt(400, CommonErrors.InvalidAccLevel))
-
-    val libType = params.getAs[String]("libType")
-      .collect { case libn => AllowedLibTypeParams.getOrElse(libn, halt(400, CommonErrors.InvalidLibType)) }
-    val lib = acc match {
-      case AccLevel.Lib => libType
-      case otherwise    => None
+    val libType = {
+      val lt = params.getAs[String]("libType")
+        .collect {
+          case p => p
+            .asEnum(AllowedLibTypeParams)
+            .getOrElse(halt(400, CommonErrors.InvalidLibType))
+        }
+      accLevel match {
+        case AccLevel.Sample => None
+        case AccLevel.Lib    => lt
+      }
     }
 
-    gentrap.getAlignmentAggregateStats(acc, lib, runIds, refIds, annotIds) match {
+    gentrap.getAlignmentAggregateStats(accLevel, libType, runIds, refIds, annotIds) match {
       case None      => NotFound(CommonErrors.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
@@ -215,27 +223,24 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
-    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
-    if (invalidRunIds.nonEmpty)
-      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
-
-    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
-    if (invalidRefIds.nonEmpty)
-      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
-
-    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
-    if (invalidAnnotIds.nonEmpty)
-      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
-
-    val libType = params.getAs[String]("libType")
-      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
-
-    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
-    val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
-
+    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
+    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
+    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
-    Ok(gentrap.getSeqStats(libType, qc, runIds, refIds, annotIds, sorted))
+    val qcPhase = params.getAs[String]("qcPhase")
+      .collect {
+        case p => p.asEnum(AllowedSeqQcPhaseParams)
+          .getOrElse(halt(400, CommonErrors.InvalidSeqQcPhase))
+      }.getOrElse(SeqQcPhase.Raw)
+
+    val libType = params.getAs[String]("libType")
+      .collect {
+        case libn => libn.asEnum(AllowedLibTypeParams)
+          .getOrElse(halt(400, CommonErrors.InvalidLibType))
+      }
+
+    Ok(gentrap.getSeqStats(libType, qcPhase, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF
@@ -278,25 +283,24 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences/aggregate", operation(statsGentrapSequencesAggregateGetOperation)) {
 
-    val (runIds, invalidRunIds) = separateObjectIds(splitParam(params.getAs[String]("runIds")))
-    if (invalidRunIds.nonEmpty)
-      halt(400, ApiMessage("Invalid run ID(s) provided.", Map("invalid" -> invalidRunIds)))
+    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
+    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
+    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
-    val (refIds, invalidRefIds) = separateObjectIds(splitParam(params.getAs[String]("refIds")))
-    if (invalidRefIds.nonEmpty)
-      halt(400, ApiMessage("Invalid reference ID(s) provided.", Map("invalid" -> invalidRefIds)))
-
-    val (annotIds, invalidAnnotIds) = separateObjectIds(splitParam(params.getAs[String]("annotIds")))
-    if (invalidAnnotIds.nonEmpty)
-      halt(400, ApiMessage("Invalid annotation ID(s) provided.", Map("invalid" -> invalidAnnotIds)))
+    val qcPhase = params.getAs[String]("qcPhase")
+      .collect {
+        case p => p.asEnum(AllowedSeqQcPhaseParams)
+          .getOrElse(halt(400, CommonErrors.InvalidSeqQcPhase))
+      }.getOrElse(SeqQcPhase.Raw)
 
     val libType = params.getAs[String]("libType")
-      .collect { case lib => AllowedLibTypeParams.getOrElse(lib, halt(400, CommonErrors.InvalidLibType)) }
+      .collect {
+        case libn => libn.asEnum(AllowedLibTypeParams)
+          .getOrElse(halt(400, CommonErrors.InvalidLibType))
+      }
 
-    val seqQcPhase = params.getAs[String]("qcPhase").getOrElse(SeqQcPhase.Raw.toString)
-    val qc = AllowedSeqQcPhaseParams.getOrElse(seqQcPhase, halt(400, CommonErrors.InvalidSeqQcPhase))
-
-    gentrap.getSeqAggregateStats(libType, qc, runIds, refIds, annotIds) match {
+    gentrap.getSeqAggregateStats(libType, qcPhase, runIds, refIds, annotIds) match {
       case None      => NotFound(CommonErrors.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }

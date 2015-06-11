@@ -2,11 +2,13 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
 
+import org.bson.types.ObjectId
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 
-import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
+import nl.lumc.sasc.sentinel.models.ApiMessage
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
 abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
 
@@ -52,6 +54,24 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
       super.registerModel(newModel)
     }
   }
+
+  protected def getObjectIds(strs: Seq[String], msg: Option[ApiMessage] = None): Seq[ObjectId] = {
+    val (validIds, invalidIds) = separateObjectIds(strs)
+    if (invalidIds.nonEmpty) msg match {
+      case None    => halt(400)
+      case Some(m) => halt(400, m.copy(data = Map("invalid" -> invalidIds)))
+    }
+    else validIds
+  }
+
+  protected def getRunObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
+    splitParam(rawParam), Option(ApiMessage("Invalid run ID(s) provided.")))
+
+  protected def getRefObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
+    splitParam(rawParam), Option(ApiMessage("Invalid reference ID(s) provided.")))
+
+  protected def getAnnotObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
+    splitParam(rawParam), Option(ApiMessage("Invalid annotation ID(s) provided.")))
 
   options("/*") {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
