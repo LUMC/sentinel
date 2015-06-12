@@ -77,14 +77,22 @@ trait RunsAdapter extends MongodbConnector {
   }
 
   def deleteRun(runId: ObjectId, user: User): Option[(RunDocument, Boolean)] = {
+
+    val userCheck =
+      if (user.isAdmin) MongoDBObject.empty
+      else MongoDBObject("uploaderId" -> user.id)
+
     val docDeleted = coll
-      .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> true)))
+      .findOne(MongoDBObject("_id" -> runId,
+        "deletionTimeUtc" -> MongoDBObject("$exists" -> true)) ++ userCheck)
       .map { case dbo => (grater[RunDocument].asObject(dbo), false) }
 
     if (docDeleted.isDefined) docDeleted
     else {
       val docToDelete = coll
-        .findAndModify(query = MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
+        .findAndModify(
+          query = MongoDBObject("_id" -> runId,
+            "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck,
           update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getTimeNow)),
           returnNew = true,
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)

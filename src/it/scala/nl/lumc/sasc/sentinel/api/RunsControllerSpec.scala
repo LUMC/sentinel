@@ -1223,5 +1223,148 @@ class RunsControllerSpec extends SentinelServletSpec {
         }
       }
     }
+
+    "when an admin authenticates correctly" >> {
+      br
+
+      "with the default parameters for the 'unsupported' pipeline should" >> inline {
+
+        new UnsupportedUploadContext {
+
+          val params = Seq(("userId", Users.admin.id))
+          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          def userRunId = runId
+          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
+          override def priorRequests = super.priorRequests.toStream :+ request
+
+          "return status 200" in {
+            priorResponses.last.status mustEqual 200
+          }
+
+          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
+            priorResponses.last.contentType mustEqual "application/json"
+            priorResponses.last.body must /("runId" -> userRunId)
+            priorResponses.last.body must /("uploaderId" -> user.id)
+            priorResponses.last.body must not /("sampleIds" -> ".+".r)
+            priorResponses.last.body must /("nSamples" -> 0)
+            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
+          }
+
+          "remove the run record" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              contentType mustEqual "application/json"
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              jsonBody must haveSize(0)
+            }
+          }
+
+          "return status 410 when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 410
+            }
+          }
+
+          "return a JSON object containing the expected message when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("message" -> "Run summary already deleted.")
+            }
+          }
+        }
+      }
+
+      "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
+
+        new Context.PriorRunUploadClean {
+          def pipelineParam = "gentrap"
+          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
+          lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
+
+          val params = Seq(("userId", Users.admin.id))
+          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          def userRunId = runId
+          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
+          override def priorRequests = super.priorRequests.toStream :+ request
+
+          "return status 200" in {
+            priorResponses.last.status mustEqual 200
+          }
+
+          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
+            delete(endpoint(userRunId), params, headers) {
+              priorResponses.last.contentType mustEqual "application/json"
+              priorResponses.last.body must /("runId" -> userRunId)
+              priorResponses.last.body must /("uploaderId" -> user.id)
+              priorResponses.last.body must not /("sampleIds" -> ".+".r)
+              priorResponses.last.body must /("annotIds" -> ".+".r)
+              priorResponses.last.body must /("refId" -> """\S+""".r)
+              priorResponses.last.body must /("nSamples" -> 1)
+              priorResponses.last.body must /("nLibs" -> 1)
+              priorResponses.last.body must /("pipeline" -> "gentrap")
+              priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
+            }
+          }
+
+          "remove the run record" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the uploaded run file" in {
+            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+              Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 404
+              contentType mustEqual "application/json"
+              body must not /("runId" -> ".+".r)
+              body must /("message" -> CommonErrors.MissingRunId.message)
+            }
+          }
+
+          "remove the run from collection listings" in {
+            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+              status mustEqual 200
+              jsonBody must haveSize(0)
+            }
+          }
+
+          "return status 410 again when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              status mustEqual 410
+            }
+          }
+
+          "return a JSON object containing the expected message when repeated" in {
+            delete(endpoint(userRunId), params, headers) {
+              contentType mustEqual "application/json"
+              body must /("message" -> "Run summary already deleted.")
+            }
+          }
+        }
+      }
+    }
   }
 }
