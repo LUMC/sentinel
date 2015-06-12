@@ -180,9 +180,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
-        | Only administrators and the run summary uploader can access this resource. Note that this endpoint omits the
-        | actual run summary content. To retrieve the run summary content, you must specify its ID using another
-        | endpoint.
+        | Only the run summary uploader can access this resource. Note that this endpoint omits the actual run summary
+        | content. To retrieve the run summary content, you must specify its ID using another endpoint.
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
