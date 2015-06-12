@@ -2,6 +2,8 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import nl.lumc.sasc.sentinel.models.AggrStat
 
+case class DataPointNames(runName: Option[String], sampleName: Option[String], libName: Option[String])
+
 case class GentrapAlignmentStats(
   nReads: Long,
   nReadsAligned: Long,
@@ -20,7 +22,8 @@ case class GentrapAlignmentStats(
   nSingletons: Option[Long] = None,
   maxInsertSize: Option[Long] = None,
   medianInsertSize: Option[Long] = None,
-  stdevInsertSize: Option[Double] = None)
+  stdevInsertSize: Option[Double] = None,
+  names: Option[DataPointNames] = None)
 
 // TODO: generate the aggregate stats programmatically (using macros?)
 case class GentrapAlignmentAggregateStats(

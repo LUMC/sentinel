@@ -228,6 +228,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
   def getAlignmentStats(accLevel: AccLevel.Value,
                         libType: Option[LibType.Value],
+                        user: Option[User],
                         runs: Seq[ObjectId] = Seq(),
                         references: Seq[ObjectId] = Seq(),
                         annotations: Seq[ObjectId] = Seq(),
@@ -238,14 +239,19 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
     val operations = accLevel match {
       case AccLevel.Sample =>
-        val opProjectAlnStats = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "alnStats" -> 1))
+        val opProjectAlnStats = MongoDBObject("$project" ->
+          MongoDBObject("_id" -> 0, "alnStats" -> 1, "uploaderId" -> 1,
+            "names" -> MongoDBObject("runName" -> "$runName", "sampleName" -> "$sampleName")))
         if (timeSorted)
           Seq(opMatchFilters, opSortSample, opProjectAlnStats)
         else
           Seq(opMatchFilters, opProjectAlnStats)
 
       case AccLevel.Lib =>
-        val opProjectStats = MongoDBObject("$project" -> MongoDBObject("alnStats" -> "$libs.alnStats"))
+        val opProjectStats = MongoDBObject("$project" ->
+          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId",
+            "names" ->
+              MongoDBObject("runName" -> "$libs.runName", "sampleName" -> "$libs.sampleName", "libName" -> "$libs.libName")))
         if (timeSorted)
           Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
         else
@@ -257,9 +263,21 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map {
-        case astat => astat.getAs[MongoDBObject]("alnStats").collect {
-          case dbo => grater[GentrapAlignmentStats].asObject(dbo)
-        }
+        case aggres =>
+          println(aggres)
+          val uploaderId = aggres.getAs[String]("uploaderId")
+          val names = aggres.getAs[DBObject]("names")
+          val astat = aggres.getAs[DBObject]("alnStats")
+          val dbo = (user, uploaderId, astat, names) match {
+            case (Some(u), Some(uid), Some(s), Some(n)) =>
+              if (u.id == uid) Option(s ++ MongoDBObject("names" -> n))
+              else Option(s)
+            case (None, _, Some(s), _) => Option(s)
+            case otherwise             => None
+          }
+          dbo.collect {
+            case obj => grater[GentrapAlignmentStats].asObject(obj)
+          }
       }.toSeq.flatten
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved

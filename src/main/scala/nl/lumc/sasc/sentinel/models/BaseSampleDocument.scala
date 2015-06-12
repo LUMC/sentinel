@@ -7,6 +7,8 @@ import org.bson.types.ObjectId
 
 @Salat abstract class BaseSampleDocument {
 
+  def uploaderId: String
+
   def runName: Option[String]
 
   def sampleName: Option[String]

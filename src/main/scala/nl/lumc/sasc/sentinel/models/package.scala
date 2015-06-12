@@ -34,6 +34,8 @@ package object models {
 
     val Unauthenticated = ApiMessage("Authentication required to access resource.")
 
+    val UnauthenticatedOptional = ApiMessage("User ID and/or API key is provided but authentication failed.")
+
     val Unauthorized = ApiMessage("Unauthorized to access resource.")
 
     val IncorrectAuthMode = ApiMessage("Incorrect authentication mode.")

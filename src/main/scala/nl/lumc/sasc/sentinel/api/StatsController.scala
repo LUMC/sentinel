@@ -7,13 +7,14 @@ import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel._
+import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
-import nl.lumc.sasc.sentinel.utils.{ separateObjectIds, splitParam }
 import nl.lumc.sasc.sentinel.utils.implicits._
 
-class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
+class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
+    with AuthenticationSupport { self =>
 
   protected val applicationDescription: String = "Statistics from deposited summaries"
   override protected val applicationName: Option[String] = Some("stats")
@@ -23,6 +24,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
   }
   protected val gentrap = new GentrapOutputProcessor(mongo)
+  protected val users = new UsersAdapter { val mongo = self.mongo }
 
   val statsRunsGetOperation = (apiOperation[Seq[PipelineRunStats]]("statsRunsGet")
     summary "Retrieves general statistics of uploaded run summaries."
@@ -65,12 +67,16 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional,
       queryParam[Boolean]("sorted")
-      .description(
-        """Whether to try sort the returned items or not. If set to false, the returned
-          | results are randomized. If set to true, the returned items are guaranteed to be sorted. The sort order is
-          | most often the items' creation time (most recent first), though this is not guaranteed (default: `false`).
-        """.stripMargin.replaceAll("\n", ""))
-      .optional)
+        .description(
+          """Whether to try sort the returned items or not. If set to false, the returned
+            | results are randomized. If set to true, the returned items are guaranteed to be sorted. The sort order is
+            | most often the items' creation time (most recent first), though this is not guaranteed (default: `false`).
+          """.stripMargin.replaceAll("\n", ""))
+        .optional,
+      queryParam[String]("userId").description("User ID.")
+        .optional,
+      headerParam[String](HeaderApiKey).description("User API key.")
+        .optional)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),
@@ -83,6 +89,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
+
+    val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
+    if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
+      halt(401, CommonErrors.UnauthenticatedOptional)
 
     val accLevel = params.getAs[String]("accLevel")
       .collect {
@@ -104,7 +114,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       }
     }
 
-    Ok(gentrap.getAlignmentStats(accLevel, libType, runIds, refIds, annotIds, sorted))
+    Ok(gentrap.getAlignmentStats(accLevel, libType, user, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF
@@ -214,6 +224,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | results are randomized. If set to true, the returned items are guaranteed to be sorted. The sort order is
             | most often the items' creation time (most recent first), though this is not guaranteed (default: `false`).
           """.stripMargin.replaceAll("\n", ""))
+        .optional,
+      queryParam[String]("userId").description("User ID.")
+        .optional,
+      headerParam[String](HeaderApiKey).description("User API key.")
         .optional)
     responseMessages (
       StringResponseMessage(400, CommonErrors.InvalidLibType.message),

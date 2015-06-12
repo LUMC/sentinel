@@ -9,6 +9,7 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.getTimeNow
 
 case class GentrapSampleDocument(
+  uploaderId: String,
   runId: ObjectId,
   referenceId: ObjectId,
   annotationIds: Seq[ObjectId],
