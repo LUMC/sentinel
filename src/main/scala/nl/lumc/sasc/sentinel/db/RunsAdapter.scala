@@ -43,13 +43,18 @@ trait RunsAdapter extends MongodbConnector {
 
   def getRun(runId: ObjectId, user: User, doDownload: Boolean): Option[Either[RunDocument, GridFSDBFile]] =
     if (doDownload) {
-      val query = MongoDBObject("_id" -> runId, "metadata.uploaderId" -> user.id)
+      val userCheck =
+        if (user.isAdmin) MongoDBObject.empty
+        else MongoDBObject("metadata.uploaderId" -> user.id)
+      val query = MongoDBObject("_id" -> runId) ++ userCheck
       mongo.gridfs
         .findOne(query)
         .collect { case gfs => Right(gfs) }
     } else {
-      val query = MongoDBObject("_id" -> runId, "uploaderId" -> user.id,
-        "deletionTimeUtc" -> MongoDBObject("$exists" -> false))
+      val userCheck =
+        if (user.isAdmin) MongoDBObject.empty
+        else MongoDBObject("uploaderId" -> user.id)
+      val query = MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck
       coll
         .findOne(query)
         .collect { case dbo => Left(grater[RunDocument].asObject(dbo)) }

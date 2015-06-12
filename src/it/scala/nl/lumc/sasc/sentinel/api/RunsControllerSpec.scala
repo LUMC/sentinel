@@ -828,6 +828,107 @@ class RunsControllerSpec extends SentinelServletSpec {
             }
           }
         }
+
+        "when an admin authenticates correctly" >> {
+          br
+
+          val params = Seq(("userId", Users.admin.id))
+          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+
+          "and queries a run he/she did not upload" >> {
+            br
+
+            def userRunId = runId
+
+            "with the default parameter" should {
+
+              "return status 200" in {
+                get(endpoint(userRunId), params, headers) { status mustEqual 200 }
+              }
+
+              "return a JSON object of the run data" in {
+                get(endpoint(userRunId), params, headers) {
+                  contentType mustEqual "application/json"
+                  body must /("runId" -> userRunId)
+                  body must /("uploaderId" -> user.id)
+                  body must /("nSamples" -> 0)
+                  body must /("nLibs" -> 0)
+                  body must /("pipeline" -> "unsupported")
+                  body must not /("sampleIds" -> ".+".r)
+                }
+              }
+            }
+
+            "and sets the download parameter to some true values which" can {
+
+              Seq("1", "yes", "true", "ok") foreach { dlParam =>
+                s"be '$dlParam'" should {
+
+                  val paramsWithDownload = params :+ ("download", dlParam)
+
+                  "return status 200" in {
+                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                  }
+
+                  "return the expected Content-Disposition header" in {
+                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+                    }
+                  }
+
+                  "return the uploaded summary file" in {
+                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                      contentType mustEqual "application/octet-stream"
+                      body mustEqual new String(uploadPayload.content)
+                    }
+                  }
+                }
+              }
+            }
+
+            "and sets the download parameter to some false values which" can {
+
+              Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
+                s"be '$dlParam'" should {
+
+                  val paramsWithDownload = params :+ ("download", dlParam)
+
+                  "return status 200" in {
+                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                  }
+
+                  "return a JSON object of the run data" in {
+                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                      contentType mustEqual "application/json"
+                      body must /("runId" -> userRunId)
+                      body must /("uploaderId" -> user.id)
+                      body must not /("sampleIds" -> ".+".r)
+                      body must /("nSamples" -> 0)
+                      body must /("nLibs" -> 0)
+                      body must /("pipeline" -> "unsupported")
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          "and queries a run with an invalid ID" should {
+
+            val invalidId = "nonexistendId"
+
+            "return status 404" in {
+              get(endpoint(invalidId), params, headers) { status mustEqual 404 }
+            }
+
+            "return a JSON object of the expected message" in  {
+              get(endpoint(invalidId), params, headers) {
+                contentType mustEqual "application/json"
+                body must /("message" -> CommonErrors.MissingRunId.message)
+              }
+            }
+          }
+        }
       }
     }
   }
