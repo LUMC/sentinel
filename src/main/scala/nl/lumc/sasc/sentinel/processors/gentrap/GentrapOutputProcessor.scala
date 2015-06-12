@@ -63,7 +63,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       case None                 => MongoDBObject.empty
       case Some(LibType.Paired) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> true))
       case Some(LibType.Single) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> false))
-      case otherwise            => throw new RuntimeException("Unexpected library type value: " + libType.toString)
+      case otherwise            => throw new NotImplementedError
     }
 
     MongoDBObject("$match" -> query)
@@ -236,29 +236,31 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     // Match operation to filter for run, reference, and/or annotation IDs
     val opMatchFilters = buildMatchOp(runs, references, annotations)
 
-    val operations =
-      if (accLevel == AccLevel.Sample) {
+    val operations = accLevel match {
+      case AccLevel.Sample =>
         val opProjectAlnStats = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "alnStats" -> 1))
         if (timeSorted)
           Seq(opMatchFilters, opSortSample, opProjectAlnStats)
         else
           Seq(opMatchFilters, opProjectAlnStats)
-      } else if (accLevel == AccLevel.Lib) {
+
+      case AccLevel.Lib =>
         val opProjectStats = MongoDBObject("$project" -> MongoDBObject("alnStats" -> "$libs.alnStats"))
         if (timeSorted)
           Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
         else
           Seq(opMatchFilters, opSortSample, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
-      } else
-        throw new RuntimeException("Unexpected accumulation level value: " + accLevel.toString)
+
+      case otherwise => throw new NotImplementedError
+    }
 
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map {
-        case astat => astat.get("alnStats") match {
-          case alnStats: BasicDBObject => grater[GentrapAlignmentStats].asObject(alnStats)
+        case astat => astat.getAs[MongoDBObject]("alnStats").collect {
+          case dbo => grater[GentrapAlignmentStats].asObject(dbo)
         }
-      }.toSeq
+      }.toSeq.flatten
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
     if (timeSorted) results
@@ -361,11 +363,10 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
           "read2" -> ("$libs." + attrName + ".read2.stats")))
     }
 
-    val operations =
-      if (timeSorted)
-        Seq(opMatchFilters, opSortSample, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
-      else
-        Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
+    val operations = timeSorted match {
+      case true  => Seq(opMatchFilters, opSortSample, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
+      case false => Seq(opMatchFilters, opProjectLibs, opUnwindLibs, opMatchLibType, opProjectStats)
+    }
 
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
