@@ -1,17 +1,17 @@
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.utils.RunValidationException
-import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
-
 import scala.util.{ Failure, Success, Try }
 
 import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
 
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.utils.RunValidationException
+import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
 
 class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with AuthenticationSupport { self =>
@@ -34,6 +34,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       """.stripMargin.replaceAll("\n", "")
     parameters (
       pathParam[String]("userId").description("User ID."),
+      headerParam[String](HeaderApiKey).description("User API key."),
       bodyParam[Seq[UserPatch]]("ops").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
@@ -94,8 +95,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     summary "Retrieves record of the given user ID."
     notes "This endpoint is only available to the particular user and administrators."
     parameters (
-      pathParam[String]("userRecordId").description("User record ID to return."),
-      queryParam[String]("userId").description("User ID."))
+      queryParam[String]("userId").description("User ID."),
+      headerParam[String](HeaderApiKey).description("User API key."),
+      pathParam[String]("userRecordId").description("User record ID to return."))
     responseMessages (
       StringResponseMessage(400, "User record ID not specified."),
       StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),

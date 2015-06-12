@@ -7,7 +7,7 @@ import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, Pipeline }
+import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, HeaderApiKey, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
@@ -50,8 +50,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         | run summary.
       """.stripMargin.replaceAll("\n", "")
     parameters (
-      pathParam[String]("runId").description("Run summary ID."),
-      queryParam[String]("userId").description("Run summary uploader ID."))
+      queryParam[String]("userId").description("Run summary uploader ID."),
+      headerParam[String](HeaderApiKey).description("Run summary uploader API key."),
+      pathParam[String]("runId").description("Run summary ID."))
     responseMessages (
       StringResponseMessage(200, "Run summary deleted successfully."),
       StringResponseMessage(400, CommonErrors.UnspecifiedRunId.message),
@@ -87,8 +88,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         | can access this resource.
       """.stripMargin.replaceAll("\n", "")
     parameters (
-      pathParam[String]("runId").description("Run summary ID."),
       queryParam[String]("userId").description("Run summary uploader ID."),
+      headerParam[String](HeaderApiKey).description("Run summary uploader API key."),
+      pathParam[String]("runId").description("Run summary ID."),
       queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional)
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
@@ -126,6 +128,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
+      headerParam[String](HeaderApiKey).description("User API key."),
       queryParam[String]("pipeline")
         .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `unsupported`.")
         .allowableValues(AllowedPipelineParams.keySet.toList),
@@ -183,6 +186,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
+      headerParam[String](HeaderApiKey).description("Run summary uploader API key."),
       queryParam[Seq[String]]("pipelines")
         .description(
           """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `unsupported`. If not
