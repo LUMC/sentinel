@@ -242,6 +242,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
+    val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
+    if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
+      halt(401, CommonErrors.UnauthenticatedOptional)
+
     val qcPhase = params.getAs[String]("qcPhase")
       .collect {
         case p => p.asEnum(AllowedSeqQcPhaseParams)
@@ -254,7 +258,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           .getOrElse(halt(400, CommonErrors.InvalidLibType))
       }
 
-    Ok(gentrap.getSeqStats(libType, qcPhase, runIds, refIds, annotIds, sorted))
+    Ok(gentrap.getSeqStats(libType, qcPhase, user, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF

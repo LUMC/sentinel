@@ -238,6 +238,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     val opMatchFilters = buildMatchOp(runs, references, annotations)
 
     val operations = accLevel match {
+
       case AccLevel.Sample =>
         val opProjectAlnStats = MongoDBObject("$project" ->
           MongoDBObject("_id" -> 0, "alnStats" -> 1, "uploaderId" -> 1,
@@ -344,6 +345,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    *
    * @param libType Library type of the returned sequence statistics.
    * @param qcPhase Sequencing QC phase of the returned statistics.
+   * @param user [[User]] object. If defined, returned data points belonging to the user will show its names.
    * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
    * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
    *                   by reference IDs.
@@ -354,6 +356,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    */
   def getSeqStats(libType: Option[LibType.Value],
                   qcPhase: SeqQcPhase.Value,
+                  user: Option[User],
                   runs: Seq[ObjectId] = Seq(),
                   references: Seq[ObjectId] = Seq(),
                   annotations: Seq[ObjectId] = Seq(),
@@ -376,6 +379,11 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       MongoDBObject("$project" ->
         MongoDBObject(
+          "names" -> MongoDBObject(
+            "runName" -> "$libs.runName",
+            "sampleName" -> "$libs.sampleName",
+            "libName" -> "$libs.libName"),
+          "uploaderId" -> "$libs.uploaderId",
           "read1" -> ("$libs." + attrName + ".read1"),
           "read2" -> ("$libs." + attrName + ".read2")))
     }
@@ -387,8 +395,14 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
-      .map { case pstat => grater[SeqStats].asObject(pstat) }
-      .toSeq
+      .map {
+        case pstat =>
+          val dbo = (user, pstat.getAs[String]("uploaderId")) match {
+            case (Some(usr), Some(uid)) if usr.id == uid => pstat
+            case otherwise                               => (pstat - "names").asDBObject
+          }
+          grater[SeqStats].asObject(dbo)
+      }.toSeq
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
     if (timeSorted) results
