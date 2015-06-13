@@ -26,7 +26,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val gentrap = new GentrapOutputProcessor(mongo)
   protected val users = new UsersAdapter { val mongo = self.mongo }
 
-  val statsRunsGetOperation = (apiOperation[Seq[PipelineRunStats]]("statsRunsGet")
+  val statsRunsGetOperation = (apiOperation[Seq[PipelineCounts]]("statsRunsGet")
     summary "Retrieves general statistics of uploaded run summaries."
   )
 
@@ -119,7 +119,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   // format: OFF
   val statsGentrapAlignmentsAggregateGetOperation = (
-    apiOperation[GentrapAlignmentAggregateStats]("statsGentrapAlignmentsAggregatesGet")
+    apiOperation[GentrapAlignmentStatsAggr]("statsGentrapAlignmentsAggregatesGet")
       summary "Retrieves the aggregate alignment statistics of Gentrap pipeline runs."
       parameters (
       queryParam[Seq[String]]("runIds")
@@ -259,7 +259,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   // format: OFF
   val statsGentrapSequencesAggregateGetOperation =
-    (apiOperation[SeqAggregateStats]("statsGentrapSequencesAggregationsGet")
+    (apiOperation[SeqStatsAggr]("statsGentrapSequencesAggregationsGet")
       summary "Retrieves the aggregate sequencing statistics of Gentrap pipeline runs."
       parameters (
       queryParam[Seq[String]]("runIds")

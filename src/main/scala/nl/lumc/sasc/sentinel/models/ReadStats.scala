@@ -12,11 +12,11 @@ case class ReadStats(
   medianQualByPosition: Seq[Double])
 
 // TODO: generate the aggregate stats programmatically (using macros?)
-case class ReadAggregateStats(
-  nBases: AggrStat,
-  nBasesA: AggrStat,
-  nBasesT: AggrStat,
-  nBasesG: AggrStat,
-  nBasesC: AggrStat,
-  nBasesN: AggrStat,
-  nReads: AggrStat)
+case class ReadStatsAggr(
+  nBases: DataPointAggr,
+  nBasesA: DataPointAggr,
+  nBasesT: DataPointAggr,
+  nBasesG: DataPointAggr,
+  nBasesC: DataPointAggr,
+  nBasesN: DataPointAggr,
+  nReads: DataPointAggr)

@@ -249,9 +249,9 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       case AccLevel.Lib =>
         val opProjectStats = MongoDBObject("$project" ->
-          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId",
-            "names" ->
-              MongoDBObject("runName" -> "$libs.runName", "sampleName" -> "$libs.sampleName", "libName" -> "$libs.libName")))
+          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId", "names" ->
+            MongoDBObject("runName" ->
+              "$libs.runName", "sampleName" -> "$libs.sampleName", "libName" -> "$libs.libName")))
         if (timeSorted)
           Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
         else
@@ -264,7 +264,6 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map {
         case aggres =>
-          println(aggres)
           val uploaderId = aggres.getAs[String]("uploaderId")
           val names = aggres.getAs[DBObject]("names")
           val astat = aggres.getAs[DBObject]("alnStats")
@@ -289,7 +288,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
                                  libType: Option[LibType.Value],
                                  runs: Seq[ObjectId] = Seq(),
                                  references: Seq[ObjectId] = Seq(),
-                                 annotations: Seq[ObjectId] = Seq()): Option[GentrapAlignmentAggregateStats] = {
+                                 annotations: Seq[ObjectId] = Seq()): Option[GentrapAlignmentStatsAggr] = {
 
     val query = buildMatchOp(runs, references, annotations, withKey = false)
 
@@ -331,7 +330,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
 
     if (aggrStats.isEmpty) None
-    else Some(grater[GentrapAlignmentAggregateStats].asObject(aggrStats))
+    else Some(grater[GentrapAlignmentStatsAggr].asObject(aggrStats))
   }
 
   /**
@@ -400,7 +399,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
                            qcPhase: SeqQcPhase.Value,
                            runs: Seq[ObjectId] = Seq(),
                            references: Seq[ObjectId] = Seq(),
-                           annotations: Seq[ObjectId] = Seq()): Option[SeqAggregateStats] = {
+                           annotations: Seq[ObjectId] = Seq()): Option[SeqStatsAggr] = {
 
     val query = buildMatchOp(runs, references, annotations, withKey = false)
 
@@ -432,10 +431,10 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
           val res = attrs.par
             .flatMap { case an => mapRecResults(an, rn) }
             .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-          if (res.nonEmpty) (rn, Option(grater[ReadAggregateStats].asObject(res)))
+          if (res.nonEmpty) (rn, Option(grater[ReadStatsAggr].asObject(res)))
           else (rn, None)
       }.seq.toMap
 
-    aggrStats("read1").collect { case r1 => SeqAggregateStats(read1 = r1, read2 = aggrStats("read2")) }
+    aggrStats("read1").collect { case r1 => SeqStatsAggr(read1 = r1, read2 = aggrStats("read2")) }
   }
 }

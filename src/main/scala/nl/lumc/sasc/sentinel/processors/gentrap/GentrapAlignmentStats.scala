@@ -1,8 +1,6 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import nl.lumc.sasc.sentinel.models.AggrStat
-
-case class DataPointNames(runName: Option[String], sampleName: Option[String], libName: Option[String])
+import nl.lumc.sasc.sentinel.models.{ DataPointAggr, DataPointNames }
 
 case class GentrapAlignmentStats(
   nReads: Long,
@@ -26,21 +24,21 @@ case class GentrapAlignmentStats(
   names: Option[DataPointNames] = None)
 
 // TODO: generate the aggregate stats programmatically (using macros?)
-case class GentrapAlignmentAggregateStats(
-  nReads: AggrStat,
-  nReadsAligned: AggrStat,
-  rateReadsMismatch: AggrStat,
-  rateIndel: AggrStat,
-  nBasesAligned: AggrStat,
-  nBasesUtr: AggrStat,
-  nBasesCoding: AggrStat,
-  nBasesIntron: AggrStat,
-  nBasesIntergenic: AggrStat,
-  median5PrimeBias: AggrStat,
-  median3PrimeBias: AggrStat,
-  nBasesRibosomal: Option[AggrStat] = None,
-  pctChimeras: Option[AggrStat] = None,
-  nSingletons: Option[AggrStat] = None,
-  maxInsertSize: Option[AggrStat] = None,
-  medianInsertSize: Option[AggrStat] = None,
-  stdevInsertSize: Option[AggrStat] = None)
+case class GentrapAlignmentStatsAggr(
+  nReads: DataPointAggr,
+  nReadsAligned: DataPointAggr,
+  rateReadsMismatch: DataPointAggr,
+  rateIndel: DataPointAggr,
+  nBasesAligned: DataPointAggr,
+  nBasesUtr: DataPointAggr,
+  nBasesCoding: DataPointAggr,
+  nBasesIntron: DataPointAggr,
+  nBasesIntergenic: DataPointAggr,
+  median5PrimeBias: DataPointAggr,
+  median3PrimeBias: DataPointAggr,
+  nBasesRibosomal: Option[DataPointAggr] = None,
+  pctChimeras: Option[DataPointAggr] = None,
+  nSingletons: Option[DataPointAggr] = None,
+  maxInsertSize: Option[DataPointAggr] = None,
+  medianInsertSize: Option[DataPointAggr] = None,
+  stdevInsertSize: Option[DataPointAggr] = None)

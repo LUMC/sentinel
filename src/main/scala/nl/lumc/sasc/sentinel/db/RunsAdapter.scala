@@ -10,7 +10,7 @@ import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.Pipeline
-import nl.lumc.sasc.sentinel.models.{ PipelineRunStats, RunDocument, User }
+import nl.lumc.sasc.sentinel.models.{ PipelineCounts, RunDocument, User }
 import nl.lumc.sasc.sentinel.utils.getTimeNow
 
 trait RunsAdapter extends MongodbConnector {
@@ -111,7 +111,7 @@ trait RunsAdapter extends MongodbConnector {
     }
   }
 
-  final def getGlobalRunStats(): Seq[PipelineRunStats] =
+  final def getGlobalRunStats(): Seq[PipelineCounts] =
     coll
       .aggregate(List(
         MongoDBObject("$project" ->
@@ -124,6 +124,6 @@ trait RunsAdapter extends MongodbConnector {
             "nLibs" -> MongoDBObject("$sum" -> "$nLibs"))),
         MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
         AggregationOptions(AggregationOptions.CURSOR))
-      .map { case pstat => grater[PipelineRunStats].asObject(pstat) }
+      .map { case pstat => grater[PipelineCounts].asObject(pstat) }
       .toSeq
 }
