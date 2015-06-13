@@ -61,8 +61,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
     val query = libType match {
       case None                 => MongoDBObject.empty
-      case Some(LibType.Paired) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> true))
-      case Some(LibType.Single) => MongoDBObject("libs.rawSeq.read2" -> MongoDBObject("$exists" -> false))
+      case Some(LibType.Paired) => MongoDBObject("libs.seqStatsRaw.read2" -> MongoDBObject("$exists" -> true))
+      case Some(LibType.Single) => MongoDBObject("libs.seqStatsRaw.read2" -> MongoDBObject("$exists" -> false))
       case otherwise            => throw new NotImplementedError
     }
 
@@ -103,9 +103,9 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     |    if ($jsSingleStr === undefined) {
     |      passFilter = passFilter && true
     |    } else if ($jsSingleStr === true) {
-    |      passFilter = passFilter && (item.rawSeq.read2 === undefined)
+    |      passFilter = passFilter && (item.seqStatsRaw.read2 === undefined)
     |    } else {
-    |      passFilter = passFilter && (item.rawSeq.read2 !== undefined)
+    |      passFilter = passFilter && (item.seqStatsRaw.read2 !== undefined)
     |    }
     |
     |    if (passFilter) {
@@ -135,42 +135,42 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       case otherwise            => throw new NotImplementedError
     }
 
-    val jsSeqName = qcPhase match {
-      case SeqQcPhase.Raw       => "rawSeq"
-      case SeqQcPhase.Processed => "processedSeq"
+    val jsStatsName = qcPhase match {
+      case SeqQcPhase.Raw       => "seqStatsRaw"
+      case SeqQcPhase.Processed => "seqStatsProcessed"
       case otherwise            => throw new NotImplementedError
     }
 
     s"""function map() {
     |  this.libs.forEach(function(item) {
     |
-    |    var passFilter = item.$jsSeqName !== null && item.$jsSeqName !== undefined;
+    |    var passFilter = item.$jsStatsName !== null && item.$jsStatsName !== undefined;
     |
     |    if (passFilter) {
-    |      passFilter = passFilter && (item.$jsSeqName.$readName !== null && item.$jsSeqName.$readName !== undefined);
+    |      passFilter = passFilter && (item.$jsStatsName.$readName !== null && item.$jsStatsName.$readName !== undefined);
     |    }
     |
     |    if (passFilter) {
-    |      passFilter = passFilter && (item.$jsSeqName.$readName.stats.$attr !== null && item.$jsSeqName.$readName.stats.$attr !== undefined);
+    |      passFilter = passFilter && (item.$jsStatsName.$readName.$attr !== null && item.$jsStatsName.$readName.$attr !== undefined);
     |    }
     |
     |    if (passFilter) {
     |     if ($jsSingleStr === undefined) {
     |       passFilter = passFilter && true;
     |     } else if ($jsSingleStr === true) {
-    |       passFilter = passFilter && (item.$jsSeqName.read2 === undefined);
+    |       passFilter = passFilter && (item.$jsStatsName.read2 === undefined);
     |     } else {
-    |       passFilter = passFilter && (item.$jsSeqName.read2 !== undefined);
+    |       passFilter = passFilter && (item.$jsStatsName.read2 !== undefined);
     |     }
     |   }
     |
     |    if (passFilter) {
     |      emit("$attr",
     |        {
-    |          sum: item.$jsSeqName.$readName.stats.$attr,
-    |          min: item.$jsSeqName.$readName.stats.$attr,
-    |          max: item.$jsSeqName.$readName.stats.$attr,
-    |          arr: [item.$jsSeqName.$readName.stats.$attr],
+    |          sum: item.$jsStatsName.$readName.$attr,
+    |          min: item.$jsStatsName.$readName.$attr,
+    |          max: item.$jsStatsName.$readName.$attr,
+    |          arr: [item.$jsStatsName.$readName.$attr],
     |          count: 1,
     |          diff: 0
     |        });
@@ -370,14 +370,14 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       // attrName is the name of the processed/raw sequence objects in the library document
       val attrName =
-        if (qcPhase == SeqQcPhase.Raw) "rawSeq"
-        else if (qcPhase == SeqQcPhase.Processed) "processedSeq"
+        if (qcPhase == SeqQcPhase.Raw) "seqStatsRaw"
+        else if (qcPhase == SeqQcPhase.Processed) "seqStatsProcessed"
         else throw new RuntimeException("Unexpected sequencing QC phase value: " + qcPhase.toString)
 
       MongoDBObject("$project" ->
         MongoDBObject(
-          "read1" -> ("$libs." + attrName + ".read1.stats"),
-          "read2" -> ("$libs." + attrName + ".read2.stats")))
+          "read1" -> ("$libs." + attrName + ".read1"),
+          "read2" -> ("$libs." + attrName + ".read2")))
     }
 
     val operations = timeSorted match {

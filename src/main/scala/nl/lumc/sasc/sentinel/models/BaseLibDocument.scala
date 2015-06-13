@@ -4,6 +4,8 @@ import com.novus.salat.annotations.Salat
 
 @Salat abstract class BaseLibDocument {
 
+  def uploaderId: String
+
   def runName: Option[String]
 
   def sampleName: Option[String]

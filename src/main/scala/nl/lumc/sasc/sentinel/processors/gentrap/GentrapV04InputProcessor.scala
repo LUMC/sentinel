@@ -55,44 +55,58 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
   }
 
-  private def extractReadDocument(libJson: JValue,
-                                  fileKey: String, seqStatKey: String, fastqcKey: String): GentrapReadDocument = {
+  private def extractReadFile(libJson: JValue, fileKey: String): FileDocument =
+    (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument]
 
+  private def extractReadStats(libJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
     val flexStats = libJson \ "flexiprep" \ "stats"
     val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
-
-    GentrapReadDocument(
-      file = (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument],
-      stats = ReadStats(
-        nBases = (flexStats \ seqStatKey \ "bases" \ "num_total").extract[Long],
-        nBasesA = (nuclCounts \ "A").extract[Long],
-        nBasesT = (nuclCounts \ "T").extract[Long],
-        nBasesG = (nuclCounts \ "G").extract[Long],
-        nBasesC = (nuclCounts \ "C").extract[Long],
-        nBasesN = (nuclCounts \ "N").extract[Long],
-        nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_by_qual").extract[Seq[Long]],
-        medianQualByPosition = (flexStats \ fastqcKey \ "median_qual_by_position").extract[Seq[Double]],
-        nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
-    )
+    ReadStats(
+      nBases = (flexStats \ seqStatKey \ "bases" \ "num_total").extract[Long],
+      nBasesA = (nuclCounts \ "A").extract[Long],
+      nBasesT = (nuclCounts \ "T").extract[Long],
+      nBasesG = (nuclCounts \ "G").extract[Long],
+      nBasesC = (nuclCounts \ "C").extract[Long],
+      nBasesN = (nuclCounts \ "N").extract[Long],
+      nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_by_qual").extract[Seq[Long]],
+      medianQualByPosition = (flexStats \ fastqcKey \ "median_qual_by_position").extract[Seq[Double]],
+      nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
   }
 
-  private def extractLibDocument(libJson: JValue, uploaderId: String, libName: String, sampleName: String): GentrapLibDocument =
+  private def extractLibDocument(libJson: JValue, uploaderId: String, libName: String,
+                                 sampleName: String): GentrapLibDocument = {
+
+    val seqStatsRaw = SeqStats(
+      read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
+      read2 = Try(extractReadStats(libJson, "seqstat_R2", "fastqc_R2")).toOption)
+
+    val seqStatsProcessed = Try(extractReadStats(libJson, "seqstat_R1_qc", "fastqc_R1_qc")).toOption
+      .collect {
+        case r1proc =>
+          SeqStats(read1 = r1proc,
+            read2 = Try(extractReadStats(libJson, "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
+      }
+
+    val seqFilesRaw = SeqFiles(
+      read1 = extractReadFile(libJson, "input_R1"),
+      read2 = Try(extractReadFile(libJson, "input_R2")).toOption)
+
+    val seqFilesProcessed = Try(extractReadFile(libJson, "output_R1")).toOption
+      .collect {
+        case r1f =>
+          SeqFiles(read1 = r1f, read2 = Try(extractReadFile(libJson, "output_R2")).toOption)
+      }
+
     GentrapLibDocument(
       uploaderId = uploaderId,
       libName = Option(libName),
       sampleName = Option(sampleName),
-      rawSeq = GentrapSeqDocument(
-        read1 = extractReadDocument(libJson, "input_R1", "seqstat_R1", "fastqc_R1"),
-        read2 = Try(extractReadDocument(libJson, "input_R2", "seqstat_R2", "fastqc_R2")).toOption),
-      processedSeq =
-        Try(extractReadDocument(libJson, "output_R1", "seqstat_R1_qc", "fastqc_R1_qc")).toOption
-          .collect {
-            case ps =>
-              GentrapSeqDocument(
-                read1 = ps,
-                read2 = Try(extractReadDocument(libJson, "output_R2", "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
-          },
+      seqStatsRaw = seqStatsRaw,
+      seqStatsProcessed = seqStatsProcessed,
+      seqFilesRaw = seqFilesRaw,
+      seqFilesProcessed = seqFilesProcessed,
       alnStats = extractAlnStats(libJson))
+  }
 
   def pipelineName = "gentrap"
 
