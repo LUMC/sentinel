@@ -587,22 +587,22 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleSample = 2
               val nPairedSample = 1
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("rateIndel") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleSample + nPairedSample))
-              priorResponse.body must /("pctChimeras") /("count" -> nPairedSample)
-              priorResponse.body must /("nSingletons") /("count" -> nPairedSample)
-              priorResponse.body must /("maxInsertSize") /("count" -> nPairedSample)
-              priorResponse.body must /("medianInsertSize") /("count" -> nPairedSample)
-              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedSample)
+              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesAligned") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesUtr") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesCoding") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesIntron") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nBasesIntergenic") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedSample)
+              priorResponse.body must /("nSingletons") /("nDataPoints" -> nPairedSample)
+              priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedSample)
+              priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedSample)
+              priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedSample)
             }
           }
         }
@@ -622,22 +622,22 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 4
               val nPairedLib = 2
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("pctChimeras") /("count" -> nPairedLib)
-              priorResponse.body must /("nSingletons") /("count" -> nPairedLib)
-              priorResponse.body must /("maxInsertSize") /("count" -> nPairedLib)
-              priorResponse.body must /("medianInsertSize") /("count" -> nPairedLib)
-              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("nSingletons") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedLib)
             }
           }
         }
@@ -657,22 +657,22 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 0
               val nPairedLib = 2
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("pctChimeras") /("count" -> nPairedLib)
-              priorResponse.body must /("nSingletons") /("count" -> nPairedLib)
-              priorResponse.body must /("maxInsertSize") /("count" -> nPairedLib)
-              priorResponse.body must /("medianInsertSize") /("count" -> nPairedLib)
-              priorResponse.body must /("stdevInsertSize") /("count" -> nPairedLib)
+              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("nSingletons") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedLib)
             }
           }
         }
@@ -692,17 +692,17 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 4
               val nPairedLib = 0
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nReadsAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateReadsMismatch") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("rateIndel") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesAligned") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesUtr") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesCoding") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntron") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("nBasesIntergenic") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
-              priorResponse.body must /("median5PrimeBias") /("count" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesUtr") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesCoding") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntron") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nBasesIntergenic") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
             }
           }
         }
@@ -1124,21 +1124,21 @@ class StatsControllerSpec extends SentinelServletSpec {
             "return a JSON object containing the expected attributes" in {
               priorResponse.contentType mustEqual "application/json"
               // read1
-              priorResponse.body must /("read1") / "nBases"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nReads"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBases"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nReads"  /("nDataPoints" -> 6)
               // read2
-              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBases"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("nDataPoints" -> 2)
             }
           }
         }
@@ -1157,21 +1157,21 @@ class StatsControllerSpec extends SentinelServletSpec {
             "return a JSON object containing the expected attributes" in {
               priorResponse.contentType mustEqual "application/json"
               // read1
-              priorResponse.body must /("read1") / "nBases"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 2)
-              priorResponse.body must /("read1") / "nReads"  /("count" -> 2)
+              priorResponse.body must /("read1") / "nBases"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read1") / "nReads"  /("nDataPoints" -> 2)
               // read2
-              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBases"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("nDataPoints" -> 2)
             }
           }
         }
@@ -1190,13 +1190,13 @@ class StatsControllerSpec extends SentinelServletSpec {
             "return a JSON object containing the expected attributes" in {
               priorResponse.contentType mustEqual "application/json"
               // read1
-              priorResponse.body must /("read1") / "nBases"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 4)
-              priorResponse.body must /("read1") / "nReads"  /("count" -> 4)
+              priorResponse.body must /("read1") / "nBases"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nBasesA"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nBasesT"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nBasesG"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nBasesC"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nBasesN"  /("nDataPoints" -> 4)
+              priorResponse.body must /("read1") / "nReads"  /("nDataPoints" -> 4)
               // read2
               priorResponse.body must not / "read2"
             }
@@ -1217,21 +1217,21 @@ class StatsControllerSpec extends SentinelServletSpec {
             "return a JSON object containing the expected attributes" in {
               priorResponse.contentType mustEqual "application/json"
               // read1
-              priorResponse.body must /("read1") / "nBases"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesA"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesT"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesG"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesC"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nBasesN"  /("count" -> 6)
-              priorResponse.body must /("read1") / "nReads"  /("count" -> 6)
+              priorResponse.body must /("read1") / "nBases"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("read1") / "nReads"  /("nDataPoints" -> 6)
               // read2
-              priorResponse.body must /("read2") / "nBases"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesA"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesT"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesG"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesC"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nBasesN"  /("count" -> 2)
-              priorResponse.body must /("read2") / "nReads"  /("count" -> 2)
+              priorResponse.body must /("read2") / "nBases"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("read2") / "nReads"  /("nDataPoints" -> 2)
             }
 
             "return a different object than when qcPhase is set to 'processed'" in {

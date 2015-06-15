@@ -115,7 +115,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     |          min: item.alnStats.$attr,
     |          max: item.alnStats.$attr,
     |          arr: [item.alnStats.$attr],
-    |          count: 1,
+    |          nDataPoints: 1,
     |          diff: 0
     |        });
     |    }
@@ -171,7 +171,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     |          min: item.$jsStatsName.$readName.$attr,
     |          max: item.$jsStatsName.$readName.$attr,
     |          arr: [item.$jsStatsName.$readName.$attr],
-    |          count: 1,
+    |          nDataPoints: 1,
     |          diff: 0
     |        });
     |      }
@@ -189,13 +189,13 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       |    var b = values[i];
       |
       |    // temp helpers
-      |    var delta = a.sum / a.count - b.sum / b.count;
-      |    var weight = (a.count * b.count) / (a.count + b.count);
+      |    var delta = a.sum / a.nDataPoints - b.sum / b.nDataPoints;
+      |    var weight = (a.nDataPoints * b.nDataPoints) / (a.nDataPoints + b.nDataPoints);
       |
       |    // do the reducing
       |    a.diff += b.diff + delta * delta * weight;
       |    a.sum += b.sum;
-      |    a.count += b.count;
+      |    a.nDataPoints += b.nDataPoints;
       |    a.arr = a.arr.concat(b.arr);
       |    a.min = Math.min(a.min, b.min);
       |    a.max = Math.max(a.max, b.max);
@@ -209,8 +209,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   private[processors] val finalizeFunc =
     """function finalize(key, value) {
       |
-      |  value.mean = value.sum / value.count;
-      |  value.variance = value.diff / value.count;
+      |  value.mean = value.sum / value.nDataPoints;
+      |  value.variance = value.diff / value.nDataPoints;
       |  value.stdev = Math.sqrt(value.variance);
       |
       |  value.arr.sort();
