@@ -209,7 +209,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   private[processors] val finalizeFunc =
     """function finalize(key, value) {
       |
-      |  value.mean = value.sum / value.nDataPoints;
+      |  value.avg = value.sum / value.nDataPoints;
       |  value.variance = value.diff / value.nDataPoints;
       |  value.stdev = Math.sqrt(value.variance);
       |
