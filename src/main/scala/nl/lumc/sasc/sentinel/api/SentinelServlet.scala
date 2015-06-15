@@ -20,7 +20,7 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
   protected def transformMapReduceResult(results: Any): JValue =
     Extraction.decompose(results)
-      .transformField { case JField("count", JDouble(n)) => ("count", JInt(n.toLong)) }
+      .transformField { case JField("nDataPoints", JDouble(n)) => ("nDataPoints", JInt(n.toLong)) }
 
   override protected def registerModel(model: Model): Unit = {
     // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
