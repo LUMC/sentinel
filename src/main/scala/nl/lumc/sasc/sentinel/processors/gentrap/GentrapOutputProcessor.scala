@@ -73,7 +73,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   private[processors] val opSortSample = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
 
   /** Projection operation for selecting only libraries */
-  private[processors] val opProjectLibs = MongoDBObject("$project" -> MongoDBObject("_id" -> 0, "libs" -> 1))
+  private[processors] val opProjectLibs = MongoDBObject("$project" ->
+    MongoDBObject("_id" -> 0, "runId" -> 1, "uploaderId" -> 1, "libs" -> 1))
 
   /** Unwind operation to break open libs array */
   private[processors] val opUnwindLibs = MongoDBObject("$unwind" -> "$libs")
@@ -242,7 +243,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       case AccLevel.Sample =>
         val opProjectAlnStats = MongoDBObject("$project" ->
           MongoDBObject("_id" -> 0, "alnStats" -> 1, "uploaderId" -> 1,
-            "labels" -> MongoDBObject("runName" -> "$runName", "sampleName" -> "$sampleName")))
+            "labels" -> MongoDBObject("runId" -> "$runId", "runName" -> "$runName", "sampleName" -> "$sampleName")))
         if (timeSorted)
           Seq(opMatchFilters, opSortSample, opProjectAlnStats)
         else
@@ -250,8 +251,8 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       case AccLevel.Lib =>
         val opProjectStats = MongoDBObject("$project" ->
-          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId", "labels" ->
-            MongoDBObject("runName" ->
+          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$uploaderId", "labels" ->
+            MongoDBObject("runId" -> "$runId", "runName" ->
               "$libs.runName", "sampleName" -> "$libs.sampleName", "libName" -> "$libs.libName")))
         if (timeSorted)
           Seq(opMatchFilters, opProjectLibs, opUnwindLibs, buildMatchPostUnwindOp(libType), opProjectStats)
@@ -380,10 +381,11 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       MongoDBObject("$project" ->
         MongoDBObject(
           "labels" -> MongoDBObject(
+            "runId" -> "$runId",
             "runName" -> "$libs.runName",
             "sampleName" -> "$libs.sampleName",
             "libName" -> "$libs.libName"),
-          "uploaderId" -> "$libs.uploaderId",
+          "uploaderId" -> "$uploaderId",
           "read1" -> ("$libs." + attrName + ".read1"),
           "read2" -> ("$libs." + attrName + ".read2")))
     }

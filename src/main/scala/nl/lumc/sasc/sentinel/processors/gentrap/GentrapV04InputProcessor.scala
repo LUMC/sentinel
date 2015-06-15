@@ -98,7 +98,6 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       }
 
     GentrapLibDocument(
-      uploaderId = uploaderId,
       libName = Option(libName),
       sampleName = Option(sampleName),
       seqStatsRaw = seqStatsRaw,

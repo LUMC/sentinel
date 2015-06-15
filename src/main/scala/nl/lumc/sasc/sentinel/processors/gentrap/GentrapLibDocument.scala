@@ -9,7 +9,6 @@ case class GentrapLibDocument(
   seqStatsProcessed: Option[SeqStats],
   seqFilesRaw: SeqFiles,
   seqFilesProcessed: Option[SeqFiles],
-  uploaderId: String,
   libName: Option[String] = None,
   sampleName: Option[String] = None,
   runName: Option[String] = None) extends BaseLibDocument
