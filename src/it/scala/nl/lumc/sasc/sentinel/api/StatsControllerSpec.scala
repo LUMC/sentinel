@@ -103,7 +103,8 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  class StatsAlnGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
+  class StatsAlnGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int,
+                               val withAuth: Boolean = false, val isLib: Boolean = false) extends Context.PriorRequests {
 
     def priorRequests = Stream(request)
 
@@ -126,6 +127,12 @@ class StatsControllerSpec extends SentinelServletSpec {
           case None => false
         }
         s"have the expected attributes (object #$item)" in {
+          // labels
+          priorResponse.body must /#(idx) */ "labels" /("runId" -> """\S+""".r) iff withAuth
+          priorResponse.body must /#(idx) */ "labels" /("sampleName" -> """\S+""".r) iff withAuth
+          priorResponse.body must /#(idx) */ "labels" /("libName" -> """\S+""".r) iff (withAuth && isLib)
+
+          // stats
           priorResponse.body must /#(idx) /("nReads" -> bePositiveNum)
           priorResponse.body must /#(idx) /("nReadsAligned" -> bePositiveNum)
           priorResponse.body must /#(idx) /("rateReadsMismatch" -> bePositiveNum)
@@ -243,6 +250,40 @@ class StatsControllerSpec extends SentinelServletSpec {
       }
     }
 
+    "when a user tries to authenticate by only providing his/her user ID should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in  {
+          priorResponse.status mustEqual 401
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User ID and/or API key is provided but authentication failed.")
+        }
+      }
+    }
+
+    "when a user tries to authenticate by only providing his/her API key should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, headers = Map(HeaderApiKey -> Users.avg.activeKey)) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in  {
+          priorResponse.status mustEqual 401
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User ID and/or API key is provided but authentication failed.")
+        }
+      }
+    }
+
     "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
 
       new Context.PriorRunUploadClean {
@@ -269,24 +310,56 @@ class StatsControllerSpec extends SentinelServletSpec {
           new StatsAlnGentrapOkTests(() => get(endpoint) { response }, 3)
         }
 
+        "when the uploader authenticates correctly should" >> inline {
+
+          def params = Seq(("userId", uploadUser.id))
+          def headers = Map(HeaderApiKey -> uploadUser.activeKey)
+
+          new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3, withAuth = true)
+        }
+
+        "when a non-uploader authenticates correctly should" >> inline {
+
+          def params = Seq(("userId", Users.avg2.id))
+          def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+
+          new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3)
+        }
+
         "when queried with accLevel set to 'sample'" >> {
           br
 
           val accLevel = "sample"
 
-          "and libType not set should" >> inline {
+          "when the uploader authenticates correctly should" >> inline {
+
+            def params = Seq(("userId", uploadUser.id), ("accLevel", "sample"))
+            def headers = Map(HeaderApiKey -> uploadUser.activeKey)
+
+            new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3, withAuth = true)
+          }
+
+          "when a non-uploader authenticates correctly should" >> inline {
+
+            def params = Seq(("userId", Users.avg2.id), ("accLevel", "sample"))
+            def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+
+            new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3)
+          }
+
+          "when libType not set should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel))) { response }, 3)
           }
 
-          "and libType set to 'single' should" >> inline {
+          "when libType set to 'single' should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel), ("libType", "single"))) { response }, 3)
           }
 
-          "and libType set to 'paired' should" >> inline {
+          "when libType set to 'paired' should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel), ("libType", "paired"))) { response }, 3)
@@ -298,19 +371,35 @@ class StatsControllerSpec extends SentinelServletSpec {
 
           val accLevel = "lib"
 
-          "and libType not set should" >> inline {
+          "when the uploader authenticates correctly should" >> inline {
+
+            def params = Seq(("userId", uploadUser.id), ("accLevel", "lib"))
+            def headers = Map(HeaderApiKey -> uploadUser.activeKey)
+
+            new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, withAuth = true, isLib = true)
+          }
+
+          "when a non-uploader authenticates correctly should" >> inline {
+
+            def params = Seq(("userId", Users.avg2.id), ("accLevel", "lib"))
+            def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+
+            new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, isLib = true)
+          }
+
+          "when libType not set should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel))) { response }, 6)
           }
 
-          "and libType set to 'single' should" >> inline {
+          "when libType set to 'single' should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel), ("libType", "single"))) { response }, 4)
           }
 
-          "and libType set to 'paired' should" >> inline {
+          "when libType set to 'paired' should" >> inline {
 
             new StatsAlnGentrapOkTests(
               () => get(endpoint, Seq(("accLevel", accLevel), ("libType", "paired"))) { response }, 2)
@@ -358,6 +447,31 @@ class StatsControllerSpec extends SentinelServletSpec {
         "when accumulation level is set to 'lib' should" >> inline {
 
           new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("accLevel", "lib"))) { response }, 10)
+        }
+
+        "when one of the uploaders authenticates correctly should" >> inline {
+
+          new Context.PriorRequests {
+
+            def params = Seq(("userId", Users.avg.id))
+            def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+            def request = () => get(endpoint, params, headers) { response }
+            def priorRequests = Seq(request)
+
+            "return some items with their labels" in {
+              priorResponse.jsonBody must beSome.like { case json =>
+                val res = json.extract[Seq[nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats]]
+                res.exists(_.labels.isDefined) must beTrue
+              }
+            }
+
+            "return some items without their labels" in {
+              priorResponse.jsonBody must beSome.like { case json =>
+                val res = json.extract[Seq[nl.lumc.sasc.sentinel.processors.gentrap.GentrapAlignmentStats]]
+                res.exists(_.labels.isEmpty) must beTrue
+              }
+            }
+          }
         }
 
         "when run IDs is set" >> {
@@ -710,7 +824,8 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  class StatsSeqGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int) extends Context.PriorRequests {
+  class StatsSeqGentrapOkTests(val request: () => ClientResponse, val expNumItems: Int,
+                               val withAuth: Boolean = false) extends Context.PriorRequests {
 
     def priorRequests = Seq(request)
 
@@ -733,6 +848,11 @@ class StatsControllerSpec extends SentinelServletSpec {
           case None => false
         }
         s"have the expected attributes (object #$item)" in {
+          // labels
+          priorResponse.body must /#(idx) */ "labels" /("runId" -> """\S+""".r) iff withAuth
+          priorResponse.body must /#(idx) */ "labels" /("sampleName" -> """\S+""".r) iff withAuth
+          priorResponse.body must /#(idx) */ "labels" /("libName" -> """\S+""".r) iff withAuth
+
           // read 1
           priorResponse.body must /#(idx) */ "read1" /("nReads" -> bePositiveNum)
           priorResponse.body must /#(idx) */ "read1" /("nBases" -> bePositiveNum)
@@ -857,6 +977,40 @@ class StatsControllerSpec extends SentinelServletSpec {
       }
     }
 
+    "when a user tries to authenticate by only providing his/her user ID should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in  {
+          priorResponse.status mustEqual 401
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User ID and/or API key is provided but authentication failed.")
+        }
+      }
+    }
+
+    "when a user tries to authenticate by only providing his/her API key should" >> inline {
+
+      new Context.PriorRequests {
+        def request = () => get(endpoint, headers = Map(HeaderApiKey -> Users.avg.activeKey)) { response }
+        def priorRequests = Seq(request)
+
+        "return status 401" in  {
+          priorResponse.status mustEqual 401
+        }
+
+        "return a JSON object containing the expected message" in {
+          priorResponse.contentType mustEqual "application/json"
+          priorResponse.body must /("message" -> "User ID and/or API key is provided but authentication failed.")
+        }
+      }
+    }
+
     "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
 
       new Context.PriorRunUploadClean {
@@ -881,6 +1035,22 @@ class StatsControllerSpec extends SentinelServletSpec {
         "when using the default parameter should" >> inline {
 
           new StatsSeqGentrapOkTests(() => get(endpoint) { response }, 6)
+        }
+
+        "when the uploader authenticates correctly should" >> inline {
+
+          def params = Seq(("userId", uploadUser.id))
+          def headers = Map(HeaderApiKey -> uploadUser.activeKey)
+
+          new StatsSeqGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, withAuth = true)
+        }
+
+        "when a non-uploader authenticates correctly should" >> inline {
+
+          def params = Seq(("userId", Users.avg2.id))
+          def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+
+          new StatsSeqGentrapOkTests(() => get(endpoint, params, headers) { response }, 6)
         }
 
         "when libType is not set should" >> inline {
@@ -962,6 +1132,31 @@ class StatsControllerSpec extends SentinelServletSpec {
         "when using the default parameter should" >> inline {
 
           new StatsSeqGentrapOkTests(() => get(endpoint) { response }, 10)
+        }
+
+        "when one of the uploaders authenticates correctly should" >> inline {
+
+          new Context.PriorRequests {
+
+            def params = Seq(("userId", Users.avg.id))
+            def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+            def request = () => get(endpoint, params, headers) { response }
+            def priorRequests = Seq(request)
+
+            "return some items with their labels" in {
+              priorResponse.jsonBody must beSome.like { case json =>
+                val res = json.extract[Seq[nl.lumc.sasc.sentinel.models.SeqStats]]
+                res.exists(_.labels.isDefined) must beTrue
+              }
+            }
+
+            "return some items without their labels" in {
+              priorResponse.jsonBody must beSome.like { case json =>
+                val res = json.extract[Seq[nl.lumc.sasc.sentinel.models.SeqStats]]
+                res.exists(_.labels.isEmpty) must beTrue
+              }
+            }
+          }
         }
 
         "when queried multiple times using the default parameter should" >> inline {
