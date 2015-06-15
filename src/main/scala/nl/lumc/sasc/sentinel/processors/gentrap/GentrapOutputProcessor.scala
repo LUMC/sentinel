@@ -242,7 +242,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       case AccLevel.Sample =>
         val opProjectAlnStats = MongoDBObject("$project" ->
           MongoDBObject("_id" -> 0, "alnStats" -> 1, "uploaderId" -> 1,
-            "names" -> MongoDBObject("runName" -> "$runName", "sampleName" -> "$sampleName")))
+            "labels" -> MongoDBObject("runName" -> "$runName", "sampleName" -> "$sampleName")))
         if (timeSorted)
           Seq(opMatchFilters, opSortSample, opProjectAlnStats)
         else
@@ -250,7 +250,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       case AccLevel.Lib =>
         val opProjectStats = MongoDBObject("$project" ->
-          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId", "names" ->
+          MongoDBObject("alnStats" -> "$libs.alnStats", "uploaderId" -> "$libs.uploaderId", "labels" ->
             MongoDBObject("runName" ->
               "$libs.runName", "sampleName" -> "$libs.sampleName", "libName" -> "$libs.libName")))
         if (timeSorted)
@@ -266,11 +266,11 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .map {
         case aggres =>
           val uploaderId = aggres.getAs[String]("uploaderId")
-          val names = aggres.getAs[DBObject]("names")
+          val labels = aggres.getAs[DBObject]("labels")
           val astat = aggres.getAs[DBObject]("alnStats")
-          val dbo = (user, uploaderId, astat, names) match {
+          val dbo = (user, uploaderId, astat, labels) match {
             case (Some(u), Some(uid), Some(s), Some(n)) =>
-              if (u.id == uid) Option(s ++ MongoDBObject("names" -> n))
+              if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
               else Option(s)
             case (None, _, Some(s), _) => Option(s)
             case otherwise             => None
@@ -345,7 +345,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    *
    * @param libType Library type of the returned sequence statistics.
    * @param qcPhase Sequencing QC phase of the returned statistics.
-   * @param user [[User]] object. If defined, returned data points belonging to the user will show its names.
+   * @param user [[User]] object. If defined, returned data points belonging to the user will show its labels.
    * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
    * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
    *                   by reference IDs.
@@ -379,7 +379,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
 
       MongoDBObject("$project" ->
         MongoDBObject(
-          "names" -> MongoDBObject(
+          "labels" -> MongoDBObject(
             "runName" -> "$libs.runName",
             "sampleName" -> "$libs.sampleName",
             "libName" -> "$libs.libName"),
@@ -399,7 +399,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
         case pstat =>
           val dbo = (user, pstat.getAs[String]("uploaderId")) match {
             case (Some(usr), Some(uid)) if usr.id == uid => pstat
-            case otherwise                               => (pstat - "names").asDBObject
+            case otherwise                               => (pstat - "labels").asDBObject
           }
           grater[SeqStats].asObject(dbo)
       }.toSeq
