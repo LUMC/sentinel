@@ -7,18 +7,29 @@ import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
+/**
+ * Controller for the `/annotations` endpoint.
+ *
+ * @param swagger Container for main Swagger specification.
+ * @param mongo Object for accessing the database.
+ */
 class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
 
-  protected val applicationDescription: String = "Retrieval of annotation file records"
+  /** Controller name, shown in the generated Swagger spec. */
   override protected val applicationName = Some("annotations")
 
+  /** Controller description, shown in the generated Swagger spec. */
+  protected val applicationDescription: String = "Retrieval of annotation file records"
+
+  /** Annotation adapter for connecting to the database. */
   protected val annots = new AnnotationsAdapter { val mongo = self.mongo }
 
-  val annotationsRefIdGetOperation = (apiOperation[Seq[Annotation]]("annotationsRefIdGet")
+  // format: OFF
+  val annotationsRefIdGetOperation = (apiOperation[Seq[AnnotationRecord]]("annotationsRefIdGet")
     summary "Retrieves a single full annotation item."
     parameters pathParam[String]("annotId").description("Annotation ID query.")
-    responseMessages StringResponseMessage(404, "Annotation ID can not be found.")
-  )
+    responseMessages StringResponseMessage(404, "Annotation ID can not be found."))
+  // format: ON
 
   get("/:annotId", operation(annotationsRefIdGetOperation)) {
     val errMsg = ApiMessage("Annotation ID can not be found.")
@@ -31,9 +42,10 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
     }
   }
 
-  val annotationsGetOperation = (apiOperation[Seq[Annotation]]("annotationsGet")
-    summary "Retrieves all available annotation items."
-  )
+  // format: OFF
+  val annotationsGetOperation = (apiOperation[Seq[AnnotationRecord]]("annotationsGet")
+    summary "Retrieves all available annotation items.")
+  // format: ON
 
   get("/", operation(annotationsGetOperation)) {
     annots.getAnnotations()

@@ -8,16 +8,21 @@ import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api._
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
+/** Main entry point for mounted servlets. */
 class ScalatraBootstrap extends LifeCycle {
 
+  /** Container for main Swagger specifications. */
   implicit val swagger = new SentinelSwagger
+  // TODO: how to add this in the object definitions itself?
   swagger.addAuthorization(ApiKey(HeaderApiKey, "header"))
 
   override def init(context: ServletContext) {
 
     implicit val system = ActorSystem("appActorSystem")
+    // TODO: refactor this out into a config file
     implicit val mongo = MongodbAccessObject(MongoClient("localhost", 27017), "sentinel")
 
+    // TODO: separate production and development behavior more cleanly
     try {
       context mount (new RootController, "/*")
       context mount (new StatsController, "/stats/*")

@@ -13,22 +13,37 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
+/**
+ * Controller for the `/stats` endpoint.
+ *
+ * @param swagger Container for main Swagger specification.
+ * @param mongo Object for accessing the database.
+ */
 class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with AuthenticationSupport { self =>
 
-  protected val applicationDescription: String = "Statistics from deposited summaries"
+  /** Controller name, shown in the generated swagger spec */
   override protected val applicationName: Option[String] = Some("stats")
 
+  /** Controller description, shown in the generated Swagger spec */
+  protected val applicationDescription: String = "Statistics of deposited run summaries"
+
+  /** Adapter for connecting to the run collections */
   protected val runs = new RunsAdapter {
     val mongo = self.mongo
     def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
   }
+
+  /** Adapter for connecting to the gentrap collection */
   protected val gentrap = new GentrapOutputProcessor(mongo)
+
+  /** Adapter for connecting to the users collection */
   protected val users = new UsersAdapter { val mongo = self.mongo }
 
-  val statsRunsGetOperation = (apiOperation[Seq[PipelineCounts]]("statsRunsGet")
-    summary "Retrieves general statistics of uploaded run summaries."
-  )
+  // format: OFF
+  val statsRunsGetOperation = (apiOperation[Seq[PipelineStats]]("statsRunsGet")
+    summary "Retrieves general statistics of uploaded run summaries.")
+  // format: ON
 
   get("/runs", operation(statsRunsGetOperation)) {
     Ok(runs.getGlobalRunStats())
@@ -78,8 +93,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       headerParam[String](HeaderApiKey).description("User API key.")
         .optional)
     responseMessages (
-      StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
-      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, CommonMessages.InvalidAccLevel.message),
+      StringResponseMessage(400, CommonMessages.InvalidLibType.message),
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
@@ -92,13 +107,13 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
-      halt(401, CommonErrors.UnauthenticatedOptional)
+      halt(401, CommonMessages.UnauthenticatedOptional)
 
     val accLevel = params.getAs[String]("accLevel")
       .collect {
         case p => p
           .asEnum(AllowedAccLevelParams)
-          .getOrElse(halt(400, CommonErrors.InvalidAccLevel))
+          .getOrElse(halt(400, CommonMessages.InvalidAccLevel))
       }.getOrElse(AccLevel.Sample)
 
     val libType = {
@@ -106,7 +121,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         .collect {
           case p => p
             .asEnum(AllowedLibTypeParams)
-            .getOrElse(halt(400, CommonErrors.InvalidLibType))
+            .getOrElse(halt(400, CommonMessages.InvalidLibType))
         }
       accLevel match {
         case AccLevel.Sample => None
@@ -151,8 +166,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         .allowableValues(AllowedLibTypeParams.keySet.toList)
         .optional)
       responseMessages (
-      StringResponseMessage(400, CommonErrors.InvalidAccLevel.message),
-      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
+      StringResponseMessage(400, CommonMessages.InvalidAccLevel.message),
+      StringResponseMessage(400, CommonMessages.InvalidLibType.message),
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
@@ -166,7 +181,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       .collect {
         case p => p
           .asEnum(AllowedAccLevelParams)
-          .getOrElse(halt(400, CommonErrors.InvalidAccLevel))
+          .getOrElse(halt(400, CommonMessages.InvalidAccLevel))
       }.getOrElse(AccLevel.Sample)
 
     val libType = {
@@ -174,7 +189,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         .collect {
           case p => p
             .asEnum(AllowedLibTypeParams)
-            .getOrElse(halt(400, CommonErrors.InvalidLibType))
+            .getOrElse(halt(400, CommonMessages.InvalidLibType))
         }
       accLevel match {
         case AccLevel.Sample => None
@@ -183,7 +198,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     }
 
     gentrap.getAlignmentAggregateStats(accLevel, libType, runIds, refIds, annotIds) match {
-      case None      => NotFound(CommonErrors.MissingDataPoints)
+      case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
   }
@@ -230,8 +245,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       headerParam[String](HeaderApiKey).description("User API key.")
         .optional)
     responseMessages (
-      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
-      StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
+      StringResponseMessage(400, CommonMessages.InvalidLibType.message),
+      StringResponseMessage(400, CommonMessages.InvalidSeqQcPhase.message),
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
   // format: ON
 
@@ -244,18 +259,18 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
-      halt(401, CommonErrors.UnauthenticatedOptional)
+      halt(401, CommonMessages.UnauthenticatedOptional)
 
     val qcPhase = params.getAs[String]("qcPhase")
       .collect {
         case p => p.asEnum(AllowedSeqQcPhaseParams)
-          .getOrElse(halt(400, CommonErrors.InvalidSeqQcPhase))
+          .getOrElse(halt(400, CommonMessages.InvalidSeqQcPhase))
       }.getOrElse(SeqQcPhase.Raw)
 
     val libType = params.getAs[String]("libType")
       .collect {
         case libn => libn.asEnum(AllowedLibTypeParams)
-          .getOrElse(halt(400, CommonErrors.InvalidLibType))
+          .getOrElse(halt(400, CommonMessages.InvalidLibType))
       }
 
     Ok(gentrap.getSeqStats(libType, qcPhase, user, runIds, refIds, annotIds, sorted))
@@ -293,10 +308,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
         .optional)
       responseMessages (
-      StringResponseMessage(400, CommonErrors.InvalidLibType.message),
-      StringResponseMessage(400, CommonErrors.InvalidSeqQcPhase.message),
+      StringResponseMessage(400, CommonMessages.InvalidLibType.message),
+      StringResponseMessage(400, CommonMessages.InvalidSeqQcPhase.message),
       StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid."),
-      StringResponseMessage(404, CommonErrors.MissingDataPoints.message)))
+      StringResponseMessage(404, CommonMessages.MissingDataPoints.message)))
   // format: ON
 
   get("/gentrap/sequences/aggregate", operation(statsGentrapSequencesAggregateGetOperation)) {
@@ -304,22 +319,21 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
-    val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     val qcPhase = params.getAs[String]("qcPhase")
       .collect {
         case p => p.asEnum(AllowedSeqQcPhaseParams)
-          .getOrElse(halt(400, CommonErrors.InvalidSeqQcPhase))
+          .getOrElse(halt(400, CommonMessages.InvalidSeqQcPhase))
       }.getOrElse(SeqQcPhase.Raw)
 
     val libType = params.getAs[String]("libType")
       .collect {
         case libn => libn.asEnum(AllowedLibTypeParams)
-          .getOrElse(halt(400, CommonErrors.InvalidLibType))
+          .getOrElse(halt(400, CommonMessages.InvalidLibType))
       }
 
     gentrap.getSeqAggregateStats(libType, qcPhase, runIds, refIds, annotIds) match {
-      case None      => NotFound(CommonErrors.MissingDataPoints)
+      case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
   }

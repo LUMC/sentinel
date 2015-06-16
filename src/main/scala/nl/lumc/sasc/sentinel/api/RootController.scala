@@ -6,16 +6,17 @@ import org.scalatra.json.JacksonJsonSupport
 
 import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
-/** Servlet for the "/" endpoint */
+/** Controller for the `/` endpoint. */
 class RootController extends ScalatraServlet with JacksonJsonSupport {
 
+  /** JSON formatting used by this endpoint. */
   protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
   before() {
     contentType = formats("json")
   }
 
-  /** Root endpoint, which permanently redirects to our documentation */
+  /** Root endpoint, which permanently redirects to our documentation. */
   get("/") {
     halt(status = 301, headers = Map("Location" -> "/api-docs"))
   }

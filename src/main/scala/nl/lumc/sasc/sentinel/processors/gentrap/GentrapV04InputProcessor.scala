@@ -12,10 +12,15 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcSeqMd5, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcSeqMd5, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
+/**
+ * Input processor for Gentrap summary file version 0.4.
+ *
+ * @param mongo MongoDB database access object.
+ */
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     extends SamplesAdapter[GentrapSampleDocument]
     with ValidationAdapter
@@ -23,9 +28,51 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     with ReferencesAdapter
     with AnnotationsAdapter {
 
+  /** JSON formats used by this processor. */
   implicit val formats = SentinelJsonFormats
 
-  private def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
+  /** Extracts a reference record from a Gentrap summary. */
+  private[processors] def extractReference(runJson: JValue): ReferenceRecord = {
+    val contigMd5s = (runJson \ "gentrap" \ "settings" \ "reference" \\ "md5")
+      .children
+      .map(_.extract[String])
+      .sorted
+    val combinedMd5 = calcSeqMd5(contigMd5s)
+    ReferenceRecord(
+      refId = new ObjectId,
+      combinedMd5 = combinedMd5,
+      contigMd5s = contigMd5s,
+      creationTimeUtc = Option(getUtcTimeNow))
+  }
+
+  /** Extracts annotation records from a Gentrap summary. */
+  private[processors] def extractAnnotations(runJson: JValue): Seq[AnnotationRecord] =
+    (runJson \ "gentrap" \ "files" \ "pipeline")
+      .filterField {
+        case JField(key, _) if GentrapAnnotationKeys.contains(key) => true
+        case _ => false
+      }
+      .children
+      .map {
+        case fileJson =>
+          val filePath = (fileJson \ "path").extractOpt[String]
+          AnnotationRecord(
+            annotId = new ObjectId,
+            annotMd5 = (fileJson \ "md5").extract[String],
+            // Make sure file has extension and always return lower case extensions
+            extension = filePath match {
+              case None => None
+              case Some(path) =>
+                val ext = getExtension(path)
+                if (ext.isEmpty) None
+                else Some(ext.toLowerCase)
+            },
+            fileName = filePath.collect { case path => getName(path) },
+            creationTimeUtc = Option(getUtcTimeNow))
+      }
+
+  /** Extracts alignment statistics from a sample or library entry in a Gentrap summary. */
+  private[processors] def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
 
     val isPaired = (effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
     val alnMetrics = effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \
@@ -55,10 +102,12 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
   }
 
-  private def extractReadFile(libJson: JValue, fileKey: String): FileDocument =
+  /** Extracts an input sequencing file from a library entry in a Gentrap summary. */
+  private[processors] def extractReadFile(libJson: JValue, fileKey: String): FileDocument =
     (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument]
 
-  private def extractReadStats(libJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
+  /** Extracts a single read statistics from a library entry in a Gentrap summary. */
+  private[processors] def extractReadStats(libJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
     val flexStats = libJson \ "flexiprep" \ "stats"
     val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
     ReadStats(
@@ -73,8 +122,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
   }
 
-  private def extractLibDocument(libJson: JValue, uploaderId: String, libName: String,
-                                 sampleName: String): GentrapLibDocument = {
+  /** Extracts a library document from a library entry in a Gentrap summary. */
+  private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, libName: String,
+                                             sampleName: String): GentrapLibDocument = {
 
     val seqStatsRaw = SeqStats(
       read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
@@ -107,13 +157,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       alnStats = extractAlnStats(libJson))
   }
 
-  def pipelineName = "gentrap"
-
-  val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
-
-  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
-
-  def extractSamples(runJson: JValue, uploaderId: String, runId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId]) = {
+  /** Extracts a sample document from a sample entry in a Gentrap summary. */
+  private[processors] def extractSamples(runJson: JValue, uploaderId: String, runId: ObjectId,
+                                         refId: ObjectId, annotIds: Seq[ObjectId]) = {
     (runJson \ "samples")
       .extract[Map[String, JValue]]
       .map {
@@ -135,57 +181,28 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       }.toSeq
   }
 
-  def extractReference(runJson: JValue): Reference = {
-    val contigMd5s = (runJson \ "gentrap" \ "settings" \ "reference" \\ "md5")
-      .children
-      .map(_.extract[String])
-      .sorted
-    val combinedMd5 = calcSeqMd5(contigMd5s)
-    Reference(
-      refId = new ObjectId,
-      combinedMd5 = combinedMd5,
-      contigMd5s = contigMd5s,
-      creationTimeUtc = Option(getTimeNow))
-  }
-
-  def extractAnnotations(runJson: JValue): Seq[Annotation] = (runJson \ "gentrap" \ "files" \ "pipeline")
-    .filterField {
-      case JField(key, _) if GentrapAnnotationKeys.contains(key) => true
-      case _ => false
-    }
-    .children
-    .map {
-      case fileJson =>
-        val filePath = (fileJson \ "path").extractOpt[String]
-        Annotation(
-          annotId = new ObjectId,
-          annotMd5 = (fileJson \ "md5").extract[String],
-          // Make sure file has extension and always return lower case extensions
-          extension = filePath match {
-            case None => None
-            case Some(path) =>
-              val ext = getExtension(path)
-              if (ext.isEmpty) None
-              else Some(ext.toLowerCase)
-          },
-          fileName = filePath.collect { case path => getName(path) },
-          creationTimeUtc = Option(getTimeNow))
-    }
-
-  def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId], samples: Seq[GentrapSampleDocument],
-                user: User, pipeline: Pipeline.Value) =
-    RunDocument(
+  /** Helper function for creating run records. */
+  private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
+                                    samples: Seq[GentrapSampleDocument], user: User, pipeline: Pipeline.Value) =
+    RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
       sampleIds = samples.map(_.id),
-      creationTimeUtc = getTimeNow,
+      creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
       pipeline = pipeline.toString.toLowerCase,
       nSamples = samples.size,
       nLibs = samples.map(_.libs.size).sum)
 
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunDocument] =
+  /** Attribute keys of Gentrap annotations. */
+  protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
+
+  def pipelineName = "gentrap"
+
+  val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
+
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunRecord] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.
@@ -198,7 +215,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       refId = ref.refId
 
       runAnnots <- Try(extractAnnotations(json))
-      annots <- Try(getOrStoreAnnotations(runAnnots))
+      annots <- Try(storeOrModifyAnnotations(runAnnots))
       annotIds = annots.map(_.annotId)
 
       samples <- Try(extractSamples(json, user.id, fileId, refId, annotIds))

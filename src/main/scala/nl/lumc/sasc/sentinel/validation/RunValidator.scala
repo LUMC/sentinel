@@ -11,25 +11,25 @@ import org.json4s.jackson.JsonMethods._
 /**
  * Validator for incoming JSON payloads.
  *
- * @param rawSchema JSON schema to validate against, as a [[JValue]] object.
+ * @param rawSchema JSON schema to validate against, as a JValue object.
  */
 class RunValidator(rawSchema: JValue) {
 
   import nl.lumc.sasc.sentinel.validation.RunValidator._
 
-  /** Alternative constructor for creating a validator from any valid [[JsonInput]] object. */
+  /** Alternative constructor for creating a validator from any valid JsonInput object. */
   def this(in: JsonInput) {
     this(parse(in))
   }
 
-  /** [[JsonSchema]] object which provides the validation functions. */
+  /** JsonSchema object which provides the validation functions. */
   protected val schema: JsonSchema = factory.getJsonSchema(rawSchema)
 
   /**
    * Validates the given JSON.
    *
    * @param instance JSON instance to validate.
-   * @return [[ProcessingReport]] instance.
+   * @return ProcessingReport instance.
    */
   def validate(instance: JValue): ProcessingReport = schema.validate(instance)
 
@@ -37,7 +37,7 @@ class RunValidator(rawSchema: JValue) {
    * Validates the given JSON and captures any validation messages in a container.
    *
    * @param instance JSON instance to validate.
-   * @return [[Seq]] containing [[ProcessingMessage]]. If the validation succeeds without any errors or warnings,
+   * @return a sequence of ProcessingMessages. If the validation succeeds without any errors or warnings,
    *         the container will be empty.
    */
   def validationMessages(instance: JValue): Seq[ProcessingMessage] = validate(instance)
@@ -52,7 +52,7 @@ object RunValidator {
   /** Constructor for new [[RunValidator]] objects. */
   def apply(in: JsonInput) = new RunValidator(in)
 
-  /** Implicit conversion from a [[JValue]] object to a [[JsonNode]] object; used internally by the validator. */
+  /** Implicit conversion from a JValue object to a JsonNode object; used internally by the validator. */
   implicit def toJsonNode(jv: JValue): JsonNode = asJsonNode(jv)
 
   /** Factory for JSON schemas */

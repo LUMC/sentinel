@@ -17,29 +17,45 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
+/**
+ * Controller for the `/runs` endpoint.
+ *
+ * @param swagger Container for main Swagger specification.
+ * @param mongo Object for accessing the database.
+ */
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with FileUploadSupport
     with AuthenticationSupport { self =>
 
-  protected val applicationDescription: String = "Submission and retrieval of run summaries"
+  /** Controller name, shown in the generated Swagger spec. */
   override protected val applicationName = Some("runs")
 
+  /** Controller description, shown in the generated Swagger spec. */
+  protected val applicationDescription: String = "Submission and retrieval of run summaries"
+
+  /** Adapter for connecting to run collections. */
   val runs = new RunsAdapter {
     val mongo = self.mongo
     def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
   }
+
+  /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
+
+  /** Adapter for connecting to the unsupported summary collections. */
   val unsupported = new UnsupportedInputProcessor(mongo)
+
+  /** Adapter for connecting to the gentrap summary collections. */
   val gentrap = new GentrapV04InputProcessor(mongo)
 
-  protected def maxFileSize = MaxRunSummarySize
+  /** Set maximum allowed file upload size. */
+  configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))
 
-  configureMultipartHandling(MultipartConfig(maxFileSize = Some(maxFileSize)))
-
+  /** Add error handler for files that exceed maximum allowed size. */
   error {
     case e: SizeConstraintExceededException =>
       contentType = formats("json")
-      RequestEntityTooLarge(CommonErrors.RunSummaryTooLarge)
+      RequestEntityTooLarge(CommonMessages.RunSummaryTooLarge)
   }
 
   // format: OFF
@@ -55,10 +71,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       pathParam[String]("runId").description("Run summary ID."))
     responseMessages (
       StringResponseMessage(200, "Run summary deleted successfully."),
-      StringResponseMessage(400, CommonErrors.UnspecifiedRunId.message),
-      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingRunId.message),
+      StringResponseMessage(400, CommonMessages.UnspecifiedRunId.message),
+      StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+      StringResponseMessage(403, CommonMessages.Unauthorized.message),
+      StringResponseMessage(404, CommonMessages.MissingRunId.message),
       StringResponseMessage(410, "Run summary already deleted.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
@@ -66,10 +82,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
     val runId = params("runId")
       .getObjectId
-      .getOrElse(halt(404, CommonErrors.MissingRunId))
+      .getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
     runs.deleteRun(runId, user) match {
-      case None => NotFound(CommonErrors.MissingRunId)
+      case None => NotFound(CommonMessages.MissingRunId)
       case Some((deletedRun, deletionPerformed)) =>
         if (deletionPerformed) Ok(deletedRun)
         else Gone(ApiMessage("Run summary already deleted."))
@@ -77,7 +93,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   // Helper matcher for "DELETE /:runId" so that we return the correct error message
-  delete("/?") { halt(400, CommonErrors.UnspecifiedRunId) }
+  delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
   val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")
@@ -94,9 +110,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional)
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
-      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingRunId.message),
+      StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+      StringResponseMessage(403, CommonMessages.Unauthorized.message),
+      StringResponseMessage(404, CommonMessages.MissingRunId.message),
       StringResponseMessage(410, "Run summary not available anymore."))
     // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
     produces (
@@ -108,10 +124,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
     val runId = params("runId")
       .getObjectId
-      .getOrElse(halt(404, CommonErrors.MissingRunId))
+      .getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
     runs.getRun(runId, user, doDownload) match {
-      case None => NotFound(CommonErrors.MissingRunId)
+      case None => NotFound(CommonMessages.MissingRunId)
       case Some(result) => result match {
         case Left(runDoc) => Ok(runDoc)
         case Right(runFile) =>
@@ -124,7 +140,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   // format: OFF
-  val runsPostOperation = (apiOperation[RunDocument]("runsPost")
+  val runsPostOperation = (apiOperation[RunRecord]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
@@ -135,19 +151,19 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       formParam[File]("run").description("Run summary file."))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
-      StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
-      StringResponseMessage(400, CommonErrors.UnspecifiedPipeline.message),
-      StringResponseMessage(400, CommonErrors.InvalidPipeline.message),
+      StringResponseMessage(400, CommonMessages.UnspecifiedUserId.message),
+      StringResponseMessage(400, CommonMessages.UnspecifiedPipeline.message),
+      StringResponseMessage(400, CommonMessages.InvalidPipeline.message),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
       StringResponseMessage(400, "Run summary already uploaded by the user."),
-      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(413, CommonErrors.RunSummaryTooLarge.message)))
+      StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+      StringResponseMessage(403, CommonMessages.Unauthorized.message),
+      StringResponseMessage(413, CommonMessages.RunSummaryTooLarge.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   post("/", operation(runsPostOperation)) {
-    val pipeline = params.getOrElse("pipeline", halt(400, CommonErrors.UnspecifiedPipeline))
+    val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
     val processor = AllowedPipelineParams.get(pipeline).collect {
@@ -156,7 +172,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     }
 
     processor match {
-      case None => BadRequest(CommonErrors.InvalidPipeline)
+      case None => BadRequest(CommonMessages.InvalidPipeline)
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
         p.processRun(uploadedRun, user, AllowedPipelineParams(pipeline)) match {
@@ -168,7 +184,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
               case dexc: com.mongodb.DuplicateKeyException =>
                 BadRequest(ApiMessage("Run summary already uploaded by the user."))
               case otherwise =>
-                InternalServerError(CommonErrors.Unexpected)
+                InternalServerError(CommonMessages.Unexpected)
             }
           case Success(run) => Created(run)
         }
@@ -176,7 +192,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   // format: OFF
-  val runsGetOperation = (apiOperation[Seq[RunDocument]]("runsGet")
+  val runsGetOperation = (apiOperation[Seq[RunRecord]]("runsGet")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
@@ -193,10 +209,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         .allowableValues(AllowedPipelineParams.keySet.toList)
         .optional)
       responseMessages (
-        StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
+        StringResponseMessage(400, CommonMessages.UnspecifiedUserId.message),
         StringResponseMessage(400, "One or more pipeline is invalid."),
-        StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-        StringResponseMessage(403, CommonErrors.Unauthorized.message)))
+        StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+        StringResponseMessage(403, CommonMessages.Unauthorized.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 

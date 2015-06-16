@@ -14,7 +14,7 @@ import org.specs2.specification.{ Fragments, Step }
 import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.users.hashPassword
 
 trait SentinelServletSpec extends MutableScalatraSpec
@@ -74,13 +74,13 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   object Users {
     val avg =
-      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false, getTimeNow)
+      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false, getUtcTimeNow)
     val avg2 =
-      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false, getTimeNow)
+      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false, getUtcTimeNow)
     val admin =
-      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true, getTimeNow)
+      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true, getUtcTimeNow)
     val unverified =
-      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false, getTimeNow)
+      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false, getUtcTimeNow)
     def all = Set(avg, avg2, admin, unverified)
   }
 

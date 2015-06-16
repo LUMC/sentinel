@@ -4,9 +4,16 @@ import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
 
 package object models {
 
+  /**
+   * Message sent to users interacting with any HTTP endpoint.
+   *
+   * @param message Main message to send.
+   * @param data Additional information.
+   */
   case class ApiMessage(message: String, data: Any = None)
 
-  object CommonErrors {
+  /** Common API messages. */
+  object CommonMessages {
 
     val InvalidPipeline = ApiMessage("Pipeline parameter is invalid.",
       "Valid values are " + AllowedPipelineParams.keySet.mkString(", ") + ".")

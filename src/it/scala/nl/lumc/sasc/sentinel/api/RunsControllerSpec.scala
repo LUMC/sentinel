@@ -8,7 +8,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.{ CommonErrors, RunDocument, User }
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, RunRecord, User }
 import nl.lumc.sasc.sentinel.settings._
 
 class RunsControllerSpec extends SentinelServletSpec {
@@ -479,7 +479,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+              body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
           }
         }
@@ -502,7 +502,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthenticated.message)
+              body must /("message" -> CommonMessages.Unauthenticated.message)
             }
           }
         }
@@ -519,7 +519,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthorized.message)
+              body must /("message" -> CommonMessages.Unauthorized.message)
             }
           }
         }
@@ -541,7 +541,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+              body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
           }
         }
@@ -564,7 +564,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthenticated.message)
+              body must /("message" -> CommonMessages.Unauthenticated.message)
             }
           }
         }
@@ -581,7 +581,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthorized.message)
+              body must /("message" -> CommonMessages.Unauthorized.message)
             }
           }
         }
@@ -667,7 +667,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(runId), Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+              body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
           }
         }
@@ -690,7 +690,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(runId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthenticated.message)
+              body must /("message" -> CommonMessages.Unauthenticated.message)
             }
           }
         }
@@ -707,7 +707,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(runId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthorized.message)
+              body must /("message" -> CommonMessages.Unauthorized.message)
             }
           }
         }
@@ -807,7 +807,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in {
               get(endpoint(runId2), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> CommonErrors.MissingRunId.message)
+                body must /("message" -> CommonMessages.MissingRunId.message)
               }
             }
           }
@@ -823,7 +823,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in  {
               get(endpoint(invalidId), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> CommonErrors.MissingRunId.message)
+                body must /("message" -> CommonMessages.MissingRunId.message)
               }
             }
           }
@@ -924,7 +924,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in  {
               get(endpoint(invalidId), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> CommonErrors.MissingRunId.message)
+                body must /("message" -> CommonMessages.MissingRunId.message)
               }
             }
           }
@@ -953,7 +953,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(runId), Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.UnspecifiedUserId.message)
+              body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
           }
 
@@ -997,7 +997,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(""), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.UnspecifiedRunId.message)
+              body must /("message" -> CommonMessages.UnspecifiedRunId.message)
             }
           }
 
@@ -1047,7 +1047,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(runId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> CommonErrors.Unauthenticated.message)
+              body must /("message" -> CommonMessages.Unauthenticated.message)
             }
           }
 
@@ -1114,7 +1114,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1124,7 +1124,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 status mustEqual 404
                 contentType mustEqual "application/json"
                 body must not /("runId" -> ".+".r)
-                body must /("message" -> CommonErrors.MissingRunId.message)
+                body must /("message" -> CommonMessages.MissingRunId.message)
               }
           }
 
@@ -1155,7 +1155,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
           def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
-          lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
+          lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
@@ -1187,7 +1187,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1197,7 +1197,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1257,7 +1257,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1267,7 +1267,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1298,7 +1298,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
           def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
-          lazy val runId = parse(priorResponse.body).extract[RunDocument].runId.toString
+          lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
           val params = Seq(("userId", Users.admin.id))
           val headers = Map(HeaderApiKey -> Users.admin.activeKey)
@@ -1330,7 +1330,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 
@@ -1340,7 +1340,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> CommonErrors.MissingRunId.message)
+              body must /("message" -> CommonMessages.MissingRunId.message)
             }
           }
 

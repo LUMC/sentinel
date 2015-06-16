@@ -13,16 +13,26 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.RunValidationException
 import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
 
+/**
+ * Controller for the `/users` endpoint.
+ *
+ * @param swagger Container for main Swagger specification.
+ * @param mongo Object for accessing the database.
+ */
 class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
     with AuthenticationSupport { self =>
 
-  protected val applicationDescription: String = "Operations on user data"
+  /** Controller name, shown in the generated Swagger spec. */
   override protected val applicationName: Option[String] = Some("users")
 
+  /** Controller description, shown in the generated Swagger spec */
+  protected val applicationDescription: String = "Operations on user data"
+
+  /** Adapter for connecting to users collection */
   val users = new UsersAdapter { val mongo = self.mongo }
-  val patchValidator = new ValidationAdapter {
-    override val validator: RunValidator = createValidator("/schemas/json_patch.json")
-  }
+
+  /** Validator for patch payloads */
+  val patchValidator = new ValidationAdapter { override val validator = createValidator("/schemas/json_patch.json") }
 
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
@@ -40,54 +50,67 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),
       StringResponseMessage(400, "Patch document is invalid or malformed."),
-      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(403, CommonErrors.Unauthorized.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message),
+      StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+      StringResponseMessage(403, CommonMessages.Unauthorized.message),
+      StringResponseMessage(404, CommonMessages.MissingUserId.message),
       StringResponseMessage(422, "Patch operation not supported.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   patch("/:userRecordId", operation(usersUserIdPatchOperation)) {
 
-    val userRecordId = params("userRecordId")
+    // TODO: refactor this endpoint ~ use less explicit halts
 
+    // validate and load patch operations ~ based on the JSON patch spec *not* our own requirements (yet)
     val patchOps = Try(patchValidator.parseAndValidate(request.body.getBytes)) match {
+
+      // validation fails
       case Failure(f) =>
         f match {
           case vexc: RunValidationException =>
             halt(400, ApiMessage(vexc.getMessage,
               data = vexc.report.collect { case r => r.toString }))
           case otherwise =>
-            halt(500, CommonErrors.Unexpected)
+            halt(500, CommonMessages.Unexpected)
         }
+
+      // validation succeeds
       case Success(jv) =>
         val patches = jv.extractOpt[Seq[UserPatch]] match {
+          // and patch list has size > 0
           case Some(ps) if ps.nonEmpty => ps
+          // but patch list is empty
           case otherwise               => halt(400, ApiMessage("Invalid user patch.", data = "Operations can not be empty."))
         }
 
+        // if any patch object is invalid
         if (patches.exists(_.validationMessages.nonEmpty)) {
           halt(400, ApiMessage("Invalid user patch.",
             data = patches
               .collect { case up: UserPatch if up.validationMessages.nonEmpty => up.validationMessages }
               .flatten))
+          // otherwise we finally retrieve the object
         } else patches
     }
 
+    val userRecordId = params("userRecordId")
     val user = basicAuth()
 
-    if (!user.isAdmin && patchOps.exists(p => p.path == "/verified")) halt(403, CommonErrors.Unauthorized)
+    // the '/verified'  operation is only allowed for admins
+    if (!user.isAdmin && patchOps.exists(p => p.path == "/verified")) halt(403, CommonMessages.Unauthorized)
+    // any other operations are only allowed for admins or for the same user
     else if (userRecordId == user.id || user.isAdmin) {
       users.patchAndUpdateUser(userRecordId, patchOps) match {
         case Some(_)   => NoContent()
         case otherwise => InternalServerError()
       }
-    } else halt(403, CommonErrors.Unauthorized)
+    } else halt(403, CommonMessages.Unauthorized)
   }
 
   // Helper endpoint to capture PATCH request with unspecified user ID
   patch("/?") { halt(400, ApiMessage("User record ID not specified.")) }
 
+  // Helper endpoint to show which PATCH format we accept
   options("/:userId") { response.setHeader("Accept-Patch", formats("json")) }
 
   // format: OFF
@@ -100,9 +123,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       pathParam[String]("userRecordId").description("User record ID to return."))
     responseMessages (
       StringResponseMessage(400, "User record ID not specified."),
-      StringResponseMessage(400, CommonErrors.UnspecifiedUserId.message),
-      StringResponseMessage(401, CommonErrors.Unauthenticated.message),
-      StringResponseMessage(404, CommonErrors.MissingUserId.message)))
+      StringResponseMessage(400, CommonMessages.UnspecifiedUserId.message),
+      StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+      StringResponseMessage(404, CommonMessages.MissingUserId.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -112,9 +135,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     if (user.isAdmin || user.id == userRecordId) {
       users.getUser(userRecordId) match {
         case Some(u) => Ok(u.toResponse)
-        case None    => NotFound(CommonErrors.MissingUserId)
+        case None    => NotFound(CommonMessages.MissingUserId)
       }
-    } else halt(403, CommonErrors.Unauthorized)
+    } else halt(403, CommonMessages.Unauthorized)
   }
 
   // Helper endpoint to capture GET request with unspecified user ID
@@ -144,11 +167,11 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       BadRequest(ApiMessage("Invalid user request.", data = userRequest.validationMessages))
     else {
       Try(users.userExist(userRequest.id)) match {
-        case Failure(_) => InternalServerError(CommonErrors.Unexpected)
+        case Failure(_) => InternalServerError(CommonMessages.Unexpected)
         case Success(true)  => Conflict(ApiMessage("User ID already taken."))
         case Success(false)  =>
           Try(users.addUser(userRequest.user)) match {
-            case Failure(_) => InternalServerError(CommonErrors.Unexpected)
+            case Failure(_) => InternalServerError(CommonMessages.Unexpected)
             case Success(_) => Created(
               ApiMessage("New user created.",
                 Map("uri" -> ("/users/" + userRequest.user.id), "apiKey" -> userRequest.user.activeKey)))

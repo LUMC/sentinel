@@ -5,6 +5,7 @@ import org.json4s._
 import org.bson.types.ObjectId
 import org.json4s.mongo.ObjectIdSerializer
 
+/** Custom ObjectId serializer which serializes to and from plain strings entries. */
 class CustomObjectIdSerializer extends ObjectIdSerializer {
 
   private val ObjectIdClass = classOf[ObjectId]
@@ -16,6 +17,7 @@ class CustomObjectIdSerializer extends ObjectIdSerializer {
       case x => throw new MappingException(s"Can't convert $x to ObjectId")
     }
   }
+
   override def serialize(implicit formats: Formats): PartialFunction[Any, JValue] = {
     case x: ObjectId => JString(x.toString)
   }

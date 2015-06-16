@@ -12,8 +12,14 @@ import nl.lumc.sasc.sentinel.models._
 
 import scala.collection.mutable.ListBuffer
 
+/**
+ * Output processor for Gentrap endpoints.
+ *
+ * @param mongo MongoDB database access object.
+ */
 class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends MongodbConnector {
 
+  /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.pipelineSamples("gentrap"))
 
   /**
@@ -227,9 +233,23 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       |}
     """.stripMargin
 
+  /**
+   * Retrieves Gentrap alignment statistics.
+   *
+   * @param accLevel Accumulation level of the retrieved statistics.
+   * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
+   * @param user If defined, returned data points belonging to the user will show its labels.
+   * @param runs Run IDs of the returned statistics. If not specified, alignment statistics are not filtered by run ID.
+   * @param references Reference IDs of the returned statistics. If not specified, alignment statistics are not filtered
+   *                   by reference IDs.
+   * @param annotations Annotations IDs of the returned statistics. If not specified, alignment statistics are not
+   *                    filtered by annotation IDs.
+   * @param timeSorted Whether to time-sort the returned items or not.
+   * @return Sequence of alignment statistics objects.
+   */
   def getAlignmentStats(accLevel: AccLevel.Value,
-                        libType: Option[LibType.Value],
-                        user: Option[User],
+                        libType: Option[LibType.Value] = None,
+                        user: Option[User] = None,
                         runs: Seq[ObjectId] = Seq(),
                         references: Seq[ObjectId] = Seq(),
                         annotations: Seq[ObjectId] = Seq(),
@@ -286,6 +306,18 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     else shuffle(results)
   }
 
+  /**
+   * Retrieves aggregated Gentrap alignment statistics.
+   *
+   * @param accLevel Accumulation level of the retrieved statistics.
+   * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
+   * @param runs Run IDs of the returned statistics. If not specified, alignment statistics are not filtered by run ID.
+   * @param references Reference IDs of the returned statistics. If not specified, alignment statistics are not filtered
+   *                   by reference IDs.
+   * @param annotations Annotations IDs of the returned statistics. If not specified, alignment statistics are not
+   *                    filtered by annotation IDs.
+   * @return Alignment statistics aggregates.
+   */
   def getAlignmentAggregateStats(accLevel: AccLevel.Value,
                                  libType: Option[LibType.Value],
                                  runs: Seq[ObjectId] = Seq(),
@@ -336,7 +368,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
   }
 
   /**
-   * Retrieves sequence statistics from database sample entries.
+   * Retrieves Gentrap sequence statistics.
    *
    * Each sample entry in the database contains an array of library entries, which in turn contain the sequence
    * statistics. So to retrieve the statistics only, this method does some aggregation operations.
@@ -346,14 +378,14 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
    *
    * @param libType Library type of the returned sequence statistics.
    * @param qcPhase Sequencing QC phase of the returned statistics.
-   * @param user [[User]] object. If defined, returned data points belonging to the user will show its labels.
+   * @param user If defined, returned data points belonging to the user will show its labels.
    * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
    * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
    *                   by reference IDs.
    * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
    *                    filtered by annotation IDs.
    * @param timeSorted Whether to time-sort the returned items or not.
-   * @return a sequence of [[SeqStats]] objects.
+   * @return Sequence of sequence statistics objects.
    */
   def getSeqStats(libType: Option[LibType.Value],
                   qcPhase: SeqQcPhase.Value,
@@ -411,6 +443,18 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
     else shuffle(results)
   }
 
+  /**
+   * Retrieves aggregated Gentrap sequence statistics.
+   *
+   * @param libType Library type of the returned sequence statistics.
+   * @param qcPhase Sequencing QC phase of the returned statistics.
+   * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
+   * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
+   *                   by reference IDs.
+   * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
+   *                    filtered by annotation IDs.
+   * @return Sequence statistics aggregates.
+   */
   def getSeqAggregateStats(libType: Option[LibType.Value],
                            qcPhase: SeqQcPhase.Value,
                            runs: Seq[ObjectId] = Seq(),

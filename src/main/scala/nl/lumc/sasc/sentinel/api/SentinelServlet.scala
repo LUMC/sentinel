@@ -1,8 +1,7 @@
 package nl.lumc.sasc.sentinel.api
 
-import org.json4s._
-
 import org.bson.types.ObjectId
+import org.json4s._
 import org.scalatra.ScalatraServlet
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
@@ -10,24 +9,18 @@ import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import nl.lumc.sasc.sentinel.models.ApiMessage
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
+/** Base servlet for all Sentinel controllers. */
 abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
-  protected implicit val jsonFormats: Formats = SentinelJsonFormats
-
-  // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
-  protected def transformMapReduceResult(results: Any): JValue =
-    Extraction.decompose(results)
-      .transformField { case JField("nDataPoints", JDouble(n)) => ("nDataPoints", JInt(n.toLong)) }
-
+  // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
+  //        models from being exposed. Until they have an officially documented way of doing so, we'll stick with this.
+  // Intercept ObjectId model creation, to prevent its internal attributes from being exposed in the API
+  // We only want to show them as plain strings
+  // Also, skip ObjectId creation completely
   override protected def registerModel(model: Model): Unit = {
-    // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
-    //        models from being exposed. Until they have an officially documented way of doing so, we'll stick with this.
-    // Intercept ObjectId model creation, to prevent its internal attributes from being exposed in the API
-    // We only want to show them as plain strings
-    // Also, skip ObjectId creation completely
     if (model.id != "ObjectId") {
       val interceptedProp = model.properties.map {
         case (propName, prop) =>
@@ -55,6 +48,16 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
     }
   }
 
+  /** JSON format for Sentinel responses */
+  protected implicit val jsonFormats: Formats = SentinelJsonFormats
+
+  // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
+  /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
+  protected def transformMapReduceResult(results: Any): JValue =
+    Extraction.decompose(results)
+      .transformField { case JField("nDataPoints", JDouble(n)) => ("nDataPoints", JInt(n.toLong)) }
+
+  /** Creates ObjectIds from a sequence of strings. */
   protected def getObjectIds(strs: Seq[String], msg: Option[ApiMessage] = None): Seq[ObjectId] = {
     val (validIds, invalidIds) = separateObjectIds(strs)
     if (invalidIds.nonEmpty) msg match {
@@ -64,12 +67,15 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
     else validIds
   }
 
+  /** Helper function for creating run object IDs with the appropriate failure message. */
   protected def getRunObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
     splitParam(rawParam), Option(ApiMessage("Invalid run ID(s) provided.")))
 
+  /** Helper function for creating reference object IDs with the appropriate failure message. */
   protected def getRefObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
     splitParam(rawParam), Option(ApiMessage("Invalid reference ID(s) provided.")))
 
+  /** Helper function for creating annotation object IDs with the appropriate failure message. */
   protected def getAnnotObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
     splitParam(rawParam), Option(ApiMessage("Invalid annotation ID(s) provided.")))
 
@@ -83,7 +89,9 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
   }
 
   after() {
-    response.setHeader("Set-Cookie", null) // Disable cookies ~ the server should not store state
-    response.setHeader("REMOTE_USER", null) // Remove nonstandard field added automatically by Scalatra
+    // Disable cookie header for now
+    response.setHeader("Set-Cookie", null)
+    // Remove nonstandard field added automatically by Scalatra
+    response.setHeader("REMOTE_USER", null)
   }
 }
