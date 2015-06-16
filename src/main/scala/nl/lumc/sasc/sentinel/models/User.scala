@@ -1,12 +1,14 @@
 package nl.lumc.sasc.sentinel.models
 
 import java.util.Date
+import javax.crypto.KeyGenerator
 
+import org.apache.commons.codec.binary.Base64
 import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
 
-import nl.lumc.sasc.sentinel.utils.{ generateApiKey, getUtcTimeNow }
-import nl.lumc.sasc.sentinel.utils.users.{ Validator, hashPassword }
+import nl.lumc.sasc.sentinel.settings._
+import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
 
 /**
  * Representation of a user.
@@ -41,6 +43,84 @@ case class User(
   lazy val toResponse = UserResponse(id, email, verified, activeKey, updateTimeUtc)
 }
 
+object User {
+
+  /** KeyGen for generating API keys. */
+  private val KeyGen = {
+    val k = KeyGenerator.getInstance("HmacSHA1")
+    k.init(192)
+    k
+  }
+
+  /** Generates a random string for API keys. */
+  def generateApiKey(): String = new String(Base64.encodeBase64(KeyGen.generateKey().getEncoded))
+
+  /** Hashes the given password string. */
+  def hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
+
+  object Validator {
+
+    lazy val HasUpperCase = "[A-Z]+".r
+
+    lazy val HasLowerCase = "[a-z]+".r
+
+    lazy val HasNumbers = "[0-9]+".r
+
+    lazy val HasNonWord = """\W+""".r
+
+    /** Regex matchers for user password. */
+    lazy val PasswordCheckers = Set(HasUpperCase, HasLowerCase, HasNumbers)
+
+    /** Validation messages for ID validation. */
+    def idMessages(id: String): Seq[String] = {
+      val msgBuffer = scala.collection.mutable.Buffer.empty[String]
+      if (!idLengthValid(id))
+        msgBuffer += s"User ID shorter than $MinUserIdLength characters."
+      if (!idContentsValid(id))
+        msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars(id).mkString("', '") + "'.")
+      msgBuffer.toSeq
+    }
+
+    /** Validation messages for password validation. */
+    def passwordMessages(password: String, confirmPassword: String): Seq[String] = {
+      val msgBuffer = scala.collection.mutable.Buffer.empty[String]
+      if (!passwordConfirmed(password, confirmPassword))
+        msgBuffer += "Different passwords given."
+      if (!passwordLengthValid(password))
+        msgBuffer += s"Password shorter than $MinPasswordLength characters."
+      if (!passwordMixValid(password))
+        msgBuffer += "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
+      msgBuffer.toSeq
+    }
+
+    /** Validation messages for email validation. */
+    def emailMessages(email: String): Seq[String] =
+      if (!emailValid(email)) Seq("Email invalid.")
+      else Seq()
+
+    /** Checks whether the ID length is valid. */
+    def idLengthValid(id: String) = id.length >= MinUserIdLength
+
+    /** Returns all forbidden characters in the given ID string. */
+    def invalidIdChars(id: String) = HasNonWord.findAllIn(id).toSeq
+
+    /** Checks whether the ID string contains forbidden characters. */
+    def idContentsValid(id: String) = invalidIdChars(id).isEmpty
+
+    /** Checks whether the given passwords match. */
+    def passwordConfirmed(password: String, confirmPassword: String) = password == confirmPassword
+
+    /** Checks whether the passwod length is valid. */
+    def passwordLengthValid(password: String) = password.length >= MinPasswordLength
+
+    /** Checks whether the password character composition is valid. */
+    def passwordMixValid(password: String) = PasswordCheckers.forall(_.findFirstIn(password).isDefined)
+
+    /** Checks whether the email is valid. */
+    def emailValid(email: String) = email matches """^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"""
+  }
+}
+
 /**
  * Representation of an HTTP response payload sent to clients requesting user information.
  *
@@ -71,16 +151,16 @@ case class UserResponse(
 case class UserRequest(id: String, email: String, password: String, confirmPassword: String) {
 
   /** Validation messages. If nonempty, the given data is invalid. */
-  lazy val validationMessages: Seq[String] = Validator.idMessages(id) ++
-    Validator.passwordMessages(password, confirmPassword) ++ Validator.emailMessages(email)
+  lazy val validationMessages: Seq[String] = User.Validator.idMessages(id) ++
+    User.Validator.passwordMessages(password, confirmPassword) ++ User.Validator.emailMessages(email)
 
   /** User representation of the request. */
   lazy val user: User =
     User(
       id = id,
       email = email,
-      hashedPassword = hashPassword(password),
-      activeKey = generateApiKey(),
+      hashedPassword = User.hashPassword(password),
+      activeKey = User.generateApiKey(),
       verified = false,
       isAdmin = false,
       creationTimeUtc = getUtcTimeNow,
@@ -110,8 +190,8 @@ case class UserPatch(op: String, path: String, value: Any) {
   lazy val validationMessages: Seq[String] = {
     val msgs = (path, value) match {
       case ("/verified", v: Boolean)        => Seq()
-      case ("/password", p: String)         => Validator.passwordMessages(p, p)
-      case ("/email", e: String)            => Validator.emailMessages(e)
+      case ("/password", p: String)         => User.Validator.passwordMessages(p, p)
+      case ("/email", e: String)            => User.Validator.emailMessages(e)
       case (x, y) if validPaths.contains(x) => Seq(s"Invalid value for path '$x': '$y'.")
       case (p, _)                           => Seq(s"Invalid path: '$p'.")
     }
@@ -125,7 +205,7 @@ case class UserPatch(op: String, path: String, value: Any) {
     (path, value) match {
       case ("/verified", v: Boolean) => user.copy(verified = v)
       case ("/email", e: String)     => user.copy(email = e)
-      case ("/password", p: String)  => user.copy(hashedPassword = hashPassword(p))
+      case ("/password", p: String)  => user.copy(hashedPassword = User.hashPassword(p))
       case (other, wise) =>
         throw new IllegalArgumentException("Unexpected '" + other + "' value: '" + wise + "'.")
     }

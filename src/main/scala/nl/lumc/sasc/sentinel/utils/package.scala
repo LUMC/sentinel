@@ -5,17 +5,13 @@ import java.util.Date
 import java.util.zip.GZIPInputStream
 import java.security.MessageDigest
 import java.time.Clock
-import javax.crypto.KeyGenerator
 import scala.io.Source
 import scala.util.Try
 
 import org.bson.types.ObjectId
-import org.apache.commons.codec.binary.Base64
 import org.json4s._
-import org.mindrot.jbcrypt.BCrypt
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models.RunRecord
 
 /** General utilities */
@@ -23,13 +19,14 @@ package object utils {
 
   import implicits._
 
-  private[this] val GzipMagic = Seq(0x1f, 0x8b)
+  /** Magic byte for all Gzipped files. */
+  private val GzipMagic = Seq(0x1f, 0x8b)
 
   /**
    * Retrieves a resource as an input stream.
    *
    * @param url URL of the resource.
-   * @return an input stream.
+   * @return An input stream.
    */
   def getResourceStream(url: String): InputStream = Option(getClass.getResourceAsStream(url)) match {
     case Some(s) => s
@@ -103,90 +100,11 @@ package object utils {
   /** Gets the current UTC time. */
   def getUtcTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
-  /** KeyGen for generating API keys. */
-  val KeyGen = {
-    val k = KeyGenerator.getInstance("HmacSHA1")
-    k.init(192)
-    k
-  }
-
-  /** Generates a random string for API keys. */
-  def generateApiKey(): String = new String(Base64.encodeBase64(KeyGen.generateKey().getEncoded))
-
   /** Serializer for outgoing JSON payloads. */
   val RunDocumentSerializer = FieldSerializer[RunRecord](FieldSerializer.ignore("sampleIds"), { case field => field })
 
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer
-
-  object users {
-
-    /** Hashes the given password string. */
-    def hashPassword(password: String): String = BCrypt.hashpw(password, BCrypt.gensalt())
-
-    object Validator {
-
-      lazy val HasUpperCase = "[A-Z]+".r
-
-      lazy val HasLowerCase = "[a-z]+".r
-
-      lazy val HasNumbers = "[0-9]+".r
-
-      lazy val HasNonWord = """\W+""".r
-
-      /** Regex matchers for user password. */
-      lazy val PasswordCheckers = Set(HasUpperCase, HasLowerCase, HasNumbers)
-
-      /** Validation messages for ID validation. */
-      def idMessages(id: String): Seq[String] = {
-        val msgBuffer = scala.collection.mutable.Buffer.empty[String]
-        if (!idLengthValid(id))
-          msgBuffer += s"User ID shorter than $MinUserIdLength characters."
-        if (!idContentsValid(id))
-          msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars(id).mkString("', '") + "'.")
-        msgBuffer.toSeq
-      }
-
-      /** Validation messages for password validation. */
-      def passwordMessages(password: String, confirmPassword: String): Seq[String] = {
-        val msgBuffer = scala.collection.mutable.Buffer.empty[String]
-        if (!passwordConfirmed(password, confirmPassword))
-          msgBuffer += "Different passwords given."
-        if (!passwordLengthValid(password))
-          msgBuffer += s"Password shorter than $MinPasswordLength characters."
-        if (!passwordMixValid(password))
-          msgBuffer += "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
-        msgBuffer.toSeq
-      }
-
-      /** Validation messages for email validation. */
-      def emailMessages(email: String): Seq[String] =
-        if (!emailValid(email)) Seq("Email invalid.")
-        else Seq()
-
-      /** Checks whether the ID length is valid. */
-      def idLengthValid(id: String) = id.length >= MinUserIdLength
-
-      /** Returns all forbidden characters in the given ID string. */
-      def invalidIdChars(id: String) = HasNonWord.findAllIn(id).toSeq
-
-      /** Checks whether the ID string contains forbidden characters. */
-      def idContentsValid(id: String) = invalidIdChars(id).isEmpty
-
-      /** Checks whether the given passwords match. */
-      def passwordConfirmed(password: String, confirmPassword: String) = password == confirmPassword
-
-      /** Checks whether the passwod length is valid. */
-      def passwordLengthValid(password: String) = password.length >= MinPasswordLength
-
-      /** Checks whether the password character composition is valid. */
-      def passwordMixValid(password: String) = PasswordCheckers.forall(_.findFirstIn(password).isDefined)
-
-      /** Checks whether the email is valid. */
-      def emailValid(email: String) = email matches """^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"""
-
-    }
-  }
 
   object implicits {
 

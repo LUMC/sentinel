@@ -15,7 +15,6 @@ import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getUtcTimeNow }
-import nl.lumc.sasc.sentinel.utils.users.hashPassword
 
 trait SentinelServletSpec extends MutableScalatraSpec
     with EmbeddedMongodbRunner
@@ -73,6 +72,9 @@ trait SentinelServletSpec extends MutableScalatraSpec
   }
 
   object Users {
+
+    import nl.lumc.sasc.sentinel.models.User.hashPassword
+
     val avg =
       User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false, getUtcTimeNow)
     val avg2 =
