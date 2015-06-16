@@ -126,16 +126,19 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       .getObjectId
       .getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
-    runs.getRun(runId, user, doDownload) match {
+
+    if (doDownload) runs.getRunFile(runId, user) match {
       case None => NotFound(CommonMessages.MissingRunId)
-      case Some(result) => result match {
-        case Left(runDoc) => Ok(runDoc)
-        case Right(runFile) =>
-          contentType = "application/octet-stream"
-          response.setHeader("Content-Disposition",
-            "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
-          Ok(runFile.inputStream)
-      }
+      case Some(runFile) =>
+        contentType = "application/octet-stream"
+        response.setHeader("Content-Disposition",
+          "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
+        Ok(runFile.inputStream)
+    }
+
+    else runs.getRunRecord(runId, user) match {
+      case None         => NotFound(CommonMessages.MissingRunId)
+      case Some(runDoc) => Ok(runDoc)
     }
   }
 

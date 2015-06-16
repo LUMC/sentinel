@@ -78,28 +78,36 @@ trait RunsAdapter extends MongodbConnector {
    *
    * @param runId ID of the run to retrieve.
    * @param user Run uploader.
-   * @param retrieveFile Whether to retrieve the run record or the stored run summary file.
-   * @return Either the run record or the run summary file.
+   * @return Run record, if it exists.
    */
-  def getRun(runId: ObjectId, user: User, retrieveFile: Boolean): Option[Either[RunRecord, GridFSDBFile]] =
+  def getRunRecord(runId: ObjectId, user: User): Option[RunRecord] = {
     // TODO: use Futures instead
-    if (retrieveFile) {
-      val userCheck =
-        if (user.isAdmin) MongoDBObject.empty
-        else MongoDBObject("metadata.uploaderId" -> user.id)
-      val query = MongoDBObject("_id" -> runId) ++ userCheck
-      mongo.gridfs
-        .findOne(query)
-        .collect { case gfs => Right(gfs) }
-    } else {
-      val userCheck =
-        if (user.isAdmin) MongoDBObject.empty
-        else MongoDBObject("uploaderId" -> user.id)
-      val query = MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck
-      coll
-        .findOne(query)
-        .collect { case dbo => Left(grater[RunRecord].asObject(dbo)) }
-    }
+    val userCheck =
+      if (user.isAdmin) MongoDBObject.empty
+      else MongoDBObject("uploaderId" -> user.id)
+    coll
+      .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
+      .collect { case dbo => grater[RunRecord].asObject(dbo) }
+  }
+
+  /**
+   * Retrieves an uploaded run file owned by the given user.
+   *
+   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
+   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
+   *
+   * @param runId ID of the run to retrieve.
+   * @param user Run uploader.
+   * @return Uploaded run file, if it exists.
+   */
+  def getRunFile(runId: ObjectId, user: User): Option[GridFSDBFile] = {
+    // TODO: use Futures instead
+    val userCheck =
+      if (user.isAdmin) MongoDBObject.empty
+      else MongoDBObject("metadata.uploaderId" -> user.id)
+    mongo.gridfs
+      .findOne(MongoDBObject("_id" -> runId) ++ userCheck)
+  }
 
   /**
    * Retrieves all run records uploaded by the given user.
