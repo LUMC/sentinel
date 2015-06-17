@@ -42,7 +42,7 @@ object SentinelBuild extends Build {
   lazy val headerSettings = Seq(HeaderPlugin.autoImport.headers := Map(
     "scala" -> (
       HeaderPattern.cStyleBlockComment,
-      """|/**
+      """|/*
         | * Copyright (c) 2015 Leiden University Medical Center and contributors
         | *                    (see AUTHORS.md file for details).
         | *
@@ -59,12 +59,12 @@ object SentinelBuild extends Build {
         | * limitations under the License.
         | */
         |""".stripMargin
-      )))
+      ))) ++ AutomateHeaderPlugin.automateFor(IntegrationTest)
 
   lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
 
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
-    headerSettings ++ Seq(
+    headerSettings ++ Defaults.itSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,
@@ -111,7 +111,8 @@ object SentinelBuild extends Build {
       )
     )
 
-  lazy val project = Project("sentinel",  file("."), settings = projectSettings)
+  lazy val project = Project("sentinel",  file("."))
+    .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-    .settings(Defaults.itSettings: _*)
+    .settings(projectSettings)
 }
