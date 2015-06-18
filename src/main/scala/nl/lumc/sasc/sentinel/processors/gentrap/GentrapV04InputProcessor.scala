@@ -101,6 +101,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       nReads = (alnMetrics \ "pf_reads").extract[Long],
       nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
       nReadsSingleton = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
+      nReadsProperPair = isPaired.option { (bpFlagstat \ "ProperPair").extract[Long] },
       rateReadsMismatch = (alnMetrics \ "pf_mismatch_rate").extract[Double],
       rateIndel = (alnMetrics \ "pf_indel_rate").extract[Double],
       pctChimeras = isPaired.option { (alnMetrics \ "pct_chimeras").extract[Double] },

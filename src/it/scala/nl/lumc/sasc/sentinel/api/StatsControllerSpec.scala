@@ -162,6 +162,7 @@ class StatsControllerSpec extends SentinelServletSpec {
           priorResponse.body must /#(idx) /("median3PrimeBias" -> bePositiveNum)
           priorResponse.body must /#(idx) /("pctChimeras" -> bePositiveNum) iff pairedEnd
           priorResponse.body must /#(idx) /("nReadsSingleton" -> bePositiveNum) iff pairedEnd
+          priorResponse.body must /#(idx) /("nReadsProperPair" -> bePositiveNum) iff pairedEnd
           priorResponse.body must /#(idx) /("maxInsertSize" -> bePositiveNum) iff pairedEnd
           priorResponse.body must /#(idx) /("medianInsertSize" -> bePositiveNum) iff pairedEnd
           priorResponse.body must /#(idx) /("stdevInsertSize" -> bePositiveNum) iff pairedEnd
@@ -730,6 +731,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleSample + nPairedSample))
               priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedSample)
               priorResponse.body must /("nReadsSingleton") /("nDataPoints" -> nPairedSample)
+              priorResponse.body must /("nReadsProperPair") /("nDataPoints" -> nPairedSample)
               priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedSample)
               priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedSample)
               priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedSample)
@@ -765,6 +767,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("nReadsSingleton") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("nReadsProperPair") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedLib)
@@ -800,6 +803,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("median5PrimeBias") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("pctChimeras") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("nReadsSingleton") /("nDataPoints" -> nPairedLib)
+              priorResponse.body must /("nReadsProperPair") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("maxInsertSize") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("medianInsertSize") /("nDataPoints" -> nPairedLib)
               priorResponse.body must /("stdevInsertSize") /("nDataPoints" -> nPairedLib)
