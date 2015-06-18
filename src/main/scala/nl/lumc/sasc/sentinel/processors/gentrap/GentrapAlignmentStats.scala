@@ -21,7 +21,7 @@ import nl.lumc.sasc.sentinel.models.{ DataPointAggr, DataPointLabels }
 /**
  * Gentrap alignment statistics.
  *
- * @param nReads Number of reads.
+ * @param nReadsTotal Number of reads.
  * @param nReadsAligned Number of reads aligned.
  * @param rateReadsMismatch Mismatch rate of aligned reads.
  * @param rateIndel How much indels are present.
@@ -34,16 +34,16 @@ import nl.lumc.sasc.sentinel.models.{ DataPointAggr, DataPointLabels }
  * @param median3PrimeBias Median value of 3' coverage biases.
  * @param normalizedTranscriptCoverage Values representing normalized transcript coverage.
  * @param nBasesRibosomal Number of bases aligned to ribosomal gene regions.
- * @param pctChimeras Percentage of reads mapped as chimeras (only for paired-end libraries).
- * @param nReadsSingleton Number of paired-end reads mapped as singletons.
- * @param nReadsProperPair Number of paired-end reads mapped as proper pairs.
+ * @param pctChimeras Percentage of reads aligned as chimeras (only for paired-end libraries).
+ * @param nReadsSingleton Number of paired-end reads aligned as singletons.
+ * @param nReadsProperPair Number of paired-end reads aligned as proper pairs.
  * @param maxInsertSize Maximum insert size (only for paired-end libraries).
  * @param medianInsertSize Median insert size (only for paired-end libraries).
  * @param stdevInsertSize Insert size standard deviation (only for paired-end libraries).
  * @param labels Data point labels.
  */
 case class GentrapAlignmentStats(
-  nReads: Long,
+  nReadsTotal: Long,
   nReadsAligned: Long,
   rateReadsMismatch: Double,
   rateIndel: Double,
@@ -67,7 +67,7 @@ case class GentrapAlignmentStats(
 // TODO: generate the aggregate stats programmatically (using macros?)
 /** Aggregated Gentrap alignment statistics. */
 case class GentrapAlignmentStatsAggr(
-  nReads: DataPointAggr,
+  nReadsTotal: DataPointAggr,
   nReadsAligned: DataPointAggr,
   rateReadsMismatch: DataPointAggr,
   rateIndel: DataPointAggr,

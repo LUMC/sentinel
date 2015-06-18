@@ -357,7 +357,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       }
 
     // TODO: generate the attribute names programmatically (using macros?)
-    val attrs = Seq("nReads",
+    val attrs = Seq("nReadsTotal",
       "nReadsAligned",
       "rateReadsMismatch",
       "rateIndel",

@@ -149,7 +149,7 @@ class StatsControllerSpec extends SentinelServletSpec {
           priorResponse.body must /#(idx) */ "labels" /("libName" -> """\S+""".r) iff (withAuth && isLib)
 
           // stats
-          priorResponse.body must /#(idx) /("nReads" -> bePositiveNum)
+          priorResponse.body must /#(idx) /("nReadsTotal" -> bePositiveNum)
           priorResponse.body must /#(idx) /("nReadsAligned" -> bePositiveNum)
           priorResponse.body must /#(idx) /("rateReadsMismatch" -> bePositiveNum)
           priorResponse.body must /#(idx) /("rateIndel" -> bePositiveNum)
@@ -718,7 +718,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleSample = 2
               val nPairedSample = 1
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleSample + nPairedSample))
+              priorResponse.body must /("nReadsTotal") /("nDataPoints" -> (nSingleSample + nPairedSample))
               priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleSample + nPairedSample))
               priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleSample + nPairedSample))
               priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleSample + nPairedSample))
@@ -754,7 +754,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 4
               val nPairedLib = 2
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsTotal") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))
@@ -790,7 +790,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 0
               val nPairedLib = 2
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsTotal") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))
@@ -826,7 +826,7 @@ class StatsControllerSpec extends SentinelServletSpec {
               val nSingleLib = 4
               val nPairedLib = 0
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("nReads") /("nDataPoints" -> (nSingleLib + nPairedLib))
+              priorResponse.body must /("nReadsTotal") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("nReadsAligned") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateReadsMismatch") /("nDataPoints" -> (nSingleLib + nPairedLib))
               priorResponse.body must /("rateIndel") /("nDataPoints" -> (nSingleLib + nPairedLib))

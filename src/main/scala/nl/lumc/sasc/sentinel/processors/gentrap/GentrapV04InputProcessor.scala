@@ -98,7 +98,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     val rnaMetrics = effJson \ "gentrap" \ "stats" \ "rna_metrics"
 
     GentrapAlignmentStats(
-      nReads = (alnMetrics \ "pf_reads").extract[Long],
+      nReadsTotal = (alnMetrics \ "pf_reads").extract[Long],
       nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
       nReadsSingleton = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
       nReadsProperPair = isPaired.option { (bpFlagstat \ "ProperPair").extract[Long] },
