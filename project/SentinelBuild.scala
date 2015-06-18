@@ -17,6 +17,31 @@ object SentinelBuild extends Build {
   val JettyVersion = "9.2.10.v20150310"
   val JettyRunnerModule = "org.eclipse.jetty" % "jetty-runner" % JettyVersion % "container"
 
+  lazy val dependencies = Seq(
+    "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
+    "com.github.fge"          %  "json-schema-validator"      % "2.2.6",
+    "com.novus"               %% "salat"                      % "1.9.9",
+    "com.typesafe.akka"       %% "akka-actor"                 % "2.3.6",
+    "commons-codec"           %  "commons-codec"              % "1.7",
+    "commons-io"              %  "commons-io"                 % "2.4",
+    "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"  % "1.47.3"              % "test;it",
+    "javax.servlet"           %  "javax.servlet-api"          % "3.1.0"               % "container;provided;test;it",
+    "net.databinder.dispatch" %% "dispatch-core"              % "0.11.2",
+    "net.databinder.dispatch" %% "dispatch-json4s-jackson"    % "0.11.2",
+    "org.eclipse.jetty"       %  "jetty-plus"                 % JettyVersion          % "container",
+    "org.eclipse.jetty"       %  "jetty-webapp"               % JettyVersion          % "container",
+    "org.json4s"              %% "json4s-jackson"             % Json4sVersion,
+    "org.json4s"              %% "json4s-mongo"               % Json4sVersion,
+    "org.json4s"              %% "json4s-ext"                 % Json4sVersion,
+    "org.mongodb"             %% "casbah"                     % "2.8.0",
+    "org.mindrot"             %  "jbcrypt"                    % "0.3m",
+    "org.scalatra"            %% "scalatra"                   % ScalatraVersion,
+    "org.scalatra"            %% "scalatra-specs2"            % ScalatraVersion       % "test;it",
+    "org.scalatra"            %% "scalatra-json"              % ScalatraVersion,
+    "org.scalatra"            %% "scalatra-swagger"           % ScalatraVersion,
+    "org.scalatra"            %% "scalatra-swagger-ext"       % ScalatraVersion,
+    "org.scalatra"            %% "scalatra-slf4j"             % ScalatraVersion)
+
   lazy val formattingPreferences = {
     import scalariform.formatter.preferences._
     FormattingPreferences()
@@ -84,32 +109,7 @@ object SentinelBuild extends Build {
       resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
       ScalariformKeys.preferences := formattingPreferences,
       dependencyOverrides ++= Set(JettyRunnerModule),
-      libraryDependencies ++= Seq(
-        "ch.qos.logback"          %  "logback-classic"          % "1.1.2"               % "runtime",
-        "com.github.fge"          %  "json-schema-validator"    % "2.2.6",
-        "com.novus"               %% "salat"                    % "1.9.9",
-        "com.typesafe.akka"       %% "akka-actor"               % "2.3.6",
-        "commons-codec"           %  "commons-codec"            % "1.7",
-        "commons-io"              %  "commons-io"               % "2.4",
-        "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"% "1.47.3"              % "test;it",
-        "javax.servlet"           %  "javax.servlet-api"        % "3.1.0"               % "container;provided;test;it",
-        "net.databinder.dispatch" %% "dispatch-core"            % "0.11.2",
-        "net.databinder.dispatch" %% "dispatch-json4s-jackson"  % "0.11.2",
-        "org.eclipse.jetty"       %  "jetty-plus"               % JettyVersion          % "container",
-        "org.eclipse.jetty"       %  "jetty-webapp"             % JettyVersion          % "container",
-        "org.json4s"              %% "json4s-jackson"           % Json4sVersion,
-        "org.json4s"              %% "json4s-mongo"             % Json4sVersion,
-        "org.json4s"              %% "json4s-ext"               % Json4sVersion,
-        "org.mongodb"             %% "casbah"                   % "2.8.0",
-        "org.mindrot"             %  "jbcrypt"                  % "0.3m",
-        "org.scalatra"            %% "scalatra"                 % ScalatraVersion,
-        "org.scalatra"            %% "scalatra-specs2"          % ScalatraVersion       % "test;it",
-        "org.scalatra"            %% "scalatra-json"            % ScalatraVersion,
-        "org.scalatra"            %% "scalatra-swagger"         % ScalatraVersion,
-        "org.scalatra"            %% "scalatra-swagger-ext"     % ScalatraVersion,
-        "org.scalatra"            %% "scalatra-slf4j"           % ScalatraVersion
-      )
-    )
+      libraryDependencies ++= dependencies)
 
   lazy val project = Project("sentinel",  file("."))
     .enablePlugins(AutomateHeaderPlugin)
