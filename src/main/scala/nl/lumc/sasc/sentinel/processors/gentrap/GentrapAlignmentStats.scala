@@ -35,7 +35,7 @@ import nl.lumc.sasc.sentinel.models.{ DataPointAggr, DataPointLabels }
  * @param normalizedTranscriptCoverage Values representing normalized transcript coverage.
  * @param nBasesRibosomal Number of bases aligned to ribosomal gene regions.
  * @param pctChimeras Percentage of reads mapped as chimeras (only for paired-end libraries).
- * @param nSingletons Number of paired-end reads mapped as singletons.
+ * @param nReadsSingleton Number of paired-end reads mapped as singletons.
  * @param maxInsertSize Maximum insert size (only for paired-end libraries).
  * @param medianInsertSize Median insert size (only for paired-end libraries).
  * @param stdevInsertSize Insert size standard deviation (only for paired-end libraries).
@@ -54,9 +54,9 @@ case class GentrapAlignmentStats(
   median5PrimeBias: Double,
   median3PrimeBias: Double,
   normalizedTranscriptCoverage: Seq[Double],
+  nReadsSingleton: Option[Long] = None,
   nBasesRibosomal: Option[Long] = None,
   pctChimeras: Option[Double] = None,
-  nSingletons: Option[Long] = None,
   maxInsertSize: Option[Long] = None,
   medianInsertSize: Option[Long] = None,
   stdevInsertSize: Option[Double] = None,
@@ -78,7 +78,7 @@ case class GentrapAlignmentStatsAggr(
   median3PrimeBias: DataPointAggr,
   nBasesRibosomal: Option[DataPointAggr] = None,
   pctChimeras: Option[DataPointAggr] = None,
-  nSingletons: Option[DataPointAggr] = None,
+  nReadsSingleton: Option[DataPointAggr] = None,
   maxInsertSize: Option[DataPointAggr] = None,
   medianInsertSize: Option[DataPointAggr] = None,
   stdevInsertSize: Option[DataPointAggr] = None)

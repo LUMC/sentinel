@@ -100,10 +100,10 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     GentrapAlignmentStats(
       nReads = (alnMetrics \ "pf_reads").extract[Long],
       nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
+      nReadsSingleton = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
       rateReadsMismatch = (alnMetrics \ "pf_mismatch_rate").extract[Double],
       rateIndel = (alnMetrics \ "pf_indel_rate").extract[Double],
       pctChimeras = isPaired.option { (alnMetrics \ "pct_chimeras").extract[Double] },
-      nSingletons = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
       maxInsertSize = (insMetrics \ "max_insert_size").extractOpt[Long],
       medianInsertSize = (insMetrics \ "median_insert_size").extractOpt[Long],
       stdevInsertSize = (insMetrics \ "standard_deviation").extractOpt[Double],

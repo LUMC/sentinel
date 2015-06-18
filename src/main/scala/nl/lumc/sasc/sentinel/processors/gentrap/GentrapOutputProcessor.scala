@@ -370,7 +370,7 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       "median5PrimeBias",
       "median3PrimeBias",
       "pctChimeras",
-      "nSingletons",
+      "nReadsSingleton",
       "maxInsertSize",
       "medianInsertSize",
       "stdevInsertSize")
