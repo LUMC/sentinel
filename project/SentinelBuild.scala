@@ -3,6 +3,7 @@ import Keys._
 import org.scalatra.sbt._
 import com.earldouglas.xwp.XwpPlugin._
 import com.typesafe.sbt.SbtScalariform._
+import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
 
 object SentinelBuild extends Build {
@@ -89,7 +90,7 @@ object SentinelBuild extends Build {
   lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
 
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
-    headerSettings ++ Defaults.itSettings ++ Seq(
+    site.settings ++ site.sphinxSupport() ++ site.includeScaladoc() ++ headerSettings ++ Defaults.itSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,
