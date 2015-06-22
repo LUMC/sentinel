@@ -68,3 +68,6 @@ jrebel.lic
 
 # paulp script
 /.lib/
+
+# generated documentation
+src/sphinx/_build
