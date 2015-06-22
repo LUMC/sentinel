@@ -160,8 +160,8 @@ trait RunsAdapter extends MongodbConnector {
    * deleted run record ID exist).
    *
    * Still, even though they exist in the database, run records with a `deletionTimeUtc` attribute can not be retrieved
-   * using [[getRun]] and will not be returned by [[getRuns]]. For all practical purposes by the user, it is almost
-   * as if the run record is not present.
+   * using [[getRunRecord]] or [[getRunFile]] and will not be returned by [[getRuns]]. For all practical purposes by
+   * the user, it is almost as if the run record is not present.
    *
    * @param runId Run ID to remove.
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
