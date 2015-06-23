@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.api
 
 import org.bson.types.ObjectId
 import org.json4s._
-import org.scalatra.ScalatraServlet
+import org.scalatra.{ CorsSupport, NotFound, ScalatraServlet }
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 
@@ -108,5 +108,9 @@ abstract class SentinelServlet extends ScalatraServlet
     response.setHeader("Set-Cookie", null)
     // Remove nonstandard field added automatically by Scalatra
     response.setHeader("REMOTE_USER", null)
+  }
+
+  notFound {
+    NotFound(ApiMessage("Requested resource not found."))
   }
 }
