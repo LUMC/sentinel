@@ -41,6 +41,13 @@ class StatsControllerSpec extends SentinelServletSpec {
   // FIXME: Since specs2 converts all JsonNumber to Doubles, we have to do the comparison as doubles as well
   def bePositiveNum = beGreaterThan(0: Double) ^^ { (t: String) => t.toDouble }
 
+  s"OPTIONS '$baseEndpoint/runs'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/runs", "GET,HEAD")
+    }
+  }
+
   s"GET '$baseEndpoint/runs'" >> {
     br
 
@@ -172,6 +179,13 @@ class StatsControllerSpec extends SentinelServletSpec {
           }
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/gentrap/alignments'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/gentrap/alignments", "GET,HEAD")
     }
   }
 
@@ -587,6 +601,13 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
+  s"OPTIONS '$baseEndpoint/gentrap/alignments/aggregate'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/gentrap/alignments/aggregate", "GET,HEAD")
+    }
+  }
+
   s"GET '$baseEndpoint/gentrap/alignments/aggregate'" >> {
     br
 
@@ -939,6 +960,13 @@ class StatsControllerSpec extends SentinelServletSpec {
     }
   }
 
+  s"OPTIONS '$baseEndpoint/gentrap/sequences'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/gentrap/sequences", "GET,HEAD")
+    }
+  }
+
   s"GET '$baseEndpoint/gentrap/sequences'" >> {
     br
 
@@ -1240,6 +1268,13 @@ class StatsControllerSpec extends SentinelServletSpec {
           }
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/gentrap/sequences/aggregate'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/gentrap/sequences/aggregate", "GET,HEAD")
     }
   }
 

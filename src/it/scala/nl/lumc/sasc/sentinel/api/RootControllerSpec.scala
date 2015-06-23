@@ -28,7 +28,14 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
   addServlet(new RootController, s"/*")
   addServlet(new ResourcesApp, "/api-docs/*")
 
-  s"GET '/' should" >> inline {
+  "OPTIONS '/'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest("/", "GET,HEAD")
+    }
+  }
+
+  "GET '/' should" >> inline {
 
     val endpoint = "/"
 

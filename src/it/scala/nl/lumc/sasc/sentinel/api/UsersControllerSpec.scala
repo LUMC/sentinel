@@ -34,6 +34,13 @@ class UsersControllerSpec extends SentinelServletSpec {
   val baseEndpoint = "/users"
   addServlet(servlet, s"$baseEndpoint/*")
 
+  s"OPTIONS '$baseEndpoint'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint", "HEAD,POST")
+    }
+  }
+
   s"POST '$baseEndpoint'" >> {
     br
 
@@ -251,6 +258,13 @@ class UsersControllerSpec extends SentinelServletSpec {
           priorResponses.last.body must /("message" -> "User ID already taken.")
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/:userRecordId'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/userRecordId", "GET,HEAD,PATCH")
     }
   }
 

@@ -50,6 +50,17 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   /** Validator for patch payloads */
   val patchValidator = new ValidationAdapter { override val validator = createValidator("/schemas/json_patch.json") }
 
+  options("/?") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "HEAD,POST")
+  }
+
+  options("/:userRecordId") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PATCH")
+    response.setHeader("Accept-Patch", formats("json"))
+  }
+
   // format: OFF
   val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
     summary "Updates an existing user record."
@@ -125,9 +136,6 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   // Helper endpoint to capture PATCH request with unspecified user ID
   patch("/?") { halt(400, ApiMessage("User record ID not specified.")) }
-
-  // Helper endpoint to show which PATCH format we accept
-  options("/:userId") { response.setHeader("Accept-Patch", formats("json")) }
 
   // format: OFF
   val usersUserIdGetOperation = (apiOperation[UserResponse]("usersUserIdGet")

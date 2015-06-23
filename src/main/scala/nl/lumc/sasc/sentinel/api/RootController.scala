@@ -17,19 +17,26 @@
 package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
-import org.scalatra.ScalatraServlet
+import org.scalatra.{ CorsSupport, ScalatraServlet }
 import org.scalatra.json.JacksonJsonSupport
 
 import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
 /** Controller for the `/` endpoint. */
-class RootController extends ScalatraServlet with JacksonJsonSupport {
+class RootController extends ScalatraServlet
+    with CorsSupport
+    with JacksonJsonSupport {
 
   /** JSON formatting used by this endpoint. */
   protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
   before() {
     contentType = formats("json")
+  }
+
+  options("/?") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   /** Root endpoint, which permanently redirects to our documentation. */

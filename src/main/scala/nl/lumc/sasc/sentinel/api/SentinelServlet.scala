@@ -26,7 +26,10 @@ import nl.lumc.sasc.sentinel.models.ApiMessage
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
 /** Base servlet for all Sentinel controllers. */
-abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport with SwaggerSupport {
+abstract class SentinelServlet extends ScalatraServlet
+    with CorsSupport
+    with JacksonJsonSupport
+    with SwaggerSupport {
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -94,10 +97,6 @@ abstract class SentinelServlet extends ScalatraServlet with JacksonJsonSupport w
   /** Helper function for creating annotation object IDs with the appropriate failure message. */
   protected def getAnnotObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
     splitParam(rawParam), Option(ApiMessage("Invalid annotation ID(s) provided.")))
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-  }
 
   before() {
     contentType = formats("json")

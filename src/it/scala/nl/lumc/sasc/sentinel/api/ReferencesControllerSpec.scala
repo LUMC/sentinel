@@ -36,6 +36,13 @@ class ReferencesControllerSpec extends SentinelServletSpec {
   addServlet(refsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
 
+  s"OPTIONS '$baseEndpoint'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD")
+    }
+  }
+
   s"GET '$baseEndpoint'" >> {
     br
 
@@ -164,6 +171,13 @@ class ReferencesControllerSpec extends SentinelServletSpec {
           }
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/:refId'" >> {
+    br
+    "when using the default parameters should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/refId", "GET,HEAD")
     }
   }
 

@@ -40,6 +40,16 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   /** Annotation adapter for connecting to the database. */
   protected val refs = new ReferencesAdapter { val mongo = self.mongo }
 
+  options("/?") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/:refId") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
   // format: OFF
   val referencesRefIdGetOperation = (apiOperation[Seq[ReferenceRecord]]("referencesRefIdGet")
     summary "Retrieves a single reference record."

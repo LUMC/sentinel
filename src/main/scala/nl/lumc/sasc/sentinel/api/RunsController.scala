@@ -74,6 +74,16 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       RequestEntityTooLarge(CommonMessages.RunSummaryTooLarge)
   }
 
+  options("/?") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST")
+  }
+
+  options("/:runId") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "DELETE,GET,HEAD")
+  }
+
   // format: OFF
   val runsRunIdDeleteOperation = (apiOperation[Unit]("runsRunIdDelete")
     summary "Deletes an uploaded run summary."

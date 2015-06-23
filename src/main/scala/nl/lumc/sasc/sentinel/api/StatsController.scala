@@ -56,6 +56,31 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   /** Adapter for connecting to the users collection */
   protected val users = new UsersAdapter { val mongo = self.mongo }
 
+  options("/runs") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/gentrap/alignments") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/gentrap/alignments/aggregate") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/gentrap/sequences") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/gentrap/sequences/aggregate") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
   // format: OFF
   val statsRunsGetOperation = (apiOperation[Seq[PipelineStats]]("statsRunsGet")
     summary "Retrieves general statistics of uploaded run summaries.")

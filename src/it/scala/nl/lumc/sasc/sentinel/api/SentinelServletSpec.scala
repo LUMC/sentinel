@@ -177,6 +177,24 @@ trait SentinelServletSpec extends MutableScalatraSpec
         priorResponse.statusLine.code mustEqual expectedUploadStatus
       }
     }
+
+    class OptionsMethodTest(endpoint: String, allowedMethods: String) extends PriorRequests {
+
+      def request = () => options(endpoint) { response }
+      def priorRequests = Seq(request)
+
+      "return status 200" in {
+        priorResponse.status mustEqual 200
+      }
+
+      "return the expected response header" in {
+        priorResponse.headers must havePair("Access-Control-Allow-Methods" -> Seq(allowedMethods))
+      }
+
+      "return an empty body" in {
+        priorResponse.body must beEmpty
+      }
+    }
   }
 }
 

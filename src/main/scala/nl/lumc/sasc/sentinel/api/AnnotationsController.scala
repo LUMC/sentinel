@@ -40,6 +40,16 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   /** Annotation adapter for connecting to the database. */
   protected val annots = new AnnotationsAdapter { val mongo = self.mongo }
 
+  options("/?") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
+  options("/:annotId") {
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+    response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
+  }
+
   // format: OFF
   val annotationsRefIdGetOperation = (apiOperation[Seq[AnnotationRecord]]("annotationsRefIdGet")
     summary "Retrieves a single full annotation item."

@@ -38,6 +38,13 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
   addServlet(annotsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
 
+  s"OPTIONS '$baseEndpoint'" >> {
+    br
+    "when using the default parameter should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD")
+    }
+  }
+
   s"GET '$baseEndpoint'" >> {
     br
 
@@ -166,6 +173,13 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
           }
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/:annotId'" >> {
+    br
+    "when using the default parameter should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/annotId", "GET,HEAD")
     }
   }
 

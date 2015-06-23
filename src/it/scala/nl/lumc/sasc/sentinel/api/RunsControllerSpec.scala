@@ -79,6 +79,13 @@ class RunsControllerSpec extends SentinelServletSpec {
   val baseEndpoint = "/runs"
   addServlet(servlet, s"$baseEndpoint/*")
 
+  s"OPTIONS '$baseEndpoint'" >> {
+    br
+    "when using the default parameter should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD,POST")
+    }
+  }
+
   s"POST '$baseEndpoint'" >> {
     br
 
@@ -663,6 +670,13 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
         }
       }
+    }
+  }
+
+  s"OPTIONS '$baseEndpoint/:runId'" >> {
+    br
+    "when using the default parameter should" >> inline {
+      new Context.OptionsMethodTest(s"$baseEndpoint/runId", "DELETE,GET,HEAD")
     }
   }
 
