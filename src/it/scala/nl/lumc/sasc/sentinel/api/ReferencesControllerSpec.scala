@@ -167,7 +167,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/:refId" >> {
+  s"GET '$baseEndpoint/:refId'" >> {
   br
 
     def endpoint(refId: String) = s"$baseEndpoint/$refId"

@@ -169,7 +169,7 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
     }
   }
 
-  s"GET '$baseEndpoint/:annotId" >> {
+  s"GET '$baseEndpoint/:annotId'" >> {
   br
 
     def endpoint(annotId: String) = s"$baseEndpoint/$annotId"
