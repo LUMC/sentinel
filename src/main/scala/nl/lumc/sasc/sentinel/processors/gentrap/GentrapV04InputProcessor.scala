@@ -28,7 +28,7 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcSeqMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcMd5, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
@@ -53,7 +53,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       .children
       .map(_.extract[String])
       .sorted
-    val combinedMd5 = calcSeqMd5(contigMd5s)
+    val combinedMd5 = calcMd5(contigMd5s)
     ReferenceRecord(
       refId = new ObjectId,
       combinedMd5 = combinedMd5,

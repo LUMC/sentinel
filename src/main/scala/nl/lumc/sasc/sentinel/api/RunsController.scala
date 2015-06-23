@@ -174,9 +174,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(400, CommonMessages.UnspecifiedPipeline.message),
       StringResponseMessage(400, CommonMessages.InvalidPipeline.message),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
-      StringResponseMessage(400, "Run summary already uploaded by the user."),
       StringResponseMessage(401, CommonMessages.Unauthenticated.message),
       StringResponseMessage(403, CommonMessages.Unauthorized.message),
+      StringResponseMessage(409, "Run summary already uploaded by the user."),
       StringResponseMessage(413, CommonMessages.RunSummaryTooLarge.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
@@ -198,10 +198,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
           case Failure(f) =>
             f match {
               case vexc: RunValidationException =>
-                BadRequest(ApiMessage(vexc.getMessage,
-                  data = vexc.report.collect { case r => r.toString }))
-              case dexc: com.mongodb.DuplicateKeyException =>
-                BadRequest(ApiMessage("Run summary already uploaded by the user."))
+                BadRequest(ApiMessage(vexc.getMessage, data = vexc.report.collect { case r => r.toString }))
+              case dexc: DuplicateFileException =>
+                Conflict(ApiMessage(dexc.getMessage, data = Map("uploadedId" -> dexc.existingId)))
               case otherwise =>
                 InternalServerError(CommonMessages.Unexpected)
             }

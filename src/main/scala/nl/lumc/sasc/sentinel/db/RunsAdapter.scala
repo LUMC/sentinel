@@ -27,7 +27,7 @@ import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, RunRecord, User }
-import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
+import nl.lumc.sasc.sentinel.utils.{ DuplicateFileException, calcMd5, getUtcTimeNow }
 
 /** Trait for processing and storing run summary files to a run records collection */
 trait RunsAdapter extends MongodbConnector {
@@ -58,21 +58,40 @@ trait RunsAdapter extends MongodbConnector {
    * @return GridFS ID of the stored entry.
    */
   def storeFile(byteContents: Array[Byte], user: User, pipeline: Pipeline.Value,
-                fileName: String, inputGzipped: Boolean): ObjectId =
+                fileName: String, inputGzipped: Boolean): ObjectId = {
     // TODO: use Futures instead
-    mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
-      f.filename = fileName
-      f.contentType = "application/json"
-      f.metaData = MongoDBObject(
-        "uploaderId" -> user.id,
-        "pipeline" -> pipeline.toString,
-        "inputGzipped" -> inputGzipped
-      )
-    }.get match {
-      case oid: ObjectId => oid
-      case otherwise =>
-        throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+    // TODO: stop using exceptions
+    val res =
+      try {
+        mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
+          f.filename = fileName
+          f.contentType = "application/json"
+          f.metaData = MongoDBObject(
+            "uploaderId" -> user.id,
+            "pipeline" -> pipeline.toString,
+            "inputGzipped" -> inputGzipped
+          )
+        }
+      } catch {
+        case dexc: com.mongodb.DuplicateKeyException =>
+          mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(byteContents)) match {
+            case Some(gfs) => gfs._id match {
+              case Some(oid) => throw new DuplicateFileException("Run summary already uploaded.", oid.toString)
+              case None      => throw dexc
+            }
+            case None => throw dexc
+          }
+      }
+
+    res match {
+      case Some(v) => v match {
+        case oid: ObjectId => oid
+        case otherwise =>
+          throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+      }
+      case None => throw new RuntimeException("Unexpected error when trying to store run summary.")
     }
+  }
 
   /**
    * Stores the given run record into the runs collection.

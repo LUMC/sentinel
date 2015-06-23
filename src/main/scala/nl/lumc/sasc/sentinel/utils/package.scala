@@ -65,9 +65,22 @@ package object utils {
    * @param seq Input strings.
    * @return MD5 checksum.
    */
-  def calcSeqMd5(seq: Seq[String]): String = {
+  def calcMd5(seq: Seq[String]): String = {
     val digest = MessageDigest.getInstance("MD5")
     seq.foreach { case item => digest.update(item.getBytes) }
+    digest.digest().map("%02x".format(_)).mkString
+  }
+
+  /**
+   * Returns the MD5 checksum of the given byte array.
+   *
+   * @param arr Byte array.
+   * @return MD5 checksum.
+   */
+  def calcMd5(arr: Array[Byte]): String = {
+    // TODO: generalize this with calcMd5(seq: Seq[String])
+    val digest = MessageDigest.getInstance("MD5")
+    arr.foreach { case item => digest.update(item) }
     digest.digest().map("%02x".format(_)).mkString
   }
 

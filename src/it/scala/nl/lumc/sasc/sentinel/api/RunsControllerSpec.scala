@@ -308,13 +308,16 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
           }
 
-          "return status 400 for the second upload" in {
-            priorResponses.last.status mustEqual 400
+          "return status 409 for the second upload" in {
+            priorResponses.last.status mustEqual 409
           }
 
           "return a JSON object containing the expected message for the second upload" in {
             priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.last.body must /("message" -> "Run summary already uploaded by the user.")
+            priorResponses.last.body must /("message" -> "Run summary already uploaded.")
+            priorResponses.head.jsonBody must beSome.like { case json =>
+              priorResponses.last.body must /("data") /("uploadedId" -> (json \ "runId").extract[String])
+            }
           }
 
         }
