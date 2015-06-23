@@ -503,13 +503,20 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       .collect { case res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
     // TODO: generate the attribute names programmatically (using macros?)
-    val attrs = Seq("nReads",
+    val attrs = Seq(
       "nBases",
       "nBasesA",
       "nBasesT",
       "nBasesG",
       "nBasesC",
-      "nBasesN")
+      "nBasesN",
+      "nReads",
+      "pctBasesA",
+      "pctBasesT",
+      "pctBasesG",
+      "pctBasesC",
+      "pctBasesN",
+      "pctBasesGC")
 
     val readNames = Seq("read1", "read2")
 

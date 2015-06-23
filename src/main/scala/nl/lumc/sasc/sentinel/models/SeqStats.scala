@@ -93,4 +93,10 @@ case class ReadStatsAggr(
   nBasesG: DataPointAggr,
   nBasesC: DataPointAggr,
   nBasesN: DataPointAggr,
-  nReads: DataPointAggr)
+  nReads: DataPointAggr,
+  pctBasesA: DataPointAggr,
+  pctBasesT: DataPointAggr,
+  pctBasesG: DataPointAggr,
+  pctBasesC: DataPointAggr,
+  pctBasesN: DataPointAggr,
+  pctBasesGC: DataPointAggr)
