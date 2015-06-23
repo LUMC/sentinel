@@ -179,6 +179,34 @@ class RunsControllerSpec extends SentinelServletSpec {
         }
       }
 
+      "when a compressed run summary that passes all validation is uploaded should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def fileMap = Map("run" -> SchemaExamples.UnsupportedCompressed)
+          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
+            fileMap, Map(HeaderApiKey -> user.activeKey)) { response }
+          def priorRequests = Seq(request)
+
+          "return status 201" in {
+            priorResponse.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run" in {
+            priorResponse.contentType mustEqual "application/json"
+            priorResponse.body must /("creationTimeUtc" -> ".+".r)
+            priorResponse.body must /("nLibs" -> 0)
+            priorResponse.body must /("nSamples" -> 0)
+            priorResponse.body must /("pipeline" -> "unsupported")
+            priorResponse.body must /("runId" -> """\S+""".r)
+            priorResponse.body must /("uploaderId" -> user.id)
+            priorResponse.body must not /("annotIds" -> ".+".r)
+            priorResponse.body must not /("refId" -> ".+".r)
+            priorResponse.body must not /("sampleIds" -> ".+".r)
+          }
+        }
+      }
+
       "when the same run summary is uploaded more than once by different users should" >> inline {
 
         new Context.PriorRequestsClean {
@@ -296,6 +324,50 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           def request1 = () => post(endpoint, params, fileMap, headers) { response }
           def request2 = () => post(endpoint, params, fileMap, headers) { response }
+          def priorRequests = Seq(request1, request2)
+
+          "return status 201 for the first upload" in {
+            priorResponses.head.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run for the first upload" in {
+            priorResponses.head.contentType mustEqual  "application/json"
+            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
+            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nSamples" -> 0)
+            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("runId" -> """\S+""".r)
+            priorResponses.head.body must /("uploaderId" -> user.id)
+            priorResponses.head.body must not /("annotIds" -> ".+".r)
+            priorResponses.head.body must not /("refId" -> ".+".r)
+            priorResponses.head.body must not /("sampleIds" -> ".+".r)
+          }
+
+          "return status 409 for the second upload" in {
+            priorResponses.last.status mustEqual 409
+          }
+
+          "return a JSON object containing the expected message for the second upload" in {
+            priorResponses.last.contentType mustEqual  "application/json"
+            priorResponses.last.body must /("message" -> "Run summary already uploaded.")
+            priorResponses.head.jsonBody must beSome.like { case json =>
+              priorResponses.last.body must /("data") /("uploadedId" -> (json \ "runId").extract[String])
+            }
+          }
+
+        }
+      }
+
+      "when a run summary is uploaded more than once (uncompressed then compressed) by the same users should" >> inline {
+
+        new Context.PriorRequestsClean {
+
+          def params = Seq(("userId", user.id), ("pipeline", pipeline))
+          def headers = Map(HeaderApiKey -> user.activeKey)
+
+          def request1 = () => post(endpoint, params, fileMap, headers) { response }
+          def request2 = () => post(endpoint, params,
+            Map("run" -> SchemaExamples.UnsupportedCompressed), headers) { response }
           def priorRequests = Seq(request1, request2)
 
           "return status 201 for the first upload" in {
