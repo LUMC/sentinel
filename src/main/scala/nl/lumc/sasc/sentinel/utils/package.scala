@@ -35,6 +35,9 @@ package object utils {
 
   import implicits._
 
+  /** Helper function to create a function that calculates percentages. */
+  def pctOf: Long => Long => Double = (b: Long) => (a: Long) => a * 100.0 / b
+
   /** Magic byte for all Gzipped files. */
   private val GzipMagic = Seq(0x1f, 0x8b)
 

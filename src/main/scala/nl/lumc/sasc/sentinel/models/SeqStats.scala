@@ -16,6 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.models
 
+import com.novus.salat.annotations.Persist
+
+import nl.lumc.sasc.sentinel.utils.pctOf
+
 /**
  * Sequencing input statistics.
  *
@@ -37,26 +41,48 @@ case class SeqStatsAggr(read1: ReadStatsAggr, read2: Option[ReadStatsAggr] = Non
 /**
  * Statistics of a single read file.
  *
- * @param nBases Total number of bases from all reads.
- * @param nBasesA Total number of adenine bases from all reads.
- * @param nBasesT Total number of thymines from all reads.
- * @param nBasesG Total number of guanines from all reads.
- * @param nBasesC Total number of cytosines from all reads.
- * @param nBasesN Total number of unknown bases from all reads.
+ * @param nBases Total number of bases across all reads.
+ * @param nBasesA Total number of adenine bases across all reads.
+ * @param nBasesT Total number of thymines across all reads.
+ * @param nBasesG Total number of guanines across all reads.
+ * @param nBasesC Total number of cytosines across all reads.
+ * @param nBasesN Total number of unknown bases across all reads.
  * @param nReads Total number of reads.
  * @param nBasesByQual Values indicating how many bases have a given quality.
  * @param medianQualByPosition Values indicating the median base quality of each position.
  */
 case class ReadStats(
-  nBases: Long,
-  nBasesA: Long,
-  nBasesT: Long,
-  nBasesG: Long,
-  nBasesC: Long,
-  nBasesN: Long,
-  nReads: Long,
-  nBasesByQual: Seq[Long],
-  medianQualByPosition: Seq[Double])
+    nBases: Long,
+    nBasesA: Long,
+    nBasesT: Long,
+    nBasesG: Long,
+    nBasesC: Long,
+    nBasesN: Long,
+    nReads: Long,
+    nBasesByQual: Seq[Long],
+    medianQualByPosition: Seq[Double]) {
+
+  /** Helper function to create a function that calculates percentages from number of aligned reads. */
+  private def pctOfBases: Long => Double = pctOf(nBases)
+
+  /** Percentage of adenine bases across all reads. */
+  @Persist lazy val pctBasesA: Double = pctOfBases(nBasesA)
+
+  /** Percentage of thymine bases across all reads. */
+  @Persist lazy val pctBasesT: Double = pctOfBases(nBasesT)
+
+  /** Percentage of guanine bases across all reads. */
+  @Persist lazy val pctBasesG: Double = pctOfBases(nBasesG)
+
+  /** Percentage of cytosine bases across all reads. */
+  @Persist lazy val pctBasesC: Double = pctOfBases(nBasesC)
+
+  /** Percentage of unknown bases across all reads. */
+  @Persist lazy val pctBasesN: Double = pctOfBases(nBasesN)
+
+  /** Percentage of guanine and cytosine bases across all reads. */
+  @Persist lazy val pctBasesGC: Double = pctOfBases(nBasesG + nBasesC)
+}
 
 // TODO: generate the aggregate stats programmatically (using macros?)
 /** Aggregated statistics of a single read file. */

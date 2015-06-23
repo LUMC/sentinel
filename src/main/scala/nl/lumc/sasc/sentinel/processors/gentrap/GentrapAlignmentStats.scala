@@ -19,6 +19,7 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 import com.novus.salat.annotations.Persist
 
 import nl.lumc.sasc.sentinel.models.{ DataPointAggr, DataPointLabels }
+import nl.lumc.sasc.sentinel.utils.pctOf
 
 /**
  * Gentrap alignment statistics.
@@ -65,9 +66,6 @@ case class GentrapAlignmentStats(
     rateIndel: Double,
     rateReadsMismatch: Double,
     stdevInsertSize: Option[Double] = None) {
-
-  /** Helper function to create a function that calculates percentages. */
-  private def pctOf: Long => Long => Double = (b: Long) => (a: Long) => a * 100.0 / b
 
   /** Helper function to create a function that calculates percentages from number of aligned reads. */
   private def pctOfAlignedReads: Long => Double = pctOf(nReadsAligned)
