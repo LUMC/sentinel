@@ -94,7 +94,7 @@ object SentinelBuild extends Build {
 
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
     site.settings ++ site.sphinxSupport() ++ site.includeScaladoc() ++ headerSettings ++ Defaults.itSettings ++
-    gitStampSettings ++ Seq(
+    gitStampSettings ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,
@@ -108,10 +108,7 @@ object SentinelBuild extends Build {
       testOptions in Test += Tests.Argument("console", "junitxml"),
       testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
       mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
-      test in assembly := {
-        (test in Test).value
-        (test in IntegrationTest).value
-      },
+      test in assembly := {},
       assemblyMergeStrategy in assembly := {
         // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
         case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
