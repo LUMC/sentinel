@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 import akka.actor.ActorSystem
+import com.mongodb.{ MongoCredential, ServerAddress }
 import com.mongodb.casbah.MongoClient
 import com.typesafe.config.ConfigFactory
 import javax.servlet.ServletContext
@@ -34,15 +35,46 @@ class ScalatraBootstrap extends LifeCycle {
   // TODO: how to add this in the object definitions itself?
   swagger.addAuthorization(ApiKey(HeaderApiKey, "header"))
 
+  /** Configuration key names. */
+  val dbConfKey = "mongodb"
+  val sentinelConfKey = "sentinel"
+
   override def init(context: ServletContext) {
 
     val conf = ConfigFactory.load()
-    val host = Try(conf.getString("mongodb.host")).getOrElse("localhost")
-    val port = Try(conf.getInt("mongodb.port")).getOrElse(27017)
-    val dbName = Try(conf.getString("mongodb.dbName")).getOrElse("sentinel")
 
-    implicit val mongo = MongodbAccessObject(MongoClient(host, port), dbName)
+    /** Database server hostname. */
+    val host = Try(conf.getString(s"$dbConfKey.host")).getOrElse("localhost")
+
+    /** Database server port. */
+    val port = Try(conf.getInt(s"$dbConfKey.port")).getOrElse(27017)
+
+    /** Database name. */
+    val dbName = Try(conf.getString(s"$dbConfKey.dbName")).getOrElse("sentinel")
+
+    /** Username for database server. */
+    val userName = Try(conf.getString(s"$dbConfKey.userName")).toOption
+
+    /** Password for database authentication. */
+    val password = Try(conf.getString(s"$dbConfKey.password")).toOption
+
+    /** Deployment environment, 'production' or 'development'. */
+    val env = Try(conf.getString(s"$sentinelConfKey.env")).getOrElse("development")
+
+    // Create authenticated connection only when both userName and password are supplied
+    val addr = new ServerAddress(host, port)
+    val client = (userName, password) match {
+      case (Some(usr), Some(pwd)) =>
+        val cred = MongoCredential.createScramSha1Credential(usr, dbName, pwd.toCharArray)
+        MongoClient(addr, List(cred))
+      case otherwise => MongoClient(addr)
+    }
+
+    implicit val mongo = MongodbAccessObject(client, dbName)
     implicit val system = ActorSystem("appActorSystem")
+
+    // Check that we have a live connection to the DB
+    mongo.db.getStats()
 
     // TODO: separate production and development behavior more cleanly
     try {
@@ -53,6 +85,7 @@ class ScalatraBootstrap extends LifeCycle {
       context mount (new RunsController, "/runs/*")
       context mount (new UsersController, "/users/*")
       context mount (new ResourcesApp, "/api-docs/*")
+      context setInitParameter (org.scalatra.EnvironmentKey, env)
     } catch {
       case e: Throwable => e.printStackTrace()
     }
