@@ -16,16 +16,22 @@
  */
 package nl.lumc.sasc.sentinel
 
+import scala.util.Try
+
+import com.typesafe.config.ConfigFactory
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.DefaultServlet
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 
+import nl.lumc.sasc.sentinel.settings.SentinelConfKey
+
 object JettyLauncher {
 
   def main(args: Array[String]) {
 
-    val port = if (System.getenv("PORT") != null) System.getenv("PORT").toInt else 8080
+    val conf = ConfigFactory.load()
+    val port = Try(conf.getInt(s"$SentinelConfKey.port")).getOrElse(8080)
     val server = new Server(port)
     val context = new WebAppContext()
 

@@ -23,7 +23,7 @@ import org.scalatra.LifeCycle
 import org.scalatra.swagger.ApiKey
 import scala.util.Try
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
+import nl.lumc.sasc.sentinel.{ HeaderApiKey, settings }, settings._
 import nl.lumc.sasc.sentinel.api._
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 
@@ -35,31 +35,27 @@ class ScalatraBootstrap extends LifeCycle {
   // TODO: how to add this in the object definitions itself?
   swagger.addAuthorization(ApiKey(HeaderApiKey, "header"))
 
-  /** Configuration key names. */
-  val dbConfKey = "mongodb"
-  val sentinelConfKey = "sentinel"
-
   override def init(context: ServletContext) {
 
     val conf = ConfigFactory.load()
 
     /** Database server hostname. */
-    val host = Try(conf.getString(s"$dbConfKey.host")).getOrElse("localhost")
+    val host = Try(conf.getString(s"$DbConfKey.host")).getOrElse("localhost")
 
     /** Database server port. */
-    val port = Try(conf.getInt(s"$dbConfKey.port")).getOrElse(27017)
+    val port = Try(conf.getInt(s"$DbConfKey.port")).getOrElse(27017)
 
     /** Database name. */
-    val dbName = Try(conf.getString(s"$dbConfKey.dbName")).getOrElse("sentinel")
+    val dbName = Try(conf.getString(s"$DbConfKey.dbName")).getOrElse("sentinel")
 
     /** Username for database server. */
-    val userName = Try(conf.getString(s"$dbConfKey.userName")).toOption
+    val userName = Try(conf.getString(s"$DbConfKey.userName")).toOption
 
     /** Password for database authentication. */
-    val password = Try(conf.getString(s"$dbConfKey.password")).toOption
+    val password = Try(conf.getString(s"$DbConfKey.password")).toOption
 
     /** Deployment environment, 'production' or 'development'. */
-    val env = Try(conf.getString(s"$sentinelConfKey.env")).getOrElse("development")
+    val env = Try(conf.getString(s"$SentinelConfKey.env")).getOrElse("development")
 
     // Create authenticated connection only when both userName and password are supplied
     val addr = new ServerAddress(host, port)
