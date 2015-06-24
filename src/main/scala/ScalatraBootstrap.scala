@@ -16,9 +16,11 @@
  */
 import akka.actor.ActorSystem
 import com.mongodb.casbah.MongoClient
+import com.typesafe.config.ConfigFactory
 import javax.servlet.ServletContext
 import org.scalatra.LifeCycle
 import org.scalatra.swagger.ApiKey
+import scala.util.Try
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api._
@@ -34,9 +36,13 @@ class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
 
+    val conf = ConfigFactory.load()
+    val host = Try(conf.getString("mongodb.host")).getOrElse("localhost")
+    val port = Try(conf.getInt("mongodb.port")).getOrElse(27017)
+    val dbName = Try(conf.getString("mongodb.dbName")).getOrElse("sentinel")
+
+    implicit val mongo = MongodbAccessObject(MongoClient(host, port), dbName)
     implicit val system = ActorSystem("appActorSystem")
-    // TODO: refactor this out into a config file
-    implicit val mongo = MongodbAccessObject(MongoClient("localhost", 27017), "sentinel")
 
     // TODO: separate production and development behavior more cleanly
     try {

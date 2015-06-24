@@ -23,6 +23,7 @@ object SentinelBuild extends Build {
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
     "com.github.fge"          %  "json-schema-validator"      % "2.2.6",
     "com.novus"               %% "salat"                      % "1.9.9",
+    "com.typesafe"            %  "config"                     % "1.3.0",
     "com.typesafe.akka"       %% "akka-actor"                 % "2.3.6",
     "commons-codec"           %  "commons-codec"              % "1.7",
     "commons-io"              %  "commons-io"                 % "2.4",
