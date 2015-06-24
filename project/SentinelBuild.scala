@@ -5,6 +5,7 @@ import com.earldouglas.xwp.XwpPlugin._
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
+import sbtassembly.{ AssemblyKeys, MergeStrategy, PathList }, AssemblyKeys._
 
 object SentinelBuild extends Build {
 
@@ -103,6 +104,16 @@ object SentinelBuild extends Build {
       scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
       testOptions in Test += Tests.Argument("console", "junitxml"),
       testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
+      mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
+      test in assembly := {
+        (test in Test).value
+        (test in IntegrationTest).value
+      },
+      assemblyMergeStrategy in assembly := {
+        // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
+        case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
+        case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
+      },
       ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
