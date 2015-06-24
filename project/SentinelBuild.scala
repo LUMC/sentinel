@@ -115,6 +115,7 @@ object SentinelBuild extends Build {
         case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
         case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
       },
+      assemblyJarName in assembly := Name + "-" + Version + ".jar",
       ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
