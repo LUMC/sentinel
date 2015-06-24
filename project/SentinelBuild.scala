@@ -104,7 +104,7 @@ object SentinelBuild extends Build {
           sys.error("Sentinel requires Java 8.")
       },
       scalaVersion := ScalaVersion,
-      scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature"),
+      scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-target:jvm-1.8"),
       testOptions in Test += Tests.Argument("console", "junitxml"),
       testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
       mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
