@@ -1,3 +1,5 @@
+addSbtPlugin("com.atlassian.labs" % "sbt-git-stamp" % "0.1.2")
+
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")

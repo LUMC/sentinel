@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
+import com.atlassian.labs.gitstamp.GitStampPlugin._
 import com.earldouglas.xwp.XwpPlugin._
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
@@ -92,7 +93,8 @@ object SentinelBuild extends Build {
   lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
 
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
-    site.settings ++ site.sphinxSupport() ++ site.includeScaladoc() ++ headerSettings ++ Defaults.itSettings ++ Seq(
+    site.settings ++ site.sphinxSupport() ++ site.includeScaladoc() ++ headerSettings ++ Defaults.itSettings ++
+    gitStampSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,
