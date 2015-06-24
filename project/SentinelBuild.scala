@@ -117,7 +117,7 @@ object SentinelBuild extends Build {
       },
       ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
       resolvers += Classpaths.typesafeReleases,
-      resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository",
+      resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
       resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
       resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
       ScalariformKeys.preferences := formattingPreferences,
