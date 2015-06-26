@@ -519,7 +519,10 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
       "pctBasesN",
       "pctBasesGC")
 
-    val readNames = Seq("read1", "read2")
+    val readNames = libType match {
+      case Some(LibType.Single) => Seq("read1")
+      case otherwise            => Seq("read1", "read2", "readAll")
+    }
 
     val aggrStats = readNames.par
       .map {
@@ -529,8 +532,13 @@ class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends M
             .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
           if (res.nonEmpty) (rn, Option(grater[ReadStatsAggr].asObject(res)))
           else (rn, None)
-      }.seq.toMap
+      }.seq
+      .filter { case (rn, res) => res.isDefined }
+      .map { case (rn, res) => (rn, res.get) }
+      .toMap
 
-    aggrStats("read1").collect { case r1 => SeqStatsAggr(read1 = r1, read2 = aggrStats("read2")) }
+    aggrStats.get("read1").collect {
+      case r1 => SeqStatsAggr(read1 = r1, read2 = aggrStats.get("read2"), readAll = aggrStats.get("readAll"))
+    }
   }
 }

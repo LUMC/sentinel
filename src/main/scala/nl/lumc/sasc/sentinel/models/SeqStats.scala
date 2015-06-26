@@ -25,9 +25,26 @@ import nl.lumc.sasc.sentinel.utils.pctOf
  *
  * @param read1 Statistics of the first read (if paired-end) or the only read (if single-end).
  * @param read2 Statistics of the second read. Only defined for paired-end inputs.
- * @param labels data point labels.
+ * @param labels Data point labels.
  */
-case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: Option[DataPointLabels] = None)
+case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: Option[DataPointLabels] = None) {
+
+  /** Combined counts for both read1 and read2 (if present). */
+  @Persist lazy val readAll: ReadStats = read2 match {
+    case Some(r2) =>
+      ReadStats(
+        nBases = read1.nBases + r2.nBases,
+        nBasesA = read1.nBasesA + r2.nBasesA,
+        nBasesT = read1.nBasesT + r2.nBasesT,
+        nBasesG = read1.nBasesG + r2.nBasesG,
+        nBasesC = read1.nBasesC + r2.nBasesC,
+        nBasesN = read1.nBasesN + r2.nBasesN,
+        nReads = read1.nReads, // nReads for each pair is equal
+        nBasesByQual = Seq.empty[Long],
+        medianQualByPosition = Seq.empty[Double])
+    case otherwise => read1
+  }
+}
 
 // TODO: generate the aggregate stats programmatically (using macros?)
 /**
@@ -35,8 +52,11 @@ case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: O
  *
  * @param read1 Aggregated statistics of the first read (if paired-end) or the only read (if single-end).
  * @param read2 Aggregated statistics of the second read. Only defined for paired-end inputs.
+ * @param readAll Aggregated statistics of both reads. Only defined if there is at least a paired-end data point
+ *                in aggregation.
  */
-case class SeqStatsAggr(read1: ReadStatsAggr, read2: Option[ReadStatsAggr] = None)
+case class SeqStatsAggr(read1: ReadStatsAggr, read2: Option[ReadStatsAggr] = None,
+                        readAll: Option[ReadStatsAggr] = None)
 
 /**
  * Statistics of a single read file.

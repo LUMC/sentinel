@@ -1440,6 +1440,20 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("read2") / "pctBasesC"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesN"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesGC"  /("nDataPoints" -> 2)
+              // readAll
+              priorResponse.body must /("readAll") / "nBases"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nReads"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesGC"  /("nDataPoints" -> 6)
             }
           }
         }
@@ -1485,6 +1499,20 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("read2") / "pctBasesC"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesN"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesGC"  /("nDataPoints" -> 2)
+              // readAll
+              priorResponse.body must /("readAll") / "nBases"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "nReads"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesA"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesT"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesG"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesC"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesN"  /("nDataPoints" -> 2)
+              priorResponse.body must /("readAll") / "pctBasesGC"  /("nDataPoints" -> 2)
             }
           }
         }
@@ -1518,6 +1546,8 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("read1") / "pctBasesGC"  /("nDataPoints" -> 4)
               // read2
               priorResponse.body must not / "read2"
+              // readAll
+              priorResponse.body must not / "readAll"
             }
           }
         }
@@ -1563,6 +1593,20 @@ class StatsControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("read2") / "pctBasesC"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesN"  /("nDataPoints" -> 2)
               priorResponse.body must /("read2") / "pctBasesGC"  /("nDataPoints" -> 2)
+              // readAll
+              priorResponse.body must /("readAll") / "nBases"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "nReads"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesA"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesT"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesG"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesC"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesN"  /("nDataPoints" -> 6)
+              priorResponse.body must /("readAll") / "pctBasesGC"  /("nDataPoints" -> 6)
             }
 
             "return a different object than when qcPhase is set to 'processed'" in {
