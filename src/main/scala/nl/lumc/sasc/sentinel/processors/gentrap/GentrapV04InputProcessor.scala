@@ -116,6 +116,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       nBasesRibosomal = (rnaMetrics \ "ribosomal_bases").extractOpt[Long],
       median5PrimeBias = (rnaMetrics \ "median_5prime_bias").extract[Double],
       median3PrimeBias = (rnaMetrics \ "median_3prime_bias").extract[Double],
+      median5PrimeTo3PrimeBias = (rnaMetrics \ "median_5prime_to_3prime_bias").extractOpt[Double],
       normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
   }
 

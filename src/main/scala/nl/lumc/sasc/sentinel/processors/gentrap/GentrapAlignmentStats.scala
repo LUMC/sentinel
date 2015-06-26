@@ -26,8 +26,9 @@ import nl.lumc.sasc.sentinel.utils.pctOf
  *
  * @param labels Data point labels.
  * @param maxInsertSize Maximum insert size (only for paired-end libraries).
- * @param median3PrimeBias Median value of 3' coverage biases.
- * @param median5PrimeBias Median value of 5' coverage biases.
+ * @param median3PrimeBias Median value of 3' coverage biases from the top 1000 expressed transcripts (3'-most 100 bp).
+ * @param median5PrimeBias Median value of 5' coverage biases from the top 1000 expressed transcripts (5'-most 100 bp).
+ * @param median5PrimeTo3PrimeBias Median value of 5' to 3' coverage biases.
  * @param medianInsertSize Median insert size (only for paired-end libraries).
  * @param nBasesAligned Number of bases aligned.
  * @param nBasesCoding Number of bases aligned in the coding regions.
@@ -51,6 +52,7 @@ case class GentrapAlignmentStats(
     medianInsertSize: Option[Long] = None,
     median3PrimeBias: Double,
     median5PrimeBias: Double,
+    median5PrimeTo3PrimeBias: Option[Double] = None, // may be undefined when 3'prime coverage bias is 0
     nReadsAligned: Long,
     nBasesAligned: Long,
     nBasesCoding: Long,
@@ -110,6 +112,7 @@ case class GentrapAlignmentStatsAggr(
   maxInsertSize: Option[DataPointAggr] = None,
   median3PrimeBias: DataPointAggr,
   median5PrimeBias: DataPointAggr,
+  median5PrimeTo3PrimeBias: Option[DataPointAggr] = None,
   medianInsertSize: Option[DataPointAggr] = None,
   nBasesAligned: DataPointAggr,
   nBasesCoding: DataPointAggr,
