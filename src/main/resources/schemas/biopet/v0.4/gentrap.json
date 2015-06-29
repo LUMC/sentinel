@@ -10,11 +10,11 @@
       "meta": {
         "description": "Pipeline run metadata",
         "type": "object",
-        "required": [ "version", "last_commit_hash", "pipeline" ],
+        "required": [ "pipeline_version", "last_commit_hash", "pipeline_name" ],
 
         "properties": {
 
-          "version": {
+          "pipeline_version": {
             "description": "Pipeline release version",
             "type": "string"
           },
@@ -25,10 +25,15 @@
             "minLength": 7
           },
 
-          "pipeline": {
+          "pipeline_name": {
             "description": "Name of the pipeline that created the summary file",
             "type": "string",
             "enum": [ "gentrap" ]
+          },
+
+          "run_name": {
+            "description": "User-supplied name of the pipeline run",
+            "type": "string"
           }
         }
       },

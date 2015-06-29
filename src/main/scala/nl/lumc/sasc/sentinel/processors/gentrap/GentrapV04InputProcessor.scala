@@ -142,7 +142,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   /** Extracts a library document from a library entry in a Gentrap summary. */
   private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, libName: String,
-                                             sampleName: String): GentrapLibDocument = {
+                                             sampleName: String, runName: Option[String] = None): GentrapLibDocument = {
 
     val seqStatsRaw = SeqStats(
       read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
@@ -168,6 +168,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     GentrapLibDocument(
       libName = Option(libName),
       sampleName = Option(sampleName),
+      runName = runName,
       seqStatsRaw = seqStatsRaw,
       seqStatsProcessed = seqStatsProcessed,
       seqFilesRaw = seqFilesRaw,
@@ -177,7 +178,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   /** Extracts a sample document from a sample entry in a Gentrap summary. */
   private[processors] def extractSamples(runJson: JValue, uploaderId: String, runId: ObjectId,
-                                         refId: ObjectId, annotIds: Seq[ObjectId]) = {
+                                         refId: ObjectId, annotIds: Seq[ObjectId], runName: Option[String] = None) = {
     (runJson \ "samples")
       .extract[Map[String, JValue]]
       .map {
@@ -187,10 +188,11 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
             uploaderId = uploaderId,
             sampleName = Option(sampleName),
             runId = runId,
+            runName = runName,
             referenceId = refId,
             annotationIds = annotIds,
             libs = libJsons
-              .map { case (libName, libJson) => extractLibDocument(libJson, uploaderId, libName, sampleName) }
+              .map { case (libName, libJson) => extractLibDocument(libJson, uploaderId, libName, sampleName, runName) }
               .toSeq,
             // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
             alnStats =
@@ -201,11 +203,13 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   /** Helper function for creating run records. */
   private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
-                                    samples: Seq[GentrapSampleDocument], user: User, pipeline: Pipeline.Value) =
+                                    samples: Seq[GentrapSampleDocument], user: User, pipeline: Pipeline.Value,
+                                    runName: Option[String] = None) =
     RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
+      name = runName,
       sampleIds = samples.map(_.id),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
@@ -226,19 +230,20 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
       (byteContents, unzipped) <- Try(fi.readInputStream())
-      json <- Try(parseAndValidate(byteContents))
+      runJson <- Try(parseAndValidate(byteContents))
       fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
-      runRef <- Try(extractReference(json))
+      runRef <- Try(extractReference(runJson))
       ref <- Try(getOrStoreReference(runRef))
       refId = ref.refId
 
-      runAnnots <- Try(extractAnnotations(json))
+      runAnnots <- Try(extractAnnotations(runJson))
       annots <- Try(storeOrModifyAnnotations(runAnnots))
       annotIds = annots.map(_.annotId)
 
-      samples <- Try(extractSamples(json, user.id, fileId, refId, annotIds))
+      runName = (runJson \ "meta" \ "run_name").extractOpt[String]
+      samples <- Try(extractSamples(runJson, user.id, fileId, refId, annotIds, runName))
       _ <- Try(storeSamples(samples))
-      run <- Try(createRun(fileId, refId, annotIds, samples, user, pipeline))
+      run <- Try(createRun(fileId, refId, annotIds, samples, user, pipeline, runName))
       _ <- Try(storeRun(run))
     } yield run
 }
