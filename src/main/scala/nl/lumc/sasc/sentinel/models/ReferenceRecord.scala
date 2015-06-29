@@ -25,14 +25,23 @@ import org.bson.types.ObjectId
  * Representation of an alignment reference sequence.
  *
  * @param refId Database IDs.
- * @param contigMd5s MD5 checksums of all contigs / chromosomes in this reference sequence.
+ * @param contigs Record of all contigs / chromosomes in this reference sequence.
  * @param combinedMd5 MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically.
  * @param name Reference sequence name.
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
   @Key("_id") refId: ObjectId,
-  contigMd5s: Seq[String],
+  contigs: Seq[ReferenceContigRecord],
   combinedMd5: String,
   name: Option[String] = None,
+  species: Option[String] = None,
   creationTimeUtc: Option[Date] = None)
+
+/**
+ * Representation of a reference sequence contig / chromosome.
+ *
+ * @param md5 MD5 checksum of the sequence.
+ * @param length Length of the sequence.
+ */
+case class ReferenceContigRecord(md5: String, length: Long)

@@ -118,6 +118,16 @@
                     "type": "object",
                     "minItems": 1,
                     "additionalProperties": { "$ref": "#/definitions/referenceContig" }
+                  },
+
+                  "species": {
+                    "description": "Reference sequence species name",
+                    "type": "string"
+                  },
+
+                  "name": {
+                    "description": "Build name of the reference sequence. For example, hg38 for the human genome.",
+                    "type": "string"
                   }
                 }
               }
@@ -515,7 +525,7 @@
     "referenceContig": {
       "description": "Entry for a single contig in a reference sequence",
       "type": "object",
-      "required": [ "md5", "size" ],
+      "required": [ "md5", "length" ],
 
       "properties": {
 
@@ -524,8 +534,8 @@
           "type": "string"
         },
 
-        "size": {
-          "description": "Size of the contig in base pairs",
+        "length": {
+          "description": "Length of the contig in base pairs",
           "type": "integer"
         }
       }

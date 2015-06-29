@@ -49,15 +49,16 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   /** Extracts a reference record from a Gentrap summary. */
   private[processors] def extractReference(runJson: JValue): ReferenceRecord = {
-    val contigMd5s = (runJson \ "gentrap" \ "settings" \ "reference" \\ "md5")
-      .children
-      .map(_.extract[String])
-      .sorted
-    val combinedMd5 = calcMd5(contigMd5s)
+    val refJson = runJson \ "gentrap" \ "settings" \ "reference"
+    val contigs = (refJson \ "contigs")
+      .extract[Map[String, ReferenceContigRecord]]
+      .values.toSeq
     ReferenceRecord(
       refId = new ObjectId,
-      combinedMd5 = combinedMd5,
-      contigMd5s = contigMd5s,
+      combinedMd5 = calcMd5(contigs.map(_.md5).sorted),
+      contigs = contigs,
+      species = (refJson \ "species").extractOpt[String],
+      name = (refJson \ "name").extractOpt[String],
       creationTimeUtc = Option(getUtcTimeNow))
   }
 

@@ -22,5 +22,6 @@ import org.json4s.jackson.JsonMethods.parse
 import nl.lumc.sasc.sentinel.utils.getResourceStream
 
 trait JsonLoader {
+  /** Given a schema URL, parses the file as JSON and returns its contents as a JValue object. */
   def loadJson(url: String): JValue = parse(getResourceStream(url))
 }

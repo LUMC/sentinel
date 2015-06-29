@@ -16,11 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import org.specs2.mutable.Specification
-import org.specs2.mock.Mockito
-
 import nl.lumc.sasc.sentinel.JsonLoader
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
 
 class GentrapValidationSpec extends Specification with JsonLoader with Mockito {
 
