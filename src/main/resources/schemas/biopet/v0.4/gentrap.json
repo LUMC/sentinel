@@ -894,7 +894,6 @@
 
           "description": "Histogram values (used for plotting).",
           "type": "object",
-          "required": [ "All_Reads.normalized_coverage" ],
 
           "properties": {
 
