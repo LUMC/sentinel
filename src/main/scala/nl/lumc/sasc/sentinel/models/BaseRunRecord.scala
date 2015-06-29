@@ -25,7 +25,7 @@ import org.bson.types.ObjectId
 @Salat abstract class BaseRunRecord {
 
   /** Run name. */
-  def name: Option[String]
+  def runName: Option[String]
 
   /** Database run ID. */
   def runId: ObjectId
@@ -63,7 +63,7 @@ case class RunRecord(
   nSamples: Int,
   nLibs: Int,
   creationTimeUtc: Date,
-  name: Option[String] = None,
+  runName: Option[String] = None,
   deletionTimeUtc: Option[Date] = None,
   sampleIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,

@@ -237,7 +237,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
-      name = runName,
+      runName = runName,
       sampleIds = samples.map(_.id),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
