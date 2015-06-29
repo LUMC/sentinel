@@ -27,14 +27,14 @@ import org.bson.types.ObjectId
  * @param refId Database IDs.
  * @param contigs Record of all contigs / chromosomes in this reference sequence.
  * @param combinedMd5 MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically.
- * @param name Reference sequence name.
+ * @param refName Reference sequence name.
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
   @Key("_id") refId: ObjectId,
   contigs: Seq[ReferenceContigRecord],
   combinedMd5: String,
-  name: Option[String] = None,
+  refName: Option[String] = None,
   species: Option[String] = None,
   creationTimeUtc: Option[Date] = None)
 

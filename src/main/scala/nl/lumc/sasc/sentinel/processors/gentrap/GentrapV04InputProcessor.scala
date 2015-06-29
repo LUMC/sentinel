@@ -58,7 +58,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       combinedMd5 = calcMd5(contigs.map(_.md5).sorted),
       contigs = contigs,
       species = (refJson \ "species").extractOpt[String],
-      name = (refJson \ "name").extractOpt[String],
+      refName = (refJson \ "name").extractOpt[String],
       creationTimeUtc = Option(getUtcTimeNow))
   }
 
