@@ -102,7 +102,8 @@ class ReferencesControllerSpec extends SentinelServletSpec {
                 priorResponse.body must /#(0) /("refId" -> """\S+""".r)
                 priorResponse.body must /#(0) /("combinedMd5" -> """\S+""".r)
                 priorResponse.jsonBody must beSome.like { case json =>
-                  (json(0) \ "contigMd5s").extract[Seq[String]].size must beGreaterThan(0)
+                  (json(0) \ "contigs" \\ "md5").children
+                    .map(_.extract[String]).size must beGreaterThan(0)
                 }
               }
             }
@@ -164,7 +165,8 @@ class ReferencesControllerSpec extends SentinelServletSpec {
                 priorResponse.body must /#(0) /("refId" -> """\S+""".r)
                 priorResponse.body must /#(0) /("combinedMd5" -> """\S+""".r)
                 priorResponse.jsonBody must beSome.like { case json =>
-                  (json(0) \ "contigMd5s").extract[Seq[String]].size must beGreaterThan(0)
+                  (json(0) \ "contigs" \\ "md5").children
+                    .map(_.extract[String]).size must beGreaterThan(0)
                 }
               }
             }
@@ -203,7 +205,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
           priorResponse.status mustEqual 201
         }
 
-        "when an annotation entry with invalid ID is queried should" >> inline {
+        "when a reference entry with invalid ID is queried should" >> inline {
 
           new Context.PriorRequests {
 
@@ -221,7 +223,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when a nonexistent annotation entry is queried should" >> inline {
+        "when a nonexistent reference entry is queried should" >> inline {
 
           new Context.PriorRequests {
 
@@ -255,7 +257,8 @@ class ReferencesControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("refId" -> """\S+""".r)
               priorResponse.body must /("combinedMd5" -> """\S+""".r)
               priorResponse.jsonBody must beSome.like { case json =>
-                (json \ "contigMd5s").extract[Seq[String]].size must beGreaterThan(0)
+                (json \ "contigs" \\ "md5").children
+                  .map(_.extract[String]).size must beGreaterThan(0)
               }
             }
           }
