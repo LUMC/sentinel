@@ -380,7 +380,7 @@
             "settings": {
               "description": "Settings used for Mapping",
               "type": "object",
-              "required": [ "aligner", "chunking", "number_chunks", "skip_flexiprep", "skip_markduplicates", "skip_metrics" ],
+              "required": [ "aligner", "chunking", "numberChunks", "skip_flexiprep", "skip_markduplicates", "skip_metrics" ],
 
               "properties": {
 
@@ -391,7 +391,7 @@
                   "type": "boolean"
                 },
 
-                "number_chunks": {
+                "numberChunks": {
                   "description": "If chungking is enabled, the number of FASTQ chunks",
                   "type": "integer"
                 },
