@@ -126,10 +126,36 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   private[processors] def extractReadFile(libJson: JValue, fileKey: String): FileDocument =
     (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument]
 
+  /** Case class for containing per-base position statistics. */
+  private[processors] case class PerBaseStat[T](index: Int, value: T)
+
+  /** Extracts FastQC module statistics which are spread out per base position or per group of base positions. */
+  private[processors] def extractFastqcStats(fastqcJson: JValue, fastqcModuleName: String,
+                                             statPerPositionName: String): Seq[Double] =
+    (fastqcJson \ fastqcModuleName)
+      .extract[Map[String, Map[String, Double]]].view
+      // filter for keys which are single base positions (not range)
+      .filter { case (key, value) => Try(key.toInt).toOption.isDefined }.toSeq
+      // get the statistics on the position and turn the base position to 0-based indexing
+      .map { case (key, value) => (key.toInt - 1, value.get(statPerPositionName)) }
+      // sort on the base position
+      .sortBy(_._1)
+      // take only while the numbers are consecutive
+      .takeWhile { case (key, value) => value.isDefined }
+      // get the stats value
+      .map { case (key, value) => PerBaseStat(key, value.get) }
+      // pair with index
+      .zipWithIndex
+      // and return only items where the base position match the index
+      // (so we only take consecutive stats from the first position onwards
+      .takeWhile { case (PerBaseStat(actualIdx, value), expectedIdx) => actualIdx == expectedIdx }
+      .map { case (PerBaseStat(_, value), _) => value }
+
   /** Extracts a single read statistics from a library entry in a Gentrap summary. */
   private[processors] def extractReadStats(libJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
     val flexStats = libJson \ "flexiprep" \ "stats"
     val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
+
     ReadStats(
       nBases = (flexStats \ seqStatKey \ "bases" \ "num_total").extract[Long],
       nBasesA = (nuclCounts \ "A").extract[Long],
@@ -137,8 +163,8 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       nBasesG = (nuclCounts \ "G").extract[Long],
       nBasesC = (nuclCounts \ "C").extract[Long],
       nBasesN = (nuclCounts \ "N").extract[Long],
-      nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_by_qual").extract[Seq[Long]],
-      medianQualByPosition = (flexStats \ fastqcKey \ "median_qual_by_position").extract[Seq[Double]],
+      nBasesByQual = (flexStats \ seqStatKey \ "bases" \ "num_qual").extract[Seq[Long]],
+      medianQualByPosition = extractFastqcStats(flexStats \ fastqcKey, "per_base_sequence_quality", "median"),
       nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
   }
 

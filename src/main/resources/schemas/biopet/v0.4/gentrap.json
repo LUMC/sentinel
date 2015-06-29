@@ -576,7 +576,7 @@
         "bases": {
           "description": "Base pair-level statistics",
           "type": "object",
-          "required": [ "nucleotides", "num_total", "num_by_qual" ],
+          "required": [ "nucleotides", "num_total", "num_qual" ],
 
           "properties": {
 
@@ -595,7 +595,7 @@
               "type": "integer"
             },
 
-            "num_by_qual": {
+            "num_qual": {
               "description": "Array of base counts by quality, from quality 0 to 60",
               "type": "array",
               "items": { "type": "integer" }
@@ -606,7 +606,7 @@
         "reads": {
           "description": "Read-level statistics",
           "type": "object",
-          "required": [ "len_max", "len_min", "num_with_n", "num_total", "qual_encoding" ],
+          "required": [ "len_max", "len_min", "num_with_n", "num_total", "num_avg_qual_gte", "qual_encoding" ],
 
           "properties": {
 
@@ -630,6 +630,16 @@
               "type": "integer"
             },
 
+            "num_avg_qual_gte": {
+              "description": "Number of reads with quality greater than a certain number",
+              "type": "object",
+              "additionalProperties": false,
+
+              "patternProperties": {
+                "^[0-9]+$": { "type": "integer" }
+              }
+            },
+
             "qual_encoding": {
               "description": "Quality encoding; which can be sanger (ASCII offset 33), solexa, or illumina (both with ASCII offset 64)",
               "type": "string",
@@ -643,29 +653,49 @@
     "statsFastqc": {
       "description": "Sequence statistics created by FastQC (part of the Flexiprep pipeline)",
       "type": "object",
-      "required": [ "median_qual_by_position", "content_by_position" ],
+      "required": [ "per_base_sequence_quality", "per_base_sequence_content" ],
 
       "properties": {
 
-        "median_qual_by_position": {
-          "description": "Array of median base quality per position (aggregated from all reads)",
-          "type": "array",
-          "items": { "type": "number" },
-          "minItems": 1
+        "per_base_sequence_quality": {
+          "description": "Quality statistics per base position",
+          "type": "object",
+          "additionalProperties": false,
+
+          "patternProperties": {
+            "^([0-9]+|[0-9]+-[0-9]+)$": {
+              "description": "Aggregate statistics per base position or per group of base positions",
+              "type": "object",
+              "required": [ "mean", "median", "lower_quartile", "upper_quartile", "percentile_10th", "percentile_90th" ],
+              "properties": {
+
+                "mean": { "type": "number" },
+                "median": { "type": "number" },
+                "lower_quartile": { "type": "number" },
+                "upper_quartile": { "type": "number" },
+                "percentile_10th": { "type": "number" },
+                "percentile_90th": { "type": "number" }
+              }
+            }
+          }
         },
 
-        "content_by_position": {
-          "description": "Array of base composition per position (aggregated from all reads)",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
+        "per_base_sequence_content": {
+          "description": "Composition statistics per base position",
+          "type": "object",
+          "additionalProperties": false,
 
-            "patternProperties": {
-              "^[ACGTURYMKSWHBVDN]$": { "type": "number" }
+          "patternProperties": {
+            "^([0-9]+|[0-9]+-[0-9]+)$": {
+              "description": "Base composition per base position or per group of base positions",
+              "type": "object",
+              "additionalProperties": false,
+
+              "patternProperties": {
+                "^[ACGTURYMKSWHBVDN]$": { "type": "number" }
+              }
             }
-          },
-          "minItems": 1
+          }
         }
       }
     },
