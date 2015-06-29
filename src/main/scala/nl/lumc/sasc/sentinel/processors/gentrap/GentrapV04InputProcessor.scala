@@ -91,34 +91,35 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   /** Extracts alignment statistics from a sample or library entry in a Gentrap summary. */
   private[processors] def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
 
-    val isPaired = (effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \ "PAIR") != JNothing
-    val alnMetrics = effJson \ "bammetrics" \ "stats" \ "alignment_metrics" \
+    val isPaired = (effJson \ "bammetrics" \ "stats" \ "CollectAlignmentSummaryMetrics" \ "PAIR") != JNothing
+    val alnMetrics = effJson \ "bammetrics" \ "stats" \ "CollectAlignmentSummaryMetrics" \
       (if (isPaired) "PAIR" else "UNPAIRED")
     val bpFlagstat = effJson \ "bammetrics" \ "stats" \ "biopet_flagstat"
-    val insMetrics = effJson \ "bammetrics" \ "stats" \ "insert_size_metrics"
-    val rnaMetrics = effJson \ "gentrap" \ "stats" \ "rna_metrics"
+    val insMetrics = effJson \ "bammetrics" \ "stats" \ "CollectInsertSizeMetrics" \ "metrics"
+    val rnaMetrics = effJson \ "bammetrics" \ "stats" \ "rna" \ "metrics"
+    val rnaHisto = effJson \ "bammetrics" \ "stats" \ "rna" \ "histogram"
 
     GentrapAlignmentStats(
-      nReadsTotal = (alnMetrics \ "pf_reads").extract[Long],
-      nReadsAligned = (alnMetrics \ "pf_reads_aligned").extract[Long],
+      nReadsTotal = (alnMetrics \ "PF_READS").extract[Long],
+      nReadsAligned = (alnMetrics \ "PF_READS_ALIGNED").extract[Long],
       nReadsSingleton = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
       nReadsProperPair = isPaired.option { (bpFlagstat \ "ProperPair").extract[Long] },
-      rateReadsMismatch = (alnMetrics \ "pf_mismatch_rate").extract[Double],
-      rateIndel = (alnMetrics \ "pf_indel_rate").extract[Double],
-      pctChimeras = isPaired.option { (alnMetrics \ "pct_chimeras").extract[Double] },
-      maxInsertSize = (insMetrics \ "max_insert_size").extractOpt[Long],
-      medianInsertSize = (insMetrics \ "median_insert_size").extractOpt[Long],
-      stdevInsertSize = (insMetrics \ "standard_deviation").extractOpt[Double],
-      nBasesAligned = (alnMetrics \ "pf_aligned_bases").extract[Long],
-      nBasesUtr = (rnaMetrics \ "utr_bases").extract[Long],
-      nBasesCoding = (rnaMetrics \ "coding_bases").extract[Long],
-      nBasesIntron = (rnaMetrics \ "intronic_bases").extract[Long],
-      nBasesIntergenic = (rnaMetrics \ "intergenic_bases").extract[Long],
-      nBasesRibosomal = (rnaMetrics \ "ribosomal_bases").extractOpt[Long],
-      median5PrimeBias = (rnaMetrics \ "median_5prime_bias").extract[Double],
-      median3PrimeBias = (rnaMetrics \ "median_3prime_bias").extract[Double],
-      median5PrimeTo3PrimeBias = (rnaMetrics \ "median_5prime_to_3prime_bias").extractOpt[Double],
-      normalizedTranscriptCoverage = (rnaMetrics \ "normalized_transcript_cov").extract[Seq[Double]])
+      rateReadsMismatch = (alnMetrics \ "PF_MISMATCH_RATE").extract[Double],
+      rateIndel = (alnMetrics \ "PF_INDEL_RATE").extract[Double],
+      pctChimeras = isPaired.option { (alnMetrics \ "PCT_CHIMERAS").extract[Double] },
+      maxInsertSize = (insMetrics \ "MAX_INSERT_SIZE").extractOpt[Long],
+      medianInsertSize = (insMetrics \ "MEDIAN_INSERT_SIZE").extractOpt[Long],
+      stdevInsertSize = (insMetrics \ "STANDARD_DEVIATION").extractOpt[Double],
+      nBasesAligned = (alnMetrics \ "PF_ALIGNED_BASES").extract[Long],
+      nBasesUtr = (rnaMetrics \ "UTR_BASES").extract[Long],
+      nBasesCoding = (rnaMetrics \ "CODING_BASES").extract[Long],
+      nBasesIntron = (rnaMetrics \ "INTRONIC_BASES").extract[Long],
+      nBasesIntergenic = (rnaMetrics \ "INTERGENIC_BASES").extract[Long],
+      nBasesRibosomal = (rnaMetrics \ "RIBOSOMAL_BASES").extractOpt[Long],
+      median5PrimeBias = (rnaMetrics \ "MEDIAN_5PRIME_BIAS").extract[Double],
+      median3PrimeBias = (rnaMetrics \ "MEDIAN_3PRIME_BIAS").extract[Double],
+      median5PrimeTo3PrimeBias = (rnaMetrics \ "MEDIAN_5PRIME_TO_3PRIME_BIAS").extractOpt[Double],
+      normalizedTranscriptCoverage = (rnaHisto \ "All_Reads.normalized_coverage").extract[Seq[Double]])
   }
 
   /** Extracts an input sequencing file from a library entry in a Gentrap summary. */

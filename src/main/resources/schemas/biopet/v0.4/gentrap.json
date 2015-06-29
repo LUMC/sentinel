@@ -155,7 +155,7 @@
 
         "gentrap": {
           "description": "Sample-level Gentrap information",
-          "required": [ "files", "stats" ],
+          "required": [ "files" ],
 
           "properties": {
 
@@ -171,26 +171,9 @@
                   "type": "object",
                   "required": [ "alignment" ],
                   "additionalProperties": { "$ref": "#/definitions/file" }
-                },
-
-                "rna_metrics": {
-                  "description": "Sample-level RNA-seq metrics",
-                  "type": "object",
-                  "required": [ "annotation", "metrics" ],
-                  "additionalProperties": { "$ref": "#/definitions/file" }
                 }
               },
               "additionalProperties": { "$ref": "#/definitions/fileGroup" }
-            },
-
-            "stats": {
-              "description": "Sample-level Gentrap statistics",
-              "type": "object",
-
-              "properties": {
-
-                "rna_metrics": { "$ref": "#/definitions/statsRnaSeqMetrics" }
-              }
             }
           }
         },
@@ -227,15 +210,17 @@
             "stats": {
               "description": "Statistics gathered by BamMetrics",
               "type": "object",
-              "required": [ "alignment_metrics", "biopet_flagstat" ],
+              "required": [ "CollectAlignmentSummaryMetrics", "biopet_flagstat", "rna" ],
 
               "properties": {
 
-                "alignment_metrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+                "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
 
                 "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
 
-                "insert_size_metrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
+                "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
+
+                "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
               }
             }
           }
@@ -462,15 +447,17 @@
             "stats": {
               "description": "Statistics gathered by BamMetrics",
               "type": "object",
-              "required": [ "alignment_metrics", "biopet_flagstat" ],
+              "required": [ "CollectAlignmentSummaryMetrics", "biopet_flagstat", "rna" ],
 
               "properties": {
 
-                "alignment_metrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+                "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
 
                 "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
 
-                "insert_size_metrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
+                "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
+
+                "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
               }
             }
           }
@@ -486,7 +473,7 @@
             "files": {
               "description": "File groups tracked by Gentrap",
               "type": "object",
-              "required": [ "pipeline", "rna_metrics" ],
+              "required": [ "pipeline" ],
 
               "properties": {
 
@@ -495,27 +482,9 @@
                   "type": "object",
                   "required": [ "alignment" ],
                   "additionalProperties": { "$ref": "#/definitions/file" }
-                },
-
-                "rna_metrics": {
-                  "description": "Library-level RNA-seq metrics",
-                  "type": "object",
-                  "required": [ "annotation", "metrics" ],
-                  "additionalProperties": { "$ref": "#/definitions/file" }
                 }
               },
               "additionalProperties": { "$ref": "#/definitions/fileGroup" }
-            },
-
-            "stats": {
-              "description": "Library-level Gentrap statistics",
-              "type": "object",
-              "required": [ "rna_metrics" ],
-
-              "properties": {
-
-                "rna_metrics": { "$ref": "#/definitions/statsRnaSeqMetrics" }
-              }
             }
           }
         }
@@ -747,32 +716,32 @@
     "statsAlignmentSummaryPair": {
       "description": "Alignment statistics gathered by Picard CollectAlignmentSummaryMetrics, per pair",
       "type": "object",
-      "required": [ "pct_chimeras", "pf_hq_aligned_reads", "pf_hq_error_rate", "pf_indel_rate", "pf_mismatch_rate",
-                    "pf_reads", "total_reads" ],
+      "required": [ "PCT_CHIMERAS", "PF_HQ_ALIGNED_READS", "PF_HQ_ERROR_RATE", "PF_INDEL_RATE", "PF_MISMATCH_RATE",
+                    "PF_READS", "TOTAL_READS" ],
 
       "properties": {
 
-        "bad_cycles": { "type": "integer" },
-        "mean_read_length": { "type": "number" },
-        "pct_adapter": { "type": "number" },
-        "pct_chimeras": { "type": "number" },
-        "pct_pf_reads": { "type": "number" },
-        "pct_pf_reads_aligned": { "type": "number" },
-        "pct_reads_aligned_in_pairs": { "type": "number" },
-        "pf_aligned_bases": { "type": "integer" },
-        "pf_hq_aligned_bases": { "type": "integer" },
-        "pf_hq_aligned_q20_bases": { "type": "integer" },
-        "pf_hq_aligned_reads": { "type": "integer" },
-        "pf_hq_error_rate": { "type": "number" },
-        "pf_hq_median_mismatches": { "type": "number" },
-        "pf_indel_rate": { "type": "number" },
-        "pf_mismatch_rate": { "type": "number" },
-        "pf_noise_reads": { "type": "integer" },
-        "pf_reads": { "type": "integer" },
-        "pf_reads_aligned": { "type": "integer" },
-        "reads_aligned_in_pairs": { "type": "integer" },
-        "strand_balance": { "type": "number" },
-        "total_reads": { "type": "integer" }
+        "BAD_CYCLES": { "type": "integer" },
+        "MEAN_READ_LENGTH": { "type": "number" },
+        "PCT_ADAPTER": { "type": "number" },
+        "PCT_CHIMERAS": { "type": "number" },
+        "PCT_PF_READS": { "type": "number" },
+        "PCT_PF_READS_ALIGNED": { "type": "number" },
+        "PCT_READS_ALIGNED_IN_PAIRS": { "type": "number" },
+        "PF_ALIGNED_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_Q20_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_READS": { "type": "integer" },
+        "PF_HQ_ERROR_RATE": { "type": "number" },
+        "PF_HQ_MEDIAN_MISMATCHES": { "type": "number" },
+        "PF_INDEL_RATE": { "type": "number" },
+        "PF_MISMATCH_RATE": { "type": "number" },
+        "PF_NOISE_READS": { "type": "integer" },
+        "PF_READS": { "type": "integer" },
+        "PF_READS_ALIGNED": { "type": "integer" },
+        "READS_ALIGNED_IN_PAIRS": { "type": "integer" },
+        "STRAND_BALANCE": { "type": "number" },
+        "TOTAL_READS": { "type": "integer" }
       }
     },
 
@@ -816,66 +785,100 @@
     "statsInsertSizeMetrics": {
       "description": "Alignment statistics gathered by Picard CollectInsertSizeMetrics tool",
       "type": "object",
-      "required": [ "max_insert_size", "mean_insert_size", "median_insert_size", "min_insert_size",
-                    "pair_orientation", "read_pairs", "standard_deviation" ],
+      "required": [ "metrics" ],
 
       "properties": {
-        "max_insert_size": { "type": "integer" },
-        "mean_insert_size": { "type": "number" },
-        "median_absolute_deviation": { "type": "number" },
-        "median_insert_size": { "type": "number" },
-        "min_insert_size": { "type": "integer" },
-        "pair_orientation": { "type": "string" },
-        "read_pairs": { "type": "integer" },
-        "standard_deviation": { "type": "number" },
-        "width_of_10_percent": { "type": "integer" },
-        "width_of_20_percent": { "type": "integer" },
-        "width_of_30_percent": { "type": "integer" },
-        "width_of_40_percent": { "type": "integer" },
-        "width_of_50_percent": { "type": "integer" },
-        "width_of_60_percent": { "type": "integer" },
-        "width_of_70_percent": { "type": "integer" },
-        "width_of_80_percent": { "type": "integer" },
-        "width_of_90_percent": { "type": "integer" },
-        "width_of_99_percent": { "type": "integer" }
+
+        "metrics": {
+          "description": "Metrics values",
+          "type": "object",
+          "required": [ "MAX_INSERT_SIZE", "MEAN_INSERT_SIZE", "MEDIAN_INSERT_SIZE", "MIN_INSERT_SIZE",
+            "PAIR_ORIENTATION", "READ_PAIRS", "STANDARD_DEVIATION" ],
+
+          "properties": {
+            "MAX_INSERT_SIZE": { "type": "integer" },
+            "MEAN_INSERT_SIZE": { "type": "number" },
+            "MEDIAN_ABSOLUTE_DEVIATION": { "type": "number" },
+            "MEDIAN_INSERT_SIZE": { "type": "number" },
+            "MIN_INSERT_SIZE": { "type": "integer" },
+            "PAIR_ORIENTATION": { "type": "string" },
+            "READ_PAIRS": { "type": "integer" },
+            "STANDARD_DEVIATION": { "type": "number" },
+            "WIDTH_OF_10_PERCENT": { "type": "integer" },
+            "WIDTH_OF_20_PERCENT": { "type": "integer" },
+            "WIDTH_OF_30_PERCENT": { "type": "integer" },
+            "WIDTH_OF_40_PERCENT": { "type": "integer" },
+            "WIDTH_OF_50_PERCENT": { "type": "integer" },
+            "WIDTH_OF_60_PERCENT": { "type": "integer" },
+            "WIDTH_OF_70_PERCENT": { "type": "integer" },
+            "WIDTH_OF_80_PERCENT": { "type": "integer" },
+            "WIDTH_OF_90_PERCENT": { "type": "integer" },
+            "WIDTH_OF_99_PERCENT": { "type": "integer" }
+          }
+        }
       }
     },
 
     "statsRnaSeqMetrics": {
       "description": "RNA-seq statistics gathered by Picard CollectRnaSeqMetrics tool",
       "type": "object",
-      "required": [ "coding_bases", "correct_strand_reads", "ignored_reads", "incorrect_strand_reads",
-                    "intergenic_bases", "intronic_bases", "median_3prime_bias", "median_5prime_bias",
-                    "median_5prime_to_3prime_bias", "normalized_transcript_cov", "pf_aligned_bases", "pf_bases",
-                    "utr_bases" ],
+      "required": [ "metrics" ],
 
       "properties": {
-        "coding_bases": { "type": "integer" },
-        "correct_strand_reads": { "type": "integer" },
-        "ignored_reads": { "type": "integer" },
-        "incorrect_strand_reads": { "type": "integer" },
-        "intergenic_bases": { "type": "integer" },
-        "intronic_bases": { "type": "integer" },
-        "median_3prime_bias": { "type": "number" },
-        "median_5prime_bias": { "type": "number" },
-        "median_5prime_to_3prime_bias": { "type": ["number", "string"] },
-        "median_cv_coverage": { "type": "number" },
-        "normalized_transcript_cov": {
-          "type": "array",
-          "items": { "type": "number" }
+
+        "metrics": {
+          "description": "Metrics values",
+          "type": "object",
+
+          "required": [ "CODING_BASES", "CORRECT_STRAND_READS", "IGNORED_READS", "INCORRECT_STRAND_READS",
+            "INTERGENIC_BASES", "INTRONIC_BASES", "MEDIAN_3PRIME_BIAS", "MEDIAN_5PRIME_BIAS",
+            "MEDIAN_5PRIME_TO_3PRIME_BIAS", "PF_ALIGNED_BASES", "PF_BASES", "UTR_BASES" ],
+
+          "properties": {
+            "CODING_BASES": { "type": "integer" },
+            "CORRECT_STRAND_READS": { "type": "integer" },
+            "IGNORED_READS": { "type": "integer" },
+            "INCORRECT_STRAND_READS": { "type": "integer" },
+            "INTERGENIC_BASES": { "type": "integer" },
+            "INTRONIC_BASES": { "type": "integer" },
+            "MEDIAN_3PRIME_BIAS": { "type": "number" },
+            "MEDIAN_5PRIME_BIAS": { "type": "number" },
+            "MEDIAN_5PRIME_TO_3PRIME_BIAS": { "type": ["number", "string"] },
+            "MEDIAN_CV_COVERAGE": { "type": "number" },
+            "PCT_CODING_BASES": { "type": "number" },
+            "PCT_CORRECT_STRAND_READS": { "type": "number" },
+            "PCT_INTERGENIC_BASES": { "type": "number" },
+            "PCT_INTRONIC_BASES": { "type": "number" },
+            "PCT_MRNA_BASES": { "type": "number" },
+            "PCT_RIBOSOMAL_BASES": { "type": ["number", "string"] },
+            "PCT_USABLE_BASES": { "type": "number" },
+            "PCT_UTR_BASES": { "type": "number" },
+            "PF_ALIGNED_BASES": { "type": "integer" },
+            "PF_BASES": { "type": "integer" },
+            "RIBOSOMAL_BASES": { "type": ["integer", "string"] },
+            "UTR_BASES": { "type": "integer" }
+          }
         },
-        "pct_coding_bases": { "type": "number" },
-        "pct_correct_strand_reads": { "type": "number" },
-        "pct_intergenic_bases": { "type": "number" },
-        "pct_intronic_bases": { "type": "number" },
-        "pct_mrna_bases": { "type": "number" },
-        "pct_ribosomal_bases": { "type": "number" },
-        "pct_usable_bases": { "type": "number" },
-        "pct_utr_bases": { "type": "number" },
-        "pf_aligned_bases": { "type": "integer" },
-        "pf_bases": { "type": "integer" },
-        "ribosomal_bases": { "type": "integer" },
-        "utr_bases": { "type": "integer" }
+
+        "histogram": {
+
+          "description": "Histogram values (used for plotting).",
+          "type": "object",
+          "required": [ "All_Reads.normalized_coverage" ],
+
+          "properties": {
+
+            "normalized_position": {
+              "type": "array",
+              "items": { "type": "number" }
+            },
+
+            "All_Reads.normalized_coverage": {
+              "type": "array",
+              "items": { "type": "number" }
+            }
+          }
+        }
       }
     }
   }
