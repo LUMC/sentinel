@@ -57,21 +57,25 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val users = new UsersAdapter { val mongo = self.mongo }
 
   options("/runs") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   options("/gentrap/alignments") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   options("/gentrap/alignments/aggregate") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   options("/gentrap/sequences") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
@@ -87,6 +91,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: ON
 
   get("/runs", operation(statsRunsGetOperation)) {
+    logger.info(requestLog)
     Ok(runs.getGlobalRunStats())
   }
 
@@ -141,6 +146,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
+    logger.info(requestLog)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
@@ -214,6 +220,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/alignments/aggregate", operation(statsGentrapAlignmentsAggregateGetOperation)) {
 
+    logger.info(requestLog)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
@@ -293,6 +300,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
+    logger.info(requestLog)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
@@ -357,6 +365,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   get("/gentrap/sequences/aggregate", operation(statsGentrapSequencesAggregateGetOperation)) {
 
+    logger.info(requestLog)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))

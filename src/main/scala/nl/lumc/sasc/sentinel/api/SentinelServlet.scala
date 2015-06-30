@@ -16,11 +16,14 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import javax.servlet.http.HttpServletRequest
+
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.{ CorsSupport, NotFound, ScalatraServlet }
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
+import org.slf4j.LoggerFactory
 
 import nl.lumc.sasc.sentinel.models.ApiMessage
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
@@ -30,6 +33,15 @@ abstract class SentinelServlet extends ScalatraServlet
     with CorsSupport
     with JacksonJsonSupport
     with SwaggerSupport {
+
+  /** Logger instance. */
+  protected val logger = LoggerFactory.getLogger(getClass)
+
+  /** Default log string and helper methods for log string. */
+  protected def reqUri(implicit req: HttpServletRequest): String = req.getRequestURI
+  protected def reqMethod(implicit req: HttpServletRequest): String = req.getMethod
+  protected def reqAddress(implicit req: HttpServletRequest): String = req.getRemoteAddr
+  protected def requestLog: String = s"$reqAddress $reqMethod $reqUri"
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)

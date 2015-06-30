@@ -75,11 +75,13 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   }
 
   options("/?") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,POST")
   }
 
   options("/:runId") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "DELETE,GET,HEAD")
   }
@@ -106,6 +108,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
+    logger.info(requestLog)
     val runId = params("runId")
       .getObjectId
       .getOrElse(halt(404, CommonMessages.MissingRunId))
@@ -147,6 +150,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   get("/:runId", operation(runsRunIdGetOperation)) {
+    logger.info(requestLog)
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
     val runId = params("runId")
       .getObjectId
@@ -192,6 +196,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   post("/", operation(runsPostOperation)) {
+    logger.info(requestLog)
     val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
@@ -245,6 +250,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   // format: ON
 
   get("/", operation(runsGetOperation)) {
+    logger.info(requestLog)
     val pipelines = splitParam(params.getAs[String]("pipelines"))
     val (validPipelines, invalidPipelines) = pipelines.partition { AllowedPipelineParams.contains }
 

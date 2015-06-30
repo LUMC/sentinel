@@ -41,11 +41,13 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   protected val annots = new AnnotationsAdapter { val mongo = self.mongo }
 
   options("/?") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   options("/:annotId") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
@@ -58,6 +60,7 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   // format: ON
 
   get("/:annotId", operation(annotationsRefIdGetOperation)) {
+    logger.info(requestLog)
     val errMsg = ApiMessage("Annotation ID can not be found.")
     val annotId = params("annotId")
       .getObjectId
@@ -74,6 +77,7 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   // format: ON
 
   get("/", operation(annotationsGetOperation)) {
+    logger.info(requestLog)
     annots.getAnnotations()
   }
 }

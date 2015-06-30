@@ -51,11 +51,13 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val patchValidator = new ValidationAdapter { override val validator = createValidator("/schemas/json_patch.json") }
 
   options("/?") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "HEAD,POST")
   }
 
   options("/:userRecordId") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,PATCH")
     response.setHeader("Accept-Patch", formats("json"))
@@ -88,6 +90,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     // TODO: refactor this endpoint ~ use less explicit halts
 
+    logger.info(requestLog)
     // validate and load patch operations ~ based on the JSON patch spec *not* our own requirements (yet)
     val patchOps = Try(patchValidator.parseAndValidate(request.body.getBytes)) match {
 
@@ -154,6 +157,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: ON
 
   get("/:userRecordId", operation(usersUserIdGetOperation)) {
+    logger.info(requestLog)
     val userRecordId = params("userRecordId")
     val user = simpleKeyAuth(params => params.get("userId"))
     if (user.isAdmin || user.id == userRecordId) {
@@ -185,6 +189,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: OFF
 
   post("/", operation(usersUserIdPostOperation)) {
+    logger.info(requestLog)
     val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
 
     if (userRequest.validationMessages.size > 0)

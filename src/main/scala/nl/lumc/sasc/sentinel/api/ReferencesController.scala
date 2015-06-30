@@ -41,11 +41,13 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   protected val refs = new ReferencesAdapter { val mongo = self.mongo }
 
   options("/?") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   options("/:refId") {
+    logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
@@ -58,6 +60,7 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   // format: ON
 
   get("/:refId", operation(referencesRefIdGetOperation)) {
+    logger.info(requestLog)
     val errMsg = ApiMessage("Reference ID can not be found.")
     val refId = params("refId")
       .getObjectId
@@ -74,6 +77,7 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   // format: ON
 
   get("/", operation(referencesGetOperation)) {
+    logger.info(requestLog)
     refs.getReferences()
   }
 }
