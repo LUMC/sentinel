@@ -26,7 +26,7 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
   implicit val system = mock[ActorSystem]
   implicit val swagger = new SentinelSwagger
   addServlet(new RootController, s"/*")
-  addServlet(new ResourcesApp, "/api-docs/*")
+  addServlet(new ResourcesApp, "/api-spec/*")
 
   "OPTIONS '/'" >> {
     br
@@ -48,8 +48,8 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
         priorResponse.status mustEqual 301
       }
 
-      "redirect to /api-docs" in {
-        priorResponse.header("Location") must endWith("/api-docs")
+      "redirect to /api-spec" in {
+        priorResponse.header("Location") must endWith("/api-spec")
       }
 
       "return an empty body" in {
@@ -58,9 +58,9 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
     }
   }
 
-  "GET '/api-docs' should" >> inline {
+  "GET '/api-spec' should" >> inline {
 
-    val endpoint = "/api-docs"
+    val endpoint = "/api-spec"
 
     new Context.PriorRequests {
 
