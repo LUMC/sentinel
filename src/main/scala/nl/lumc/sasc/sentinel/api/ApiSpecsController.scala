@@ -38,5 +38,5 @@ object SentinelSwagger {
 }
 
 /** Controller for auto-generated Swagger specification. */
-class ResourcesApp(implicit protected val system: ActorSystem, val swagger: SentinelSwagger) extends ScalatraServlet
+class ApiSpecsController(implicit protected val system: ActorSystem, val swagger: SentinelSwagger) extends ScalatraServlet
   with JacksonSwaggerBase

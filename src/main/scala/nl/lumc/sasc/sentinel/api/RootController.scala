@@ -30,17 +30,15 @@ class RootController extends ScalatraServlet
   /** JSON formatting used by this endpoint. */
   protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
-  before() {
-    contentType = formats("json")
-  }
-
   options("/?") {
+    contentType = formats("json")
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
   /** Root endpoint, which permanently redirects to our specification. */
   get("/") {
+    contentType = formats("json")
     halt(status = 301, headers = Map("Location" -> "/api-spec"))
   }
 }

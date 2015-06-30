@@ -26,7 +26,8 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
   implicit val system = mock[ActorSystem]
   implicit val swagger = new SentinelSwagger
   addServlet(new RootController, s"/*")
-  addServlet(new ResourcesApp, "/api-spec/*")
+  addServlet(new ApiDocsController, "/api-docs/*")
+  addServlet(new ApiSpecsController, "/api-spec/*")
 
   "OPTIONS '/'" >> {
     br
@@ -74,6 +75,26 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
       "return a JSON object containing the API version" in {
         priorResponse.contentType mustEqual "application/json"
         priorResponse.body must /("apiVersion" -> CurrentApiVersion)
+      }
+    }
+  }
+
+  "GET '/api-docs' should" >> inline {
+
+    val endpoint = "/api-docs"
+
+    new Context.PriorRequests {
+
+      def request = () => get(endpoint) { response }
+      def priorRequests = Seq(request)
+
+      "return status 200" in {
+        priorResponse.status mustEqual 200
+      }
+
+      "return an HTML page of the live documentation" in {
+        priorResponse.contentType mustEqual "text/html"
+        priorResponse.body must contain("Sentinel API")
       }
     }
   }

@@ -34,11 +34,13 @@ object JettyLauncher {
     val port = Try(conf.getInt(s"$SentinelConfKey.port")).getOrElse(8080)
     val server = new Server(port)
     val context = new WebAppContext()
+    val resource = getClass.getClassLoader.getResource("webapp").toExternalForm
 
     context setContextPath "/"
-    context.setResourceBase("src/main/webapp")
+    context.setResourceBase(resource)
     context.addEventListener(new ScalatraListener)
     context.addServlet(classOf[DefaultServlet], "/")
+
     server.setHandler(context)
     server.start()
     server.join()

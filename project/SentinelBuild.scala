@@ -107,6 +107,16 @@ object SentinelBuild extends Build {
       scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-target:jvm-1.8"),
       testOptions in Test += Tests.Argument("console", "junitxml"),
       testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
+      resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
+        (managedBase, base) =>
+          val webappBase = base / "src" / "main" / "webapp"
+          for {
+            (from, to) <- webappBase ** "*" pair rebase(webappBase, managedBase / "main" / "webapp")
+          } yield {
+            Sync.copy(from, to)
+            to
+          }
+      },
       mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
       test in assembly := {},
       assemblyMergeStrategy in assembly := {
