@@ -92,9 +92,13 @@ object SentinelBuild extends Build {
 
   lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
 
+  lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
+
+  lazy val commandAliases = addCommandAlias("assembly-fulltest", ";test; it:test; assembly")
+
   lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
-    site.settings ++ site.sphinxSupport() ++ site.includeScaladoc() ++ headerSettings ++ Defaults.itSettings ++
-    gitStampSettings ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++ Seq(
+    headerSettings ++ Defaults.itSettings ++ docsSiteSettings ++ gitStampSettings ++ commandAliases ++
+    Seq(
       organization := Organization,
       name := Name,
       version := Version,
