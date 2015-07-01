@@ -25,9 +25,13 @@ package object db {
   /**
    * MongoDB database access provider.
    *
-   * @param client object representing the client connection.
-   * @param dbName database name to connect to.
-   * @param bucketName GridFS bucket name to connect to.
+   * This object encapsulates database access for our internally-defined adapters. It is meant to be instantiated
+   * during site initialization and then passed down to each controllers which use adapters for database access.
+   *
+   * @param client Object representing the client connection.
+   * @param dbName Database name to connect to.
+   * @param bucketName GridFS bucket name to connect to. If not supplied, is set to `fs`, which is the default MongoDB
+   *                   bucket name.
    */
   case class MongodbAccessObject(client: MongoClient, dbName: String, bucketName: String = DEFAULT_BUCKET) {
 
@@ -43,7 +47,7 @@ package object db {
     }
   }
 
-  /** Trait for connecting to a MongoDB database. */
+  /** Trait for connecting to a MongoDB database, meant to be mixed into adapters which require database access. */
   trait MongodbConnector {
 
     import MongodbConnector._
@@ -51,7 +55,7 @@ package object db {
     /** Helper container for collection names. */
     final def collectionNames = CollectionNames
 
-    /** MongoDB access. */
+    /** MongoDB access provider. */
     protected def mongo: MongodbAccessObject
   }
 
