@@ -36,9 +36,9 @@ class RootController extends ScalatraServlet
     response.setHeader("Access-Control-Allow-Methods", "GET,HEAD")
   }
 
-  /** Root endpoint, which permanently redirects to our specification. */
+  /** Root endpoint, which permanently redirects to our documentation. */
   get("/") {
     contentType = formats("json")
-    halt(status = 301, headers = Map("Location" -> "/api-spec"))
+    halt(status = 301, headers = Map("Location" -> "/api-docs"))
   }
 }

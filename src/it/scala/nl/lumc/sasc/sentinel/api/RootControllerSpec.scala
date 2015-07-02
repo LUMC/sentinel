@@ -49,8 +49,8 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
         priorResponse.status mustEqual 301
       }
 
-      "redirect to /api-spec" in {
-        priorResponse.header("Location") must endWith("/api-spec")
+      "redirect to /api-docs" in {
+        priorResponse.header("Location") must endWith("/api-docs")
       }
 
       "return an empty body" in {
