@@ -107,14 +107,14 @@ class StatsControllerSpec extends SentinelServletSpec {
             "which" should {
 
               "contain statistics over the first pipeline" in {
-                priorResponse.body must /#(0) /("name" -> "gentrap")
+                priorResponse.body must /#(0) /("pipelineName" -> "gentrap")
                 priorResponse.body must /#(0) /("nLibs" -> 10)
                 priorResponse.body must /#(0) /("nRuns" -> 3)
                 priorResponse.body must /#(0) /("nSamples" -> 6)
               }
 
               "contain statistics over the second pipeline" in {
-                priorResponse.body must /#(1) /("name" -> "unsupported")
+                priorResponse.body must /#(1) /("pipelineName" -> "unsupported")
                 priorResponse.body must /#(1) /("nLibs" -> 0)
                 priorResponse.body must /#(1) /("nRuns" -> 1)
                 priorResponse.body must /#(1) /("nSamples" -> 0)
