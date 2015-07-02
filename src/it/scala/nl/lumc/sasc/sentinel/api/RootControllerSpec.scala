@@ -27,7 +27,7 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
   implicit val swagger = new SentinelSwagger
   addServlet(new RootController, s"/*")
   addServlet(new ApiDocsController, "/api-docs/*")
-  addServlet(new ApiSpecsController, "/api-spec/*")
+  addServlet(new ApiSpecsController, "/api-specs/*")
 
   "OPTIONS '/'" >> {
     br
@@ -59,9 +59,9 @@ class RootControllerSpec extends SentinelServletSpec with Mockito {
     }
   }
 
-  "GET '/api-spec' should" >> inline {
+  "GET '/api-specs' should" >> inline {
 
-    val endpoint = "/api-spec"
+    val endpoint = "/api-specs"
 
     new Context.PriorRequests {
 

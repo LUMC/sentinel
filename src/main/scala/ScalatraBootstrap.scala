@@ -80,7 +80,7 @@ class ScalatraBootstrap extends LifeCycle {
       context mount (new AnnotationsController, "/annotations/*")
       context mount (new RunsController, "/runs/*")
       context mount (new UsersController, "/users/*")
-      context mount (new ApiSpecsController, "/api-spec/*")
+      context mount (new ApiSpecsController, "/api-specs/*")
       context mount (new ApiDocsController, "/api-docs/*")
       context setInitParameter (org.scalatra.EnvironmentKey, env)
     } catch {
