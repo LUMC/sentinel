@@ -129,7 +129,7 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
         def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib)
         def upload2 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleMLib)
         def upload3 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleSLib)
-        def upload4 = makeUpload(Users.avg, SchemaExamples.Unsupported)
+        def upload4 = makeUpload(Users.avg, SchemaExamples.Plain)
 
         def priorRequests = Seq(upload1, upload2, upload3)
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.processors.unsupported
+package nl.lumc.sasc.sentinel.processors.plain
 
 import java.time.Clock
 import java.util.Date
@@ -37,11 +37,11 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  *
  * @param mongo MongoDB database access object.
  */
-class UnsupportedInputProcessor(protected val mongo: MongodbAccessObject)
+class PlainInputProcessor(protected val mongo: MongodbAccessObject)
     extends RunsAdapter
     with ValidationAdapter {
 
-  val validator = createValidator("/schemas/unsupported.json")
+  val validator = createValidator("/schemas/plain.json")
 
   def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) =
 

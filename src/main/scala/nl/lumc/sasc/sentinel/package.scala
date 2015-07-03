@@ -48,7 +48,7 @@ package object sentinel {
   /** Supported pipeline summary schemas */
   object Pipeline extends Enumeration {
     type Pipeline = Value
-    val Unsupported = Value("unsupported")
+    val Plain = Value("plain")
     val Gentrap = Value("gentrap")
   }
 

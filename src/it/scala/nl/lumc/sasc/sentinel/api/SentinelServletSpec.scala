@@ -224,8 +224,8 @@ object SentinelServletSpec {
       }
     }
 
-    lazy val Unsupported = makeUploadable("/schema_examples/unsupported.json")
-    lazy val UnsupportedCompressed = makeUploadable("/schema_examples/unsupported.json.gz")
+    lazy val Plain = makeUploadable("/schema_examples/plain.json")
+    lazy val UnsupportedCompressed = makeUploadable("/schema_examples/plain.json.gz")
     lazy val Invalid = makeUploadable("/schema_examples/invalid.json")
     lazy val Not = makeUploadable("/schema_examples/not.json")
   }

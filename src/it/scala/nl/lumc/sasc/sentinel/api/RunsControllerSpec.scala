@@ -49,13 +49,13 @@ class RunsControllerSpec extends SentinelServletSpec {
     file
   }
 
-  class UnsupportedUploadContext extends Context.PriorRunUploadClean {
-    def pipelineParam = "unsupported"
-    def uploadPayload = SchemaExamples.Unsupported
+  class PlainUploadContext extends Context.PriorRunUploadClean {
+    def pipelineParam = "plain"
+    def uploadPayload = SchemaExamples.Plain
     lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
   }
 
-  class UnsupportedThenGentrapUploadContext extends UnsupportedUploadContext {
+  class PlainThenGentrapUploadContext extends PlainUploadContext {
 
     def pipeline2 = "gentrap"
     def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
@@ -111,7 +111,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     "when the request body is empty" >> inline {
 
       new Context.PriorRequests {
-        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "unsupported"))) { response }
+        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "plain"))) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -127,7 +127,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     "when an invalid pipeline is specified should" >> inline {
 
-      val fileMap = Map("run" -> SchemaExamples.Unsupported)
+      val fileMap = Map("run" -> SchemaExamples.Plain)
 
       new Context.PriorRequests {
 
@@ -146,11 +146,11 @@ class RunsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the 'unsupported' pipeline summary file" >> {
+    "using the 'plain' pipeline summary file" >> {
       br
 
-      val pipeline = "unsupported"
-      def fileMap = Map("run" -> SchemaExamples.Unsupported)
+      val pipeline = "plain"
+      def fileMap = Map("run" -> SchemaExamples.Plain)
 
       "when a run summary that passes all validation is uploaded should" >> inline {
 
@@ -169,7 +169,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must /("creationTimeUtc" -> ".+".r)
             priorResponse.body must /("nLibs" -> 0)
             priorResponse.body must /("nSamples" -> 0)
-            priorResponse.body must /("pipeline" -> "unsupported")
+            priorResponse.body must /("pipeline" -> "plain")
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must /("uploaderId" -> user.id)
             priorResponse.body must not /("annotIds" -> ".+".r)
@@ -197,7 +197,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must /("creationTimeUtc" -> ".+".r)
             priorResponse.body must /("nLibs" -> 0)
             priorResponse.body must /("nSamples" -> 0)
-            priorResponse.body must /("pipeline" -> "unsupported")
+            priorResponse.body must /("pipeline" -> "plain")
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must /("uploaderId" -> user.id)
             priorResponse.body must not /("annotIds" -> ".+".r)
@@ -228,7 +228,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
             priorResponses.head.body must /("nLibs" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
             priorResponses.head.body must /("uploaderId" -> Users.avg2.id)
             priorResponses.head.body must not /("annotIds" -> ".+".r)
@@ -245,7 +245,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must /("creationTimeUtc" -> ".+".r)
             priorResponses.last.body must /("nLibs" -> 0)
             priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("runId" -> """\S+""".r)
             priorResponses.last.body must /("uploaderId" -> user.id)
             priorResponses.last.body must not /("annotIds" -> ".+".r)
@@ -335,7 +335,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
             priorResponses.head.body must /("nLibs" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
             priorResponses.head.body must /("uploaderId" -> user.id)
             priorResponses.head.body must not /("annotIds" -> ".+".r)
@@ -379,7 +379,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
             priorResponses.head.body must /("nLibs" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "unsupported")
+            priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
             priorResponses.head.body must /("uploaderId" -> user.id)
             priorResponses.head.body must not /("annotIds" -> ".+".r)
@@ -624,9 +624,9 @@ class RunsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the 'unsupported' and the 'gentrap' run summary files" >> inline {
+    "using the 'plain' and the 'gentrap' run summary files" >> inline {
 
-      new UnsupportedThenGentrapUploadContext {
+      new PlainThenGentrapUploadContext {
 
         "when the user ID is not specified" should {
 
@@ -702,7 +702,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 jsonBody must haveSize(1)
                 body must /#(0) */("runId" -> """\S+""".r)
                 body must /#(0) */("uploaderId" -> user.id)
-                body must /#(0) */("pipeline" -> "unsupported")
+                body must /#(0) */("pipeline" -> "plain")
                 body must /#(0) */("nSamples" -> 0)
                 body must /#(0) */("nLibs" -> 0)
                 body must not /("sampleIds" -> ".+".r)
@@ -757,9 +757,9 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     def endpoint(runId: String) = s"$baseEndpoint/$runId"
 
-    "using the 'unsupported' and the 'gentrap' run summary files" >> inline {
+    "using the 'plain' and the 'gentrap' run summary files" >> inline {
 
-      new UnsupportedThenGentrapUploadContext {
+      new PlainThenGentrapUploadContext {
 
         "when the user ID is not specified" should {
 
@@ -841,7 +841,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
                   body must /("nLibs" -> 0)
-                  body must /("pipeline" -> "unsupported")
+                  body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
                 }
               }
@@ -893,7 +893,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must not /("sampleIds" -> ".+".r)
                       body must /("nSamples" -> 0)
                       body must /("nLibs" -> 0)
-                      body must /("pipeline" -> "unsupported")
+                      body must /("pipeline" -> "plain")
                     }
                   }
                 }
@@ -958,7 +958,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
                   body must /("nLibs" -> 0)
-                  body must /("pipeline" -> "unsupported")
+                  body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
                 }
               }
@@ -1010,7 +1010,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must not /("sampleIds" -> ".+".r)
                       body must /("nSamples" -> 0)
                       body must /("nLibs" -> 0)
-                      body must /("pipeline" -> "unsupported")
+                      body must /("pipeline" -> "plain")
                     }
                   }
                 }
@@ -1043,9 +1043,9 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     def endpoint(runId: String) = s"$baseEndpoint/$runId"
 
-    "using the 'unsupported' run summary file" >> inline {
+    "using the 'plain' run summary file" >> inline {
 
-      new UnsupportedUploadContext {
+      new PlainUploadContext {
 
         "when the user ID is not specified" should {
 
@@ -1189,9 +1189,9 @@ class RunsControllerSpec extends SentinelServletSpec {
     "when the user authenticates correctly" >> {
       br
 
-      "with the default parameters for the 'unsupported' pipeline should" >> inline {
+      "with the default parameters for the 'plain' pipeline should" >> inline {
 
-        new UnsupportedUploadContext {
+        new PlainUploadContext {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
@@ -1211,7 +1211,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
             priorResponses.last.body must /("nLibs" -> 0)
-            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
           }
 
@@ -1332,9 +1332,9 @@ class RunsControllerSpec extends SentinelServletSpec {
     "when an admin authenticates correctly" >> {
       br
 
-      "with the default parameters for the 'unsupported' pipeline should" >> inline {
+      "with the default parameters for the 'plain' pipeline should" >> inline {
 
-        new UnsupportedUploadContext {
+        new PlainUploadContext {
 
           val params = Seq(("userId", Users.admin.id))
           val headers = Map(HeaderApiKey -> Users.admin.activeKey)
@@ -1354,7 +1354,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
             priorResponses.last.body must /("nLibs" -> 0)
-            priorResponses.last.body must /("pipeline" -> "unsupported")
+            priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
           }
 
