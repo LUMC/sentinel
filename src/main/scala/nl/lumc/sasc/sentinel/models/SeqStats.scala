@@ -82,8 +82,11 @@ case class SeqStatsAggr[T <: AnyRef](read1: T, read2: Option[T] = None, readAll:
  * @param nBasesC Total number of cytosines across all reads.
  * @param nBasesN Total number of unknown bases across all reads.
  * @param nReads Total number of reads.
- * @param nBasesByQual Values indicating how many bases have a given quality.
- * @param medianQualByPosition Values indicating the median base quality of each position.
+ * @param nBasesByQual Sequence indicating how many bases have a given quality. The quality values correspond to the
+ *                     array index (e.g. Seq(10) shows many bases have quality value 10 as quality values start from 0).
+ * @param medianQualByPosition Sequence indicating the median quality value for a given read position. The position
+ *                             correspond to the array index (e.g. Seq(20) shows the median quality value of read
+ *                             position 21 since positions start from 1).
  */
 case class ReadStats(
     nBases: Long,

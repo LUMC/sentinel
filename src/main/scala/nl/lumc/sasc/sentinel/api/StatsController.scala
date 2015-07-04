@@ -26,6 +26,7 @@ import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
 import nl.lumc.sasc.sentinel.processors.gentrap._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
@@ -45,13 +46,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val applicationDescription: String = "Statistics of deposited run summaries"
 
   /** Adapter for connecting to the run collections */
-  protected val runs = new RunsAdapter {
-    val mongo = self.mongo
-    def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
-  }
+  protected val runs = new GenericRunsProcessor(mongo)
 
   /** Adapter for connecting to the gentrap collection */
-  protected val gentrap = new GentrapOutputProcessor(mongo)
+  protected val gentrap = new GentrapStatsProcessor(mongo)
 
   /** Adapter for connecting to the users collection */
   protected val users = new UsersAdapter { val mongo = self.mongo }
@@ -98,6 +96,53 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: OFF
   val statsGentrapAlignmentsGetOperation = (apiOperation[Seq[GentrapAlignmentStats]]("statsGentrapAlignmentsGet")
     summary "Retrieves the alignment statistics of Gentrap pipeline runs."
+    notes
+      """This endpoint returns a list containing alignment-level metrics of Gentrap pipeline runs.
+        |
+        |By default:
+        |
+        | * Each data point represents metrics from an alignment file of a sample. To return alignment metrics from
+        |   single libraries, use the `accLevel` parameter.
+        |
+        | * When the `accLevel` parameter is set to `lib`, the returned data points represent either single-end or
+        |   paired-end sequencing files. To return data points from only one library type, use the `libType` parameter.
+        |   When the `accLevel` is set to `sample`, the `libType` parameter is ignored as a single sample alignment
+        |   may be a mix of single-end and paired-end library.
+        |
+        | * Data points are returned in random order which changes in every query. To maintain a sorted order
+        |   (most-recently created first), use the `sorted` parameter.
+        |
+        | * All data points of all Gentrap runs are returned. The filter for specific data points, use the `runIds`,
+        |   `refIds`, and/or `annotIds` parameter.
+        |
+        | * All data points are unlabeled. To label the data points with their respective IDs and names, you must be
+        |   the data points' uploader and authenticate yourself using your API key. If the returned data points contain
+        |   data points you did not upload, they will remain unlabeled.
+        |
+        |Each returned data point has the following metrics:
+        |
+        | * `maxInsertSize`: Maximum insert size (only for paired-end libraries).
+        | * `median3PrimeBias`: Median value of 3' coverage biases from the top 1000 expressed transcripts (3'-most 100 bp).
+        | * `median5PrimeBias`: Median value of 5' coverage biases from the top 1000 expressed transcripts (5'-most 100 bp).
+        | * `median5PrimeTo3PrimeBias`: Median value of 5' to 3' coverage biases.
+        | * `medianInsertSize`: Median insert size (only for paired-end libraries).
+        | * `nBasesAligned`: Number of bases aligned.
+        | * `nBasesCoding`: Number of bases aligned in the coding regions.
+        | * `nBasesIntergenic`: Number of bases aligned in the intergenic regions.
+        | * `nBasesIntron`: Number of bases aligned in the intronic regions.
+        | * `nBasesRibosomal`: Number of bases aligned to ribosomal gene regions.
+        | * `nBasesUtr`: Number of bases aligned in the UTR regions.
+        | * `normalizedTranscriptCoverage`: Array representing normalized coverage along transcripts. The transcripts
+        | come from the top 1000 expressed genes and each item in the array represents 1% of the transcript length.
+        | * `nReadsAligned`: Number of reads aligned.
+        | * `nReadsSingleton`: Number of paired-end reads aligned as singletons.
+        | * `nReadsTotal`: Number of reads.
+        | * `nReadsProperPair`: Number of paired-end reads aligned as proper pairs.
+        | * `pctChimeras`: Percentage of reads aligned as chimeras (only for paired-end libraries).
+        | * `rateIndel`: How much indels are present.
+        | * `rateReadsMismatch`: Mismatch rate of aligned reads.
+        | * `stdevInsertSize`: Insert size standard deviation (only for paired-end libraries).
+      """.stripMargin
     parameters (
       queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
@@ -183,6 +228,31 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsGentrapAlignmentsAggregateGetOperation = (
     apiOperation[GentrapAlignmentStatsAggr]("statsGentrapAlignmentsAggregatesGet")
       summary "Retrieves the aggregate alignment statistics of Gentrap pipeline runs."
+      notes
+        """This endpoint returns aggregate values of various alignment-level metrics. The default settings are the same
+          | as the corresponding data points endpoint. The aggregated metrics are also similar to the data points'
+          | metrics, with the following additions:
+          |
+          | * `nBasesMrna`: Number of bases aligned in the UTR and coding region.
+          | * `pctBasesCoding`: Percentage of bases aligned in the coding regions.
+          | * `pctBasesIntergenic`: Percentage of bases aligned in the intergenic regions.
+          | * `pctBasesIntron`: Percentage of bases aligned in the intronic regions.
+          | * `pctBasesMrna`: Percentage of bases aligned in the UTR and coding region.
+          | * `pctBasesRibosomal`: Percentage of bases aligned to ribosomal gene regions.
+          | * `pctBasesUtr`: Percentage of bases aligned in the UTR regions.
+          | * `pctReadsAlignedTotal`: Percentage of reads aligned (per total reads).
+          | * `pctReadsAligned`: Percentage of reads aligned (per aligned reads).
+          | * `pctReadsSingleton`: Percentage of paired-end reads aligned as singletons (per aligned reads).
+          | * `pctReadsProperPair`: Percentage of paired-end reads aligned as proper pairs (per aligned reads).
+          |
+          |The following data point attribute is not aggregated:
+          |
+          | * `normalizedTranscriptCoverage`
+          |
+          |Each aggregated metric contains the attributes `avg` (average), `max` (maximum), `min` (minimum), `median`
+          | (median), and `stdev` (standard deviation). It also contains the `nDataPoints` attribute, showing the number
+          | of data points aggregated for the metrics.
+        """.stripMargin
       parameters (
       queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
@@ -254,6 +324,44 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // format: OFF
   val statsGentrapSequencesGetOperation = (apiOperation[Seq[SeqStats]]("statsGentrapSequencesGet")
     summary "Retrieves the sequencing statistics of Gentrap pipeline runs."
+    notes
+      """This endpoint returns a list containing sequence-level metrics of Gentrap pipeline runs.
+        |
+        |By default:
+        |
+        | * Each data point represents an input set, which may consist of a single sequence (for single-end sequencing)
+        |   or two sequences (for paired-end sequencing). Selection on library type (single, paired, or both) can be
+        |   done via the `libType` parameter. When `libType` is set to `paired`, the data point will contain a `readAll`
+        |   attribute denoting the combined metrics of both `read1` and `read2`.
+        |
+        | * The returned data points are computed from the raw sequence files. To return data points of the processed
+        |   sequence files (possibly adapter-clipped and/or trimmed), use the `qcPhase` parameter.
+        |
+        | * Data points are returned in random order which changes in every query. To maintain a sorted order
+        |   (most-recently created first), use the `sorted` parameter.
+        |
+        | * All data points of all Gentrap runs are returned. The filter for specific data points, use the `runIds`,
+        |   `refIds`, and/or `annotIds` parameter.
+        |
+        | * All data points are unlabeled. To label the data points with their respective IDs and names, you must be
+        |   the data points' uploader and authenticate yourself using your API key. If the returned data points contain
+        |   data points you did not upload, they will remain unlabeled.
+        |
+        |Each `read*` attribute contains the following metrics:
+        |
+        | * `nBases`: Total number of bases across all reads.
+        | * `nBasesA`: Total number of adenine bases across all reads.
+        | * `nBasesT`: Total number of thymines across all reads.
+        | * `nBasesG`: Total number of guanines across all reads.
+        | * `nBasesC`: Total number of cytosines across all reads.
+        | * `nBasesN`: Total number of unknown bases across all reads.
+        | * `nReads`: Total number of reads.
+        | * `nBasesByQual`: Array indicating how many bases have a given quality. The quality value corresponds to the
+        |   array index (e.g. array(10) shows how many bases have quality value 10 as quality values start from 0).
+        | * `medianQualByPosition`: Array indicating the median quality value for a given read position. The position
+        |   correspond to the array index (e.g. array(20) shows the median quality value of read position 21 since
+        |   position starts from 1).
+      """.stripMargin
     parameters (
       queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")
@@ -334,6 +442,28 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   val statsGentrapSequencesAggregateGetOperation =
     (apiOperation[SeqStatsAggr[ReadStatsAggr]]("statsGentrapSequencesAggregationsGet")
       summary "Retrieves the aggregate sequencing statistics of Gentrap pipeline runs."
+      notes
+        """This endpoint returns aggregate values of various sequence-level metrics. The default settings are the same
+          | as the corresponding data points endpoint. The aggregated metrics are also similar to the data points'
+          | metrics' with the following additions:
+          |
+          | * `pctBases`: Percentage of bases across all reads.
+          | * `pctBasesA`: Percentage of adenine bases across all reads.
+          | * `pctBasesT`: Percentage of thymines across all reads.
+          | * `pctBasesG`: Percentage of guanines across all reads.
+          | * `pctBasesC`: Percentage of cytosines across all reads.
+          | * `pctBasesN`: Percentage of unknown bases across all reads.
+          | * `pctBasesGC`: Percentage of guanine and cytosine bases across all reads.
+          |
+          |The following data point attributes not aggregated:
+          |
+          | * `nBasesByQual`
+          | * `medianQualByPosition`
+          |
+          |Each aggregated metric contains the attributes `avg` (average), `max` (maximum), `min` (minimum), `median`
+          | (median), and `stdev` (standard deviation). It also contains the `nDataPoints` attribute, showing the number
+          | of data points aggregated for the metrics.
+        """.stripMargin
       parameters (
       queryParam[Seq[String]]("runIds")
         .description("Include only Gentrap runs with the given run ID(s).")

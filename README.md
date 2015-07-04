@@ -1,18 +1,21 @@
 # Sentinel
 
-Sentinel is a JSON-based database for next-generation sequencing statistics.
+Sentinel is a JSON-based database for next-generation sequencing statistics. Queries and submissions are all done via a
+RESTful HTTP API which is specified based on [Swagger](http://swagger.io).
 
 ## Requirements
 
 - Java 8 (must be set as the default `java`)
 - Scala 2.11.6
-- MongoDB 3.0
+- MongoDB 3.0 (running on localhost port 27017 for development)
+- Python 2.7 and Sphinx (only when building the documentation)
 
-## Build & Run
+## Quick Start
 
 ```sh
 $ git clone {this-repository}
 $ cd sentinel
+$ ./scripts/bootstrap_dev.sh
 $ ./sbt
 > container:start
 > browse
@@ -22,12 +25,9 @@ If `browse` doesn't launch your browser, manually open [http://localhost:8080/](
 
 ## Support
 
-Please report issues to [the issue page](https://git.lumc.nl/sasc/sentinel/issues). Feature suggestions are also welcome.
+Report issues to [the issue page](https://git.lumc.nl/sasc/sentinel/issues). Fixes and feature suggestions are also
+welcome.
 
-## Contributing
+## More
 
-```sh
-$ grep -r 'TODO' src/
-```
-
-You can also check for unclosed issues in the issue page.
+Please see the documentation for a complete guide on the project.

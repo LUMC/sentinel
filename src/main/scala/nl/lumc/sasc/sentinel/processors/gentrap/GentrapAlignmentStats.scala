@@ -36,7 +36,9 @@ import nl.lumc.sasc.sentinel.utils.pctOf
  * @param nBasesIntron Number of bases aligned in the intronic regions.
  * @param nBasesRibosomal Number of bases aligned to ribosomal gene regions.
  * @param nBasesUtr Number of bases aligned in the UTR regions.
- * @param normalizedTranscriptCoverage Values representing normalized transcript coverage.
+ * @param normalizedTranscriptCoverage Sequence representing normalized transcript coverage along transcripts. The
+ *                                     transcripts come from the top 1000 expressed genes and each item in the
+ *                                     sequence represents 1% of the transcript length.
  * @param nReadsAligned Number of reads aligned.
  * @param nReadsSingleton Number of paired-end reads aligned as singletons.
  * @param nReadsTotal Number of reads.

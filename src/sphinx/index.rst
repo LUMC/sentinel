@@ -6,41 +6,40 @@
 Sentinel
 ========
 
-Sentinel is a JSON-based database for various next-generation sequencing
-experiment metrics.
+Sentinel is a JSON-based database for various next-generation sequencing metrics. It is meant for storing various
+metrics from various phases of an analysis pipeline run. For a given pipeline run, users upload a
+`JSON <https://en.wikipedia.org/wiki/JSON>`_ file containing the metrics of that pipeline. The metrics can then be
+queried using one of the predefined HTTP endpoints.
 
-Using Sentinel:
+At the moment, Sentinel is meant for internal `LUMC <http://www.lumc.nl>`_ use only. URLs mentioned in this
+documentation may not work outside LUMC.
 
-.. toctree::
-   :maxdepth: 2
-
-   introduction
-   api
-
-
-Managing Sentinel:
+Please use the navigation bar on the right to explore this site.
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
-   deployment
-
-
-Contributing to Sentinel:
+   users_introduction
+   users_terminologies
+   users_upload
+   users_query
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
-   guide
-   design
-   setup
-   testing
-   extension
+   devs_setup
+   devs_design
+   devs_codebase
+   devs_tutorial_intro
+   devs_tutorial_schema
+   devs_tutorial_processors
+   devs_tutorial_controllers
 
+.. toctree::
+   :hidden:
+   :maxdepth: 2
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
+   contribute
+   changes
