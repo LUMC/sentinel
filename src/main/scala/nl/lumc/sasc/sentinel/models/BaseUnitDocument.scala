@@ -16,17 +16,46 @@
  */
 package nl.lumc.sasc.sentinel.models
 
-import com.novus.salat.annotations.Salat
+import java.util.Date
 
-/** Representation of a library within a sample. */
-@Salat abstract class BaseLibDocument {
+import com.novus.salat.annotations.{ Persist, Salat }
+import org.bson.types.ObjectId
+
+/** Representation of a sequencing accumulation level unit. */
+@Salat abstract class BaseUnitDocument {
+
+  /** Internal database ID for the library document. */
+  def id: ObjectId
+
+  /** Name of the uploader of the run summary which contains this library. */
+  def uploaderId: String
+
+  /** Database sample ID. */
+  def runId: ObjectId
 
   /** Name of the run that produced this library. */
   def runName: Option[String]
+
+  /** UTC time when the sample document was created. */
+  def creationTimeUtc: Date
+}
+
+/** Representation of a sample within a run. */
+@Salat abstract class BaseSampleDocument extends BaseUnitDocument {
+
+  /** Sample name. */
+  def sampleName: Option[String]
+}
+
+/** Representation of a library within a sample. */
+@Salat abstract class BaseLibDocument extends BaseUnitDocument {
 
   /** Name of the sample which this library belongs to. */
   def sampleName: Option[String]
 
   /** Library name. */
   def libName: Option[String]
+
+  /** Short hand attribute that returns true if the library was create from a paired-end sequence. */
+  @Persist def isPaired: Boolean
 }

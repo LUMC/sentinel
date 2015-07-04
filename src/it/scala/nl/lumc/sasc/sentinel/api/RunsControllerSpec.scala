@@ -175,6 +175,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must not /("annotIds" -> ".+".r)
             priorResponse.body must not /("refId" -> ".+".r)
             priorResponse.body must not /("sampleIds" -> ".+".r)
+            priorResponse.body must not /("libIds" -> ".+".r)
           }
         }
       }
@@ -203,6 +204,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must not /("annotIds" -> ".+".r)
             priorResponse.body must not /("refId" -> ".+".r)
             priorResponse.body must not /("sampleIds" -> ".+".r)
+            priorResponse.body must not /("libIds" -> ".+".r)
           }
         }
       }
@@ -234,6 +236,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must not /("annotIds" -> ".+".r)
             priorResponses.head.body must not /("refId" -> ".+".r)
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
+            priorResponses.head.body must not /("libIds" -> ".+".r)
           }
 
           "return status 201 for the second upload" in {
@@ -251,6 +254,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must not /("annotIds" -> ".+".r)
             priorResponses.last.body must not /("refId" -> ".+".r)
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
+            priorResponses.last.body must not /("libIds" -> ".+".r)
           }
         }
       }
@@ -341,6 +345,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must not /("annotIds" -> ".+".r)
             priorResponses.head.body must not /("refId" -> ".+".r)
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
+            priorResponses.head.body must not /("libIds" -> ".+".r)
           }
 
           "return status 409 for the second upload" in {
@@ -385,6 +390,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must not /("annotIds" -> ".+".r)
             priorResponses.head.body must not /("refId" -> ".+".r)
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
+            priorResponses.head.body must not /("libIds" -> ".+".r)
           }
 
           "return status 409 for the second upload" in {
@@ -531,6 +537,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must /("nLibs" -> 1)
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must not /("sampleIds" -> ".+".r)
+            priorResponse.body must not /("libIds" -> ".+".r)
             // TODO: use raw JSON matchers when we upgrade specs2
             priorResponse.jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
           }
@@ -706,6 +713,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 body must /#(0) */("nSamples" -> 0)
                 body must /#(0) */("nLibs" -> 0)
                 body must not /("sampleIds" -> ".+".r)
+                body must not /("libIds" -> ".+".r)
                 body must not /# 0 */ "refId"
                 body must not /# 0 */ "annotIds"
               }
@@ -843,6 +851,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("nLibs" -> 0)
                   body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
+                  body must not /("libIds" -> ".+".r)
                 }
               }
             }
@@ -891,6 +900,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must /("runId" -> userRunId)
                       body must /("uploaderId" -> user.id)
                       body must not /("sampleIds" -> ".+".r)
+                      body must not /("libIds" -> ".+".r)
                       body must /("nSamples" -> 0)
                       body must /("nLibs" -> 0)
                       body must /("pipeline" -> "plain")
@@ -960,6 +970,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("nLibs" -> 0)
                   body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
+                  body must not /("libIds" -> ".+".r)
                 }
               }
             }
@@ -1008,6 +1019,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must /("runId" -> userRunId)
                       body must /("uploaderId" -> user.id)
                       body must not /("sampleIds" -> ".+".r)
+                      body must not /("libIds" -> ".+".r)
                       body must /("nSamples" -> 0)
                       body must /("nLibs" -> 0)
                       body must /("pipeline" -> "plain")
@@ -1209,6 +1221,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must /("runId" -> userRunId)
             priorResponses.last.body must /("uploaderId" -> user.id)
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
+            priorResponses.last.body must not /("libIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
             priorResponses.last.body must /("nLibs" -> 0)
             priorResponses.last.body must /("pipeline" -> "plain")
@@ -1279,6 +1292,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               priorResponses.last.body must /("runId" -> userRunId)
               priorResponses.last.body must /("uploaderId" -> user.id)
               priorResponses.last.body must not /("sampleIds" -> ".+".r)
+              priorResponses.last.body must not /("libIds" -> ".+".r)
               priorResponses.last.body must /("annotIds" -> ".+".r)
               priorResponses.last.body must /("refId" -> """\S+""".r)
               priorResponses.last.body must /("nSamples" -> 1)
@@ -1352,6 +1366,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must /("runId" -> userRunId)
             priorResponses.last.body must /("uploaderId" -> user.id)
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
+            priorResponses.last.body must not /("libIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
             priorResponses.last.body must /("nLibs" -> 0)
             priorResponses.last.body must /("pipeline" -> "plain")
@@ -1422,6 +1437,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               priorResponses.last.body must /("runId" -> userRunId)
               priorResponses.last.body must /("uploaderId" -> user.id)
               priorResponses.last.body must not /("sampleIds" -> ".+".r)
+              priorResponses.last.body must not /("libIds" -> ".+".r)
               priorResponses.last.body must /("annotIds" -> ".+".r)
               priorResponses.last.body must /("refId" -> """\S+""".r)
               priorResponses.last.body must /("nSamples" -> 1)

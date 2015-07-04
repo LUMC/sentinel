@@ -38,7 +38,7 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  * @param mongo MongoDB database access object.
  */
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends SamplesAdapter[GentrapSampleDocument]
+    extends UnitsAdapter[GentrapSampleDocument, GentrapLibDocument]
     with ValidationAdapter
     with RunsAdapter
     with ReferencesAdapter
@@ -169,8 +169,9 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   }
 
   /** Extracts a library document from a library entry in a Gentrap summary. */
-  private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, libName: String,
-                                             sampleName: String, runName: Option[String] = None): GentrapLibDocument = {
+  private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, runId: ObjectId, refId: ObjectId,
+                                             annotIds: Seq[ObjectId], libName: String, sampleName: String,
+                                             runName: Option[String] = None): GentrapLibDocument = {
 
     val seqStatsRaw = SeqStats(
       read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
@@ -194,56 +195,68 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       }
 
     GentrapLibDocument(
-      libName = Option(libName),
-      sampleName = Option(sampleName),
-      runName = runName,
+      alnStats = extractAlnStats(libJson),
       seqStatsRaw = seqStatsRaw,
       seqStatsProcessed = seqStatsProcessed,
       seqFilesRaw = seqFilesRaw,
       seqFilesProcessed = seqFilesProcessed,
-      alnStats = extractAlnStats(libJson))
+      referenceId = refId,
+      annotationIds = annotIds,
+      isPaired = seqStatsRaw.read2.isDefined,
+      libName = Option(libName),
+      sampleName = Option(sampleName),
+      runId = runId,
+      uploaderId = uploaderId,
+      runName = runName)
   }
 
-  /** Extracts a sample document from a sample entry in a Gentrap summary. */
-  private[processors] def extractSamples(runJson: JValue, uploaderId: String, runId: ObjectId,
-                                         refId: ObjectId, annotIds: Seq[ObjectId], runName: Option[String] = None) = {
-    (runJson \ "samples")
+  /** Extracts samples and libraries from a Gentrap summary. */
+  private[processors] def extractUnits(runJson: JValue, uploaderId: String, runId: ObjectId,
+                                       refId: ObjectId, annotIds: Seq[ObjectId], runName: Option[String] = None) = {
+    val parsed = (runJson \ "samples")
       .extract[Map[String, JValue]]
+      .view
       .map {
         case (sampleName, sampleJson) =>
           val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
-          GentrapSampleDocument(
+          val gSample = GentrapSampleDocument(
             uploaderId = uploaderId,
             sampleName = Option(sampleName),
             runId = runId,
             runName = runName,
             referenceId = refId,
             annotationIds = annotIds,
-            libs = libJsons
-              .map { case (libName, libJson) => extractLibDocument(libJson, uploaderId, libName, sampleName, runName) }
-              .toSeq,
             // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
             alnStats =
               if (libJsons.size > 1) extractAlnStats(sampleJson)
               else extractAlnStats(libJsons.values.head))
+          val gLibs = libJsons
+            .map {
+              case (libName, libJson) =>
+                extractLibDocument(libJson, uploaderId, runId, refId, annotIds, libName, sampleName, runName)
+            }
+            .toSeq
+          (gSample, gLibs)
       }.toSeq
+    (parsed.map(_._1), parsed.map(_._2).flatten)
   }
 
   /** Helper function for creating run records. */
   private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
-                                    samples: Seq[GentrapSampleDocument], user: User, pipeline: Pipeline.Value,
-                                    runName: Option[String] = None) =
+                                    samples: Seq[GentrapSampleDocument], libs: Seq[GentrapLibDocument],
+                                    user: User, pipeline: Pipeline.Value, runName: Option[String] = None) =
     RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
       annotIds = Option(annotIds),
       runName = runName,
       sampleIds = samples.map(_.id),
+      libIds = libs.map(_.id),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
       pipeline = pipeline.toString.toLowerCase,
       nSamples = samples.size,
-      nLibs = samples.map(_.libs.size).sum)
+      nLibs = libs.size)
 
   /** Attribute keys of Gentrap annotations. */
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
@@ -269,9 +282,10 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       annotIds = annots.map(_.annotId)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]
-      samples <- Try(extractSamples(runJson, user.id, fileId, refId, annotIds, runName))
+      (samples, libs) <- Try(extractUnits(runJson, user.id, fileId, refId, annotIds, runName))
       _ <- Try(storeSamples(samples))
-      run <- Try(createRun(fileId, refId, annotIds, samples, user, pipeline, runName))
+      _ <- Try(storeLibs(libs))
+      run <- Try(createRun(fileId, refId, annotIds, samples, libs, user, pipeline, runName))
       _ <- Try(storeRun(run))
     } yield run
 }

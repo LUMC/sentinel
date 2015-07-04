@@ -125,7 +125,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
-  val runsRunIdGetOperation = (apiOperation[File]("runsRunIdGet")
+  val runsRunIdGetOperation = (apiOperation[RunRecord]("runsRunIdGet")
     summary "Retrieves single run summaries."
     notes
       """This endpoint retrieves the a single record of an uploaded summary. Optionally, you can also download the

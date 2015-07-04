@@ -16,23 +16,38 @@
  */
 package nl.lumc.sasc.sentinel.models
 
-import com.novus.salat.annotations.Persist
+import com.novus.salat.annotations.{ Persist, Salat }
 
 import nl.lumc.sasc.sentinel.utils.pctOf
 
 /**
- * Sequencing input statistics.
+ * Trait for sequence statistics container.
  *
- * @param read1 Statistics of the first read (if paired-end) or the only read (if single-end).
- * @param read2 Statistics of the second read. Only defined for paired-end inputs.
- * @param labels Data point labels.
+ * @tparam T Container for read-level statistics.
  */
-case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: Option[DataPointLabels] = None) {
+@Salat trait SeqStatsLike[T] {
+
+  /** Statistics of the first read. */
+  def read1: T
+
+  /** Statistics of the second read. */
+  def read2: Option[T]
+
+  /** Combined statistics of the first and second read. */
+  def readAll: Option[_]
+
+  /** Data points labels. */
+  def labels: Option[DataPointLabels]
+}
+
+/** Sequencing input statistics.*/
+case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: Option[DataPointLabels] = None)
+    extends SeqStatsLike[ReadStats] {
 
   /** Combined counts for both read1 and read2 (if present). */
-  @Persist lazy val readAll: ReadStats = read2 match {
+  @Persist lazy val readAll: Option[ReadStats] = read2 match {
     case Some(r2) =>
-      ReadStats(
+      Option(ReadStats(
         nBases = read1.nBases + r2.nBases,
         nBasesA = read1.nBasesA + r2.nBasesA,
         nBasesT = read1.nBasesT + r2.nBasesT,
@@ -41,8 +56,8 @@ case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: O
         nBasesN = read1.nBasesN + r2.nBasesN,
         nReads = read1.nReads, // nReads for each pair is equal
         nBasesByQual = Seq.empty[Long],
-        medianQualByPosition = Seq.empty[Double])
-    case otherwise => read1
+        medianQualByPosition = Seq.empty[Double]))
+    case otherwise => Option(read1)
   }
 }
 
@@ -55,8 +70,7 @@ case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: O
  * @param readAll Aggregated statistics of both reads. Only defined if there is at least a paired-end data point
  *                in aggregation.
  */
-case class SeqStatsAggr(read1: ReadStatsAggr, read2: Option[ReadStatsAggr] = None,
-                        readAll: Option[ReadStatsAggr] = None)
+case class SeqStatsAggr[T <: AnyRef](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
 
 /**
  * Statistics of a single read file.

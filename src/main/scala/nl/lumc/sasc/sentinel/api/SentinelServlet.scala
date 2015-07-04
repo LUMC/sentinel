@@ -25,7 +25,7 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.slf4j.LoggerFactory
 
-import nl.lumc.sasc.sentinel.models.ApiMessage
+import nl.lumc.sasc.sentinel.models.{ ApiMessage, RunRecord }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
 /** Base servlet for all Sentinel controllers. */
@@ -69,9 +69,9 @@ abstract class SentinelServlet extends ScalatraServlet
           (propName, interceptedProp)
       }
       val newModel =
-        if (model.id == "RunDocument")
+        if (model.id == "RunRecord")
           model.copy(properties = interceptedProp.filter {
-            case (propName, prop) => propName != "sampleIds" || propName != "samples"
+            case (propName, prop) => !RunRecord.hiddenAttributes.contains(propName)
           })
         else
           model.copy(properties = interceptedProp)

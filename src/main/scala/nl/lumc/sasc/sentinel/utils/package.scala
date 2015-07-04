@@ -137,7 +137,9 @@ package object utils {
   def getUtcTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
   /** Serializer for outgoing JSON payloads. */
-  val RunDocumentSerializer = FieldSerializer[RunRecord](FieldSerializer.ignore("sampleIds"), { case field => field })
+  val RunDocumentSerializer =
+    FieldSerializer[RunRecord]({ case (attr, _) if RunRecord.hiddenAttributes.contains(attr) => None },
+      { case field => field })
 
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer

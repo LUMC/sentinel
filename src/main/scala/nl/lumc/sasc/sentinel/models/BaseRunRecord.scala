@@ -66,5 +66,11 @@ case class RunRecord(
   runName: Option[String] = None,
   deletionTimeUtc: Option[Date] = None,
   sampleIds: Seq[ObjectId] = Seq(),
+  libIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None) extends BaseRunRecord
+
+object RunRecord {
+  /** Attributes that is hidden when this object is serialized into JSON. */
+  val hiddenAttributes = Set("sampleIds", "libIds")
+}

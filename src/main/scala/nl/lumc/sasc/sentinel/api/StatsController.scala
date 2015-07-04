@@ -245,7 +245,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       }
     }
 
-    gentrap.getAlignmentAggregateStats(accLevel, libType, runIds, refIds, annotIds) match {
+    gentrap.getAlignmentAggr(accLevel, libType, runIds, refIds, annotIds) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
@@ -322,12 +322,17 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           .getOrElse(halt(400, CommonMessages.InvalidLibType))
       }
 
-    Ok(gentrap.getSeqStats(libType, qcPhase, user, runIds, refIds, annotIds, sorted))
+    val queryFunc = qcPhase match {
+      case SeqQcPhase.Raw       => gentrap.getSeqStatsRaw
+      case SeqQcPhase.Processed => gentrap.getSeqStatsProcessed
+    }
+
+    Ok(queryFunc(libType, user, runIds, refIds, annotIds, sorted))
   }
 
   // format: OFF
   val statsGentrapSequencesAggregateGetOperation =
-    (apiOperation[SeqStatsAggr]("statsGentrapSequencesAggregationsGet")
+    (apiOperation[SeqStatsAggr[ReadStatsAggr]]("statsGentrapSequencesAggregationsGet")
       summary "Retrieves the aggregate sequencing statistics of Gentrap pipeline runs."
       parameters (
       queryParam[Seq[String]]("runIds")
@@ -382,7 +387,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           .getOrElse(halt(400, CommonMessages.InvalidLibType))
       }
 
-    gentrap.getSeqAggregateStats(libType, qcPhase, runIds, refIds, annotIds) match {
+    val queryFunc = qcPhase match {
+      case SeqQcPhase.Raw       => gentrap.getSeqStatsAggrRaw
+      case SeqQcPhase.Processed => gentrap.getSeqStatsAggrProcessed
+    }
+
+    queryFunc(libType, runIds, refIds, annotIds) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }

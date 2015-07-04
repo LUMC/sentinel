@@ -21,7 +21,14 @@ import org.json4s._
 import org.bson.types.ObjectId
 import org.json4s.mongo.ObjectIdSerializer
 
-/** Custom ObjectId serializer which serializes to and from plain strings entries. */
+/**
+ * Custom ObjectId serializer for serialization between MongoDB and plain strings.
+ *
+ * This serializer is required so that `ObjectId`s can be serialized directly to strings instead of JSON objects, i.e.
+ * `MongoDBObject("myId" -> ObjectId("1234"))` becomes `{"myId": "1234"}` instead of `{"myId": {"$oid": "1234"}}`.
+ *
+ * The (de)serializers are meant to be used by the controllers when sending JSON payloads.
+ */
 class CustomObjectIdSerializer extends ObjectIdSerializer {
 
   private val ObjectIdClass = classOf[ObjectId]

@@ -31,20 +31,19 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
  * @param runId Database ID of the run to which this sample belongs to.
  * @param referenceId Database ID of the reference alignment record used by this sample.
  * @param annotationIds Database IDs of the annotation records used by this sample.
- * @param libs Libraries that compose this sample.
  * @param alnStats Sample-level alignment statistics.
  * @param sampleName Sample name.
  * @param runName Name of the run to which this sample belongs to.
  * @param creationTimeUtc UTC time when this sample entry was created.
+ * @param id Internal database ID.
  */
 case class GentrapSampleDocument(
   uploaderId: String,
   runId: ObjectId,
   referenceId: ObjectId,
   annotationIds: Seq[ObjectId],
-  libs: Seq[GentrapLibDocument],
   alnStats: GentrapAlignmentStats,
-  @Key("_id") id: ObjectId = new ObjectId,
   sampleName: Option[String] = None,
   runName: Option[String] = None,
-  creationTimeUtc: Date = getUtcTimeNow) extends BaseSampleDocument
+  creationTimeUtc: Date = getUtcTimeNow,
+  @Key("_id") id: ObjectId = new ObjectId) extends BaseSampleDocument

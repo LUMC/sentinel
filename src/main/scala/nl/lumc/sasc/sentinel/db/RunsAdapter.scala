@@ -168,7 +168,7 @@ trait RunsAdapter extends MongodbConnector {
    *
    * When a run record is deleted, the following happens:
    *    - The underlying run summary file is removed from the database.
-   *    - All sample documents created from the run summary file is removed from the database.
+   *    - All sample and library documents created from the run summary file is removed from the database.
    *    - The run record itself is *not* removed from the database, but it is marked with a `deletionTimeUtc` attribute
    *      to mark when the delete request was made.
    *
@@ -209,12 +209,17 @@ trait RunsAdapter extends MongodbConnector {
         .map { case dbo => (grater[RunRecord].asObject(dbo), true) }
       docToDelete.foreach {
         case (doc, _) =>
-          val collSamples = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
+          val samplesColl = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
+          val libsColl = mongo.db(collectionNames.pipelineLibs(doc.pipeline))
           // remove the GridFS entry
           mongo.gridfs.remove(doc.runId)
           // and all samples linked to this run
           doc.sampleIds.foreach {
-            case oid => collSamples.remove(MongoDBObject("_id" -> oid))
+            case oid => samplesColl.remove(MongoDBObject("_id" -> oid))
+          }
+          // and all libs linked to this run
+          doc.libIds.foreach {
+            case oid => libsColl.remove(MongoDBObject("_id" -> oid))
           }
       }
       docToDelete

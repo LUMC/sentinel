@@ -79,10 +79,18 @@ package object db {
       /**
        * Retrieves the sample collection name for the given pipeline.
        *
-       * @param name pipeline name.
-       * @return collection name for the samples parsed from the pipeline's run summary file.
+       * @param name Pipeline name.
+       * @return Collection name for the samples parsed from the pipeline's run summary file.
        */
       def pipelineSamples(name: String) = s"$name.samples" // TODO: use enums instead
+
+      /**
+       * Retrieves the library collection name for the given pipeline.
+       *
+       * @param name Pipeline name.
+       * @return Collection name for the libraries parsed from the pipeline's run summary file.
+       */
+      def pipelineLibs(name: String) = s"$name.libs"
     }
   }
 }
