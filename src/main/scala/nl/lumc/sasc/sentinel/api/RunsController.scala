@@ -17,17 +17,19 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.util.{ Failure, Success, Try }
+
+import scala.util.{ Failure, Success }
 
 import org.scalatra._
 import org.scalatra.swagger._
-import org.scalatra.servlet.{ FileItem, FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
+import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
 import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, HeaderApiKey, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
-import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04InputProcessor
-import nl.lumc.sasc.sentinel.processors.plain.PlainInputProcessor
+import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor
+import nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor
+import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
@@ -50,19 +52,16 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
 
   /** Adapter for connecting to run collections. */
-  val runs = new RunsAdapter {
-    val mongo = self.mongo
-    def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Try(throw new NotImplementedError)
-  }
+  val runs = new GenericRunsProcessor(mongo)
 
   /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Adapter for connecting to the plain summary collections. */
-  val plain = new PlainInputProcessor(mongo)
+  val plain = new PlainRunsProcessor(mongo)
 
   /** Adapter for connecting to the gentrap summary collections. */
-  val gentrap = new GentrapV04InputProcessor(mongo)
+  val gentrap = new GentrapV04RunsProcessor(mongo)
 
   /** Set maximum allowed file upload size. */
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))

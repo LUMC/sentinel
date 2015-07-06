@@ -19,6 +19,7 @@ package nl.lumc.sasc.sentinel.processors.plain
 import java.time.Clock
 import java.util.Date
 import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import scala.util.Try
 
 import org.scalatra.servlet.FileItem
@@ -37,9 +38,10 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  *
  * @param mongo MongoDB database access object.
  */
-class PlainInputProcessor(protected val mongo: MongodbAccessObject)
-    extends RunsAdapter
+class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
     with ValidationAdapter {
+
+  def pipelineName = "plain"
 
   val validator = createValidator("/schemas/plain.json")
 

@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.processors.gentrap
 
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
+
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
@@ -37,9 +39,9 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  *
  * @param mongo MongoDB database access object.
  */
-class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends UnitsAdapter[GentrapSampleRecord, GentrapLibRecord]
-    with RunsAdapter
+class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
+    extends RunsProcessor(mongo)
+    with UnitsAdapter[GentrapSampleRecord, GentrapLibRecord]
     with ValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {

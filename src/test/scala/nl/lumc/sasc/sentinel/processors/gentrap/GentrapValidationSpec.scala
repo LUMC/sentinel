@@ -28,7 +28,7 @@ class GentrapValidationSpec extends Specification with JsonLoader with Mockito {
   "Support for the 'gentrap' pipeline" should {
     br
 
-    val ipv04 = new GentrapV04InputProcessor(mongo)
+    val ipv04 = new GentrapV04RunsProcessor(mongo)
 
     "exclude non-gentrap summary files" in {
       val summary = loadJson("/schema_examples/plain.json")

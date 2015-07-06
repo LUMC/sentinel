@@ -23,19 +23,16 @@ import com.novus.salat._
 import com.novus.salat.global._
 import com.mongodb.casbah.Imports._
 
-import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
-import nl.lumc.sasc.sentinel.db.MongodbConnector
+import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ SeqStatsAggr, User }
 
 /**
- * Base trait that provides support for querying and aggregating metrics for a pipeline.
+ * Base class that provides support for querying and aggregating statistics for a pipeline.
  */
-trait OutputProcessor extends MongodbConnector {
+abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends Processor {
 
   // TODO: refactor functions in here ~ we can do with less duplication
-
-  /** Name of the pipeline that produces the metrics to query. */
-  def pipelineName: String
 
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
   protected implicit val pairAttrib = "isPaired"

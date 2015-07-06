@@ -18,14 +18,14 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.processors.OutputProcessor
+import nl.lumc.sasc.sentinel.processors.StatsProcessor
 
 /**
  * Output processor for Gentrap endpoints.
  *
  * @param mongo MongoDB database access object.
  */
-class GentrapOutputProcessor(protected val mongo: MongodbAccessObject) extends OutputProcessor {
+class GentrapStatsProcessor(mongo: MongodbAccessObject) extends StatsProcessor(mongo) {
 
   def pipelineName = "gentrap"
 

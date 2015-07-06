@@ -21,6 +21,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.{ BaseLibRecord, BaseSampleRecord }
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /**
  * Trait for storing samples and libraries from run summaries.
@@ -28,10 +29,7 @@ import nl.lumc.sasc.sentinel.models.{ BaseLibRecord, BaseSampleRecord }
  * @tparam S Subclass of [[nl.lumc.sasc.sentinel.models.BaseSampleRecord]] representing a sample run by a pipeline.
  * @tparam L Subclass of [[nl.lumc.sasc.sentinel.models.BaseLibRecord]] representing a library run by a pipeline.
  */
-trait UnitsAdapter[S <: BaseSampleRecord, L <: BaseLibRecord] extends MongodbConnector { this: RunsAdapter =>
-
-  /** Name of the pipeline that produces the run summary file. */
-  def pipelineName: String
+trait UnitsAdapter[S <: BaseSampleRecord, L <: BaseLibRecord] extends MongodbConnector { this: RunsProcessor =>
 
   /** Collection for the samples. */
   private lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
