@@ -17,23 +17,26 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
+import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat._
 import com.novus.salat.global._
+import org.scalatra.servlet.FileItem
+
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
-import nl.lumc.sasc.sentinel.utils.{ DuplicateFileException, calcMd5, getUtcTimeNow }
-import org.scalatra.servlet.FileItem
-
-import scala.util.Try
+import nl.lumc.sasc.sentinel.utils.{ DuplicateFileException, SentinelJsonFormats, calcMd5, getUtcTimeNow }
 
 /**
  * Base class for processing run summary files.
  */
 abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends Processor {
+
+  /** JSON formats used by this processor. */
+  implicit val formats = SentinelJsonFormats
 
   /**
    * Processes and stores the given uploaded file to the run records collection.

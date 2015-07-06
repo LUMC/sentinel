@@ -30,7 +30,7 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
@@ -45,9 +45,6 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     with ValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
-
-  /** JSON formats used by this processor. */
-  implicit val formats = SentinelJsonFormats
 
   /** Extracts a reference record from a Gentrap summary. */
   private[processors] def extractReference(runJson: JValue): ReferenceRecord = {
