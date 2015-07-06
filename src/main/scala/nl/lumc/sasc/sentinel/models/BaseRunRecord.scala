@@ -49,6 +49,11 @@ import org.bson.types.ObjectId
   def deletionTimeUtc: Option[Date]
 }
 
+object BaseRunRecord {
+  /** Attributes that is hidden when this object is serialized into JSON. */
+  val hiddenAttributes = Set("sampleIds", "libIds")
+}
+
 /**
  * Simple implementation of a run record.
  *
@@ -69,8 +74,3 @@ case class RunRecord(
   libIds: Seq[ObjectId] = Seq(),
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None) extends BaseRunRecord
-
-object RunRecord {
-  /** Attributes that is hidden when this object is serialized into JSON. */
-  val hiddenAttributes = Set("sampleIds", "libIds")
-}

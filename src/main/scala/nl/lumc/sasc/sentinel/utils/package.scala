@@ -28,7 +28,7 @@ import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.models.RunRecord
+import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, RunRecord }
 
 /** General utilities */
 package object utils {
@@ -138,7 +138,7 @@ package object utils {
 
   /** Serializer for outgoing JSON payloads. */
   val RunDocumentSerializer =
-    FieldSerializer[RunRecord]({ case (attr, _) if RunRecord.hiddenAttributes.contains(attr) => None },
+    FieldSerializer[BaseRunRecord]({ case (attr, _) if BaseRunRecord.hiddenAttributes.contains(attr) => None },
       { case field => field })
 
   /** JSON format used across the entire package. */
