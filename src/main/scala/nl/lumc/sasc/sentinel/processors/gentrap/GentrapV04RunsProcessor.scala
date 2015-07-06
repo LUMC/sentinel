@@ -256,9 +256,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       libIds = libs.map(_.id),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
-      pipeline = pipeline.toString.toLowerCase,
-      nSamples = samples.size,
-      nLibs = libs.size)
+      pipeline = pipeline.toString.toLowerCase)
 
   /** Attribute keys of Gentrap annotations. */
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")

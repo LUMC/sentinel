@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.models
 
 import java.util.Date
 
-import com.novus.salat.annotations.{ Key, Salat }
+import com.novus.salat.annotations.{ Key, Persist, Salat }
 import org.bson.types.ObjectId
 
 /** Representation of an uploaded run summary file. */
@@ -36,17 +36,23 @@ import org.bson.types.ObjectId
   /** Name of the pipeline that produced the run. */
   def pipeline: String
 
-  /** Number of samples in the run summary file used for statistics. */
-  def nSamples: Int
+  /** Sample IDs linked to this run. */
+  def sampleIds: Seq[ObjectId]
 
-  /** Number of libraries in the run summary file used for statistics. */
-  def nLibs: Int
+  /** Library IDs linked to this run. */
+  def libIds: Seq[ObjectId]
 
   /** UTC time when the run record was created. */
   def creationTimeUtc: Date
 
   /** UTC time when the run record was deleted. */
   def deletionTimeUtc: Option[Date]
+
+  /** Number of samples in the run summary file used for statistics. */
+  @Persist val nSamples: Int = sampleIds.size
+
+  /** Number of libraries in the run summary file used for statistics. */
+  @Persist val nLibs: Int = libIds.size
 }
 
 object BaseRunRecord {
@@ -55,9 +61,8 @@ object BaseRunRecord {
 }
 
 /**
- * Simple implementation of a run record.
+ * Simple implementation of a run record with a single reference and multiple annotations.
  *
- * @param sampleIds Database sample document IDs contained in the sample.
  * @param refId Reference record ID contained in the sample.
  * @param annotIds Annotation record IDs contained in the sample.
  */
@@ -65,8 +70,6 @@ case class RunRecord(
   @Key("_id") runId: ObjectId,
   uploaderId: String,
   pipeline: String,
-  nSamples: Int,
-  nLibs: Int,
   creationTimeUtc: Date,
   runName: Option[String] = None,
   deletionTimeUtc: Option[Date] = None,

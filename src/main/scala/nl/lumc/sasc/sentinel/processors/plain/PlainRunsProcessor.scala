@@ -51,7 +51,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       (byteContents, unzipped) <- Try(fi.readInputStream())
       _ <- Try(parseAndValidate(byteContents))
       fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
-      run = RunRecord(fileId, user.id, pipeline.toString.toLowerCase, 0, 0, Date.from(Clock.systemUTC().instant))
+      run = RunRecord(fileId, user.id, pipeline.toString.toLowerCase, Date.from(Clock.systemUTC().instant))
       _ <- Try(storeRun(run))
     } yield run
 }

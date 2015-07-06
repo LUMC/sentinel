@@ -24,7 +24,7 @@ import com.novus.salat._
 import com.novus.salat.global._
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
-import nl.lumc.sasc.sentinel.models.{ PipelineStats, RunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils.{ DuplicateFileException, calcMd5, getUtcTimeNow }
 import org.scalatra.servlet.FileItem
 
@@ -43,7 +43,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param pipeline Enum value representing the pipeline name that generated the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunRecord] // TODO: use Futures instead
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[BaseRunRecord] // TODO: use Futures instead
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -102,9 +102,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param run Run record to store.
    * @return Result of the store operation.
    */
-  def storeRun(run: RunRecord): WriteResult = {
+  def storeRun(run: BaseRunRecord): WriteResult = {
     // TODO: use Futures instead
-    val dbo = grater[RunRecord].asDBObject(run)
+    val dbo = grater[BaseRunRecord].asDBObject(run)
     coll.insert(dbo)
   }
 
@@ -118,14 +118,14 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User): Option[RunRecord] = {
+  def getRunRecord(runId: ObjectId, user: User): Option[BaseRunRecord] = {
     // TODO: use Futures instead
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
     coll
       .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-      .collect { case dbo => grater[RunRecord].asObject(dbo) }
+      .collect { case dbo => grater[BaseRunRecord].asObject(dbo) }
   }
 
   /**
@@ -154,7 +154,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param pipelines Pipeline enums. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelines: Seq[Pipeline.Value]): Seq[RunRecord] = {
+  def getRuns(user: User, pipelines: Seq[Pipeline.Value]): Seq[BaseRunRecord] = {
     // TODO: use Futures instead
     val query =
       if (pipelines.isEmpty) $and("uploaderId" $eq user.id)
@@ -162,7 +162,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
     coll
       .find($and(query :: ("deletionTimeUtc" $exists false)))
       .sort(MongoDBObject("creationTimeUtc" -> -1))
-      .map { case dbo => grater[RunRecord].asObject(dbo) }
+      .map { case dbo => grater[BaseRunRecord].asObject(dbo) }
       .toSeq
   }
 
@@ -189,7 +189,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
    * @return Run record with `deletionTimeUtc` attribute and a boolean showing whether the deletion was performed or not.
    */
-  def deleteRun(runId: ObjectId, user: User): Option[(RunRecord, Boolean)] = {
+  def deleteRun(runId: ObjectId, user: User): Option[(BaseRunRecord, Boolean)] = {
     // TODO: use Futures instead
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
@@ -198,7 +198,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
     val docDeleted = coll
       .findOne(MongoDBObject("_id" -> runId,
         "deletionTimeUtc" -> MongoDBObject("$exists" -> true)) ++ userCheck)
-      .map { case dbo => (grater[RunRecord].asObject(dbo), false) }
+      .map { case dbo => (grater[BaseRunRecord].asObject(dbo), false) }
 
     if (docDeleted.isDefined) docDeleted
     else {
@@ -209,7 +209,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
           update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getUtcTimeNow)),
           returnNew = true,
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
-        .map { case dbo => (grater[RunRecord].asObject(dbo), true) }
+        .map { case dbo => (grater[BaseRunRecord].asObject(dbo), true) }
       docToDelete.foreach {
         case (doc, _) =>
           val samplesColl = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
