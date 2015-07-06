@@ -18,32 +18,43 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import java.util.Date
 
-import com.novus.salat.annotations.Key
+import com.novus.salat.annotations.{ Key, Persist }
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
 
 /**
- * Gentrap sample entry.
+ * Gentrap library entry.
  *
- * @param uploaderId ID of the user that created the sample entry.
- * @param runId Database ID of the run to which this sample belongs to.
+ * @param alnStats Alignment statistics of the library.
+ * @param seqStatsRaw Sequencing statistics of the raw input sequencing files.
+ * @param seqStatsProcessed Sequencing statistics of the QC-ed input sequencing files.
+ * @param seqFilesRaw Raw input sequencing file entries.
+ * @param seqFilesProcessed QC-ed sequencing file entries.
  * @param referenceId Database ID of the reference alignment record used by this sample.
  * @param annotationIds Database IDs of the annotation records used by this sample.
- * @param alnStats Sample-level alignment statistics.
- * @param sampleName Sample name.
- * @param runName Name of the run to which this sample belongs to.
+ * @param isPaired Whether the library is paired-end or not.
+ * @param libName Library name.
+ * @param sampleName Name of the sample to which the library belongs to.
+ * @param runName Name of the run to which the library belongs to.
+ * @param uploaderId ID of the user that created the sample entry.
  * @param creationTimeUtc UTC time when this sample entry was created.
  * @param id Internal database ID.
  */
-case class GentrapSampleDocument(
-  uploaderId: String,
-  runId: ObjectId,
+case class GentrapLibRecord(
+  alnStats: GentrapAlignmentStats,
+  seqStatsRaw: SeqStats,
+  seqStatsProcessed: Option[SeqStats],
+  seqFilesRaw: SeqFiles,
+  seqFilesProcessed: Option[SeqFiles],
   referenceId: ObjectId,
   annotationIds: Seq[ObjectId],
-  alnStats: GentrapAlignmentStats,
+  isPaired: Boolean,
+  uploaderId: String,
+  runId: ObjectId,
+  libName: Option[String] = None,
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") id: ObjectId = new ObjectId) extends BaseSampleDocument
+  @Key("_id") id: ObjectId = new ObjectId) extends BaseLibRecord

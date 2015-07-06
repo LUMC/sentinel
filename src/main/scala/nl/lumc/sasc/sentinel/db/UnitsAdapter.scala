@@ -20,15 +20,15 @@ import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat._
 import com.novus.salat.global._
 
-import nl.lumc.sasc.sentinel.models.{ BaseLibDocument, BaseSampleDocument }
+import nl.lumc.sasc.sentinel.models.{ BaseLibRecord, BaseSampleRecord }
 
 /**
  * Trait for storing samples and libraries from run summaries.
  *
- * @tparam S Subclass of [[nl.lumc.sasc.sentinel.models.BaseSampleDocument]] representing a sample run by a pipeline.
- * @tparam L Subclass of [[nl.lumc.sasc.sentinel.models.BaseLibDocument]] representing a library run by a pipeline.
+ * @tparam S Subclass of [[nl.lumc.sasc.sentinel.models.BaseSampleRecord]] representing a sample run by a pipeline.
+ * @tparam L Subclass of [[nl.lumc.sasc.sentinel.models.BaseLibRecord]] representing a library run by a pipeline.
  */
-trait UnitsAdapter[S <: BaseSampleDocument, L <: BaseLibDocument] extends MongodbConnector { this: RunsAdapter =>
+trait UnitsAdapter[S <: BaseSampleRecord, L <: BaseLibRecord] extends MongodbConnector { this: RunsAdapter =>
 
   /** Name of the pipeline that produces the run summary file. */
   def pipelineName: String

@@ -22,7 +22,7 @@ import com.novus.salat.annotations.{ Persist, Salat }
 import org.bson.types.ObjectId
 
 /** Representation of a sequencing accumulation level unit. */
-@Salat abstract class BaseUnitDocument {
+@Salat abstract class BaseUnitRecord {
 
   /** Internal database ID for the library document. */
   def id: ObjectId
@@ -41,14 +41,14 @@ import org.bson.types.ObjectId
 }
 
 /** Representation of a sample within a run. */
-@Salat abstract class BaseSampleDocument extends BaseUnitDocument {
+@Salat abstract class BaseSampleRecord extends BaseUnitRecord {
 
   /** Sample name. */
   def sampleName: Option[String]
 }
 
 /** Representation of a library within a sample. */
-@Salat abstract class BaseLibDocument extends BaseUnitDocument {
+@Salat abstract class BaseLibRecord extends BaseUnitRecord {
 
   /** Name of the sample which this library belongs to. */
   def sampleName: Option[String]

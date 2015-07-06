@@ -38,9 +38,9 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  * @param mongo MongoDB database access object.
  */
 class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
-    extends UnitsAdapter[GentrapSampleDocument, GentrapLibDocument]
-    with ValidationAdapter
+    extends UnitsAdapter[GentrapSampleRecord, GentrapLibRecord]
     with RunsAdapter
+    with ValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
 
@@ -123,8 +123,8 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   }
 
   /** Extracts an input sequencing file from a library entry in a Gentrap summary. */
-  private[processors] def extractReadFile(libJson: JValue, fileKey: String): FileDocument =
-    (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileDocument]
+  private[processors] def extractReadFile(libJson: JValue, fileKey: String): FileRecord =
+    (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileRecord]
 
   /** Case class for containing per-base position statistics. */
   private[processors] case class PerBaseStat[T](index: Int, value: T)
@@ -171,7 +171,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
   /** Extracts a library document from a library entry in a Gentrap summary. */
   private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, runId: ObjectId, refId: ObjectId,
                                              annotIds: Seq[ObjectId], libName: String, sampleName: String,
-                                             runName: Option[String] = None): GentrapLibDocument = {
+                                             runName: Option[String] = None): GentrapLibRecord = {
 
     val seqStatsRaw = SeqStats(
       read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
@@ -194,7 +194,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
           SeqFiles(read1 = r1f, read2 = Try(extractReadFile(libJson, "output_R2")).toOption)
       }
 
-    GentrapLibDocument(
+    GentrapLibRecord(
       alnStats = extractAlnStats(libJson),
       seqStatsRaw = seqStatsRaw,
       seqStatsProcessed = seqStatsProcessed,
@@ -219,7 +219,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
       .map {
         case (sampleName, sampleJson) =>
           val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
-          val gSample = GentrapSampleDocument(
+          val gSample = GentrapSampleRecord(
             uploaderId = uploaderId,
             sampleName = Option(sampleName),
             runId = runId,
@@ -243,7 +243,7 @@ class GentrapV04InputProcessor(protected val mongo: MongodbAccessObject)
 
   /** Helper function for creating run records. */
   private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
-                                    samples: Seq[GentrapSampleDocument], libs: Seq[GentrapLibDocument],
+                                    samples: Seq[GentrapSampleRecord], libs: Seq[GentrapLibRecord],
                                     user: User, pipeline: Pipeline.Value, runName: Option[String] = None) =
     RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
