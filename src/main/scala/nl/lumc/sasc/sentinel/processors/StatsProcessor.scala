@@ -265,7 +265,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   }
 
   /**
-   * Retrieves sequence statistics.
+   * Retrieves library statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
    * @param libType Library type of the returned sequence statistics.
@@ -372,6 +372,54 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
     }
 
     def mapRecResults(attr: String) = coll
+      .mapReduce(
+        mapFunction = mapFunc(s"$metricName.$attr", libType),
+        reduceFunction = reduceFunc,
+        output = MapReduceInlineOutput,
+        finalizeFunction = Option(finalizeFunc),
+        query = Option(query))
+      .toSeq
+      .headOption
+      .collect {
+        case res =>
+          MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty))
+      }
+
+    val aggrStats = metricAttrNames.par
+      .flatMap { mapRecResults }
+      .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
+
+    if (aggrStats.isEmpty) None
+    else Option(grater[T].asObject(aggrStats))
+  }
+
+  /**
+   * Retrieves aggregated library statistics.
+   *
+   * @param metricName Name of the main metrics container object in the unit.
+   * @param metricAttrNames Sequence of names of the metric container object attribute to aggregate on.
+   * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
+   * @param runs Run IDs of the returned statistics. If not specified, unit statistics are not filtered by run ID.
+   * @param references Reference IDs of the returned statistics. If not specified, unit statistics are not filtered
+   *                   by reference IDs.
+   * @param annotations Annotations IDs of the returned statistics. If not specified, unit statistics are not
+   *                    filtered by annotation IDs.
+   * @tparam T Case class representing the aggregated metrics object to return.
+   * @return Alignment statistics aggregates.
+   */
+  // format: OFF
+  def getLibAggrStats[T <: AnyRef](metricName: String,
+                                   metricAttrNames: Seq[String])
+                                  (libType: Option[LibType.Value],
+                                   runs: Seq[ObjectId] = Seq(),
+                                   references: Seq[ObjectId] = Seq(),
+                                   annotations: Seq[ObjectId] = Seq())
+                                  (implicit m: Manifest[T]): Option[T] = {
+    // format: ON
+
+    val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
+
+    def mapRecResults(attr: String) = libsColl
       .mapReduce(
         mapFunction = mapFunc(s"$metricName.$attr", libType),
         reduceFunction = reduceFunc,
