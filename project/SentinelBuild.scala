@@ -12,7 +12,7 @@ object SentinelBuild extends Build {
 
   val Organization = "nl.lumc.sasc"
   val Name = "Sentinel"
-  val Version = "0.1.0"
+  val Version = "0.2.0-SNAPSHOT"
   val ScalaVersion = "2.11.6"
   val JavaVersion = "1.8"
   val ScalatraVersion = "2.3.1"

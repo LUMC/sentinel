@@ -2,6 +2,12 @@ Changelog
 =========
 
 
+Release 0.2.0
+-------------
+
+`release date: TBD`
+
+
 Release 0.1.0
 -------------
 
