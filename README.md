@@ -1,5 +1,7 @@
 # Sentinel
 
+[![Build Status](https://travis-ci.org/LUMC/sentinel.svg?branch=master)](https://travis-ci.org/LUMC/sentinel)
+
 Sentinel is a JSON-based database for next-generation sequencing statistics. Queries and submissions are all done via a
 RESTful HTTP API which is specified based on [Swagger](http://swagger.io).
 
@@ -7,7 +9,7 @@ RESTful HTTP API which is specified based on [Swagger](http://swagger.io).
 
 - Java 8 (must be set as the default `java`)
 - Scala 2.11.6
-- MongoDB 3.0 (running on localhost port 27017 for development)
+- MongoDB 3.0 (running on localhost port 27017 for live development server)
 - Python 2.7 and Sphinx (only when building the documentation)
 
 ## Quick Start
