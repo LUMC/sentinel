@@ -2,14 +2,27 @@ Changelog
 =========
 
 
-Release 0.2.0
+Releases 0.2
 -------------
 
 `release date: TBD`
 
 
-Release 0.1.0
--------------
+Releases 0.1
+------------
+
+Version 0.1.1
+^^^^^^^^^^^^^
+
+`release date: July 10 2015`
+
+Bug fix release:
+
+    * Fix bug caused by the Gentrap summary format having a different
+      executable entries for JAR and non-JAR files
+
+Version 0.1.0
+^^^^^^^^^^^^^
 
 `release date: July 6 2015`
 
