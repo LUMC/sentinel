@@ -70,7 +70,12 @@
           "executables": {
             "description": "Executables used in the Gentrap run",
             "type": "object",
-            "additionalProperties": { "$ref": "#/definitions/executable" }
+            "additionalProperties": {
+              "anyOf": [
+                { "$ref": "#/definitions/executable" },
+                { "$ref": "#/definitions/jar" }
+              ]
+            }
           },
 
           "settings": {
@@ -204,7 +209,12 @@
             "executables": {
               "description": "Executables used in BamMetrics",
               "type": "object",
-              "additionalProperties": { "$ref": "#/definitions/executable" }
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
             },
 
             "stats": {
@@ -268,7 +278,12 @@
             "executables": {
               "description": "Executables used in Flexiprep",
               "type": "object",
-              "additionalProperties": { "$ref": "#/definitions/executable" }
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
             },
 
             "settings": {
@@ -374,7 +389,12 @@
             "executables": {
               "description": "Executables used in Mapping",
               "type": "object",
-              "additionalProperties": { "$ref": "#/definitions/executable" }
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
             },
 
             "settings": {
@@ -441,7 +461,12 @@
             "executables": {
               "description": "Executables used in BamMetrics",
               "type": "object",
-              "additionalProperties": { "$ref": "#/definitions/executable" }
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
             },
 
             "stats": {
@@ -553,6 +578,11 @@
           "type": ["string", "null"]
         },
 
+        "path": {
+          "description": "Path to executable",
+          "type": "string"
+        },
+
         "jar_md5": {
           "description": "MD5 checksum of the JAR (only for JAR-packaged tools)",
           "type": ["string", "null"]
@@ -560,6 +590,51 @@
 
         "java_md5": {
           "description": "MD5 checksum of the java executable (only for JAR-packaged tools)",
+          "type": ["string", "null"]
+        },
+
+        "java_version": {
+          "description": "Version of the java executable used to execute the JAR",
+          "type": "string"
+        },
+
+        "java_md5": {
+          "description": "MD5 checksum of the java executable",
+          "type": ["string", "null"]
+        },
+
+        "jar_path": {
+          "description": "Path to the JAR file (null if not available)",
+          "type": ["string", "null"]
+        }
+      }
+    },
+
+    "jar": {
+      "description": "Entry for storing tools packaged as JAR files",
+      "type": "object",
+      "required": [ "version", "java_md5", "java_version", "jar_path" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "version":  {
+          "description": "Version of the JAR package, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "java_version": {
+          "description": "Version of the java executable used to execute the JAR",
+          "type": "string"
+        },
+
+        "java_md5": {
+          "description": "MD5 checksum of the java executable",
+          "type": ["string", "null"]
+        },
+
+        "jar_path": {
+          "description": "Path to the JAR file (null if not available)",
           "type": ["string", "null"]
         }
       }
