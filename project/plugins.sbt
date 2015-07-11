@@ -1,5 +1,3 @@
-addSbtPlugin("com.atlassian.labs" % "sbt-git-stamp" % "0.1.2")
-
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")
@@ -12,4 +10,8 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.0")
 
 addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.4.0")
 
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
+
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.1.0")
+
+addSbtPlugin("uk.gov.hmrc" % "sbt-git-stamp" % "5.1.0")

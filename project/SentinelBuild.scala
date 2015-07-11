@@ -1,12 +1,12 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
-import com.atlassian.labs.gitstamp.GitStampPlugin._
 import com.earldouglas.xwp.XwpPlugin._
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
 import sbtassembly.{ AssemblyKeys, MergeStrategy, PathList }, AssemblyKeys._
+import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
 object SentinelBuild extends Build {
 
