@@ -15,6 +15,6 @@ addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.4.0")
 
 addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.1.0")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.4")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-git-stamp" % "5.1.0")
