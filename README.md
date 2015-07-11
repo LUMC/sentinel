@@ -1,6 +1,6 @@
 # Sentinel
 
-[![Build Status](https://travis-ci.org/LUMC/sentinel.svg?branch=master)](https://travis-ci.org/LUMC/sentinel)
+[![Build Status](https://travis-ci.org/LUMC/sentinel.svg?branch=master)](https://travis-ci.org/LUMC/sentinel)  [![Coverage Status](https://coveralls.io/repos/LUMC/sentinel/badge.svg?branch=master&service=github)](https://coveralls.io/github/LUMC/sentinel?branch=master)
 
 Sentinel is a JSON-based database for next-generation sequencing statistics. Queries and submissions are all done via a
 RESTful HTTP API which is specified based on [Swagger](http://swagger.io).
