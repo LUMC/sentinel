@@ -1,3 +1,6 @@
+resolvers += Resolver.url("hmrc-sbt-plugin-releases",
+                          url("https://dl.bintray.com/hmrc/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")
