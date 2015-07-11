@@ -68,7 +68,7 @@ Depending on the pipeline, you may also see additional attributes such as:
 Large Run Summaries
 ^^^^^^^^^^^^^^^^^^^
 
-Some pipeline run may contain hundreds of samples, which in turn increases the run summary file size as well. Sentinel
+Some pipeline runs may contain hundreds of samples, which in turn increases the run summary file size as well. Sentinel
 has a default upload limit of 16MB. While this may seem small, there are several things you can do to minimize your
 uploaded summary:
 

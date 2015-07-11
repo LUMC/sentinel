@@ -39,7 +39,7 @@ through the source code for ``FIXME`` notes. Having found an issue you would lik
 
 1. Create a new local branch, based on the last version of `master`.
 2. Implement the fix.
-3. Make sure all test passes. If the bug has not been covered by any of our tests, we request that new tests be added
+3. Make sure all tests pass. If the bug has not been covered by any of our tests, we request that new tests be added
    to protect against regressions in the future.
 4. Commit your changes.
 5. Submit a pull request.

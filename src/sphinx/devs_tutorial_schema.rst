@@ -128,5 +128,5 @@ For our `Maple` pipeline, we'll use the schema already defined below. Save this 
 
 If the above code looks daunting, don't worry. You can copy-paste the code as-is and try to understand the JSON schema
 specifications later on. If you want to play around with the schema itself, there is an online validator available
-`here <http://jsonschemalint.com/draft4/>`_. You can copy-paste both JSON documents above there and try tinkering with
-them.
+`here <http://jsonschemalint.com/draft4/>`_. You can copy-paste both the JSON summary and JSON schema examples above
+there and try tinkering with them.

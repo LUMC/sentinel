@@ -16,7 +16,7 @@ When you're set, let's start with the ``RunsController`` first.
 RunsController
 --------------
 
-The updates that we need to do on the ``RunsController`` is quite minimum. First, we need to instantiate a copy of our
+The updates that we need to do on the ``RunsController`` are quite minimum. First, we need to instantiate a copy of our
 ``MapleRunsProcessor`` in it, and then make sure the ``POST /runs`` endpoint recognizes ``Maple``.
 
 To instantiate ``MapleRunsProcessor``, you must first import the processor in the top of the file:
@@ -155,14 +155,14 @@ anymore. This makes sense, since aggregated data points do not have any name lab
     }
 
 Having a shorter API description now means that we only need to implement fewer parameter parsing, as you can see in the
-route matcher above. There, we only capture the ``runIds`` filter parameter. The rest of the code deals with actually
-querying and aggregating the data.
+route matcher above. There, we only capture the ``runIds`` filter parameter. The rest of the code deals with the actual
+querying and aggregating of the data.
 
 
 Epilogue
 --------
 
 The ``MapleStatsController`` implementation marks the end of our tutorial. You have just added a new pipeline support to
-Sentinel! Feel free to play around with uploading and queryingt the endpoints you just created. When you're more
+Sentinel! Feel free to play around with uploading and querying the endpoints you just created. When you're more
 familiar with the code base, you can experiment with adding support for more complex pipelines. If that's not enough,
 head over to the :doc:`contribute` page and see how you can contribute to Sentinel development.

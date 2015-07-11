@@ -17,7 +17,7 @@ for the `Maple` pipeline support.
 Internal Models
 ---------------
 
-There are a few models that you will need to define to model the internal support:
+To start off, we first consider the types of object we need to define:
 
 * For the run itself, we'll define a ``MapleRunRecord`` that subclasses ``nl.lumc.sasc.sentinel.models.BaseRunRecord``.
 * For the samples, we'll define ``MapleSampleRecord`` that subclasses ``nl.lumc.sasc.sentinel.models.BaseSampleRecord``.
@@ -262,7 +262,7 @@ We can already see some new classes and objects being used there:
 
 Now we're ready to take a stab at defining the ``extractUnits`` pipeline. Generally, there is at least one function to
 extract the samples and libraries defined in a runs processor. This is completely up you (you can even define it inside
-the ``processRun`` if you wish). Here, we define it as a separate function so the structure is clearer.
+the ``processRun`` function if you wish). Here, we define it as a separate function so the structure is clearer.
 
 Here's our definition of ``extractUnits``:
 
@@ -310,7 +310,8 @@ filled with the library records.
 
 Inside, you'll notice that we also have defined three helper functions: ``makeStats`` for creating the ``MapleStats``
 object, ``makeLib`` for the library record, and ``makeSample`` for the sample record. All three functions are used
-in the last part, where we work directly on the supplied run JSON object. There, you'll see that we are
+in the last part, where we work directly on the supplied run JSON object. There, you'll see that this allows us to
+deconstruct the nested sample-library structure into two ``Seq``s: a ``Seq`` of samples and a ``Seq`` of libraries.
 
 Again, although in theory you may not need the helper functions, we prefer to have them defined separately for
 readability.
@@ -360,8 +361,8 @@ ones and the general structure of the for-comprehension:
        possibility of failure in the type itself. Notice also that the code looks much cleaner, without any nested
        ``try-catch`` blocks.
 
-    2. Some of the function calls' return values are simply an underscore (``_``). This means we are not using whatever
-       the functioon is returning. Instead we are only interested in its side-effect. Indeed, all the functions whose
+    2. Some of the function calls' return values are simply an underscore. This means we are not using whatever
+       the function is returning. Instead we are only interested in its side-effect. Indeed, all the functions whose
        result we discard are database storage functions.
 
 And that's it! You now have fully-functioning runs processor.
@@ -370,7 +371,7 @@ The Stats Processor
 -------------------
 
 The final step is defining the stats processor. This step will be relatively simpler than the inputs processor, since
-Sentinel have a better idea of what to expect from the database records:
+Sentinel now has a better idea of what to expect from the database records:
 
 .. code-block:: scala
    :linenos:

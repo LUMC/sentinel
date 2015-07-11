@@ -17,8 +17,8 @@ anecdotal evidence.
 
 To address this issue, we developed Sentinel. Sentinel is a database designed to store various metrics of various
 sequencing analysis pipeline runs. It provides a systematic way of storing and querying these metrics, with various
-filter and selection capabilities. We believe that only after gathering enough data points, can one makes an informed
-decision about his / her sequencing experiment.
+filter and selection capabilities. We believe that gathering sufficient data points is the first step to make
+informed decisions about a sequencing experiment.
 
 
 At a Glance
@@ -35,6 +35,6 @@ important is that Sentinel knows how to parse and store the particular JSON file
 the parsing code inside Sentinel but we are working to make the setup more modular.
 
 All uploaded JSON files are only accessible to the uploader and site administrators. The data points contained in the
-JSON file, however, are available to anybody with access to the HTTP endpoints. These data points are anonymized by
+JSON file however, are available to anybody with access to the HTTP endpoints. These data points are anonymized by
 default. Only after (optional) authentication, can a user see the names of the data points.
 

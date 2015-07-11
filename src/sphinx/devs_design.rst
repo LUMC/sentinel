@@ -19,7 +19,7 @@ his / her own data analysis pipeline, he/she must clone the entire source code a
 functions and also the pipeline's HTTP endpoints there. More ideal is to have a single core module (e.g.
 a ``sentinel-core`` package) and other modules which implements specific pipeline support separately. This is not yet
 implemented since in order to do so, we need to be able to combine not only parsing logic, but also the HTTP endpoints
-that exposes the pipeline's metrics. While this is seems possible, we have not found a way to do so cleanly.
+that exposes the pipeline's metrics. While this seems possible, we have not found a way to do so cleanly yet.
 
 Framework
 ---------

@@ -2,13 +2,13 @@ Terminologies
 =============
 
 In the context of next-generation sequencing, the same words are often used to refer to multiple things. Here we list
-terms that we use repeatedly across the Sentinel documentation and what we actually mean when we use them.
+terms that are used repeatedly in the Sentinel documentation.
 
 Library
 -------
 
 A library denotes a single execution / run of an NGS machine. It may consist of a single sequence file (in the case of
-single-end sequencing) or two sequence files (in the case of paired-end sequencing). Libraries are often used when
+single-end sequencing) or two sequence files (paired-end sequencing). Libraries are often used when
 a single sample needs to be sequenced more than once (e.g. because its sequencing depth is less than desired) or when
 one sample is sequenced in different lanes.
 

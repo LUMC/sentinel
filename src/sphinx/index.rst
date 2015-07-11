@@ -14,7 +14,7 @@ queried using one of the predefined HTTP endpoints.
 At the moment, Sentinel is meant for internal `LUMC <http://www.lumc.nl>`_ use only. URLs mentioned in this
 documentation may not work outside LUMC.
 
-Please use the navigation bar on the right to explore this site.
+Please use the navigation bar on the left to explore this site.
 
 .. toctree::
    :hidden:
