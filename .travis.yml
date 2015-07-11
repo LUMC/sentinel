@@ -7,7 +7,7 @@ jdk:
     - oraclejdk8
 
 script:
-    - ./sbt ++$TRAVIS_SCALA_VERSION clean coverage test it:test
+    - cd $TRAVIS_BUILD_DIR && ./sbt ++$TRAVIS_SCALA_VERSION clean coverage test it:test
 
 after_success:
-    - ./sbt coveralls
+    - cd $TRAVIS_BUILD_DIR && ./sbt coveralls
