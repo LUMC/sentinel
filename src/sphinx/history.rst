@@ -1,5 +1,5 @@
-Changelog
-=========
+History
+=======
 
 
 Releases 0.2
@@ -13,6 +13,18 @@ Version 0.2.0
 
 Releases 0.1
 ------------
+
+Version 0.1.2
+^^^^^^^^^^^^^
+
+`release date: July 14 2015`
+
+Bug fix (upstream) release:
+
+    * Improve summary file parsing for Picard CollectAlignmentSummaryMetrics
+      numbers. In some cases, the number of total reads and aligned reads
+      may be 0. In that case, we use the BiopetFlagstat value instead.
+
 
 Version 0.1.1
 ^^^^^^^^^^^^^

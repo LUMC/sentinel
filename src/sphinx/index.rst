@@ -42,4 +42,4 @@ Please use the navigation bar on the left to explore this site.
    :maxdepth: 2
 
    contribute
-   changes
+   history
