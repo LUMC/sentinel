@@ -98,9 +98,20 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     val rnaMetrics = effJson \ "bammetrics" \ "stats" \ "rna" \ "metrics"
     val rnaHisto = effJson \ "bammetrics" \ "stats" \ "rna" \ "histogram"
 
+    // Use BiopetFlagstat values for fallback is CollectAlignmentSummaryMetrics's values for these are 0.
+    // The values are 0 when CAS is not run without setting the reference flag.
+    val nReadsTotal = (alnMetrics \ "PF_READS").extract[Long] match {
+      case 0         => (bpFlagstat \ "All").extract[Long]
+      case otherwise => otherwise
+    }
+    val nReadsAligned = (alnMetrics \ "PF_READS_ALIGNED").extract[Long] match {
+      case 0         => (bpFlagstat \ "Mapped").extract[Long]
+      case otherwise => otherwise
+    }
+
     GentrapAlignmentStats(
-      nReadsTotal = (alnMetrics \ "PF_READS").extract[Long],
-      nReadsAligned = (alnMetrics \ "PF_READS_ALIGNED").extract[Long],
+      nReadsTotal = nReadsTotal,
+      nReadsAligned = nReadsAligned,
       nReadsSingleton = isPaired.option { (bpFlagstat \ "MateUnmapped").extract[Long] },
       nReadsProperPair = isPaired.option { (bpFlagstat \ "ProperPair").extract[Long] },
       rateReadsMismatch = (alnMetrics \ "PF_MISMATCH_RATE").extract[Double],
@@ -109,7 +120,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       maxInsertSize = (insMetrics \ "MAX_INSERT_SIZE").extractOpt[Long],
       medianInsertSize = (insMetrics \ "MEDIAN_INSERT_SIZE").extractOpt[Long],
       stdevInsertSize = (insMetrics \ "STANDARD_DEVIATION").extractOpt[Double],
-      nBasesAligned = (alnMetrics \ "PF_ALIGNED_BASES").extract[Long],
+      nBasesAligned = (rnaMetrics \ "PF_ALIGNED_BASES").extract[Long],
       nBasesUtr = (rnaMetrics \ "UTR_BASES").extract[Long],
       nBasesCoding = (rnaMetrics \ "CODING_BASES").extract[Long],
       nBasesIntron = (rnaMetrics \ "INTRONIC_BASES").extract[Long],
