@@ -24,7 +24,7 @@ import com.novus.salat.global._
 import com.mongodb.casbah.Imports._
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.{ SeqStatsAggr, User }
 
 /**
@@ -35,7 +35,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   // TODO: refactor functions in here ~ we can do with less duplication
 
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
-  protected implicit val pairAttrib = "isPaired"
+  implicit val pairAttrib = StatsProcessor.pairAttrib
 
   /** MongoDB samples collection name of the pipeline. */
   protected lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
@@ -181,13 +181,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    *
    * @param metricName Name of the main metrics container object in the unit.
    * @param accLevel Accumulation level of the retrieved statistics.
-   * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
    * @param user If defined, returned data points belonging to the user will show its labels.
-   * @param runs Run IDs of the returned statistics. If not specified, unit statistics are not filtered by run ID.
-   * @param references Reference IDs of the returned statistics. If not specified, unit statistics are not filtered
-   *                   by reference IDs.
-   * @param annotations Annotations IDs of the returned statistics. If not specified, unit statistics are not
-   *                    filtered by annotation IDs.
    * @param timeSorted Whether to time-sort the returned items or not.
    * @tparam T Case class representing the metrics object to return.
    * @return Sequence of unit statistics objects.
@@ -195,18 +189,15 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   // format: OFF
   def getStatsByAcc[T <: AnyRef](metricName: String)
                                 (accLevel: AccLevel.Value,
-                                 libType: Option[LibType.Value] = None,
+                                 matchers: MongoDBObject,
                                  user: Option[User] = None,
-                                 runs: Seq[ObjectId] = Seq(),
-                                 references: Seq[ObjectId] = Seq(),
-                                 annotations: Seq[ObjectId] = Seq(),
                                  timeSorted: Boolean = false)
                                 (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
-    // Match operation to filter for run, reference, and/or annotation IDs
-    val opMatchFilters = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired))
-
+    // Initial selection
+    val opMatch = MongoDBObject("$match" -> matchers).asDBObject
+    println(opMatch)
     // Projection for data point label
     val labelProjection =
       MongoDBObject(
@@ -235,8 +226,8 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
             "labels" -> labelProjection))
 
       timeSorted match {
-        case true  => Seq(opMatchFilters, opSortUnit, opProjectAlnStats)
-        case false => Seq(opMatchFilters, opProjectAlnStats)
+        case true  => Seq(opMatch, opSortUnit, opProjectAlnStats)
+        case false => Seq(opMatch, opProjectAlnStats)
       }
     }
 
@@ -501,4 +492,10 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
       case r1 => SeqStatsAggr(read1 = r1, read2 = aggrStats.get("read2"), readAll = aggrStats.get("readAll"))
     }
   }
+}
+
+object StatsProcessor {
+
+  /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
+  def pairAttrib = "isPaired"
 }

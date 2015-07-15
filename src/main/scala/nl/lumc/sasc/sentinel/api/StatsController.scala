@@ -19,7 +19,6 @@ package nl.lumc.sasc.sentinel.api
 import scala.util.Try
 
 import org.scalatra._
-import org.scalatra.servlet.FileItem
 import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel._
@@ -192,9 +191,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
     logger.info(requestLog)
-    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
-    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
-    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val runSelector = ManyContainOne("runId", getRunObjectIds(params.getAs[String]("runIds")))
+    val refSelector = ManyContainOne("referenceId", getRefObjectIds(params.getAs[String]("refIds")))
+    val annotSelector = ManyIntersectMany("annotationIds", getAnnotObjectIds(params.getAs[String]("annotIds")))
+
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
@@ -208,7 +208,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           .getOrElse(halt(400, CommonMessages.InvalidAccLevel))
       }.getOrElse(AccLevel.Sample)
 
-    val libType = {
+    val libSelector = {
       val lt = params.getAs[String]("libType")
         .collect {
           case p => p
@@ -216,12 +216,14 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             .getOrElse(halt(400, CommonMessages.InvalidLibType))
         }
       accLevel match {
-        case AccLevel.Sample => None
-        case AccLevel.Lib    => lt
+        case AccLevel.Sample => EmptySelector
+        case AccLevel.Lib    => Selector.fromLibType(lt)
       }
     }
 
-    Ok(gentrap.getAlignmentStats(accLevel, libType, user, runIds, refIds, annotIds, sorted))
+    val matchers = Selector.combineAnd(runSelector, refSelector, annotSelector, libSelector)
+
+    Ok(gentrap.getAlignmentStats(accLevel, matchers, user, sorted))
   }
 
   // format: OFF
