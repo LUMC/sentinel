@@ -191,6 +191,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
     logger.info(requestLog)
+    val accLevel = params.getAs[AccLevel.Value]("accLevel").getOrElse(AccLevel.Sample)
     val runSelector = ManyContainOne("runId", getRunObjectIds(params.getAs[String]("runIds")))
     val refSelector = ManyContainOne("referenceId", getRefObjectIds(params.getAs[String]("refIds")))
     val annotSelector = ManyIntersectMany("annotationIds", getAnnotObjectIds(params.getAs[String]("annotIds")))
@@ -200,13 +201,6 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
       halt(401, CommonMessages.UnauthenticatedOptional)
-
-    val accLevel = params.getAs[String]("accLevel")
-      .collect {
-        case p => p
-          .asEnum(AllowedAccLevelParams)
-          .getOrElse(halt(400, CommonMessages.InvalidAccLevel))
-      }.getOrElse(AccLevel.Sample)
 
     val libSelector = {
       val lt = params.getAs[String]("libType")
@@ -293,16 +287,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   get("/gentrap/alignments/aggregate", operation(statsGentrapAlignmentsAggregateGetOperation)) {
 
     logger.info(requestLog)
+    val accLevel = params.getAs[AccLevel.Value]("accLevel").getOrElse(AccLevel.Sample)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
-
-    val accLevel = params.getAs[String]("accLevel")
-      .collect {
-        case p => p
-          .asEnum(AllowedAccLevelParams)
-          .getOrElse(halt(400, CommonMessages.InvalidAccLevel))
-      }.getOrElse(AccLevel.Sample)
 
     val libType = {
       val lt = params.getAs[String]("libType")

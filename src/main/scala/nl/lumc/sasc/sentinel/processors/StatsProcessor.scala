@@ -197,7 +197,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     // Initial selection
     val opMatch = MongoDBObject("$match" -> matchers).asDBObject
-    println(opMatch)
+
     // Projection for data point label
     val labelProjection =
       MongoDBObject(

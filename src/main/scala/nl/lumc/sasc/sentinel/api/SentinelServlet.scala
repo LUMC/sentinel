@@ -23,9 +23,11 @@ import org.json4s._
 import org.scalatra.{ CorsSupport, NotFound, ScalatraServlet }
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
+import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
-import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord }
+import nl.lumc.sasc.sentinel.{ AccLevel, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
 /** Base servlet for all Sentinel controllers. */
@@ -81,6 +83,15 @@ abstract class SentinelServlet extends ScalatraServlet
 
   /** JSON format for Sentinel responses */
   protected implicit val jsonFormats: Formats = SentinelJsonFormats
+
+  /** Implicit conversion from URL parameter to library accumulation level enum. */
+  protected implicit val stringToAccLevel: TypeConverter[String, AccLevel.Value] =
+    new TypeConverter[String, AccLevel.Value] {
+      def apply(s: String): Option[AccLevel.Value] =
+        // Not doing .get directly as we want to throw the appropriate error when the parameter is defined but invalid.
+        if (AllowedAccLevelParams.contains(s)) AllowedAccLevelParams.get(s)
+        else halt(400, CommonMessages.InvalidAccLevel)
+    }
 
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
   /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
