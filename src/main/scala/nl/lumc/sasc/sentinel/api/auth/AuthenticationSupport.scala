@@ -43,8 +43,10 @@ trait AuthenticationSupport extends ScentrySupport[User]
     with BasicAuthSupport[User]
     with SimpleKeyAuthSupport[User] { this: SentinelServlet { def users: UsersAdapter } =>
 
+  type ScentryConfiguration = ScentryConfig
+
   /** Scentry configuration instance used by the trait. */
-  protected val scentryConfig = new ScentryConfig {}.asInstanceOf[ScentryConfiguration]
+  protected val scentryConfig = new ScentryConfig {}
 
   /** Registers our custom authentication strategies. */
   override protected def registerAuthStrategies() = {
