@@ -46,12 +46,20 @@ trait AnnotationsAdapter extends MongodbConnector {
     // TODO: refactor to use Futures instead
     annots
       .map {
-        case annot => coll.findOne(MongoDBObject("annotMd5" -> annot.annotMd5)) match {
-          case Some(dbo) => annot.copy(annotId = dbo._id.get)
-          case None =>
-            coll.insert(grater[AnnotationRecord].asDBObject(annot))
-            annot
-        }
+        case annot =>
+          // First check if there is already an annotation record stored with the same MD5 checksum.
+          val existingOid = for {
+            dbo <- coll.findOne(MongoDBObject("annotMd5" -> annot.annotMd5))
+            oid <- dbo._id
+          } yield oid
+          // Then, depending on the check result, we either copy the annotation object with the existing ObjectId,
+          // or store a new record.
+          existingOid match {
+            case Some(eid) => annot.copy(annotId = eid)
+            case None =>
+              coll.insert(grater[AnnotationRecord].asDBObject(annot))
+              annot
+          }
       }
 
   /**
