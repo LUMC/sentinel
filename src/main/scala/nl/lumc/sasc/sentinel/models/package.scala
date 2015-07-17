@@ -38,7 +38,7 @@ package object models {
       "Valid values are " + AllowedLibTypeParams.keySet.mkString(", ") + ".")
 
     val InvalidAccLevel = ApiMessage("Accumulation level parameter is invalid.",
-      "Valid values are " + AllowedAccLevelParams.keySet.mkString(", ") + ".")
+      "Valid values are '" + AccLevel.values.toList.map(_.toString).sorted.mkString("', '") + "'.")
 
     val InvalidSeqQcPhase = ApiMessage("Sequencing QC phase parameter is invalid.",
       "Valid values are " + AllowedSeqQcPhaseParams.keySet.mkString(", ") + ".")

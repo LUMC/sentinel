@@ -208,7 +208,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are .+".r)
+          priorResponse.body must /("data" -> "Valid values are 'lib', 'sample'.")
         }
       }
     }
@@ -627,7 +627,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are .+".r)
+          priorResponse.body must /("data" -> "Valid values are 'lib', 'sample'.")
         }
       }
     }
