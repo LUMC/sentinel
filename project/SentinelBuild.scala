@@ -2,6 +2,7 @@ import sbt._
 import Keys._
 import org.scalatra.sbt._
 import com.earldouglas.xwp.XwpPlugin._
+import com.sksamuel.scapegoat.sbt.ScapegoatSbtPlugin.autoImport._
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
@@ -109,6 +110,9 @@ object SentinelBuild extends Build {
       },
       scalaVersion := ScalaVersion,
       scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-target:jvm-1.8"),
+      scapegoatConsoleOutput := false,
+      // Since we use a lot of MongoDB operators, which look like interpolated strings.
+      scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),
       testOptions in Test += Tests.Argument("console", "junitxml"),
       testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
       resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
