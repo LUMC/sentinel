@@ -69,11 +69,6 @@ package object sentinel {
     val Stdev = Value("stdev")
   }
 
-  /** Allowed aggregation parameters in HTTP request */
-  val AllowedAggrStatParams = AggrStat.values
-    .map(enum => enum.toString.toLowerCase -> enum)
-    .toMap
-
   /** Supported library types */
   object LibType extends Enumeration {
     type LibType = Value
