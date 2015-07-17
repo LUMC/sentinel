@@ -35,7 +35,7 @@ package object models {
       "Valid values are " + AllowedPipelineParams.keySet.mkString(", ") + ".")
 
     val InvalidLibType = ApiMessage("Library type parameter is invalid.",
-      "Valid values are " + AllowedLibTypeParams.keySet.mkString(", ") + ".")
+      "Valid values are '" + LibType.values.toList.map(_.toString).sorted.mkString("', '") + "'.")
 
     val InvalidAccLevel = ApiMessage("Accumulation level parameter is invalid.",
       "Valid values are '" + AccLevel.values.toList.map(_.toString).sorted.mkString("', '") + "'.")
