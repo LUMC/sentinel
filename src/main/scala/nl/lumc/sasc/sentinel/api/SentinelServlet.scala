@@ -27,7 +27,7 @@ import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
-import nl.lumc.sasc.sentinel.{ AccLevel, SeqQcPhase }
+import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
@@ -97,8 +97,18 @@ abstract class SentinelServlet extends ScalatraServlet
         }
     }
 
+  /** Implicit conversion from URL parameter to library type enum. */
+  protected implicit val stringToLibType: TypeConverter[String, LibType.Value] =
+    new TypeConverter[String, LibType.Value] {
+      def apply(str: String): Option[LibType.Value] =
+        Try(LibType.withName(str)) match {
+          case Success(s) => Option(s)
+          case Failure(_) => halt(400, CommonMessages.InvalidLibType)
+        }
+    }
+
   /** Implicit conversion from URL parameter to sequencing QC phase enum. */
-  protected implicit val stringtoSeqQcPhase: TypeConverter[String, SeqQcPhase.Value] =
+  protected implicit val stringToSeqQcPhase: TypeConverter[String, SeqQcPhase.Value] =
     new TypeConverter[String, SeqQcPhase.Value] {
       def apply(str: String): Option[SeqQcPhase.Value] =
         Try(SeqQcPhase.withName(str)) match {

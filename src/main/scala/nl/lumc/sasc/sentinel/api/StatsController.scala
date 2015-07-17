@@ -169,7 +169,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | parameter is considered to be unset if `accLevel` is set to `sample` regardless of user input since a
             | single sample may contain mixed library types.
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .allowableValues(LibType.values.toList)
         .optional,
       queryParam[Boolean]("sorted")
         .description(
@@ -203,15 +203,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       halt(401, CommonMessages.UnauthenticatedOptional)
 
     val libSelector = {
-      val lt = params.getAs[String]("libType")
-        .collect {
-          case p => p
-            .asEnum(AllowedLibTypeParams)
-            .getOrElse(halt(400, CommonMessages.InvalidLibType))
-        }
+      val libType = params.getAs[LibType.Value]("libType")
       accLevel match {
         case AccLevel.Sample => EmptySelector
-        case AccLevel.Lib    => Selector.fromLibType(lt)
+        case AccLevel.Lib    => Selector.fromLibType(libType)
       }
     }
 
@@ -276,7 +271,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
             | parameter is considered to be unset if `accLevel` is set to `sample` regardless of user input since a
             | single sample may contain mixed library types.
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .allowableValues(LibType.values.toList)
         .optional)
       responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidAccLevel.message),
@@ -293,15 +288,10 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
 
     val libType = {
-      val lt = params.getAs[String]("libType")
-        .collect {
-          case p => p
-            .asEnum(AllowedLibTypeParams)
-            .getOrElse(halt(400, CommonMessages.InvalidLibType))
-        }
+      val libType = params.getAs[LibType.Value]("libType")
       accLevel match {
         case AccLevel.Sample => None
-        case AccLevel.Lib    => lt
+        case AccLevel.Lib    => libType
       }
     }
 
@@ -370,7 +360,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """The types of sequence libraries to return. Possible values are `single` for single end
             | libraries or `paired` for paired end libraries. If not set, both library types are included.
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .allowableValues(LibType.values.toList)
         .optional,
       queryParam[String]("qcPhase")
         .description(
@@ -403,17 +393,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
+    val libType = params.getAs[LibType.Value]("libType")
     val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
       halt(401, CommonMessages.UnauthenticatedOptional)
-
-    val libType = params.getAs[String]("libType")
-      .collect {
-        case libn => libn.asEnum(AllowedLibTypeParams)
-          .getOrElse(halt(400, CommonMessages.InvalidLibType))
-      }
 
     val queryFunc = qcPhase match {
       case SeqQcPhase.Raw       => gentrap.getSeqStatsRaw
@@ -467,7 +452,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """The types of sequence libraries to return. Possible values are `single` for single end
             | libraries or `paired` for paired end libraries. If not set, both library types are included.
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedLibTypeParams.keySet.toList)
+        .allowableValues(LibType.values.toList)
         .optional,
       queryParam[String]("qcPhase")
         .description(
@@ -489,13 +474,8 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val libType = params.getAs[LibType.Value]("libType")
     val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
-
-    val libType = params.getAs[String]("libType")
-      .collect {
-        case libn => libn.asEnum(AllowedLibTypeParams)
-          .getOrElse(halt(400, CommonMessages.InvalidLibType))
-      }
 
     val queryFunc = qcPhase match {
       case SeqQcPhase.Raw       => gentrap.getSeqStatsAggrRaw
