@@ -1008,7 +1008,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are .+".r)
+          priorResponse.body must /("data" -> "Valid values are 'processed', 'raw'.")
         }
       }
     }
@@ -1319,7 +1319,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are .+".r)
+          priorResponse.body must /("data" -> "Valid values are 'processed', 'raw'.")
         }
       }
     }
