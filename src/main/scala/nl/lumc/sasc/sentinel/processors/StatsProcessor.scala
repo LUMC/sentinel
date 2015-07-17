@@ -484,8 +484,8 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
           if (res.nonEmpty) (rn, Option(grater[T].asObject(res)))
           else (rn, None)
       }.seq
-      .filter { case (rn, res) => res.isDefined }
-      .map { case (rn, res) => (rn, res.get) }
+      .map { case (rn, res) => res.map(r => (rn, r)) }
+      .flatten
       .toMap
 
     aggrStats.get("read1").collect {
