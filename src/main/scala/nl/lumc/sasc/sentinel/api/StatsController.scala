@@ -377,7 +377,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """Selects for the sequencing QC phase to return. Possible values are `raw` for raw data before any QC
             | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
+        .allowableValues(SeqQcPhase.values.toList)
         .optional,
       queryParam[Boolean]("sorted")
         .description(
@@ -403,16 +403,11 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
+    val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
       halt(401, CommonMessages.UnauthenticatedOptional)
-
-    val qcPhase = params.getAs[String]("qcPhase")
-      .collect {
-        case p => p.asEnum(AllowedSeqQcPhaseParams)
-          .getOrElse(halt(400, CommonMessages.InvalidSeqQcPhase))
-      }.getOrElse(SeqQcPhase.Raw)
 
     val libType = params.getAs[String]("libType")
       .collect {
@@ -479,7 +474,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """Selects for the sequencing QC phase to return. Possible values are `raw` for raw data before any QC
             | is done and `processed` for sequencing statistics just before alignment (default: `raw`).
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedSeqQcPhaseParams.keySet.toList)
+        .allowableValues(SeqQcPhase.values.toList)
         .optional)
       responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidLibType.message),
@@ -494,12 +489,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val runIds = getRunObjectIds(params.getAs[String]("runIds"))
     val refIds = getRefObjectIds(params.getAs[String]("refIds"))
     val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
-
-    val qcPhase = params.getAs[String]("qcPhase")
-      .collect {
-        case p => p.asEnum(AllowedSeqQcPhaseParams)
-          .getOrElse(halt(400, CommonMessages.InvalidSeqQcPhase))
-      }.getOrElse(SeqQcPhase.Raw)
+    val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
 
     val libType = params.getAs[String]("libType")
       .collect {
