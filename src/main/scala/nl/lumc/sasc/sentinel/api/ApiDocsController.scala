@@ -26,11 +26,12 @@ import nl.lumc.sasc.sentinel.utils.getResourceStream
 class ApiDocsController extends ScalatraServlet {
 
   /** Helper method to get requested static resource path. */
-  private def getResourcePath = {
-    val splatPath = multiParams("splat").head
-    if (splatPath.isEmpty) request.getServletPath + "/index.html"
-    else request.getServletPath + s"/$splatPath"
-  }
+  private def getResourcePath =
+    multiParams("splat").headOption match {
+      case None                 => request.getServletPath + "/index.html"
+      case Some(s) if s.isEmpty => request.getServletPath + "/index.html"
+      case Some(splatPath)      => request.getServletPath + s"/$splatPath"
+    }
 
   /** Endpoint for live Swagger documentation. */
   get("/*") {
