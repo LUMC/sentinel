@@ -59,14 +59,21 @@ abstract class SentinelServlet extends ScalatraServlet
       val interceptedProp = model.properties.map {
         case (propName, prop) =>
           val interceptedProp = prop.`type` match {
+
             case vdt: DataType.ValueDataType if vdt.name == "ObjectId" =>
               prop.copy(`type` = DataType.String)
-            case cdt: DataType.ContainerDataType if cdt.typeArg.isDefined && cdt.typeArg.get.name == "ObjectId" =>
-              cdt.name match {
-                case "List"    => prop.copy(`type` = DataType.GenList(DataType.String))
-                case "Set"     => prop.copy(`type` = DataType.GenSet(DataType.String))
-                case otherwise => prop
-              }
+
+            case cdt: DataType.ContainerDataType => cdt.typeArg match {
+
+              case Some(dt) if dt.name == "ObjectId" && cdt.name == "List" =>
+                prop.copy(`type` = DataType.GenList(DataType.String))
+
+              case Some(dt) if dt.name == "ObjectId" && cdt.name == "Set" =>
+                prop.copy(`type` = DataType.GenSet(DataType.String))
+
+              case otherwise => prop
+            }
+
             case otherwise => prop
           }
           (propName, interceptedProp)
