@@ -76,11 +76,6 @@ package object sentinel {
     val Paired = Value("paired")
   }
 
-  /** Allowed library type parameters in HTTP requests */
-  val AllowedLibTypeParams = LibType.values
-    .map(enum => enum.toString.toLowerCase -> enum)
-    .toMap
-
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
     type AccLevel = Value
@@ -88,20 +83,10 @@ package object sentinel {
     val Sample = Value("sample")
   }
 
-  /** Allowed accumulation level parameters in HTTP requests */
-  val AllowedAccLevelParams = AccLevel.values
-    .map(enum => enum.toString.toLowerCase -> enum)
-    .toMap
-
   /** Supported QC step for sequences */
   object SeqQcPhase extends Enumeration {
     type SeqQcPhase = Value
     val Raw = Value("raw")
     val Processed = Value("processed")
   }
-
-  /** Allowed sequencing QC step parameters in HTTP requests */
-  val AllowedSeqQcPhaseParams = SeqQcPhase.values
-    .map(enum => enum.toString.toLowerCase -> enum)
-    .toMap
 }
