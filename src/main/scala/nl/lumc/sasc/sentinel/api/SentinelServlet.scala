@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import javax.servlet.http.HttpServletRequest
+import scala.util.{ Failure, Success, Try }
 
 import org.bson.types.ObjectId
 import org.json4s._
@@ -26,7 +27,7 @@ import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
-import nl.lumc.sasc.sentinel.{ AccLevel, AllowedAccLevelParams }
+import nl.lumc.sasc.sentinel.AccLevel
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
 
@@ -87,10 +88,13 @@ abstract class SentinelServlet extends ScalatraServlet
   /** Implicit conversion from URL parameter to library accumulation level enum. */
   protected implicit val stringToAccLevel: TypeConverter[String, AccLevel.Value] =
     new TypeConverter[String, AccLevel.Value] {
-      def apply(s: String): Option[AccLevel.Value] =
-        // Not doing .get directly as we want to throw the appropriate error when the parameter is defined but invalid.
-        if (AllowedAccLevelParams.contains(s)) AllowedAccLevelParams.get(s)
-        else halt(400, CommonMessages.InvalidAccLevel)
+      def apply(str: String): Option[AccLevel.Value] =
+        Try(AccLevel.withName(str)) match {
+          case Success(s) => Option(s)
+          // Halt when the supplied string parameter is not convertible to enum. This allows us to return a useful
+          // error message instead of just silently failing.
+          case Failure(_) => halt(400, CommonMessages.InvalidAccLevel)
+        }
     }
 
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.

@@ -160,7 +160,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
             | accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedAccLevelParams.keySet.toList)
+        .allowableValues(AccLevel.values.toList)
         .optional,
       queryParam[String]("libType")
         .description(
@@ -267,7 +267,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           """The level at which the alignment statistics are gathered. Possible values are `lib` for library-level
             | accumulation or `sample` for sample-level accumulation (default: `sample`).
           """.stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedAccLevelParams.keySet.toList)
+        .allowableValues(AccLevel.values.toList)
         .optional,
       queryParam[String]("libType")
         .description(
