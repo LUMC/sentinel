@@ -16,6 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.api.auth
 
+import javax.servlet.http.{ HttpServletResponse, HttpServletRequest }
+
+import org.scalatra.auth.ScentryAuthStore.ScentryAuthStore
+
 import scala.language.reflectiveCalls
 
 import org.scalatra.auth.{ ScentryConfig, ScentrySupport }
@@ -50,10 +54,14 @@ trait AuthenticationSupport extends ScentrySupport[User]
 
   /** Scentry configuration method that disables the internal AuthStore. */
   override protected def configureScentry() = {
-    scentry.store = new BlankAuthStore
+    scentry.store = new ScentryAuthStore {
+      def get(implicit request: HttpServletRequest, response: HttpServletResponse): String = ""
+      def set(value: String)(implicit request: HttpServletRequest, response: HttpServletResponse) = ()
+      def invalidate()(implicit request: HttpServletRequest, response: HttpServletResponse) = ()
+    }
   }
 
-  // NOTE: Scentry caches authentication and we've turned it off using our BlankAuthStore. But these two methods
+  // NOTE: Scentry caches authentication and we've turned it off using our ad-hoc ScentryAuthStore. But these two methods
   //       still needs to be implemented, so we are implementing something minimum
   protected def fromSession = { case id: String => User(id, "", "", "", verified = false, isAdmin = false, getUtcTimeNow) }
   protected def toSession = { case user: User => user.id }
