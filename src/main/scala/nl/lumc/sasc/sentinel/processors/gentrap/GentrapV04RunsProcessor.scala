@@ -153,7 +153,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       // take only while the numbers are consecutive
       .takeWhile { case (key, value) => value.isDefined }
       // get the stats value
-      .map { case (key, value) => PerBaseStat(key, value.get) }
+      .map { case (key, value) => value.map(v => PerBaseStat(key, v)) }.flatten
       // pair with index
       .zipWithIndex
       // and return only items where the base position match the index
