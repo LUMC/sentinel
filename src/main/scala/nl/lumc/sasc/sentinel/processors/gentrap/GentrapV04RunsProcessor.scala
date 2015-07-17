@@ -237,9 +237,10 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
             referenceId = refId,
             annotationIds = annotIds,
             // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
-            alnStats =
-              if (libJsons.size > 1) extractAlnStats(sampleJson)
-              else extractAlnStats(libJsons.values.head))
+            alnStats = libJsons.toList match {
+              case (libName, libJson) :: Nil => extractAlnStats(libJson)
+              case otherwise                 => extractAlnStats(sampleJson)
+            })
           val gLibs = libJsons
             .map {
               case (libName, libJson) =>
