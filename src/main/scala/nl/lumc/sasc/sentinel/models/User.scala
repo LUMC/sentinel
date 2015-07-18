@@ -112,7 +112,7 @@ object User {
     /** Validation messages for email validation. */
     def emailMessages(email: String): Seq[String] =
       if (!emailValid(email)) Seq("Email invalid.")
-      else Seq()
+      else Seq.empty
 
     /** Checks whether the ID length is valid. */
     def idLengthValid(id: String) = id.length >= MinUserIdLength
@@ -198,14 +198,14 @@ case class UserPatch(op: String, path: String, value: Any) {
   private val validPaths = Set("/password", "/email", "/verified")
 
   /** Messages to emit when the patch operation is invalid. */
-  private val opMessages =
-    if (op == "replace") Seq()
+  private val opMessages: Seq[String] =
+    if (op == "replace") Seq.empty
     else Seq(s"Invalid operation: '$op'.")
 
   /** Messages to emit when any part of the patch operation is invalid. */
   lazy val validationMessages: Seq[String] = {
     val msgs = (path, value) match {
-      case ("/verified", v: Boolean)        => Seq()
+      case ("/verified", v: Boolean)        => Seq.empty
       case ("/password", p: String)         => User.Validator.passwordMessages(p, p)
       case ("/email", e: String)            => User.Validator.emailMessages(e)
       case (x, y) if validPaths.contains(x) => Seq(s"Invalid value for path '$x': '$y'.")

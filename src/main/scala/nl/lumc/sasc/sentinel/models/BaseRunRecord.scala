@@ -73,7 +73,7 @@ case class RunRecord(
   creationTimeUtc: Date,
   runName: Option[String] = None,
   deletionTimeUtc: Option[Date] = None,
-  sampleIds: Seq[ObjectId] = Seq(),
-  libIds: Seq[ObjectId] = Seq(),
+  sampleIds: Seq[ObjectId] = Seq.empty,
+  libIds: Seq[ObjectId] = Seq.empty,
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None) extends BaseRunRecord

@@ -93,7 +93,7 @@ package object utils {
    * @return String items of the raw URL parameter, or the fallback string.
    */
   def splitParam(param: Option[String], delimiter: String = ",",
-                 fallback: Seq[String] = Seq()): Seq[String] = param match {
+                 fallback: Seq[String] = Seq.empty): Seq[String] = param match {
     case Some(str) => str.split(delimiter).toSeq
     case None      => fallback
   }

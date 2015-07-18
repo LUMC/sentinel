@@ -274,9 +274,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   def getLibStats[T <: AnyRef](metricName: String)
                               (libType: Option[LibType.Value],
                                user: Option[User],
-                               runs: Seq[ObjectId] = Seq(),
-                               references: Seq[ObjectId] = Seq(),
-                               annotations: Seq[ObjectId] = Seq(),
+                               runs: Seq[ObjectId] = Seq.empty,
+                               references: Seq[ObjectId] = Seq.empty,
+                               annotations: Seq[ObjectId] = Seq.empty,
                                timeSorted: Boolean = false)
                               (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
@@ -348,9 +348,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
                                      metricAttrNames: Seq[String])
                                     (accLevel: AccLevel.Value,
                                      libType: Option[LibType.Value],
-                                     runs: Seq[ObjectId] = Seq(),
-                                     references: Seq[ObjectId] = Seq(),
-                                     annotations: Seq[ObjectId] = Seq())
+                                     runs: Seq[ObjectId] = Seq.empty,
+                                     references: Seq[ObjectId] = Seq.empty,
+                                     annotations: Seq[ObjectId] = Seq.empty)
                                     (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
@@ -402,9 +402,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   def getLibAggrStats[T <: AnyRef](metricName: String,
                                    metricAttrNames: Seq[String])
                                   (libType: Option[LibType.Value],
-                                   runs: Seq[ObjectId] = Seq(),
-                                   references: Seq[ObjectId] = Seq(),
-                                   annotations: Seq[ObjectId] = Seq())
+                                   runs: Seq[ObjectId] = Seq.empty,
+                                   references: Seq[ObjectId] = Seq.empty,
+                                   annotations: Seq[ObjectId] = Seq.empty)
                                   (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
@@ -450,9 +450,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   def getSeqAggregateStats[T <: AnyRef](metricName: String,
                                         metricAttrNames: Seq[String])
                                        (libType: Option[LibType.Value],
-                                        runs: Seq[ObjectId] = Seq(),
-                                        references: Seq[ObjectId] = Seq(),
-                                        annotations: Seq[ObjectId] = Seq())
+                                        runs: Seq[ObjectId] = Seq.empty,
+                                        references: Seq[ObjectId] = Seq.empty,
+                                        annotations: Seq[ObjectId] = Seq.empty)
                                        (implicit m: Manifest[T]): Option[SeqStatsAggr[T]] = {
     // format: ON
 
