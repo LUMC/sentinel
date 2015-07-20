@@ -214,7 +214,7 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val alnStatsFunc = accLevel match {
       case AccLevel.Sample => gentrap.getSampleAlignmentStats
-      case AccLevel.Sample => gentrap.getLibAlignmentStats
+      case AccLevel.Lib    => gentrap.getLibAlignmentStats
     }
 
     Ok(alnStatsFunc(matchers, user, sorted))
