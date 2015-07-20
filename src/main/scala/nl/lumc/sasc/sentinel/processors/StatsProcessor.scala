@@ -26,6 +26,7 @@ import com.mongodb.casbah.Imports._
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.{ SeqStatsAggr, User }
+import nl.lumc.sasc.sentinel.utils.extractFieldNames
 
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.
@@ -332,7 +333,6 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * Retrieves aggregated unit statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
-   * @param metricAttrNames Sequence of names of the metric container object attribute to aggregate on.
    * @param accLevel Accumulation level of the retrieved statistics.
    * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
    * @param runs Run IDs of the returned statistics. If not specified, unit statistics are not filtered by run ID.
@@ -344,8 +344,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Alignment statistics aggregates.
    */
   // format: OFF
-  def getAggrStatsByAcc[T <: AnyRef](metricName: String,
-                                     metricAttrNames: Seq[String])
+  def getAggrStatsByAcc[T <: AnyRef](metricName: String)
                                     (accLevel: AccLevel.Value,
                                      libType: Option[LibType.Value],
                                      runs: Seq[ObjectId] = Seq.empty,
@@ -376,7 +375,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
           MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty))
       }
 
-    val aggrStats = metricAttrNames.par
+    val aggrStats = extractFieldNames[T].par
       .flatMap { mapRecResults }
       .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
 
@@ -436,7 +435,6 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * Retrieves aggregated sequence statistics.
    *
    * @param metricName Name of the main metrics container object in the sequence.
-   * @param metricAttrNames Sequence of names of the metric container object attribute to aggregate on.
    * @param libType Library type of the returned sequence statistics.
    * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
    * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
@@ -447,8 +445,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Sequence statistics aggregates.
    */
   // format: OFF
-  def getSeqAggregateStats[T <: AnyRef](metricName: String,
-                                        metricAttrNames: Seq[String])
+  def getSeqAggregateStats[T <: AnyRef](metricName: String)
                                        (libType: Option[LibType.Value],
                                         runs: Seq[ObjectId] = Seq.empty,
                                         references: Seq[ObjectId] = Seq.empty,
@@ -474,6 +471,8 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
       case Some(LibType.Single) => Seq("read1")
       case otherwise            => Seq("read1", "read2", "readAll")
     }
+
+    val metricAttrNames = extractFieldNames[T].toSeq
 
     val aggrStats = readNames.par
       .map {

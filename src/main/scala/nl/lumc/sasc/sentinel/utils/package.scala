@@ -60,6 +60,17 @@ package object utils {
   def getResourceBytes = getResourceStream _ andThen getByteArray andThen ((res: (Array[Byte], Boolean)) => res._1)
 
   /**
+   * Given a case class type, return the names of its fields.
+   *
+   * @tparam T Type of case class whose name will be returned.
+   * @return Array of case class field names.
+   */
+  def extractFieldNames[T <: AnyRef](implicit m: Manifest[T]) =
+    m.runtimeClass.getDeclaredFields
+      .map(_.getName)
+      .filter(!_.startsWith("$"))
+
+  /**
    * Returns the MD5 checksum of the string made by concatenating the given input strings.
    *
    * @param seq Input strings.
