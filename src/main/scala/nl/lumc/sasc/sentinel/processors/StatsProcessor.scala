@@ -221,7 +221,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
       val opMatch = MongoDBObject("$match" -> matchers).asDBObject
 
       timeSorted match {
-        case true  =>
+        case true =>
           if (matchers.isEmpty) Seq(opSortUnit, opProjectAlnStats)
           else Seq(opMatch, opSortUnit, opProjectAlnStats)
         case false =>
