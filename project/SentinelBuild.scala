@@ -109,7 +109,12 @@ object SentinelBuild extends Build {
           sys.error("Sentinel requires Java 8.")
       },
       scalaVersion := ScalaVersion,
-      scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-target:jvm-1.8"),
+      scalacOptions ++= Seq(
+        "-unchecked",
+        "-deprecation",
+        "-feature",
+        "-target:jvm-1.8",
+        "-Xmax-classfile-name", "200"),
       scapegoatConsoleOutput := false,
       // Since we use a lot of MongoDB operators, which look like interpolated strings.
       scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),

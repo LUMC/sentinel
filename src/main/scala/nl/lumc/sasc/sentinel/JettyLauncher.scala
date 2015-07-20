@@ -28,7 +28,7 @@ import nl.lumc.sasc.sentinel.settings.SentinelConfKey
 
 object JettyLauncher {
 
-  def main() {
+  def main(args: Array[String]) {
 
     val conf = ConfigFactory.load()
     val port = Try(conf.getInt(s"$SentinelConfKey.port")).getOrElse(8080)
