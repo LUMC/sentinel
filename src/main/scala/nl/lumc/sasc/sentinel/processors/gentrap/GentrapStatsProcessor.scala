@@ -16,6 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.processors.gentrap
 
+import nl.lumc.sasc.sentinel.AccLevel
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.StatsProcessor
@@ -29,8 +30,11 @@ class GentrapStatsProcessor(mongo: MongodbAccessObject) extends StatsProcessor(m
 
   def pipelineName = "gentrap"
 
-  /** Retrieves alignment statistics data points. */
-  def getAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats") _
+  /** Retrieves alignment statistics per sample. */
+  def getSampleAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.Sample) _
+
+  /** Retrieves alignment statistics per library. */
+  def getLibAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.Lib) _
 
   /** Retrieves aggregated alignment statistics. */
   def getAlignmentAggr = getAggrStatsByAcc[GentrapAlignmentStatsAggr]("alnStats") _

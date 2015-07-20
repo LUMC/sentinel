@@ -212,7 +212,12 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     val matchers = Selector.combineAnd(runSelector, refSelector, annotSelector, libSelector)
 
-    Ok(gentrap.getAlignmentStats(accLevel, matchers, user, sorted))
+    val alnStatsFunc = accLevel match {
+      case AccLevel.Sample => gentrap.getSampleAlignmentStats
+      case AccLevel.Sample => gentrap.getLibAlignmentStats
+    }
+
+    Ok(alnStatsFunc(matchers, user, sorted))
   }
 
   // format: OFF

@@ -182,6 +182,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    *
    * @param metricName Name of the main metrics container object in the unit.
    * @param accLevel Accumulation level of the retrieved statistics.
+   * @param matchers MongoDBObject containing query parameters.
    * @param user If defined, returned data points belonging to the user will show its labels.
    * @param timeSorted Whether to time-sort the returned items or not.
    * @tparam T Case class representing the metrics object to return.
@@ -189,15 +190,12 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    */
   // format: OFF
   def getStatsByAcc[T <: AnyRef](metricName: String)
-                                (accLevel: AccLevel.Value,
-                                 matchers: MongoDBObject,
+                                (accLevel: AccLevel.Value)
+                                (matchers: MongoDBObject,
                                  user: Option[User] = None,
                                  timeSorted: Boolean = false)
                                 (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
-
-    // Initial selection
-    val opMatch = MongoDBObject("$match" -> matchers).asDBObject
 
     // Projection for data point label
     val labelProjection =
@@ -209,13 +207,6 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
           else MongoDBObject.empty
         }
 
-    // Collection to query on
-    val coll = accLevel match {
-      case AccLevel.Sample => samplesColl
-      case AccLevel.Lib    => libsColl
-      case otherwise       => throw new NotImplementedError
-    }
-
     // MongoDB aggregation framework operations
     val operations = {
       val opProjectAlnStats =
@@ -226,10 +217,24 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
             "uploaderId" -> 1,
             "labels" -> labelProjection))
 
+      // Initial document selection
+      val opMatch = MongoDBObject("$match" -> matchers).asDBObject
+
       timeSorted match {
-        case true  => Seq(opMatch, opSortUnit, opProjectAlnStats)
-        case false => Seq(opMatch, opProjectAlnStats)
+        case true  =>
+          if (matchers.isEmpty) Seq(opSortUnit, opProjectAlnStats)
+          else Seq(opMatch, opSortUnit, opProjectAlnStats)
+        case false =>
+          if (matchers.isEmpty) Seq(opProjectAlnStats)
+          else Seq(opMatch, opProjectAlnStats)
       }
+    }
+
+    // Collection to query on
+    val coll = accLevel match {
+      case AccLevel.Sample => samplesColl
+      case AccLevel.Lib    => libsColl
+      case otherwise       => throw new NotImplementedError
     }
 
     lazy val results = coll
