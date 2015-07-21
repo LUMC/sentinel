@@ -17,7 +17,7 @@ installation.
 
 For building documentation, you will also need Python `Python <https://www.python.org/>`_ (version 2.7.x), since we use
 the `Sphinx <http://sphinx-doc.org/>`_ documentation generator. A complete list of python libraries is listed in the
-``dev-requirements.txt`` file in the root of the project.
+``requirements-dev.txt`` file in the root of the project.
 
 And finally, while the following packages are not required per se, they can make your development much easier:
 
@@ -52,7 +52,7 @@ On the Command Line (without an IDE)
 
     .. code-block:: bash
 
-       $ pip install -r dev-requirements.txt
+       $ pip install -r requirements-dev.txt
 
 3. If you would like to set up a local development server, make sure MongoDB is running locally on port 27017. You will
    also need to set up the Sentinel MongoDB users. Sentinel comes with a bash bootstrap script to help you do so. Thes

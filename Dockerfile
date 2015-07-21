@@ -10,6 +10,6 @@ ADD . /sentinel
 
 WORKDIR /sentinel
 
-RUN pip install -r dev-requirements.txt
+RUN pip install -r requirements-dev.txt
 
 RUN ./sbt update
