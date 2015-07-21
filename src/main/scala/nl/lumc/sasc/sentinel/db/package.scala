@@ -16,9 +16,16 @@
  */
 package nl.lumc.sasc.sentinel
 
+import scala.util.Try
+
+import com.mongodb.{ MongoCredential, ServerAddress }
+import com.mongodb.casbah.MongoClient
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.Imports._
 import com.mongodb.gridfs.GridFS.DEFAULT_BUCKET
+import com.typesafe.config.ConfigFactory
+
+import nl.lumc.sasc.sentinel.settings._
 
 package object db {
 
@@ -44,6 +51,40 @@ package object db {
       db.getCollection(s"$bucketName.files").setWriteConcern(WriteConcern.Acknowledged)
       db.getCollection(s"$bucketName.chunks").setWriteConcern(WriteConcern.Acknowledged)
       gfs
+    }
+  }
+
+  object MongodbAccessObject {
+
+    def defaultSettings = {
+
+      val conf = ConfigFactory.load()
+
+      /** Database server hostname. */
+      val host = Try(conf.getString(s"$DbConfKey.host")).getOrElse("localhost")
+
+      /** Database server port. */
+      val port = Try(conf.getInt(s"$DbConfKey.port")).getOrElse(27017)
+
+      /** Database name. */
+      val dbName = Try(conf.getString(s"$DbConfKey.dbName")).getOrElse("sentinel")
+
+      /** Username for database server. */
+      val userName = Try(conf.getString(s"$DbConfKey.userName")).toOption
+
+      /** Password for database authentication. */
+      val password = Try(conf.getString(s"$DbConfKey.password")).toOption
+
+      // Create authenticated connection only when both userName and password are supplied
+      val addr = new ServerAddress(host, port)
+      val client = (userName, password) match {
+        case (Some(usr), Some(pwd)) =>
+          val cred = MongoCredential.createScramSha1Credential(usr, dbName, pwd.toCharArray)
+          MongoClient(addr, List(cred))
+        case otherwise => MongoClient(addr)
+      }
+
+      MongodbAccessObject(client, dbName)
     }
   }
 

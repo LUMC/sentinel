@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 import akka.actor.ActorSystem
-import com.mongodb.{ MongoCredential, ServerAddress }
-import com.mongodb.casbah.MongoClient
 import com.typesafe.config.ConfigFactory
 import javax.servlet.ServletContext
 import org.scalatra.LifeCycle
@@ -39,34 +37,10 @@ class ScalatraBootstrap extends LifeCycle {
 
     val conf = ConfigFactory.load()
 
-    /** Database server hostname. */
-    val host = Try(conf.getString(s"$DbConfKey.host")).getOrElse("localhost")
-
-    /** Database server port. */
-    val port = Try(conf.getInt(s"$DbConfKey.port")).getOrElse(27017)
-
-    /** Database name. */
-    val dbName = Try(conf.getString(s"$DbConfKey.dbName")).getOrElse("sentinel")
-
-    /** Username for database server. */
-    val userName = Try(conf.getString(s"$DbConfKey.userName")).toOption
-
-    /** Password for database authentication. */
-    val password = Try(conf.getString(s"$DbConfKey.password")).toOption
-
     /** Deployment environment, 'production' or 'development'. */
     val env = Try(conf.getString(s"$SentinelConfKey.env")).getOrElse("development")
 
-    // Create authenticated connection only when both userName and password are supplied
-    val addr = new ServerAddress(host, port)
-    val client = (userName, password) match {
-      case (Some(usr), Some(pwd)) =>
-        val cred = MongoCredential.createScramSha1Credential(usr, dbName, pwd.toCharArray)
-        MongoClient(addr, List(cred))
-      case otherwise => MongoClient(addr)
-    }
-
-    implicit val mongo = MongodbAccessObject(client, dbName)
+    implicit val mongo = MongodbAccessObject.defaultSettings
     implicit val system = ActorSystem("appActorSystem")
 
     // Check that we have a live connection to the DB
