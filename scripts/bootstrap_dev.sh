@@ -20,11 +20,6 @@ set -o nounset
 # Output exit code of last failed command in a piped execution
 set -o pipefail
 
-# MongoDB defaults (change to your local settings appropriately)
-MONGO_EXE=mongo
-MONGO_HOST=localhost
-MONGO_PORT=27017
-
 # Uncomment and fill values to authenticate against MongoDB instance.
 ## User name
 MONGO_USER=
@@ -40,7 +35,7 @@ REQ_MONGO_VERSION=3
 
 # Function for checking that MongoDB with the correct version is installed
 function __check_version {
-    INS_MONGO_VERSION=$(${MONGO_EXE} --version | grep -oP "([0-9\.]+)$" | cut -d "." -f1)
+    INS_MONGO_VERSION=$(${MONGO_EXE:=mongo} --version | grep -oE "([0-9\.]+)$" | cut -d "." -f1)
     if [ "${INS_MONGO_VERSION}" -ne "${REQ_MONGO_VERSION}" ]
     then
         echo "ERROR: Sentinel requires MongoDB version ${REQ_MONGO_VERSION}. Exiting."
@@ -60,7 +55,7 @@ function __db_setup {
     if [ -n "${MONGO_AUTHDB}" ]; then
         __auth+=" --authenticationDatabase ${MONGO_AUTHDB}"
     fi
-    ${MONGO_EXE} ${MONGO_HOST}:${MONGO_PORT}/${DB_NAME} ${DB_SCRIPT} ${__auth}
+    ${MONGO_EXE:=mongo} ${MONGO_HOST:=localhost}:${MONGO_PORT:=27017}/${DB_NAME} ${DB_SCRIPT} ${__auth}
 }
 
 __check_version
