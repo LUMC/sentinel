@@ -27,7 +27,6 @@ import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
 import nl.lumc.sasc.sentinel.processors.gentrap._
-import nl.lumc.sasc.sentinel.utils.implicits._
 
 /**
  * Controller for the `/stats` endpoint.
@@ -185,32 +184,33 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidAccLevel.message),
       StringResponseMessage(400, CommonMessages.InvalidLibType.message),
-      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
+      StringResponseMessage(400, CommonMessages.InvalidDbId.message)))
   // format: ON
 
   get("/gentrap/alignments", operation(statsGentrapAlignmentsGetOperation)) {
 
     logger.info(requestLog)
     val accLevel = params.getAs[AccLevel.Value]("accLevel").getOrElse(AccLevel.Sample)
-    val runSelector = ManyContainOne("runId", getRunObjectIds(params.getAs[String]("runIds")))
-    val refSelector = ManyContainOne("referenceId", getRefObjectIds(params.getAs[String]("refIds")))
-    val annotSelector = ManyIntersectMany("annotationIds", getAnnotObjectIds(params.getAs[String]("annotIds")))
-
+    val runIds = params.getAs[Seq[DbId]]("runIds").getOrElse(Seq.empty)
+    val refIds = params.getAs[Seq[DbId]]("refIds").getOrElse(Seq.empty)
+    val annotIds = params.getAs[Seq[DbId]]("annotIds").getOrElse(Seq.empty)
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
+    val libType = params.getAs[LibType.Value]("libType")
 
     val user = Try(simpleKeyAuth(params => params.get("userId"))).toOption
     if ((Option(request.getHeader(HeaderApiKey)).nonEmpty || params.get("userId").nonEmpty) && user.isEmpty)
       halt(401, CommonMessages.UnauthenticatedOptional)
 
-    val libSelector = {
-      val libType = params.getAs[LibType.Value]("libType")
-      accLevel match {
-        case AccLevel.Sample => EmptySelector
-        case AccLevel.Lib    => Selector.fromLibType(libType)
-      }
+    val libSelector = accLevel match {
+      case AccLevel.Sample => EmptySelector
+      case AccLevel.Lib    => Selector.fromLibType(libType)
     }
 
-    val matchers = Selector.combineAnd(runSelector, refSelector, annotSelector, libSelector)
+    val matchers = Selector.combineAnd(
+      libSelector,
+      ManyContainOne("runId", runIds),
+      ManyContainOne("referenceId", refIds),
+      ManyIntersectMany("annotationIds", annotIds))
 
     val alnStatsFunc = accLevel match {
       case AccLevel.Sample => gentrap.getSampleAlignmentStats
@@ -281,16 +281,16 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidAccLevel.message),
       StringResponseMessage(400, CommonMessages.InvalidLibType.message),
-      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
+      StringResponseMessage(400, CommonMessages.InvalidDbId.message)))
   // format: ON
 
   get("/gentrap/alignments/aggregate", operation(statsGentrapAlignmentsAggregateGetOperation)) {
 
     logger.info(requestLog)
     val accLevel = params.getAs[AccLevel.Value]("accLevel").getOrElse(AccLevel.Sample)
-    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
-    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
-    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val runIds = params.getAs[Seq[DbId]]("runIds").getOrElse(Seq.empty)
+    val refIds = params.getAs[Seq[DbId]]("refIds").getOrElse(Seq.empty)
+    val annotIds = params.getAs[Seq[DbId]]("annotIds").getOrElse(Seq.empty)
 
     val libType = {
       val libType = params.getAs[LibType.Value]("libType")
@@ -388,15 +388,15 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidLibType.message),
       StringResponseMessage(400, CommonMessages.InvalidSeqQcPhase.message),
-      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid.")))
+      StringResponseMessage(400, CommonMessages.InvalidDbId.message)))
   // format: ON
 
   get("/gentrap/sequences", operation(statsGentrapSequencesGetOperation)) {
 
     logger.info(requestLog)
-    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
-    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
-    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val runIds = params.getAs[Seq[DbId]]("runIds").getOrElse(Seq.empty)
+    val refIds = params.getAs[Seq[DbId]]("refIds").getOrElse(Seq.empty)
+    val annotIds = params.getAs[Seq[DbId]]("annotIds").getOrElse(Seq.empty)
     val sorted = params.getAs[Boolean]("sorted").getOrElse(false)
     val libType = params.getAs[LibType.Value]("libType")
     val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
@@ -469,16 +469,16 @@ class StatsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       responseMessages (
       StringResponseMessage(400, CommonMessages.InvalidLibType.message),
       StringResponseMessage(400, CommonMessages.InvalidSeqQcPhase.message),
-      StringResponseMessage(400, "One or more of the supplied run IDs, reference IDs, and/or annotation IDs is invalid."),
+      StringResponseMessage(400, CommonMessages.InvalidDbId.message),
       StringResponseMessage(404, CommonMessages.MissingDataPoints.message)))
   // format: ON
 
   get("/gentrap/sequences/aggregate", operation(statsGentrapSequencesAggregateGetOperation)) {
 
     logger.info(requestLog)
-    val runIds = getRunObjectIds(params.getAs[String]("runIds"))
-    val refIds = getRefObjectIds(params.getAs[String]("refIds"))
-    val annotIds = getAnnotObjectIds(params.getAs[String]("annotIds"))
+    val runIds = params.getAs[Seq[DbId]]("runIds").getOrElse(Seq.empty)
+    val refIds = params.getAs[Seq[DbId]]("refIds").getOrElse(Seq.empty)
+    val annotIds = params.getAs[Seq[DbId]]("annotIds").getOrElse(Seq.empty)
     val libType = params.getAs[LibType.Value]("libType")
     val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
 

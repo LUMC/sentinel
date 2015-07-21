@@ -243,7 +243,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -260,7 +260,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -277,7 +277,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -662,7 +662,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -679,7 +679,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -696,7 +696,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1025,7 +1025,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1042,7 +1042,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1059,7 +1059,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1336,7 +1336,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid run ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1353,7 +1353,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid reference ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }
@@ -1370,7 +1370,7 @@ class StatsControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid annotation ID(s) provided.")
+          priorResponse.body must /("message" -> "Invalid ID(s) provided.")
         }
       }
     }

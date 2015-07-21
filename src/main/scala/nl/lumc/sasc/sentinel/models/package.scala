@@ -43,6 +43,8 @@ package object models {
     val InvalidSeqQcPhase = ApiMessage("Sequencing QC phase parameter is invalid.",
       "Valid values are '" + SeqQcPhase.values.toList.map(_.toString).sorted.mkString("', '") + "'.")
 
+    val InvalidDbId = ApiMessage("Invalid ID(s) provided.")
+
     val UnspecifiedUserId = ApiMessage("User ID not specified.")
 
     val UnspecifiedRunId = ApiMessage("Run summary ID not specified.")

@@ -37,6 +37,9 @@ abstract class SentinelServlet extends ScalatraServlet
     with JacksonJsonSupport
     with SwaggerSupport {
 
+  /** Type of database ID. */
+  type DbId = ObjectId
+
   /** Logger instance. */
   protected val logger = LoggerFactory.getLogger(getClass)
 
@@ -124,33 +127,22 @@ abstract class SentinelServlet extends ScalatraServlet
         }
     }
 
+  /** Implicit conversion from URL parameter to a sequence of database IDs. */
+  protected implicit val stringToObjectId: TypeConverter[String, Seq[DbId]] =
+    new TypeConverter[String, Seq[DbId]] {
+      def apply(str: String): Option[Seq[DbId]] = {
+        val (validIds, invalidIds) = separateObjectIds(splitParam(Option(str)))
+        if (invalidIds.nonEmpty)
+          halt(400, CommonMessages.InvalidDbId.copy(data = invalidIds))
+        else Option(validIds)
+      }
+    }
+
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
   /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
   protected def transformMapReduceResult(results: Any): JValue =
     Extraction.decompose(results)
       .transformField { case JField("nDataPoints", JDouble(n)) => ("nDataPoints", JInt(n.toLong)) }
-
-  /** Creates ObjectIds from a sequence of strings. */
-  protected def getObjectIds(strs: Seq[String], msg: Option[ApiMessage] = None): Seq[ObjectId] = {
-    val (validIds, invalidIds) = separateObjectIds(strs)
-    if (invalidIds.nonEmpty) msg match {
-      case None    => halt(400)
-      case Some(m) => halt(400, m.copy(data = Map("invalid" -> invalidIds)))
-    }
-    else validIds
-  }
-
-  /** Helper function for creating run object IDs with the appropriate failure message. */
-  protected def getRunObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
-    splitParam(rawParam), Option(ApiMessage("Invalid run ID(s) provided.")))
-
-  /** Helper function for creating reference object IDs with the appropriate failure message. */
-  protected def getRefObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
-    splitParam(rawParam), Option(ApiMessage("Invalid reference ID(s) provided.")))
-
-  /** Helper function for creating annotation object IDs with the appropriate failure message. */
-  protected def getAnnotObjectIds(rawParam: Option[String]): Seq[ObjectId] = getObjectIds(
-    splitParam(rawParam), Option(ApiMessage("Invalid annotation ID(s) provided.")))
 
   before() {
     contentType = formats("json")
