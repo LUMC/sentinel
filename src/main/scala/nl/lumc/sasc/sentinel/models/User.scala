@@ -45,7 +45,7 @@ case class User(
     activeKey: String,
     verified: Boolean,
     isAdmin: Boolean,
-    creationTimeUtc: Date,
+    creationTimeUtc: Date = getUtcTimeNow,
     _id: ObjectId = new ObjectId,
     updateTimeUtc: Option[Date] = None) {
 

@@ -92,13 +92,13 @@ trait SentinelServletSpec extends MutableScalatraSpec
     import nl.lumc.sasc.sentinel.models.User.hashPassword
 
     val avg =
-      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false, getUtcTimeNow)
+      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false)
     val avg2 =
-      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false, getUtcTimeNow)
+      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false)
     val admin =
-      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true, getUtcTimeNow)
+      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true)
     val unverified =
-      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false, getUtcTimeNow)
+      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false)
     def all = Set(avg, avg2, admin, unverified)
   }
 
