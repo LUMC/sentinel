@@ -62,8 +62,8 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "New user created.")
-          priorResponse.body must /("data") /("uri" -> ("/users/" + userRequest.id))
-          priorResponse.body must /("data") /("apiKey" -> """\S+""".r)
+          priorResponse.body must /("hint") /("uri" -> ("/users/" + userRequest.id))
+          priorResponse.body must /("hint") /("apiKey" -> """\S+""".r)
         }
       }
     }
@@ -119,7 +119,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") / "Different passwords given."
+          priorResponse.body must /("hint") / "Different passwords given."
         }
       }
     }
@@ -139,7 +139,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") / "User ID shorter than 3 characters."
+          priorResponse.body must /("hint") / "User ID shorter than 3 characters."
         }
       }
     }
@@ -161,7 +161,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "return a JSON object containing the expected message" in {
               priorResponse.body must /("message" -> "Invalid user request.")
-              priorResponse.body must /("data") / "User ID contains disallowed characters: .+".r
+              priorResponse.body must /("hint") / "User ID contains disallowed characters: .+".r
             }
           }
         }
@@ -181,7 +181,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") / "Password shorter than 6 characters."
+          priorResponse.body must /("hint") / "Password shorter than 6 characters."
         }
       }
     }
@@ -199,7 +199,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") /
+          priorResponse.body must /("hint") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -218,7 +218,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") /
+          priorResponse.body must /("hint") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -237,7 +237,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("data") /
+          priorResponse.body must /("hint") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -545,7 +545,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid user patch.")
-          priorResponse.body must /("data" -> "Operations can not be empty.")
+          priorResponse.body must /("hint" -> "Operations can not be empty.")
         }
       }
     }

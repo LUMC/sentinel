@@ -99,7 +99,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         f match {
           case vexc: RunValidationException =>
             halt(400, ApiMessage(vexc.getMessage,
-              data = vexc.report.collect { case r => r.toString }))
+              hint = vexc.report.collect { case r => r.toString }))
           case otherwise =>
             halt(500, CommonMessages.Unexpected)
         }
@@ -110,13 +110,13 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           // and patch list has size > 0
           case Some(ps) if ps.nonEmpty => ps
           // but patch list is empty
-          case otherwise               => halt(400, ApiMessage("Invalid user patch.", data = "Operations can not be empty."))
+          case otherwise               => halt(400, ApiMessage("Invalid user patch.", hint = "Operations can not be empty."))
         }
 
         // if any patch object is invalid
         if (patches.exists(_.validationMessages.nonEmpty)) {
           halt(400, ApiMessage("Invalid user patch.",
-            data = patches
+            hint = patches
               .collect { case up: UserPatch if up.validationMessages.nonEmpty => up.validationMessages }
               .flatten))
           // otherwise we finally retrieve the object
@@ -193,7 +193,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
 
     if (userRequest.validationMessages.size > 0)
-      BadRequest(ApiMessage("Invalid user request.", data = userRequest.validationMessages))
+      BadRequest(ApiMessage("Invalid user request.", hint = userRequest.validationMessages))
     else {
       Try(users.userExist(userRequest.id)) match {
         case Failure(_) => InternalServerError(CommonMessages.Unexpected)

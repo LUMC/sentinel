@@ -141,7 +141,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Pipeline parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are .+".r)
+          priorResponse.body must /("hint" -> "Valid values are .+".r)
         }
       }
     }
@@ -356,7 +356,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.contentType mustEqual  "application/json"
             priorResponses.last.body must /("message" -> "Run summary already uploaded.")
             priorResponses.head.jsonBody must beSome.like { case json =>
-              priorResponses.last.body must /("data") /("uploadedId" -> (json \ "runId").extract[String])
+              priorResponses.last.body must /("hint") /("uploadedId" -> (json \ "runId").extract[String])
             }
           }
 
@@ -401,7 +401,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.contentType mustEqual  "application/json"
             priorResponses.last.body must /("message" -> "Run summary already uploaded.")
             priorResponses.head.jsonBody must beSome.like { case json =>
-              priorResponses.last.body must /("data") /("uploadedId" -> (json \ "runId").extract[String])
+              priorResponses.last.body must /("hint") /("uploadedId" -> (json \ "runId").extract[String])
             }
           }
 
@@ -744,7 +744,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               get(endpoint, params :+ ("pipelines", "nonexistent"), headers) {
                 contentType mustEqual "application/json"
                 body must /("message" -> "One or more pipeline is invalid.")
-                body must /("data") / "invalid pipelines" /# 0 / "nonexistent"
+                body must /("hint") / "invalid pipelines" /# 0 / "nonexistent"
               }
             }
           }

@@ -212,9 +212,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
           case Failure(f) =>
             f match {
               case vexc: RunValidationException =>
-                BadRequest(ApiMessage(vexc.getMessage, data = vexc.report.collect { case r => r.toString }))
+                BadRequest(ApiMessage(vexc.getMessage, hint = vexc.report.collect { case r => r.toString }))
               case dexc: DuplicateFileException =>
-                Conflict(ApiMessage(dexc.getMessage, data = Map("uploadedId" -> dexc.existingId)))
+                Conflict(ApiMessage(dexc.getMessage, hint = Map("uploadedId" -> dexc.existingId)))
               case otherwise =>
                 InternalServerError(CommonMessages.Unexpected)
             }
@@ -254,7 +254,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val (validPipelines, invalidPipelines) = pipelines.partition { AllowedPipelineParams.contains }
 
     if (invalidPipelines.nonEmpty)
-      halt(400, ApiMessage("One or more pipeline is invalid.", data = Map("invalid pipelines" -> invalidPipelines)))
+      halt(400, ApiMessage("One or more pipeline is invalid.", hint = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
       runs.getRuns(user, validPipelines.map { AllowedPipelineParams.apply })

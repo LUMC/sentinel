@@ -208,7 +208,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'lib', 'sample'.")
+          priorResponse.body must /("hint" -> "Valid values are 'lib', 'sample'.")
         }
       }
     }
@@ -226,7 +226,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'paired', 'single'.")
+          priorResponse.body must /("hint" -> "Valid values are 'paired', 'single'.")
         }
       }
     }
@@ -627,7 +627,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'lib', 'sample'.")
+          priorResponse.body must /("hint" -> "Valid values are 'lib', 'sample'.")
         }
       }
     }
@@ -645,7 +645,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'paired', 'single'.")
+          priorResponse.body must /("hint" -> "Valid values are 'paired', 'single'.")
         }
       }
     }
@@ -990,7 +990,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'paired', 'single'.")
+          priorResponse.body must /("hint" -> "Valid values are 'paired', 'single'.")
         }
       }
     }
@@ -1008,7 +1008,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'processed', 'raw'.")
+          priorResponse.body must /("hint" -> "Valid values are 'processed', 'raw'.")
         }
       }
     }
@@ -1301,7 +1301,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Library type parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'paired', 'single'.")
+          priorResponse.body must /("hint" -> "Valid values are 'paired', 'single'.")
         }
       }
     }
@@ -1319,7 +1319,7 @@ class StatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Sequencing QC phase parameter is invalid.")
-          priorResponse.body must /("data" -> "Valid values are 'processed', 'raw'.")
+          priorResponse.body must /("hint" -> "Valid values are 'processed', 'raw'.")
         }
       }
     }

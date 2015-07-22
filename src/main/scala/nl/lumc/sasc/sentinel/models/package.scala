@@ -24,9 +24,9 @@ package object models {
    * Message sent to users interacting with any HTTP endpoint.
    *
    * @param message Main message to send.
-   * @param data Additional information.
+   * @param hint Additional information.
    */
-  case class ApiMessage(message: String, data: Any = None)
+  case class ApiMessage(message: String, hint: Any = None)
 
   /** Common API messages. */
   object CommonMessages {

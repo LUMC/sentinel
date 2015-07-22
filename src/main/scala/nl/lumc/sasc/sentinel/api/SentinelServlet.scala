@@ -133,7 +133,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[Seq[DbId]] = {
         val (validIds, invalidIds) = separateObjectIds(splitParam(Option(str)))
         if (invalidIds.nonEmpty)
-          halt(400, CommonMessages.InvalidDbId.copy(data = invalidIds))
+          halt(400, CommonMessages.InvalidDbId.copy(hint = invalidIds))
         else Option(validIds)
       }
     }
