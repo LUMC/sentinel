@@ -56,7 +56,12 @@ package object db {
 
   object MongodbAccessObject {
 
-    def defaultSettings = {
+    /** Helper method to create the object using the underlying Java Client object. */
+    def fromJava(underlying: com.mongodb.MongoClient, dbName: String, bucketName: String = DEFAULT_BUCKET) =
+      MongodbAccessObject(new MongoClient(underlying), dbName, bucketName)
+
+    /** Helper method to create the object using default settings. */
+    def withDefaultSettings = {
 
       val conf = ConfigFactory.load()
 

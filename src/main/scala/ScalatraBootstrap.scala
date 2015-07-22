@@ -40,7 +40,7 @@ class ScalatraBootstrap extends LifeCycle {
     /** Deployment environment, 'production' or 'development'. */
     val env = Try(conf.getString(s"$SentinelConfKey.env")).getOrElse("development")
 
-    implicit val mongo = MongodbAccessObject.defaultSettings
+    implicit val mongo = MongodbAccessObject.withDefaultSettings
     implicit val system = ActorSystem("appActorSystem")
 
     // Check that we have a live connection to the DB
