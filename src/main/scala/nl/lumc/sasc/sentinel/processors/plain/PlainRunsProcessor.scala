@@ -18,14 +18,15 @@ package nl.lumc.sasc.sentinel.processors.plain
 
 import java.time.Clock
 import java.util.Date
-import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import scala.util.Try
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
+import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
@@ -48,10 +49,10 @@ class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) =
 
     for {
-      (byteContents, unzipped) <- Try(fi.readInputStream())
-      _ <- Try(parseAndValidate(byteContents))
-      fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
+      (byteContents, unzipped) <- Future { fi.readInputStream() }
+      _ <- Future { parseAndValidate(byteContents) }
+      fileId <- Future { storeFile(byteContents, user, pipeline, fi.getName, unzipped) }
       run = RunRecord(fileId, user.id, pipeline.toString.toLowerCase, Date.from(Clock.systemUTC().instant))
-      _ <- Try(storeRun(run))
+      _ <- Future { storeRun(run) }
     } yield run
 }

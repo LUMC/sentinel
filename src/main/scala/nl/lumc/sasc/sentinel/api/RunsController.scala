@@ -17,7 +17,6 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-
 import scala.util.{ Failure, Success }
 
 import org.scalatra._
@@ -66,11 +65,23 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   /** Set maximum allowed file upload size. */
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))
 
-  /** Add error handler for files that exceed maximum allowed size. */
+  /** General error handler for any type of exception. */
   error {
-    case e: SizeConstraintExceededException =>
+    case sexc: SizeConstraintExceededException =>
       contentType = formats("json")
       RequestEntityTooLarge(CommonMessages.RunSummaryTooLarge)
+
+    case vexc: RunValidationException =>
+      contentType = formats("json")
+      BadRequest(ApiMessage(vexc.getMessage, hint = vexc.report.collect { case r => r.toString }))
+
+    case dexc: DuplicateFileException =>
+      contentType = formats("json")
+      Conflict(ApiMessage(dexc.getMessage, hint = Map("uploadedId" -> dexc.existingId)))
+
+    case otherwise =>
+      contentType = formats("json")
+      InternalServerError(CommonMessages.Unexpected)
   }
 
   options("/?") {
@@ -208,17 +219,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       case None => BadRequest(CommonMessages.InvalidPipeline)
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
-        p.processRun(uploadedRun, user, AllowedPipelineParams(pipeline)) match {
-          case Failure(f) =>
-            f match {
-              case vexc: RunValidationException =>
-                BadRequest(ApiMessage(vexc.getMessage, hint = vexc.report.collect { case r => r.toString }))
-              case dexc: DuplicateFileException =>
-                Conflict(ApiMessage(dexc.getMessage, hint = Map("uploadedId" -> dexc.existingId)))
-              case otherwise =>
-                InternalServerError(CommonMessages.Unexpected)
-            }
-          case Success(run) => Created(run)
+        new AsyncResult {
+          val is =
+            p.processRun(uploadedRun, user, AllowedPipelineParams(pipeline))
+              .map(run => Created(run))
         }
     }
   }

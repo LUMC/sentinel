@@ -17,11 +17,12 @@
 package nl.lumc.sasc.sentinel.api
 
 import javax.servlet.http.HttpServletRequest
+import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success, Try }
 
 import org.bson.types.ObjectId
 import org.json4s._
-import org.scalatra.{ CorsSupport, NotFound, ScalatraServlet }
+import org.scalatra.{ CorsSupport, FutureSupport, NotFound, ScalatraServlet }
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
@@ -34,6 +35,7 @@ import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, spl
 /** Base servlet for all Sentinel controllers. */
 abstract class SentinelServlet extends ScalatraServlet
     with CorsSupport
+    with FutureSupport
     with JacksonJsonSupport
     with SwaggerSupport {
 
@@ -48,6 +50,9 @@ abstract class SentinelServlet extends ScalatraServlet
   protected def reqMethod(implicit req: HttpServletRequest): String = req.getMethod
   protected def reqAddress(implicit req: HttpServletRequest): String = req.getRemoteAddr
   protected def requestLog: String = s"$reqAddress $reqMethod $reqUri"
+
+  /** Default execution context. */
+  implicit protected def executor: ExecutionContext = scala.concurrent.ExecutionContext.global
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)

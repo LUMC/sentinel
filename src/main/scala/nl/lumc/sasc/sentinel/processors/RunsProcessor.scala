@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
-import scala.util.Try
+import scala.concurrent.Future
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
@@ -46,7 +46,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param pipeline Enum value representing the pipeline name that generated the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[BaseRunRecord] // TODO: use Futures instead
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Future[BaseRunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)

@@ -16,8 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.processors.gentrap
 
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
-
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
@@ -30,6 +30,7 @@ import scalaz.{ Failure => _, _ }, Scalaz._
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.validation.ValidationAdapter
@@ -274,27 +275,28 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
   val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
 
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Try[RunRecord] =
+  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Future[RunRecord] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
-      (byteContents, unzipped) <- Try(fi.readInputStream())
-      runJson <- Try(parseAndValidate(byteContents))
-      fileId <- Try(storeFile(byteContents, user, pipeline, fi.getName, unzipped))
-      runRef <- Try(extractReference(runJson))
-      ref <- Try(getOrStoreReference(runRef))
+      (byteContents, unzipped) <- Future { fi.readInputStream() }
+      runJson <- Future { parseAndValidate(byteContents) }
+      fileId <- Future { storeFile(byteContents, user, pipeline, fi.getName, unzipped) }
+      runRef <- Future { extractReference(runJson) }
+      ref <- Future { getOrStoreReference(runRef) }
       refId = ref.refId
 
-      runAnnots <- Try(extractAnnotations(runJson))
-      annots <- Try(storeOrModifyAnnotations(runAnnots))
+      runAnnots <- Future { extractAnnotations(runJson) }
+      annots <- Future { storeOrModifyAnnotations(runAnnots) }
       annotIds = annots.map(_.annotId)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]
-      (samples, libs) <- Try(extractUnits(runJson, user.id, fileId, refId, annotIds, runName))
-      _ <- Try(storeSamples(samples))
-      _ <- Try(storeLibs(libs))
-      run <- Try(createRun(fileId, refId, annotIds, samples, libs, user, pipeline, runName))
-      _ <- Try(storeRun(run))
+      (samples, libs) <- Future { extractUnits(runJson, user.id, fileId, refId, annotIds, runName) }
+      _ <- Future { storeSamples(samples) }
+      _ <- Future { storeLibs(libs) }
+
+      run = createRun(fileId, refId, annotIds, samples, libs, user, pipeline, runName)
+      _ <- Future { storeRun(run) }
     } yield run
 }
