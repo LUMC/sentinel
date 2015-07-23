@@ -24,6 +24,7 @@ import java.time.Clock
 import scala.io.Source
 import scala.util.Try
 
+import com.github.fge.jsonschema.core.report.ProcessingReport
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.servlet.FileItem
@@ -154,6 +155,19 @@ package object utils {
 
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer
+
+  object exceptions {
+
+    /** Exception that is thrown when trying to add a user with an existing ID. */
+    class ExistingUserIdException(msg: String) extends RuntimeException(msg)
+
+    /** Exception that is thrown when a JSON validation fails. */
+    class JsonValidationException(msg: String, val report: Option[ProcessingReport] = None)
+      extends RuntimeException(msg)
+
+    /** Exception that is thrown when a duplicate file (based on MD5 checksum value) is stored to the database. */
+    class DuplicateFileException(msg: String, val existingId: String) extends RuntimeException(msg)
+  }
 
   object implicits {
 

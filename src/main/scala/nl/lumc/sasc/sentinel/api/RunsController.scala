@@ -17,7 +17,6 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.util.{ Failure, Success }
 
 import org.scalatra._
 import org.scalatra.swagger._
@@ -32,6 +31,7 @@ import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils._
+import nl.lumc.sasc.sentinel.utils.exceptions._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
 /**
@@ -71,7 +71,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       contentType = formats("json")
       RequestEntityTooLarge(CommonMessages.RunSummaryTooLarge)
 
-    case vexc: RunValidationException =>
+    case vexc: JsonValidationException =>
       contentType = formats("json")
       BadRequest(ApiMessage(vexc.getMessage, hint = vexc.report.collect { case r => r.toString }))
 

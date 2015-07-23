@@ -21,7 +21,8 @@ import java.io.ByteArrayInputStream
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.utils.{ RunValidationException, getResourceStream }
+import nl.lumc.sasc.sentinel.utils.getResourceStream
+import nl.lumc.sasc.sentinel.utils.exceptions.JsonValidationException
 
 /** Trait for validating input JSON with a schema. */
 trait ValidationAdapter {
@@ -49,11 +50,11 @@ trait ValidationAdapter {
         parse(new ByteArrayInputStream(byteContents))
       } catch {
         case exc: Exception =>
-          throw new RunValidationException("File is not JSON-formatted.")
+          throw new JsonValidationException("File is not JSON-formatted.")
       }
     val valResult = validator.validate(json)
     if (!valResult.isSuccess)
-      throw new RunValidationException("JSON run summary is invalid.", Option(valResult))
+      throw new JsonValidationException("JSON run summary is invalid.", Option(valResult))
     else json
   }
 }

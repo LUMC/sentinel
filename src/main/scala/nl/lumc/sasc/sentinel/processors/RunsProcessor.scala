@@ -28,7 +28,8 @@ import org.scalatra.servlet.FileItem
 import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
-import nl.lumc.sasc.sentinel.utils.{ DuplicateFileException, SentinelJsonFormats, calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
 
 /**
  * Base class for processing run summary files.

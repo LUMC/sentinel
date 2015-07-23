@@ -26,7 +26,7 @@ import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.RunValidationException
+import nl.lumc.sasc.sentinel.utils.exceptions.{ ExistingUserIdException, JsonValidationException }
 import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
 
 /**
@@ -97,7 +97,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       // validation fails
       case Failure(f) =>
         f match {
-          case vexc: RunValidationException =>
+          case vexc: JsonValidationException =>
             halt(400, ApiMessage(vexc.getMessage,
               hint = vexc.report.collect { case r => r.toString }))
           case otherwise =>
