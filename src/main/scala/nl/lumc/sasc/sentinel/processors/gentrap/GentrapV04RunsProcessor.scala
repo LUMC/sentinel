@@ -31,9 +31,8 @@ import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow, JsonValidationAdapter }
 import nl.lumc.sasc.sentinel.utils.implicits._
-import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 /**
  * Input processor for Gentrap summary file version 0.4.
@@ -43,7 +42,7 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     extends RunsProcessor(mongo)
     with UnitsAdapter[GentrapSampleRecord, GentrapLibRecord]
-    with ValidationAdapter
+    with JsonValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
 

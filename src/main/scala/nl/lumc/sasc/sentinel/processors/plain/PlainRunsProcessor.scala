@@ -27,8 +27,8 @@ import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
+import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
 import nl.lumc.sasc.sentinel.utils.implicits._
-import nl.lumc.sasc.sentinel.validation.ValidationAdapter
 
 /**
  * Input processor for generic run summary files.
@@ -40,7 +40,7 @@ import nl.lumc.sasc.sentinel.validation.ValidationAdapter
  * @param mongo MongoDB database access object.
  */
 class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
-    with ValidationAdapter {
+    with JsonValidationAdapter {
 
   def pipelineName = "plain"
 

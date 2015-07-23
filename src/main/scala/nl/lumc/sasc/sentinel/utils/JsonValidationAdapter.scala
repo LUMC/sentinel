@@ -14,21 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.validation
+package nl.lumc.sasc.sentinel.utils
 
 import java.io.ByteArrayInputStream
 
-import org.json4s.JValue
+import nl.lumc.sasc.sentinel.utils.exceptions.JsonValidationException
+import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.utils.getResourceStream
-import nl.lumc.sasc.sentinel.utils.exceptions.JsonValidationException
-
 /** Trait for validating input JSON with a schema. */
-trait ValidationAdapter {
+trait JsonValidationAdapter {
 
   /** JSON validator. */
-  val validator: RunValidator
+  val validator: JsonValidator
 
   /**
    * Creates a JSON validator from a JSON schema stored as a resource.
@@ -36,7 +34,7 @@ trait ValidationAdapter {
    * @param schemaResourceUrl URL of the JSON schema.
    * @return a JSON validator.
    */
-  def createValidator(schemaResourceUrl: String) = RunValidator(getResourceStream(schemaResourceUrl))
+  def createValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
 
   /**
    * Parses the given byte array into as a JSON file.

@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.validation
-
-import scala.collection.JavaConverters._
+package nl.lumc.sasc.sentinel.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.core.report.{ ProcessingMessage, ProcessingReport }
@@ -24,14 +22,16 @@ import com.github.fge.jsonschema.main._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+import scala.collection.JavaConverters._
+
 /**
  * Validator for incoming JSON payloads.
  *
  * @param rawSchema JSON schema to validate against, as a JValue object.
  */
-class RunValidator(rawSchema: JValue) {
+class JsonValidator(rawSchema: JValue) {
 
-  import nl.lumc.sasc.sentinel.validation.RunValidator._
+  import JsonValidator._
 
   /** Alternative constructor for creating a validator from any valid JsonInput object. */
   def this(in: JsonInput) {
@@ -61,12 +61,12 @@ class RunValidator(rawSchema: JValue) {
 
 }
 
-object RunValidator {
+object JsonValidator {
 
   import scala.language.implicitConversions
 
-  /** Constructor for new [[RunValidator]] objects. */
-  def apply(in: JsonInput) = new RunValidator(in)
+  /** Constructor for new [[JsonValidator]] objects. */
+  def apply(in: JsonInput) = new JsonValidator(in)
 
   /** Implicit conversion from a JValue object to a JsonNode object; used internally by the validator. */
   implicit def toJsonNode(jv: JValue): JsonNode = asJsonNode(jv)

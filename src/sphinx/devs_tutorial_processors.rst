@@ -212,7 +212,7 @@ for processing the actual uploaded run summary file:
     import nl.lumc.sasc.sentinel.models.User
     import nl.lumc.sasc.sentinel.processors.RunsProcessor
     import nl.lumc.sasc.sentinel.utils.implicits._
-    import nl.lumc.sasc.sentinel.validation.ValidationAdapter
+    import nl.lumc.sasc.sentinel.utils.ValidationAdapter
 
     class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
         with UnitsAdapter[MapleSampleRecord, MapleLibRecord]
