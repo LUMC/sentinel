@@ -17,12 +17,15 @@
 package nl.lumc.sasc.sentinel.db
 
 import com.github.fakemongo.Fongo
+import com.mongodb.DBCollection
+import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
 class UsersAdapterSpec extends Specification with Mockito {
 
@@ -32,9 +35,6 @@ class UsersAdapterSpec extends Specification with Mockito {
   /** MongoDB testing database name. */
   private val testDbName = "users_test"
 
-  /** MongoDB representation of the user object. */
-  private val testUserDbo = grater[User].asDBObject(testUserObj)
-
   /** In-memory MongoDB database instance. */
   private def makeFongo = new Fongo("mem")
 
@@ -43,36 +43,66 @@ class UsersAdapterSpec extends Specification with Mockito {
     .getDB(testDbName)
     .getCollection(MongodbConnector.CollectionNames.Users)
 
+  class TestUsersAdapter(mockDb: Fongo) extends UsersAdapter {
+    val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)
+    private[UsersAdapterSpec] def find(dbo: MongoDBObject) = mockDb
+      .getDB(testDbName)
+      .getCollection(MongodbConnector.CollectionNames.Users)
+      .find(dbo)
+  }
+
   /** Helper method to create a new adapter instance for each test. */
-  private def testAdapter(mockDb: Fongo) =
-    new UsersAdapter {
-      val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)
-    }
+  private def makeAdapter(mockDb: Fongo) = new TestUsersAdapter(mockDb)
+
+  /** Helper method to create a new adapter instance for each test. */
+  private def usingAdapter(fongo: Fongo)(f: DBCollection => Any) = {
+    f(getColl(fongo))
+    makeAdapter(fongo)
+  }
+
+  /** MongoDB representation of the user object. */
+  private val testUserDbo = grater[User].asDBObject(testUserObj)
 
   "usersExist" should {
 
     "return false when database is empty" in {
-      testAdapter(makeFongo).userExist("myId") must beFalse.await
+      makeAdapter(makeFongo).userExist("myId") must beFalse.await
     }
 
     "return false when the user ID does not exist" in {
-      val fongo = makeFongo
-      val coll = getColl(fongo)
-      coll.insert(testUserDbo)
-      val adapter = testAdapter(fongo)
+      val adapter = usingAdapter(makeFongo) { coll =>
+        coll.insert(testUserDbo)
+      }
       val testId = "testIdAnother"
       testUserDbo.get("id") must be_!=(testId)
       adapter.userExist(testId) must beFalse.await
     }
 
     "return true when the user ID exists" in {
-      val fongo = makeFongo
-      val coll = getColl(fongo)
-      coll.insert(testUserDbo)
-      val adapter = testAdapter(fongo)
+      val adapter = usingAdapter(makeFongo) { coll =>
+        coll.insert(testUserDbo)
+      }
       val testId = "testId"
       testUserDbo.get("id") mustEqual testId
       adapter.userExist(testId) must beTrue.await
+    }
+  }
+
+  "addUser" should {
+
+    "succeed when supplied with a non-existing user" in {
+      val adapter = makeAdapter(makeFongo)
+      adapter.addUser(testUserObj) must beEqualTo(()).await
+      adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
+    }
+
+    "fail when supplied with an existing user" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        coll.insert(testUserDbo)
+      }
+      adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
+      adapter.addUser(testUserObj) must throwAn[ExistingUserIdException].await
+      adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
     }
   }
 }
