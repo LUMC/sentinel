@@ -17,6 +17,8 @@
 package nl.lumc.sasc.sentinel.api
 
 import scala.util.Try
+import scala.concurrent._
+import scala.concurrent.duration._
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -124,7 +126,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       override def beforeAll() = {
         super.beforeAll()
-        users.foreach { addUser }
+        users.foreach { user => Await.result(addUser(user), 1000.milli) }
       }
     }
 

@@ -36,6 +36,7 @@ import nl.lumc.sasc.sentinel.validation.{ RunValidator, ValidationAdapter }
  * @param mongo Object for accessing the database.
  */
 class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
+    with FutureSupport
     with AuthenticationSupport { self =>
 
   /** Controller name, shown in the generated Swagger spec. */
@@ -49,6 +50,17 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   /** Validator for patch payloads */
   val patchValidator = new ValidationAdapter { override val validator = createValidator("/schemas/json_patch.json") }
+
+  /** General error handler for any type of exception. */
+  error {
+    case iexc: ExistingUserIdException =>
+      contentType = formats("json")
+      Conflict(ApiMessage("User ID already taken."))
+
+    case exc =>
+      contentType = formats("json")
+      InternalServerError(CommonMessages.Unexpected)
+  }
 
   options("/?") {
     logger.info(requestLog)
@@ -195,15 +207,11 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     if (userRequest.validationMessages.size > 0)
       BadRequest(ApiMessage("Invalid user request.", hint = userRequest.validationMessages))
     else {
-      Try(users.userExist(userRequest.id)) match {
-        case Failure(_) => InternalServerError(CommonMessages.Unexpected)
-        case Success(true)  => Conflict(ApiMessage("User ID already taken."))
-        case Success(false)  =>
-          Try(users.addUser(userRequest.user)) match {
-            case Failure(_) => InternalServerError(CommonMessages.Unexpected)
-            case Success(_) => Created(
-              ApiMessage("New user created.",
-                Map("uri" -> ("/users/" + userRequest.user.id), "apiKey" -> userRequest.user.activeKey)))
+      new AsyncResult {
+        val is = users.addUser(userRequest.user)
+          .map { u =>
+            Created(ApiMessage("New user created.",
+              Map("uri" -> ("/users/" + userRequest.user.id), "apiKey" -> userRequest.user.activeKey)))
           }
       }
     }

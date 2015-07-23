@@ -52,7 +52,7 @@ class UsersAdapterSpec extends Specification with Mockito {
   "usersExist" should {
 
     "return false when database is empty" in {
-      testAdapter(makeFongo).userExist("myId") must beFalse
+      testAdapter(makeFongo).userExist("myId") must beFalse.await
     }
 
     "return false when the user ID does not exist" in {
@@ -62,7 +62,7 @@ class UsersAdapterSpec extends Specification with Mockito {
       val adapter = testAdapter(fongo)
       val testId = "testIdAnother"
       testUserDbo.get("id") must be_!=(testId)
-      adapter.userExist(testId) must beFalse
+      adapter.userExist(testId) must beFalse.await
     }
 
     "return true when the user ID exists" in {
@@ -72,7 +72,7 @@ class UsersAdapterSpec extends Specification with Mockito {
       val adapter = testAdapter(fongo)
       val testId = "testId"
       testUserDbo.get("id") mustEqual testId
-      adapter.userExist(testId) must beTrue
+      adapter.userExist(testId) must beTrue.await
     }
   }
 }

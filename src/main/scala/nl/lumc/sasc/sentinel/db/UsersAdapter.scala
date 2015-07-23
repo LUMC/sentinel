@@ -17,28 +17,36 @@
 package nl.lumc.sasc.sentinel.db
 
 import scala.util.Try
+import scala.concurrent._
 
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
+import nl.lumc.sasc.sentinel.utils.FutureAdapter
+import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
 /** Trait for performing operations on user records. */
-trait UsersAdapter extends MongodbConnector {
+trait UsersAdapter extends MongodbConnector with FutureAdapter {
+
+  /** Execution context for User database operations. */
+  implicit protected def context: ExecutionContext = ExecutionContext.global
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Users)
 
   /** Checks whether the given user ID exist or not. */
-  def userExist(userId: String): Boolean = coll
-    // TODO: refactor to use Futures instead
-    .find(MongoDBObject("id" -> userId)).limit(1).size == 1
+  def userExist(userId: String): Future[Boolean] = Future {
+    coll.find(MongoDBObject("id" -> userId)).limit(1).size == 1
+  }
 
   /** Adds a new user record. */
-  def addUser(user: User): Unit = coll
-    // TODO: refactor to use Futures instead
-    .insert(grater[User].asDBObject(user))
+  def addUser(user: User): Future[Unit] = userExist(user.id)
+    .map { exists =>
+      if (exists) throw new ExistingUserIdException("User ID '" + user.id + "' already exists.")
+      else coll.insert(grater[User].asDBObject(user))
+    }
 
   /** Deletes a user record. */
   def deleteUser(userId: String): Unit = coll
