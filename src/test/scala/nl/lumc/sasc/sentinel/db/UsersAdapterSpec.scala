@@ -44,7 +44,9 @@ class UsersAdapterSpec extends Specification with Mockito {
     .getCollection(MongodbConnector.CollectionNames.Users)
 
   class TestUsersAdapter(mockDb: Fongo) extends UsersAdapter {
+
     val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)
+
     private[UsersAdapterSpec] def find(dbo: MongoDBObject) = mockDb
       .getDB(testDbName)
       .getCollection(MongodbConnector.CollectionNames.Users)
@@ -103,6 +105,38 @@ class UsersAdapterSpec extends Specification with Mockito {
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
       adapter.addUser(testUserObj) must throwAn[ExistingUserIdException].await
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
+    }
+  }
+
+  "getUser" should {
+
+    "fail when the database operation raises any exception" in {
+      val mockFongo = mock[Fongo]
+      val mockDb = mock[com.mongodb.DB]
+      mockFongo.getDB(testDbName) returns mockDb
+      mockDb.getCollection(MongodbConnector.CollectionNames.Users) throws new RuntimeException
+      val adapter = makeAdapter(mockFongo)
+      adapter.getUser(testUserObj.id) must throwA[RuntimeException].await
+    }
+
+    "succeed returning none when the database is empty" in {
+      val adapter = makeAdapter(makeFongo)
+      adapter.getUser(testUserObj.id) must beEqualTo(None).await
+    }
+
+    "succeed returning the user when supplied with an existing user" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        coll.insert(testUserDbo)
+      }
+      adapter.getUser(testUserObj.id) must beEqualTo(Some(testUserObj)).await
+    }
+
+    "succeed returning none when supplied with a non-existing user" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        val dbo = grater[User].asDBObject(testUserObj.copy(id = "newId"))
+        coll.insert(dbo)
+      }
+      adapter.getUser(testUserObj.id) must beEqualTo(None).await
     }
   }
 }

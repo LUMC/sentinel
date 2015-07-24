@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
 
+import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
 
 import org.scalatra._
@@ -47,7 +48,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   protected val applicationDescription: String = "Operations on user data"
 
   /** Adapter for connecting to users collection */
-  val users = new UsersAdapter { val mongo = self.mongo }
+  private[api] val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Validator for patch payloads */
   val patchValidator = new JsonValidationAdapter { override val validator = createValidator("/schemas/json_patch.json") }
@@ -142,12 +143,15 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     // the '/verified'  operation is only allowed for admins
     if (!user.isAdmin && patchOps.exists(p => p.path == "/verified")) halt(403, CommonMessages.Unauthorized)
     // any other operations are only allowed for admins or for the same user
-    else if (userRecordId == user.id || user.isAdmin) {
-      users.patchAndUpdateUser(userRecordId, patchOps) match {
-        case Some(_)   => NoContent()
-        case otherwise => InternalServerError()
-      }
-    } else halt(403, CommonMessages.Unauthorized)
+    else if (userRecordId == user.id || user.isAdmin) new AsyncResult {
+      val is =
+        users.patchAndUpdateUser(userRecordId, patchOps)
+          .map {
+            case Some(_) => NoContent()
+            case None    => InternalServerError()
+          }
+    }
+    else halt(403, CommonMessages.Unauthorized)
   }
 
   // Helper endpoint to capture PATCH request with unspecified user ID
@@ -173,12 +177,14 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     logger.info(requestLog)
     val userRecordId = params("userRecordId")
     val user = simpleKeyAuth(params => params.get("userId"))
-    if (user.isAdmin || user.id == userRecordId) {
-      users.getUser(userRecordId) match {
-        case Some(u) => Ok(u.toResponse)
-        case None    => NotFound(CommonMessages.MissingUserId)
-      }
-    } else halt(403, CommonMessages.Unauthorized)
+    if (user.isAdmin || user.id == userRecordId) new AsyncResult {
+      val is =
+        users.getUser(userRecordId).map {
+          case Some(u) => Ok(u.toResponse)
+          case None    => NotFound(CommonMessages.MissingUserId)
+        }
+    }
+    else halt(403, CommonMessages.Unauthorized)
   }
 
   // Helper endpoint to capture GET request with unspecified user ID

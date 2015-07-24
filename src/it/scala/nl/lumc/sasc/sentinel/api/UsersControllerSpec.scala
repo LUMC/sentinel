@@ -16,6 +16,9 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import org.json4s.jackson.Serialization.write
@@ -626,8 +629,10 @@ class UsersControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("message" -> "Authentication required to access resource.")
             }
 
-            "not change the user record" in {
-              servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beFalse }
+            "not change the user authentication status" in {
+              // TODO: find a way to use matcher without using Await explicitly
+              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              results must beSome.like { case user => user.verified must beFalse }
             }
           }
         }
@@ -652,8 +657,10 @@ class UsersControllerSpec extends SentinelServletSpec {
                 priorResponse.body must beEmpty
               }
 
-              "change the user verified status" in {
-                servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beTrue }
+              "change the user verification status" in {
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+                results must beSome.like { case user => user.verified must beTrue }
               }
             }
           }
@@ -678,7 +685,9 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               "change the user password" in {
-                servlet.users.getUser(Users.avg.id) must beSome.like { case user =>
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = servlet.users.getUser(Users.avg.id)
+                Await.result(results, 1000.milli) must beSome.like { case user =>
                   user.passwordMatches(newPass) must beTrue
                   user.passwordMatches("0PwdAvg") must beFalse
                 }
@@ -706,7 +715,9 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               "change the user email" in {
-                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.email mustEqual newEmail }
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                results must beSome.like { case user => user.email mustEqual newEmail }
               }
             }
           }
@@ -741,8 +752,10 @@ class UsersControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("message" -> "Authentication required to access resource.")
             }
 
-            "not change the user record" in {
-              servlet.users.getUser(Users.unverified.id) must beSome.like { case user => user.verified must beFalse }
+            "not change the verification status" in {
+              // TODO: find a way to use matcher without using Await explicitly
+              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              results must beSome.like { case user => user.verified must beFalse }
             }
           }
         }
@@ -768,8 +781,10 @@ class UsersControllerSpec extends SentinelServletSpec {
                 priorResponse.body must /("message" -> "Unauthorized to access resource.")
               }
 
-              "not change the user record" in {
-                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.verified must beTrue }
+              "not change the user verification status" in {
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                results must beSome.like { case user => user.verified must beTrue }
               }
             }
           }
@@ -793,8 +808,10 @@ class UsersControllerSpec extends SentinelServletSpec {
                 priorResponse.body must beEmpty
               }
 
-              "not change the user password" in {
-                servlet.users.getUser(Users.avg.id) must beSome.like { case user =>
+              "change the user password" in {
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = servlet.users.getUser(Users.avg.id)
+                Await.result(results, 1000.milli) must beSome.like { case user =>
                   user.passwordMatches(newPass) must beTrue
                   user.passwordMatches("0PwdAvg") must beFalse
                 }
@@ -822,7 +839,9 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               "change the user email" in {
-                servlet.users.getUser(Users.avg.id) must beSome.like { case user => user.email mustEqual newEmail }
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                results must beSome.like { case user => user.email mustEqual newEmail }
               }
             }
           }
@@ -838,12 +857,12 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "when the password does not match should" >> inline {
 
-          def headers = Map("Authorization" -> makeBasicAuthHeader(userRecord.id, (password + "_nomatch")))
+          def headers = Map("Authorization" -> makeBasicAuthHeader(userRecord.id, password + "_nomatch"))
 
           new Context.PriorRequestsClean {
 
             def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(user.id), payload, headers) { response }
+            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 401" in {
@@ -859,8 +878,10 @@ class UsersControllerSpec extends SentinelServletSpec {
               priorResponse.body must /("message" -> "Authentication required to access resource.")
             }
 
-            "not change the user record" in {
-              servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.verified must beFalse }
+            "not change the user verification status" in {
+              // TODO: find a way to use matcher without using Await explicitly
+              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              results must beSome.like { case user => user.verified must beFalse }
             }
           }
         }
@@ -885,8 +906,10 @@ class UsersControllerSpec extends SentinelServletSpec {
                 priorResponse.body must /("message" -> "Unauthorized to access resource.")
               }
 
-              "not change the user record" in {
-                servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.verified must beFalse }
+              "not change the user verification status" in {
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(userRecord.id), 1000.milli)
+                results must beSome.like { case user => user.verified must beFalse }
               }
             }
           }
@@ -911,7 +934,9 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               "not change the user password" in {
-                servlet.users.getUser(userRecord.id) must beSome.like { case user =>
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = servlet.users.getUser(userRecord.id)
+                Await.result(results, 1000.milli) must beSome.like { case user =>
                   user.passwordMatches(newPass) must beFalse
                   user.passwordMatches(password) must beTrue
                 }
@@ -939,7 +964,9 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               "not change the user email" in {
-                servlet.users.getUser(userRecord.id) must beSome.like { case usr => usr.email must not be equalTo(newEmail) }
+                // TODO: find a way to use matcher without using Await explicitly
+                val results = Await.result(servlet.users.getUser(userRecord.id), 1000.milli)
+                results must beSome.like { case user => user.email mustEqual userRecord.email }
               }
             }
           }

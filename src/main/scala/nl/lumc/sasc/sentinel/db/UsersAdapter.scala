@@ -22,6 +22,7 @@ import scala.concurrent._
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
 import nl.lumc.sasc.sentinel.utils.FutureAdapter
@@ -55,10 +56,11 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
     .remove(MongoDBObject("id" -> userId))
 
   /** Retrieves the record of the given user ID. */
-  def getUser(userId: String): Option[User] = coll
-    // TODO: refactor to use Futures instead
-    .findOne(MongoDBObject("id" -> userId))
-    .collect { case dbo => grater[User].asObject(dbo) }
+  def getUser(userId: String): Future[Option[User]] = Future {
+    coll
+      .findOne(MongoDBObject("id" -> userId))
+      .collect { case dbo => grater[User].asObject(dbo) }
+  }
 
   /**
    * Patches an existing user record without saving the patched user to the database.
@@ -83,11 +85,12 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
    * @param patchOps Patch operations to apply.
    * @return Write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: Seq[UserPatch]) =
-    // TODO: refactor to use Futures instead
-    for {
-      user <- getUser(userId)
-      patchedUser <- Try(patchUser(user, patchOps)).toOption
-      updateOp <- Try(updateUser(patchedUser)).toOption
-    } yield updateOp
+  def patchAndUpdateUser(userId: String, patchOps: Seq[UserPatch]): Future[Option[WriteResult]] =
+    getUser(userId).map { maybeUser =>
+      for {
+        user <- maybeUser
+        patchedUser <- Try(patchUser(user, patchOps)).toOption
+        updateOp <- Try(updateUser(patchedUser)).toOption
+      } yield updateOp
+    }
 }

@@ -17,6 +17,8 @@
 package nl.lumc.sasc.sentinel.api.auth
 
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+import scala.concurrent.{ Await, ExecutionContext }
+import scala.concurrent.duration._
 import scala.language.reflectiveCalls
 
 import org.scalatra.{ Forbidden, ScalatraBase }
@@ -40,16 +42,21 @@ import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
 class BasicAuthStrategy(protected override val app: SentinelServlet { def users: UsersAdapter }, realm: String)
     extends org.scalatra.auth.strategy.BasicAuthStrategy[User](app, realm) {
 
+  implicit protected def context: ExecutionContext = ExecutionContext.global
+
   /** String name of this authentication strategy, used internally by Scentry. */
   override def name = BasicAuthStrategy.name
 
   /** Checks whether a user's authentication is valid or not. */
-  protected def validate(userId: String, password: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] =
-    app.users.getUser(userId).flatMap {
-      case user =>
-        if (user.passwordMatches(password)) Some(user)
-        else None
+  protected def validate(userId: String, password: String)(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] = {
+    val result = app.users.getUser(userId).map { user =>
+      for {
+        okUser <- user
+        if okUser.passwordMatches(password)
+      } yield okUser
     }
+    Await.result(result, 30.seconds)
+  }
 
   /** Action to be performed after authentication succeeds. */
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =

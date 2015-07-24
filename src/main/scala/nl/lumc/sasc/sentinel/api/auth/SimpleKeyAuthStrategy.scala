@@ -17,6 +17,8 @@
 package nl.lumc.sasc.sentinel.api.auth
 
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
+import scala.concurrent.{ Await, ExecutionContext }
+import scala.concurrent.duration._
 import scala.language.reflectiveCalls
 
 import org.scalatra.{ Forbidden, Params, ScalatraBase, Unauthorized }
@@ -43,16 +45,22 @@ class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: User
 
   import SimpleKeyAuthStrategy._
 
+  implicit protected def context: ExecutionContext = ExecutionContext.global
+
   /** String name of this authentication strategy, used internally by Scentry. */
   override def name = SimpleKeyAuthStrategy.name
 
   /** Authenticates an incoming HTTP request */
-  def authenticate()(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] =
-    app.users.getUser(app.params("userId")).flatMap {
-      case user =>
-        if (user.keyMatches(request.getHeader(HeaderApiKey))) Some(user)
-        else None
+  def authenticate()(implicit request: HttpServletRequest, response: HttpServletResponse): Option[User] = {
+    val result = app.users.getUser(app.params("userId")).map { user =>
+      for {
+        okUser <- user
+        if okUser.keyMatches(request.getHeader(HeaderApiKey))
+      } yield okUser
     }
+
+    Await.result(result, 30.seconds)
+  }
 
   /** Action to be performed after authentication succeeds. */
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
@@ -85,7 +93,7 @@ trait SimpleKeyAuthSupport[UserType <: AnyRef] { this: (ScalatraBase with Scentr
   /**
    * Main authentication method used in the controllers for performing Basic HTTP authentication.
    *
-   * @param f function that accepts a Scalatra Params object and possibly returns a userId` string.
+   * @param f function that accepts a Scalatra Params object and possibly returns a userId string.
    * @return [[nl.lumc.sasc.sentinel.models.User]] object.
    */
   protected def simpleKeyAuth(f: Params => Option[String])(implicit request: HttpServletRequest, response: HttpServletResponse) = {
