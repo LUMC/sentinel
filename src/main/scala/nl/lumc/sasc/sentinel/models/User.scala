@@ -214,16 +214,21 @@ case class UserPatch(op: String, path: String, value: Any) {
     opMessages ++ msgs
   }
 
-  /** Applies the patch operation to the given [[User]] object */
+  /**
+   * Applies the patch operation to the given [[User]] object.
+   *
+   * @param user [[User]] object to patch.
+   * @return Either a sequence of error strings or a patched user object.
+   */
   // NOTE: does not have anything to do with `apply` method of this case class' object.
-  def apply(user: User): User = {
-    require(validationMessages.isEmpty, "Patch object must be valid.")
-    (path, value) match {
-      case ("/verified", v: Boolean) => user.copy(verified = v)
-      case ("/email", e: String)     => user.copy(email = e)
-      case ("/password", p: String)  => user.copy(hashedPassword = User.hashPassword(p))
-      case (other, wise) =>
-        throw new IllegalArgumentException("Unexpected '" + other + "' value: '" + wise + "'.")
-    }
+  def apply(user: User): Either[Seq[String], User] = {
+    if (validationMessages.nonEmpty) Left(validationMessages)
+    else
+      (path, value) match {
+        case ("/verified", v: Boolean) => Right(user.copy(verified = v))
+        case ("/email", e: String)     => Right(user.copy(email = e))
+        case ("/password", p: String)  => Right(user.copy(hashedPassword = User.hashPassword(p)))
+        case (other, wise)             => Left(Seq("Unexpected '" + other + "' value: '" + wise + "'."))
+      }
   }
 }

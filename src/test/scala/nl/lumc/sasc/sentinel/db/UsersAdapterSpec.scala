@@ -24,13 +24,14 @@ import com.novus.salat.global._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
-import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
 import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
 class UsersAdapterSpec extends Specification with Mockito {
 
   /** User object for testing. */
-  private val testUserObj = User("testId", "test@email.com", "testPass", "testKey", verified = true, isAdmin = false)
+  private val testUserObj =
+    User("testId", "test@email.com", User.hashPassword("testPass"), "testKey", verified = true, isAdmin = false)
 
   /** MongoDB testing database name. */
   private val testDbName = "users_test"
@@ -137,6 +138,45 @@ class UsersAdapterSpec extends Specification with Mockito {
         coll.insert(dbo)
       }
       adapter.getUser(testUserObj.id) must beEqualTo(None).await
+    }
+  }
+
+  "patchUser" should {
+
+    "not change the input user when patchOps is empty" in {
+      val adapter = makeAdapter(makeFongo)
+      adapter.patchUser(testUserObj, Seq.empty) must beRight.like { case user =>
+        user mustEqual testUserObj
+      }
+    }
+
+    "change the user email when patchOps has one email patch operation" in {
+      val adapter = makeAdapter(makeFongo)
+      val newEmail = "new@email.com"
+      val patches = Seq(UserPatch("replace", "/email", newEmail))
+      adapter.patchUser(testUserObj, patches) must beRight.like { case user =>
+        user mustEqual testUserObj.copy(email = newEmail)
+      }
+    }
+
+    "change the user password when patchOps has one password patch operation" in {
+      val adapter = makeAdapter(makeFongo)
+      val newPw = "myNewPass123"
+      val patches = Seq(UserPatch("replace", "/password", newPw))
+      val newUser = adapter.patchUser(testUserObj, patches)
+      testUserObj.passwordMatches(newPw) must beFalse
+      newUser must beRight.like { case user =>
+        user.passwordMatches(newPw) must beTrue
+      }
+    }
+
+    "change the user verification status when patchOps has one verification status patch operation" in {
+      val adapter = makeAdapter(makeFongo)
+      val newStatus = !testUserObj.verified
+      val patches = Seq(UserPatch("replace", "/verified", newStatus))
+      adapter.patchUser(testUserObj, patches) must beRight.like { case user =>
+        user mustEqual testUserObj.copy(verified = newStatus)
+      }
     }
   }
 }
