@@ -79,8 +79,6 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
     }
   }
 
-  //((u, p) => p.apply(u))
-
   /** Updates an existing user record in the database. */
   def updateUser(user: User) = coll
     // TODO: refactor to use Futures instead

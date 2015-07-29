@@ -63,13 +63,16 @@ class UsersAdapterSpec extends Specification with Mockito {
     makeAdapter(fongo)
   }
 
+  /** Helper method to create a new adapter instance for each test. */
+  private def testAdapter = makeAdapter(makeFongo)
+
   /** MongoDB representation of the user object. */
   private val testUserDbo = grater[User].asDBObject(testUserObj)
 
   "usersExist" should {
 
     "return false when database is empty" in {
-      makeAdapter(makeFongo).userExist("myId") must beFalse.await
+      testAdapter.userExist("myId") must beFalse.await
     }
 
     "return false when the user ID does not exist" in {
@@ -94,7 +97,7 @@ class UsersAdapterSpec extends Specification with Mockito {
   "addUser" should {
 
     "succeed when supplied with a non-existing user" in {
-      val adapter = makeAdapter(makeFongo)
+      val adapter = testAdapter
       adapter.addUser(testUserObj) must beEqualTo(()).await
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
     }
@@ -121,8 +124,7 @@ class UsersAdapterSpec extends Specification with Mockito {
     }
 
     "succeed returning none when the database is empty" in {
-      val adapter = makeAdapter(makeFongo)
-      adapter.getUser(testUserObj.id) must beEqualTo(None).await
+      testAdapter.getUser(testUserObj.id) must beEqualTo(None).await
     }
 
     "succeed returning the user when supplied with an existing user" in {
@@ -143,39 +145,81 @@ class UsersAdapterSpec extends Specification with Mockito {
 
   "patchUser" should {
 
-    "not change the input user when patchOps is empty" in {
-      val adapter = makeAdapter(makeFongo)
-      adapter.patchUser(testUserObj, Seq.empty) must beRight.like { case user =>
-        user mustEqual testUserObj
+    "return the user unchanged when patchOps is empty" in {
+      testAdapter.patchUser(testUserObj, Seq.empty) must beRight.like {
+        case user =>
+          user mustEqual testUserObj
       }
     }
 
-    "change the user email when patchOps has one email patch operation" in {
-      val adapter = makeAdapter(makeFongo)
+    "return a user with updated email when patchOps has one email patch operation" in {
       val newEmail = "new@email.com"
       val patches = Seq(UserPatch("replace", "/email", newEmail))
-      adapter.patchUser(testUserObj, patches) must beRight.like { case user =>
-        user mustEqual testUserObj.copy(email = newEmail)
+      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+        case user =>
+          user mustEqual testUserObj.copy(email = newEmail)
       }
     }
 
-    "change the user password when patchOps has one password patch operation" in {
-      val adapter = makeAdapter(makeFongo)
+    "return a user with updated password when patchOps has one password patch operation" in {
       val newPw = "myNewPass123"
       val patches = Seq(UserPatch("replace", "/password", newPw))
-      val newUser = adapter.patchUser(testUserObj, patches)
       testUserObj.passwordMatches(newPw) must beFalse
-      newUser must beRight.like { case user =>
-        user.passwordMatches(newPw) must beTrue
+      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+        case user =>
+          user.passwordMatches(newPw) must beTrue
       }
     }
 
-    "change the user verification status when patchOps has one verification status patch operation" in {
-      val adapter = makeAdapter(makeFongo)
+    "return a user with updated verification status when patchOps has one verification status patch operation" in {
       val newStatus = !testUserObj.verified
       val patches = Seq(UserPatch("replace", "/verified", newStatus))
-      adapter.patchUser(testUserObj, patches) must beRight.like { case user =>
-        user mustEqual testUserObj.copy(verified = newStatus)
+      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+        case user =>
+          user mustEqual testUserObj.copy(verified = newStatus)
+      }
+    }
+
+    "return an updated user as expected when patchOps has multiple valid patches" in {
+      val patch1 = UserPatch("replace", "/verified", false)
+      val patch2 = UserPatch("replace", "/email", "my@email.com")
+      val patch3 = UserPatch("replace", "/password", "SuperSecret126")
+      testAdapter.patchUser(testUserObj, Seq(patch1, patch2, patch3)) must beRight.like {
+        case user =>
+          user.email mustEqual "my@email.com"
+          user.verified must beFalse
+          user.passwordMatches("SuperSecret126") must beTrue
+      }
+    }
+
+    "return the correct error message when op is invalid" in {
+      val patches = Seq(UserPatch("add", "/email", "t@t.com"))
+      testAdapter.patchUser(testUserObj, patches) must beLeft.like {
+        case errs =>
+          errs mustEqual Seq("Invalid operation: 'add'.")
+      }
+    }
+
+    "return the correct error message when path is invalid" in {
+      val patches = Seq(UserPatch("replace", "/invalid", 100))
+      testAdapter.patchUser(testUserObj, patches) must beLeft.like {
+        case errs =>
+          errs mustEqual Seq("Invalid path: '/invalid'.")
+      }
+    }
+
+    "return the correct error message when the value for a valid path is invalid" in {
+      val invalidCombinations = Seq(
+        ("/verified", 1),
+        ("/verified", "yes"),
+        ("/password", 1235),
+        ("/email", true))
+      foreach(invalidCombinations) {
+        case (path, value) =>
+          testAdapter.patchUser(testUserObj, Seq(UserPatch("replace", path, value))) must beLeft.like {
+            case errs =>
+              errs mustEqual Seq(s"Invalid value for path '$path': '$value'.")
+          }
       }
     }
   }
