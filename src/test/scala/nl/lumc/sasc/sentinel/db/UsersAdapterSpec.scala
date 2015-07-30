@@ -23,11 +23,14 @@ import com.novus.salat._
 import com.novus.salat.global._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import org.specs2.scalaz.DisjunctionMatchers
 
 import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
 import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
-class UsersAdapterSpec extends Specification with Mockito {
+class UsersAdapterSpec extends Specification
+    with DisjunctionMatchers
+    with Mockito {
 
   /** User object for testing. */
   private val testUserObj =
@@ -146,7 +149,7 @@ class UsersAdapterSpec extends Specification with Mockito {
   "patchUser" should {
 
     "return the user unchanged when patchOps is empty" in {
-      testAdapter.patchUser(testUserObj, Seq.empty) must beRight.like {
+      testAdapter.patchUser(testUserObj, Seq.empty) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj
       }
@@ -155,7 +158,7 @@ class UsersAdapterSpec extends Specification with Mockito {
     "return a user with updated email when patchOps has one email patch operation" in {
       val newEmail = "new@email.com"
       val patches = Seq(UserPatch("replace", "/email", newEmail))
-      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj.copy(email = newEmail)
       }
@@ -165,7 +168,7 @@ class UsersAdapterSpec extends Specification with Mockito {
       val newPw = "myNewPass123"
       val patches = Seq(UserPatch("replace", "/password", newPw))
       testUserObj.passwordMatches(newPw) must beFalse
-      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
           user.passwordMatches(newPw) must beTrue
       }
@@ -174,7 +177,7 @@ class UsersAdapterSpec extends Specification with Mockito {
     "return a user with updated verification status when patchOps has one verification status patch operation" in {
       val newStatus = !testUserObj.verified
       val patches = Seq(UserPatch("replace", "/verified", newStatus))
-      testAdapter.patchUser(testUserObj, patches) must beRight.like {
+      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj.copy(verified = newStatus)
       }
@@ -184,7 +187,7 @@ class UsersAdapterSpec extends Specification with Mockito {
       val patch1 = UserPatch("replace", "/verified", false)
       val patch2 = UserPatch("replace", "/email", "my@email.com")
       val patch3 = UserPatch("replace", "/password", "SuperSecret126")
-      testAdapter.patchUser(testUserObj, Seq(patch1, patch2, patch3)) must beRight.like {
+      testAdapter.patchUser(testUserObj, Seq(patch1, patch2, patch3)) must beRightDisjunction.like {
         case user =>
           user.email mustEqual "my@email.com"
           user.verified must beFalse
@@ -194,7 +197,7 @@ class UsersAdapterSpec extends Specification with Mockito {
 
     "return the correct error message when op is invalid" in {
       val patches = Seq(UserPatch("add", "/email", "t@t.com"))
-      testAdapter.patchUser(testUserObj, patches) must beLeft.like {
+      testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
           errs mustEqual Seq("Invalid operation: 'add'.")
       }
@@ -202,7 +205,7 @@ class UsersAdapterSpec extends Specification with Mockito {
 
     "return the correct error message when path is invalid" in {
       val patches = Seq(UserPatch("replace", "/invalid", 100))
-      testAdapter.patchUser(testUserObj, patches) must beLeft.like {
+      testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
           errs mustEqual Seq("Invalid path: '/invalid'.")
       }
@@ -216,7 +219,7 @@ class UsersAdapterSpec extends Specification with Mockito {
         ("/email", true))
       foreach(invalidCombinations) {
         case (path, value) =>
-          testAdapter.patchUser(testUserObj, Seq(UserPatch("replace", path, value))) must beLeft.like {
+          testAdapter.patchUser(testUserObj, Seq(UserPatch("replace", path, value))) must beLeftDisjunction.like {
             case errs =>
               errs mustEqual Seq(s"Invalid value for path '$path': '$value'.")
           }

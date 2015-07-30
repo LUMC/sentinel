@@ -69,15 +69,14 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
    * @param patchOps Patch operations.
    * @return Either a sequence of error messages or the patched user object.
    */
-  def patchUser(user: User, patchOps: Seq[UserPatch]): Either[Seq[String], User] = {
-    val init: Either[Seq[String], User] = Right(user)
-    patchOps.foldLeft(init) {
-      case (u, p) => u match {
-        case Right(usr) => p.apply(usr)
-        case otherwise  => otherwise
-      }
+  def patchUser(user: User, patchOps: Seq[UserPatch]): \/[Seq[String], User] =
+    patchOps.foldLeft(user.right[Seq[String]]) {
+      case (usr, p) =>
+        for {
+          u <- usr
+          patchedUsr <- p.apply(u)
+        } yield patchedUsr
     }
-  }
 
   /** Updates an existing user record in the database. */
   def updateUser(user: User) = coll
@@ -95,10 +94,7 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
     getUser(userId).map { maybeUser =>
       for {
         user <- maybeUser
-        patchedUser <- patchUser(user, patchOps) match {
-          case Right(usr) => Option(usr)
-          case Left(errs) => None
-        }
+        patchedUser <- patchUser(user, patchOps).toOption
         updateOp <- Try(updateUser(patchedUser)).toOption
       } yield updateOp
     }

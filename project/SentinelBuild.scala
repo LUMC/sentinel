@@ -46,7 +46,8 @@ object SentinelBuild extends Build {
     "org.scalatra"            %% "scalatra-json"              % ScalatraVersion,
     "org.scalatra"            %% "scalatra-swagger"           % ScalatraVersion,
     "org.scalatra"            %% "scalatra-swagger-ext"       % ScalatraVersion,
-    "org.scalatra"            %% "scalatra-slf4j"             % ScalatraVersion)
+    "org.scalatra"            %% "scalatra-slf4j"             % ScalatraVersion,
+    "org.typelevel"           %% "scalaz-specs2"              % "0.2"                 % "test")
 
   lazy val formattingPreferences = {
     import scalariform.formatter.preferences._
