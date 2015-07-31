@@ -16,7 +16,6 @@
  */
 package nl.lumc.sasc.sentinel.db
 
-import scala.util.Try
 import scala.concurrent._
 
 import com.mongodb.casbah.Imports._

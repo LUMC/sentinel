@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
-import nl.lumc.sasc.sentinel.db.{ MongodbAccessObject, MongodbConnector }
+import nl.lumc.sasc.sentinel.db.MongodbConnector
 
 /** Base trait for defining processors. */
 trait Processor extends MongodbConnector {
