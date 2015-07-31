@@ -89,14 +89,18 @@ trait UsersAdapter extends MongodbConnector with FutureAdapter {
    *
    * @param userId ID of the user to patch.
    * @param patchOps Patch operations to apply.
-   * @return Write result.
+   * @return Either error messages or write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: Seq[UserPatch]): Future[Option[WriteResult]] =
-    getUser(userId).map { maybeUser =>
-      for {
-        user <- maybeUser
-        patchedUser <- patchUser(user, patchOps).toOption
-        updateOp <- Try(updateUser(patchedUser)).toOption
-      } yield updateOp
-    }
+  def patchAndUpdateUser(userId: String, patchOps: Seq[UserPatch]): Future[Seq[String] \/ WriteResult] = {
+    val result = for {
+      currentUser <- EitherT(getUser(userId).map {
+        case Some(u) => u.right[Seq[String]]
+        case None    => Seq(s"User ID '$userId' not found.").left[User]
+      })
+      patchedUser <- EitherT(Future { patchUser(currentUser, patchOps) })
+      writeResult <- EitherT(updateUser(patchedUser).map(_.right[Seq[String]]))
+    } yield writeResult
+
+    result.run
+  }
 }
