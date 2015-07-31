@@ -201,7 +201,7 @@ case class UserPatch(op: String, path: String, value: Any) {
   /** Messages to emit when the patch operation is invalid. */
   private val opMessages: Seq[String] =
     if (op == "replace") Seq.empty
-    else Seq(s"Invalid operation: '$op'.")
+    else Seq(s"Unexpected operation: '$op'.")
 
   /** Messages to emit when any part of the patch operation is invalid. */
   lazy val validationMessages: Seq[String] = {

@@ -199,7 +199,7 @@ class UsersAdapterSpec extends Specification
       val patches = Seq(UserPatch("add", "/email", "t@t.com"))
       testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
-          errs mustEqual Seq("Invalid operation: 'add'.")
+          errs mustEqual Seq("Unexpected operation: 'add'.")
       }
     }
 
