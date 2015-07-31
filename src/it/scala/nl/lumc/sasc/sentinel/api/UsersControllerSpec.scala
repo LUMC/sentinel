@@ -580,9 +580,10 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           new Context.PriorRequestsClean {
 
+            def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
             def payload = toByteArray(
               Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
-            def request = () => patch(endpoint(Users.avg.id), payload) { response }
+            def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 400" in {
@@ -591,7 +592,8 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "return a JSON object containing the expected message" in {
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Invalid user patch.")
+              priorResponse.body must /("message" -> "Error encountered when patching.")
+              priorResponse.body must /("hint" -> s"Unexpected operation: '$op'.")
             }
           }
         }

@@ -16,20 +16,19 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
-
-import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
 
 import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
+import scalaz._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.exceptions.{ ExistingUserIdException, JsonValidationException }
+import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
 
 /**
  * Controller for the `/users` endpoint.
@@ -123,18 +122,10 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         val patches = jv.extractOpt[Seq[UserPatch]] match {
           // and patch list has size > 0
           case Some(ps) if ps.nonEmpty => ps
-          // but patch list is empty
+          // if patch list is empty
           case otherwise               => halt(400, ApiMessage("Invalid user patch.", hint = "Operations can not be empty."))
         }
-
-        // if any patch object is invalid
-        if (patches.exists(_.validationMessages.nonEmpty)) {
-          halt(400, ApiMessage("Invalid user patch.",
-            hint = patches
-              .collect { case up: UserPatch if up.validationMessages.nonEmpty => up.validationMessages }
-              .flatten))
-          // otherwise we finally retrieve the object
-        } else patches
+        patches
     }
 
     val userRecordId = params("userRecordId")
@@ -147,8 +138,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       val is =
         users.patchAndUpdateUser(userRecordId, patchOps)
           .map {
-            case Some(_) => NoContent()
-            case None    => InternalServerError()
+            case -\/(errs)                 => BadRequest(ApiMessage("Error encountered when patching.", hint = errs.mkString(", ")))
+            case \/-(res) if res.getN == 1 => NoContent()
+            case otherwise                 => InternalServerError()
           }
     }
     else halt(403, CommonMessages.Unauthorized)
