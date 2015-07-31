@@ -226,5 +226,32 @@ class UsersAdapterSpec extends Specification
       }
     }
   }
+
+  "updateUser" should {
+
+    "fail when the database is empty" in {
+      testAdapter.updateUser(testUserObj) must throwAn[Exception].await
+    }
+
+    "fail when the database does not contain the specified user" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        val dbo = grater[User].asDBObject(testUserObj.copy(id = "newId"))
+        coll.insert(dbo)
+      }
+      adapter.updateUser(testUserObj) must throwAn[Exception].await
+    }
+
+    "succeed when the database contain the specified user" in {
+      val fongo = makeFongo
+      val adapter = usingAdapter(fongo) { coll =>
+        val dbo = grater[User].asDBObject(testUserObj)
+        coll.insert(dbo)
+      }
+      val newEmail = "new@email.com"
+      adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
+      adapter.updateUser(testUserObj.copy(email = newEmail)).map { res => res.getN mustEqual 1 }.await
+      adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
+    }
+  }
 }
 
