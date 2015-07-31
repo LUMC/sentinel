@@ -16,8 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.utils
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
+
+import scalaz._
 
 /**
  * Base adapter that uses Scala's Futures.
@@ -29,4 +31,10 @@ trait FutureAdapter {
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds
+
+  /** Implicit value for making Future a Scalaz monad. */
+  implicit def futureMonad(implicit context: ExecutionContext) = new Monad[Future] {
+    override def point[T](t: => T): Future[T] = Future { t }
+    override def bind[T, U](ft: Future[T])(f: T => Future[U]): Future[U] = ft.flatMap(f)
+  }
 }
