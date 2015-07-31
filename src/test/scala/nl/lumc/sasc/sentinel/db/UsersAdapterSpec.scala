@@ -242,8 +242,7 @@ class UsersAdapterSpec extends Specification
     }
 
     "succeed when the database contain the specified user" in {
-      val fongo = makeFongo
-      val adapter = usingAdapter(fongo) { coll =>
+      val adapter = usingAdapter(makeFongo) { coll =>
         val dbo = grater[User].asDBObject(testUserObj)
         coll.insert(dbo)
       }
@@ -251,6 +250,38 @@ class UsersAdapterSpec extends Specification
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.updateUser(testUserObj.copy(email = newEmail)).map { res => res.getN mustEqual 1 }.await
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
+    }
+  }
+
+  "patchAndUpdateUser" should {
+
+    "return the expected error message when user does not exist" in {
+      testAdapter.patchAndUpdateUser("nonexistent", Seq.empty).map { ret =>
+        ret must beLeftDisjunction.like {
+          case errs => errs mustEqual Seq("User ID 'nonexistent' not found.")
+        }
+      }.await
+    }
+
+    "return the expected result when patch is successful" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        val dbo = grater[User].asDBObject(testUserObj)
+        coll.insert(dbo)
+      }
+      val newEmail = "new@email.com"
+      val newStatus = !testUserObj.verified
+      val patch1 = UserPatch("replace", "/verified", newStatus)
+      val patch2 = UserPatch("replace", "/email", newEmail)
+      val patches = Seq(patch1, patch2)
+      adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
+      adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 0
+      adapter.patchAndUpdateUser(testUserObj.id, patches).map { ret =>
+        ret must beRightDisjunction.like {
+          case res => res.getN mustEqual 1
+        }
+      }.await
+      adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
+      adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 1
     }
   }
 }
