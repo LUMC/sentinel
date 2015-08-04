@@ -196,7 +196,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       StringResponseMessage(201, "Run summary added."),
       StringResponseMessage(400, CommonMessages.UnspecifiedUserId.message),
       StringResponseMessage(400, CommonMessages.UnspecifiedPipeline.message),
-      StringResponseMessage(400, CommonMessages.InvalidPipeline.message),
+      StringResponseMessage(400, "Pipeline parameter is invalid."),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
       StringResponseMessage(401, CommonMessages.Unauthenticated.message),
       StringResponseMessage(403, CommonMessages.Unauthorized.message),
@@ -211,7 +211,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
     supportedPipelines.get(pipeline) match {
-      case None => BadRequest(CommonMessages.InvalidPipeline)
+      case None => BadRequest(CommonMessages.invalidPipeline(supportedPipelines.keySet.toSeq))
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {

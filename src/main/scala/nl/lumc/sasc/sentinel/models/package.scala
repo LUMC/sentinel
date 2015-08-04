@@ -31,8 +31,8 @@ package object models {
   /** Common API messages. */
   object CommonMessages {
 
-    val InvalidPipeline = ApiMessage("Pipeline parameter is invalid.",
-      "Valid values are " + Pipeline.values.toList.map(_.toString).sorted.mkString(", ") + ".")
+    def invalidPipeline(validList: Seq[String]) = ApiMessage("Pipeline parameter is invalid.",
+      "Valid values are " + validList.sorted.mkString(", ") + ".")
 
     val InvalidLibType = ApiMessage("Library type parameter is invalid.",
       "Valid values are '" + LibType.values.toList.map(_.toString).sorted.mkString("', '") + "'.")
