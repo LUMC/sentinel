@@ -44,10 +44,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    *
    * @param fi Run summary file uploaded via an HTTP endpoint.
    * @param user Uploader of the run summary file.
-   * @param pipeline Enum value representing the pipeline name that generated the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Future[BaseRunRecord]
+  def processRun(fi: FileItem, user: User): Future[BaseRunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -59,13 +58,11 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    *
    * @param byteContents Byte array to store.
    * @param user Uploader of the byte array.
-   * @param pipeline Enum value representing the pipeline name.
    * @param fileName Original uploaded file name.
    * @param inputGzipped Whether the input file was gzipped or not.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(byteContents: Array[Byte], user: User, pipeline: Pipeline.Value,
-                fileName: String, inputGzipped: Boolean): ObjectId = {
+  def storeFile(byteContents: Array[Byte], user: User, fileName: String, inputGzipped: Boolean): ObjectId = {
     // TODO: use Futures instead
     // TODO: stop using exceptions
     val res =
@@ -75,7 +72,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
           f.contentType = "application/json"
           f.metaData = MongoDBObject(
             "uploaderId" -> user.id,
-            "pipeline" -> pipeline.toString,
+            "pipeline" -> pipelineName,
             "inputGzipped" -> inputGzipped
           )
         }

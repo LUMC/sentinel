@@ -23,7 +23,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
@@ -46,13 +45,13 @@ class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
 
   val validator = createValidator("/schemas/plain.json")
 
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) =
+  def processRun(fi: FileItem, user: User) =
 
     for {
       (byteContents, unzipped) <- Future { fi.readInputStream() }
       _ <- Future { parseAndValidate(byteContents) }
-      fileId <- Future { storeFile(byteContents, user, pipeline, fi.getName, unzipped) }
-      run = RunRecord(fileId, user.id, pipeline.toString.toLowerCase, Date.from(Clock.systemUTC().instant))
+      fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
+      run = RunRecord(fileId, user.id, pipelineName, Date.from(Clock.systemUTC().instant))
       _ <- Future { storeRun(run) }
     } yield run
 }

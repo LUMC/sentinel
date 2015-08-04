@@ -21,7 +21,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models._
 
@@ -30,5 +29,5 @@ import nl.lumc.sasc.sentinel.models._
  */
 class GenericRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo) {
   def pipelineName = "generic"
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value) = Future { throw new NotImplementedError }
+  def processRun(fi: FileItem, user: User) = Future { throw new NotImplementedError }
 }

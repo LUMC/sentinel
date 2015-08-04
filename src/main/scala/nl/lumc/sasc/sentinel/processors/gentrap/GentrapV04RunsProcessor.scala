@@ -27,7 +27,6 @@ import org.json4s.JsonDSL._
 import org.scalatra.servlet.FileItem
 import scalaz.{ Failure => _, _ }, Scalaz._
 
-import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
@@ -255,7 +254,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
   /** Helper function for creating run records. */
   private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
                                     samples: Seq[GentrapSampleRecord], libs: Seq[GentrapLibRecord],
-                                    user: User, pipeline: Pipeline.Value, runName: Option[String] = None) =
+                                    user: User, runName: Option[String] = None) =
     RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
       refId = Option(refId),
@@ -265,7 +264,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       libIds = libs.map(_.id),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
-      pipeline = pipeline.toString.toLowerCase)
+      pipeline = pipelineName)
 
   /** Attribute keys of Gentrap annotations. */
   protected val GentrapAnnotationKeys = Set("annotation_bed", "annotation_refflat", "annotation_gtf")
@@ -274,14 +273,14 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
   val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
 
-  def processRun(fi: FileItem, user: User, pipeline: Pipeline.Value): Future[RunRecord] =
+  def processRun(fi: FileItem, user: User): Future[RunRecord] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
       (byteContents, unzipped) <- Future { fi.readInputStream() }
       runJson <- Future { parseAndValidate(byteContents) }
-      fileId <- Future { storeFile(byteContents, user, pipeline, fi.getName, unzipped) }
+      fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
       runRef <- Future { extractReference(runJson) }
       ref <- Future { getOrStoreReference(runRef) }
       refId = ref.refId
@@ -295,7 +294,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       _ <- Future { storeSamples(samples) }
       _ <- Future { storeLibs(libs) }
 
-      run = createRun(fileId, refId, annotIds, samples, libs, user, pipeline, runName)
+      run = createRun(fileId, refId, annotIds, samples, libs, user, runName)
       _ <- Future { storeRun(run) }
     } yield run
 }

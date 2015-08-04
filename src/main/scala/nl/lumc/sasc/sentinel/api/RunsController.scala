@@ -221,7 +221,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
           val is =
-            p.processRun(uploadedRun, user, AllowedPipelineParams(pipeline))
+            p.processRun(uploadedRun, user)
               .map(run => Created(run))
         }
     }
