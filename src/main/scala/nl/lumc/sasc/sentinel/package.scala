@@ -52,11 +52,6 @@ package object sentinel {
     val Gentrap = Value("gentrap")
   }
 
-  /** Allowed pipeline parameters in HTTP requests */
-  val AllowedPipelineParams = Pipeline.values
-    .map(enum => enum.toString.toLowerCase -> enum)
-    .toMap
-
   /** Supported aggregation parameters */
   object AggrStat extends Enumeration {
     type AggrStat = Value

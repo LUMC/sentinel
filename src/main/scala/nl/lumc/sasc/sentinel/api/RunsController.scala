@@ -22,7 +22,7 @@ import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 
-import nl.lumc.sasc.sentinel.{ AllowedPipelineParams, HeaderApiKey, Pipeline }
+import nl.lumc.sasc.sentinel.{ HeaderApiKey, Pipeline }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor
@@ -56,11 +56,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
 
-  /** Adapter for connecting to the plain summary collections. */
-  val plain = new PlainRunsProcessor(mongo)
-
-  /** Adapter for connecting to the gentrap summary collections. */
-  val gentrap = new GentrapV04RunsProcessor(mongo)
+  /** Temporary container for valid pipeline parameters. */
+  protected val supportedPipelines = Map(
+    "plain" -> new PlainRunsProcessor(mongo),
+    "gentrap" -> new GentrapV04RunsProcessor(mongo)
+  )
 
   /** Set maximum allowed file upload size. */
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))
@@ -190,7 +190,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
       headerParam[String](HeaderApiKey).description("User API key."),
       queryParam[String]("pipeline")
         .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `plain`.")
-        .allowableValues(AllowedPipelineParams.keySet.toList),
+        .allowableValues(Pipeline.values.toList),
       formParam[File]("run").description("Run summary file."))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
@@ -210,12 +210,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
     val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
-    val processor = AllowedPipelineParams.get(pipeline).collect {
-      case Pipeline.Gentrap => gentrap
-      case Pipeline.Plain   => plain
-    }
-
-    processor match {
+    supportedPipelines.get(pipeline) match {
       case None => BadRequest(CommonMessages.InvalidPipeline)
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
@@ -242,7 +237,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
         .description(
           """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `plain`. If not
             | specified, all run summaries are returned.""".stripMargin.replaceAll("\n", ""))
-        .allowableValues(AllowedPipelineParams.keySet.toList)
+        .allowableValues(Pipeline.values.toList)
         .optional)
       responseMessages (
         StringResponseMessage(400, CommonMessages.UnspecifiedUserId.message),
@@ -255,13 +250,13 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   get("/", operation(runsGetOperation)) {
     logger.info(requestLog)
     val pipelines = splitParam(params.getAs[String]("pipelines"))
-    val (validPipelines, invalidPipelines) = pipelines.partition { AllowedPipelineParams.contains }
+    val (validPipelines, invalidPipelines) = pipelines.partition { supportedPipelines.contains }
 
     if (invalidPipelines.nonEmpty)
       halt(400, ApiMessage("One or more pipeline is invalid.", hint = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
-      runs.getRuns(user, validPipelines.map { AllowedPipelineParams.apply })
+      runs.getRuns(user, validPipelines.map { Pipeline.withName })
     }
   }
 }
