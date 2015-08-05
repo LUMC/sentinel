@@ -128,7 +128,7 @@ package object utils {
     val (oids, noids) = strs
       .map { case str => (str.getObjectId, str) }
       .partition { case (x, y) => x.isDefined }
-    (oids.map(_._1).flatten, noids.map(_._2))
+    (oids.flatMap(_._1), noids.map(_._2))
   }
 
   /** Gets the current UTC time. */
