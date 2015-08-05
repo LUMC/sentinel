@@ -45,13 +45,6 @@ package object sentinel {
     val SentinelConfKey = "sentinel"
   }
 
-  /** Supported pipeline summary schemas */
-  object Pipeline extends Enumeration {
-    type Pipeline = Value
-    val Plain = Value("plain")
-    val Gentrap = Value("gentrap")
-  }
-
   /** Supported aggregation parameters */
   object AggrStat extends Enumeration {
     type AggrStat = Value

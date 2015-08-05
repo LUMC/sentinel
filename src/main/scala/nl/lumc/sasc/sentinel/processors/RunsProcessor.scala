@@ -25,7 +25,6 @@ import com.novus.salat._
 import com.novus.salat.global._
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.Pipeline
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, calcMd5, getUtcTimeNow }
@@ -152,14 +151,14 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * Retrieves all run records uploaded by the given user.
    *
    * @param user Run summary files uploader.
-   * @param pipelines Pipeline enums. If non-empty, only run records of the pipelines in the sequence will be retrieved.
+   * @param pipelineNames Pipeline names. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelines: Seq[Pipeline.Value]): Seq[BaseRunRecord] = {
+  def getRuns(user: User, pipelineNames: Seq[String]): Seq[BaseRunRecord] = {
     // TODO: use Futures instead
     val query =
-      if (pipelines.isEmpty) $and("uploaderId" $eq user.id)
-      else $and("uploaderId" $eq user.id, $or(pipelines.map(pipeline => "pipeline" $eq pipeline.toString)))
+      if (pipelineNames.isEmpty) $and("uploaderId" $eq user.id)
+      else $and("uploaderId" $eq user.id, $or(pipelineNames.map(pipeline => "pipeline" $eq pipeline)))
     coll
       .find($and(query :: ("deletionTimeUtc" $exists false)))
       .sort(MongoDBObject("creationTimeUtc" -> -1))
