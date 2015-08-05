@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, splitParam }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds }
 
 /** Base servlet for all Sentinel controllers. */
 abstract class SentinelServlet extends ScalatraServlet
@@ -53,6 +53,9 @@ abstract class SentinelServlet extends ScalatraServlet
 
   /** Default execution context. */
   implicit protected def executor: ExecutionContext = scala.concurrent.ExecutionContext.global
+
+  /** Delimiter for multi-valued URL parameter. */
+  protected val multiParamDelimiter: String = ","
 
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
@@ -132,11 +135,18 @@ abstract class SentinelServlet extends ScalatraServlet
         }
     }
 
+  /** Implicit conversion from URL parameter to a sequence of strings. */
+  protected implicit val stringToSeqString: TypeConverter[String, Seq[String]] =
+    new TypeConverter[String, Seq[String]] {
+      def apply(str: String): Option[Seq[String]] =
+        Option(str.split(multiParamDelimiter).toSeq)
+    }
+
   /** Implicit conversion from URL parameter to a sequence of database IDs. */
   protected implicit val stringToObjectId: TypeConverter[String, Seq[DbId]] =
     new TypeConverter[String, Seq[DbId]] {
       def apply(str: String): Option[Seq[DbId]] = {
-        val (validIds, invalidIds) = separateObjectIds(splitParam(Option(str)))
+        val (validIds, invalidIds) = separateObjectIds(str.split(multiParamDelimiter).toSeq)
         if (invalidIds.nonEmpty)
           halt(400, CommonMessages.InvalidDbId.copy(hint = invalidIds))
         else Option(validIds)

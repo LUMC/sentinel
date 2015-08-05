@@ -249,7 +249,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
 
   get("/", operation(runsGetOperation)) {
     logger.info(requestLog)
-    val pipelines = splitParam(params.getAs[String]("pipelines"))
+    val pipelines = params.getAs[Seq[String]]("pipelines").getOrElse(Seq.empty)
     val (validPipelines, invalidPipelines) = pipelines.partition { supportedPipelines.contains }
 
     if (invalidPipelines.nonEmpty)

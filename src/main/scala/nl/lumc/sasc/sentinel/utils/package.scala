@@ -97,20 +97,6 @@ package object utils {
   }
 
   /**
-   * Splits a raw URL parameter using the given delimiter.
-   *
-   * @param param Raw URL parameter string.
-   * @param delimiter String delimiter.
-   * @param fallback Fallback string.
-   * @return String items of the raw URL parameter, or the fallback string.
-   */
-  def splitParam(param: Option[String], delimiter: String = ",",
-                 fallback: Seq[String] = Seq.empty): Seq[String] = param match {
-    case Some(str) => str.split(delimiter).toSeq
-    case None      => fallback
-  }
-
-  /**
    * Transforms the given input stream into a byte array.
    *
    * @param is Input stream.
