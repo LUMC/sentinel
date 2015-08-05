@@ -24,7 +24,7 @@ import org.json4s.jackson.JsonMethods._
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.User
 
-class StatsControllerSpec extends SentinelServletSpec {
+class LumcStatsControllerSpec extends SentinelServletSpec {
 
   import SentinelServletSpec.SchemaExamples
 
@@ -33,7 +33,7 @@ class StatsControllerSpec extends SentinelServletSpec {
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val baseEndpoint = "/stats"
-  val statsServlet = new StatsController
+  val statsServlet = new LumcStatsController
   val runsServlet = new RunsController
   addServlet(statsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
