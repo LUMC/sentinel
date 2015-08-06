@@ -23,13 +23,17 @@ import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
+import scala.concurrent.Future
+
 /**
  * Controller for the `/annotations` endpoint.
  *
  * @param swagger Container for main Swagger specification.
  * @param mongo Object for accessing the database.
  */
-class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
+class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
+    extends SentinelServlet
+    with FutureSupport { self =>
 
   /** Controller name, shown in the generated Swagger spec. */
   override protected val applicationName = Some("annotations")
@@ -78,6 +82,8 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
 
   get("/", operation(annotationsGetOperation)) {
     logger.info(requestLog)
-    annots.getAnnotations()
+    new AsyncResult {
+      val is = annots.getAnnotations().map(annots => Ok(annots))
+    }
   }
 }

@@ -16,14 +16,21 @@
  */
 package nl.lumc.sasc.sentinel.db
 
+import scala.concurrent._
+
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.AnnotationRecord
+import nl.lumc.sasc.sentinel.utils.FutureAdapter
 
 /** Trait for connecting to an annotation records collection. */
-trait AnnotationsAdapter extends MongodbConnector {
+trait AnnotationsAdapter extends MongodbConnector with FutureAdapter {
+
+  /** Execution context for User database operations. */
+  implicit protected def context: ExecutionContext = ExecutionContext.global
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Annotations)
@@ -67,13 +74,13 @@ trait AnnotationsAdapter extends MongodbConnector {
    *
    * @return Annotation records.
    */
-  def getAnnotations(): Seq[AnnotationRecord] =
-    // TODO: refactor to use Futures instead
+  def getAnnotations(): Future[Seq[AnnotationRecord]] = Future {
     coll
       .find()
       .sort(MongoDBObject("creationTimeUtc" -> -1))
-      .map { case dbo => grater[AnnotationRecord].asObject(dbo) }
+      .map { dbo => grater[AnnotationRecord].asObject(dbo) }
       .toSeq
+  }
 
   /**
    * Retrieves a single annotation record.
