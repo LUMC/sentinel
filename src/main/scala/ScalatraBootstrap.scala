@@ -24,6 +24,7 @@ import scala.util.Try
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, settings }, settings._
 import nl.lumc.sasc.sentinel.api._
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 /** Main entry point for mounted servlets. */
 class ScalatraBootstrap extends LifeCycle {
@@ -42,6 +43,9 @@ class ScalatraBootstrap extends LifeCycle {
 
     implicit val mongo = MongodbAccessObject.withDefaultSettings
     implicit val system = ActorSystem("appActorSystem")
+    implicit val runsProcessorMakers = Set(
+      runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+      runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
 
     // Check that we have a live connection to the DB
     mongo.db.getStats()

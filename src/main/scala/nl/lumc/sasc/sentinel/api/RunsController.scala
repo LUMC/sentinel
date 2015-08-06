@@ -25,12 +25,9 @@ import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraint
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
-import nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor
-import nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor
-import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
+import nl.lumc.sasc.sentinel.processors.{ GenericRunsProcessor, RunsProcessor }
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils._
 import nl.lumc.sasc.sentinel.utils.exceptions._
 import nl.lumc.sasc.sentinel.utils.implicits._
 
@@ -40,7 +37,9 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  * @param swagger Container for main Swagger specification.
  * @param mongo Object for accessing the database.
  */
-class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet
+class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
+                     runsProcessorMakers: Set[MongodbAccessObject => RunsProcessor])
+    extends SentinelServlet
     with FileUploadSupport
     with AuthenticationSupport { self =>
 
@@ -56,11 +55,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject) 
   /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
 
-  /** Temporary container for valid pipeline parameters. */
-  protected val supportedPipelines = Map(
-    "plain" -> new PlainRunsProcessor(mongo),
-    "gentrap" -> new GentrapV04RunsProcessor(mongo)
-  )
+  /** Container for supported pipelines. */
+  protected lazy val supportedPipelines = runsProcessorMakers.map { f =>
+    val proc = f(mongo)
+    (proc.pipelineName, proc)
+  }.toMap
 
   /** Set maximum allowed file upload size. */
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))

@@ -16,11 +16,13 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.User
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.Uploadable
+
+import nl.lumc.sasc.sentinel.HeaderApiKey
+import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
@@ -30,6 +32,9 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
+  implicit val runsProcessorMakers = Set(
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/references"
   val refsServlet = new ReferencesController
   val runsServlet = new RunsController

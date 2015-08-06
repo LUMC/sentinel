@@ -23,6 +23,7 @@ import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class LumcStatsControllerSpec extends SentinelServletSpec {
 
@@ -32,6 +33,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
+  implicit val runsProcessorMakers = Set(
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/stats"
   val statsServlet = new LumcStatsController
   val runsServlet = new RunsController

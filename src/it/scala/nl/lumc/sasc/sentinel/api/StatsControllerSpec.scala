@@ -16,11 +16,13 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import org.scalatra.swagger.Swagger
+import org.scalatra.test.Uploadable
+
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.User
-import org.scalatra.swagger.Swagger
-import org.scalatra.test.Uploadable
+import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class StatsControllerSpec extends SentinelServletSpec { self =>
 
@@ -33,6 +35,9 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
+  implicit val runsProcessorMakers = Set(
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/stats"
   val statsServlet = new TestStatsController
   val runsServlet = new RunsController

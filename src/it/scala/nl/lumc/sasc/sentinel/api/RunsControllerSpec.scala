@@ -26,6 +26,7 @@ import org.json4s.jackson.JsonMethods._
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, RunRecord, User }
 import nl.lumc.sasc.sentinel.settings._
+import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class RunsControllerSpec extends SentinelServletSpec {
 
@@ -75,6 +76,9 @@ class RunsControllerSpec extends SentinelServletSpec {
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
+  implicit val runsProcessorMakers = Set(
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val servlet = new RunsController
   val baseEndpoint = "/runs"
   addServlet(servlet, s"$baseEndpoint/*")

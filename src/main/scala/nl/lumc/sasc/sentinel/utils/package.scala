@@ -22,6 +22,7 @@ import java.util.zip.GZIPInputStream
 import java.security.MessageDigest
 import java.time.Clock
 import scala.io.Source
+import scala.reflect.runtime.{ universe => ru }
 import scala.util.Try
 
 import com.github.fge.jsonschema.core.report.ProcessingReport
@@ -29,7 +30,9 @@ import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.servlet.FileItem
 
-import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, RunRecord }
+import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.models.BaseRunRecord
+import nl.lumc.sasc.sentinel.processors.{ RunsProcessor, StatsProcessor }
 
 /** General utilities */
 package object utils {
@@ -174,4 +177,43 @@ package object utils {
       def asEnum[T <: Enumeration#Value](enm: Map[String, T]): Option[T] = enm.get(raw)
     }
   }
+
+  object reflect {
+
+    /** Shared mirror instance. */
+    private val mirror = ru.runtimeMirror(getClass.getClassLoader)
+
+    /**
+     * Given a [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass, returns a single-parameter function that
+     * takes a [[nl.lumc.sasc.sentinel.db.MongodbAccessObject]] instance and instantiates the runs processor. In other
+     * words, the function creates a delayed constructor for the runs processor.
+     *
+     * @tparam T [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass.
+     * @return Delayed constructor for the given class.
+     */
+    def runsProcessorMaker[T <: RunsProcessor](implicit m: Manifest[T]) = {
+      val klass = ru.typeOf[T].typeSymbol.asClass
+      val km = mirror.reflectClass(klass)
+      val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
+      val ctorm = km.reflectConstructor(ctor)
+      (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[RunsProcessor]
+    }
+
+    /**
+     * Given a [[nl.lumc.sasc.sentinel.processors.StatsProcessor]] subclass, returns a single-parameter function that
+     * takes a [[nl.lumc.sasc.sentinel.db.MongodbAccessObject]] instance and instantiates the stats processor. In other
+     * words, the function creates a delayed constructor for the stats processor.
+     *
+     * @tparam T [[nl.lumc.sasc.sentinel.processors.StatsProcessor]] subclass.
+     * @return Delayed constructor for the given class.
+     */
+    def statsProcessorMaker[T <: StatsProcessor](implicit m: Manifest[T]) = {
+      val klass = ru.typeOf[T].typeSymbol.asClass
+      val km = mirror.reflectClass(klass)
+      val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
+      val ctorm = km.reflectConstructor(ctor)
+      (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[StatsProcessor]
+    }
+  }
+
 }
