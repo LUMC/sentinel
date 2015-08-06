@@ -20,7 +20,7 @@ import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-import org.apache.commons.io.FilenameUtils.{ getExtension, getName }
+import org.apache.commons.io.FilenameUtils.getName
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -68,22 +68,10 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
         case _ => false
       }
       .children
-      .map {
-        case fileJson =>
-          val filePath = (fileJson \ "path").extractOpt[String]
-          AnnotationRecord(
-            annotId = new ObjectId,
-            annotMd5 = (fileJson \ "md5").extract[String],
-            // Make sure file has extension and always return lower case extensions
-            extension = filePath match {
-              case None => None
-              case Some(path) =>
-                val ext = getExtension(path)
-                if (ext.isEmpty) None
-                else Some(ext.toLowerCase)
-            },
-            fileName = filePath.collect { case path => getName(path) },
-            creationTimeUtc = Option(getUtcTimeNow))
+      .map { fileJson =>
+        AnnotationRecord(
+          annotMd5 = (fileJson \ "md5").extract[String],
+          fileName = (fileJson \ "path").extractOpt[String].map { path => getName(path) })
       }
 
   /** Extracts alignment statistics from a sample or library entry in a Gentrap summary. */

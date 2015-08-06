@@ -26,7 +26,6 @@ import org.specs2.mutable.Specification
 import org.specs2.scalaz.DisjunctionMatchers
 
 import nl.lumc.sasc.sentinel.models.AnnotationRecord
-import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
 
 class AnnotationsAdapterSpec extends Specification
     with DisjunctionMatchers
@@ -36,9 +35,7 @@ class AnnotationsAdapterSpec extends Specification
   private val testAnnotObj = AnnotationRecord(
     annotId = new ObjectId,
     annotMd5 = "2c7041c7986dd97127df35e481ff4c36",
-    extension = Option("gtf"),
-    fileName = Option("annotation.gtf"),
-    creationTimeUtc = Option(getUtcTimeNow))
+    fileName = Option("annotation.gtf"))
 
   /** MongoDB testing database name. */
   private val testDbName = "users_test"
@@ -88,16 +85,10 @@ class AnnotationsAdapterSpec extends Specification
       testAdapter.getAnnotations() must beEqualTo(Seq.empty).await
     }
 
-    "succeed returning annotations (most recent first, no date last) when the database is not empty" in {
+    "succeed returning annotations (most recent first) when the database is not empty" in {
       val annot1 = testAnnotObj
-      val annot2 = testAnnotObj.copy(
-        annotId = new ObjectId,
-        annotMd5 = "1c7041c7986dd97127df35e481ff4c36",
-        creationTimeUtc = Option(getUtcTimeNow))
-      val annot3 = testAnnotObj.copy(
-        annotId = new ObjectId,
-        annotMd5 = "3c7041c7986dd97127df35e481ff4c36",
-        creationTimeUtc = Option(getUtcTimeNow))
+      val annot2 = AnnotationRecord("1c7041c7986dd97127df35e481ff4c36")
+      val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
       val annots = Seq(annot1, annot3, annot2)
       val adapter = usingAdapter(makeFongo) { coll =>
         annots.foreach { obj =>
