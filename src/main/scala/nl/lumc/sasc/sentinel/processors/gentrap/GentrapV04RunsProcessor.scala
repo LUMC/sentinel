@@ -17,7 +17,6 @@
 package nl.lumc.sasc.sentinel.processors.gentrap
 
 import scala.concurrent._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 import org.apache.commons.io.FilenameUtils.getName
@@ -175,10 +174,8 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       read2 = Try(extractReadStats(libJson, "seqstat_R2", "fastqc_R2")).toOption)
 
     val seqStatsProcessed = Try(extractReadStats(libJson, "seqstat_R1_qc", "fastqc_R1_qc")).toOption
-      .collect {
-        case r1proc =>
-          SeqStats(read1 = r1proc,
-            read2 = Try(extractReadStats(libJson, "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
+      .map { r1proc =>
+        SeqStats(read1 = r1proc, read2 = Try(extractReadStats(libJson, "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
       }
 
     val seqFilesRaw = SeqFiles(
@@ -186,10 +183,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       read2 = Try(extractReadFile(libJson, "input_R2")).toOption)
 
     val seqFilesProcessed = Try(extractReadFile(libJson, "output_R1")).toOption
-      .collect {
-        case r1f =>
-          SeqFiles(read1 = r1f, read2 = Try(extractReadFile(libJson, "output_R2")).toOption)
-      }
+      .map { r1f => SeqFiles(read1 = r1f, read2 = Try(extractReadFile(libJson, "output_R2")).toOption) }
 
     GentrapLibRecord(
       alnStats = extractAlnStats(libJson),
