@@ -73,9 +73,6 @@ class AnnotationsAdapterSpec extends Specification
   /** Helper method to create a new adapter instance for each test. */
   private def testAdapter = makeAdapter(makeFongo)
 
-  /** MongoDB representation of the user object. */
-  private val testAnnotDbo = grater[AnnotationRecord].asDBObject(testAnnotObj)
-
   "getAnnotations" should {
 
     "fail when the database operation raises any exception" in {
@@ -108,7 +105,6 @@ class AnnotationsAdapterSpec extends Specification
           coll.insert(dbo)
         }
       }
-      val expected = annots.sortBy(_.creationTimeUtc)
       adapter.getAnnotations() must beEqualTo(Seq(annot3, annot2, annot1)).await
     }
   }
