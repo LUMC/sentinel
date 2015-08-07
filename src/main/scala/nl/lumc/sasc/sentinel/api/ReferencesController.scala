@@ -29,7 +29,9 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  * @param swagger Container for main Swagger specification.
  * @param mongo Object for accessing the database.
  */
-class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject) extends SentinelServlet { self =>
+class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
+    extends SentinelServlet
+    with FutureSupport { self =>
 
   /** Controller name, shown in the generated Swagger spec. */
   override protected val applicationName: Option[String] = Some("references")
@@ -63,9 +65,11 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
     logger.info(requestLog)
     val errMsg = ApiMessage("Reference ID can not be found.")
     val refId = params.getAs[DbId]("refId").getOrElse(halt(404, errMsg))
-    refs.getReference(refId) match {
-      case None      => NotFound(ApiMessage("Reference ID can not be found."))
-      case Some(ref) => Ok(ref)
+    new AsyncResult {
+      val is = refs.getReference(refId).map {
+        case None      => NotFound(ApiMessage("Reference ID can not be found."))
+        case Some(ref) => Ok(ref)
+      }
     }
   }
 
@@ -76,6 +80,8 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
 
   get("/", operation(referencesGetOperation)) {
     logger.info(requestLog)
-    refs.getReferences()
+    new AsyncResult {
+      val is = refs.getReferences().map(res => Ok(res))
+    }
   }
 }

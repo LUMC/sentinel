@@ -44,6 +44,9 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     with ReferencesAdapter
     with AnnotationsAdapter {
 
+  /** Execution context. */
+  implicit override protected def context: ExecutionContext = ExecutionContext.global
+
   /** Extracts a reference record from a Gentrap summary. */
   private[processors] def extractReference(runJson: JValue): ReferenceRecord = {
     val refJson = runJson \ "gentrap" \ "settings" \ "reference"
@@ -262,7 +265,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       runJson <- Future { parseAndValidate(byteContents) }
       fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
       runRef <- Future { extractReference(runJson) }
-      ref <- Future { getOrStoreReference(runRef) }
+      ref <- getOrCreateReference(runRef)
       refId = ref.refId
 
       runAnnots <- Future { extractAnnotations(runJson) }
