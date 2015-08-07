@@ -268,7 +268,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       refId = ref.refId
 
       runAnnots <- Future { extractAnnotations(runJson) }
-      annots <- Future { getOrCreateAnnotations(runAnnots) }
+      annots <- getOrCreateAnnotations(runAnnots)
       annotIds = annots.map(_.annotId)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]

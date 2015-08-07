@@ -139,5 +139,62 @@ class AnnotationsAdapterSpec extends Specification
       adapter.getAnnotation(testAnnotObj.annotId) must beEqualTo(Some(testAnnotObj)).await
     }
   }
+
+  "getOrCreateAnnotation" should {
+
+    "fail when the database operation raises any exception" in {
+      val mockFongo = mock[Fongo]
+      val mockDb = mock[com.mongodb.DB]
+      mockFongo.getDB(testDbName) returns mockDb
+      mockDb.getCollection(MongodbConnector.CollectionNames.Annotations) throws new RuntimeException
+      val adapter = makeAdapter(mockFongo)
+      adapter.getOrCreateAnnotation(testAnnotObj) must throwA[RuntimeException].await
+    }
+
+    "succeed storing the annotation record when it does not exist in the database" in {
+      val adapter = testAdapter
+      adapter.find(MongoDBObject.empty).count() mustEqual 0
+      adapter.getOrCreateAnnotation(testAnnotObj) must beEqualTo(testAnnotObj).await
+      adapter.find(testAnnotDbo).count() mustEqual 1
+    }
+
+    "succeed retrieving the annotation record without storing anything when it exists in the database" in {
+      val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
+      val newAnnot = testAnnotObj.copy(annotId = new ObjectId)
+      adapter.find(MongoDBObject.empty).count() mustEqual 1
+      adapter.getOrCreateAnnotation(newAnnot) must beEqualTo(testAnnotObj).await
+      adapter.find(grater[AnnotationRecord].asDBObject(newAnnot)).count() mustEqual 0
+      adapter.find(testAnnotDbo).count() mustEqual 1
+    }
+  }
+
+  "getOrCreateAnnotations" should {
+
+    val annot1 = testAnnotObj
+    val annot2 = AnnotationRecord("1c7041c7986dd97127df35e481ff4c36")
+    val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
+
+    "fail when the database operation raises any exception" in {
+      val mockFongo = mock[Fongo]
+      val mockDb = mock[com.mongodb.DB]
+      mockFongo.getDB(testDbName) returns mockDb
+      mockDb.getCollection(MongodbConnector.CollectionNames.Annotations) throws new RuntimeException
+      val adapter = makeAdapter(mockFongo)
+      adapter.getOrCreateAnnotations(Seq(annot1)) must throwA[RuntimeException].await
+    }
+
+    "succeed storing the annotation records that do not exist yet and getting the ones that exist" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        coll.insert(testAnnotDbo) // annot1
+      }
+      val newAnnot1 = annot1.copy(annotId = new ObjectId)
+      adapter.find(testAnnotDbo).count() mustEqual 1
+      adapter.getOrCreateAnnotations(Seq(annot2, annot3, newAnnot1)) must beEqualTo(Seq(annot2, annot3, annot1)).await
+      adapter.find(testAnnotDbo).count() mustEqual 1
+      adapter.find(grater[AnnotationRecord].asDBObject(newAnnot1)).count() mustEqual 0
+      adapter.find(grater[AnnotationRecord].asDBObject(annot2)).count() mustEqual 1
+      adapter.find(grater[AnnotationRecord].asDBObject(annot3)).count() mustEqual 1
+    }
+  }
 }
 
