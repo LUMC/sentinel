@@ -21,7 +21,6 @@ import scala.concurrent._
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.AnnotationRecord
 import nl.lumc.sasc.sentinel.utils.FutureAdapter
@@ -82,9 +81,9 @@ trait AnnotationsAdapter extends MongodbConnector with FutureAdapter {
    * @param annotId ID of the annotation record to return.
    * @return An annotation record object, if it exists.
    */
-  def getAnnotation(annotId: ObjectId): Option[AnnotationRecord] =
-    // TODO: refactor to use Futures instead
+  def getAnnotation(annotId: ObjectId): Future[Option[AnnotationRecord]] = Future {
     coll
       .findOneByID(annotId)
-      .collect { case dbo => grater[AnnotationRecord].asObject(dbo) }
+      .map { dbo => grater[AnnotationRecord].asObject(dbo) }
+  }
 }

@@ -31,11 +31,14 @@ class AnnotationsAdapterSpec extends Specification
     with DisjunctionMatchers
     with Mockito {
 
-  /** User object for testing. */
+  /** AnnotationRecord object for testing. */
   private val testAnnotObj = AnnotationRecord(
     annotId = new ObjectId,
     annotMd5 = "2c7041c7986dd97127df35e481ff4c36",
     fileName = Option("annotation.gtf"))
+
+  /** Database record of testing AnnotationRecord object. */
+  private val testAnnotDbo = grater[AnnotationRecord].asDBObject(testAnnotObj)
 
   /** MongoDB testing database name. */
   private val testDbName = "users_test"
@@ -97,6 +100,32 @@ class AnnotationsAdapterSpec extends Specification
         }
       }
       adapter.getAnnotations() must beEqualTo(Seq(annot3, annot2, annot1)).await
+    }
+  }
+
+  "getAnnotation" should {
+
+    "fail when the database operation raises any exception" in {
+      val mockFongo = mock[Fongo]
+      val mockDb = mock[com.mongodb.DB]
+      mockFongo.getDB(testDbName) returns mockDb
+      mockDb.getCollection(MongodbConnector.CollectionNames.Annotations) throws new RuntimeException
+      val adapter = makeAdapter(mockFongo)
+      adapter.getAnnotation(testAnnotObj.annotId) must throwA[RuntimeException].await
+    }
+
+    "succeed returning None when the database is empty" in {
+      testAdapter.getAnnotation(testAnnotObj.annotId) must beNone.await
+    }
+
+    "succeed returning None when no records match" in {
+      val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
+      adapter.getAnnotation(new ObjectId) must beNone.await
+    }
+
+    "succeed returning the expected object when a matching record exists" in {
+      val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
+      adapter.getAnnotation(testAnnotObj.annotId) must beEqualTo(Some(testAnnotObj)).await
     }
   }
 }

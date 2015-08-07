@@ -69,9 +69,12 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
     val annotId = params("annotId")
       .getObjectId
       .getOrElse(halt(404, errMsg))
-    annots.getAnnotation(annotId) match {
-      case None        => NotFound(errMsg)
-      case Some(annot) => Ok(annot)
+    new AsyncResult {
+      val is = annots.getAnnotation(annotId)
+        .map {
+          case None        => NotFound(errMsg)
+          case Some(annot) => Ok(annot)
+        }
     }
   }
 
