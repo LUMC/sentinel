@@ -118,9 +118,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
   delete("/:runId", operation(runsRunIdDeleteOperation)) {
     logger.info(requestLog)
-    val runId = params("runId")
-      .getObjectId
-      .getOrElse(halt(404, CommonMessages.MissingRunId))
+    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
     runs.deleteRun(runId, user) match {
       case None => NotFound(CommonMessages.MissingRunId)
@@ -161,9 +159,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   get("/:runId", operation(runsRunIdGetOperation)) {
     logger.info(requestLog)
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
-    val runId = params("runId")
-      .getObjectId
-      .getOrElse(halt(404, CommonMessages.MissingRunId))
+    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
 
     if (doDownload) runs.getRunFile(runId, user) match {

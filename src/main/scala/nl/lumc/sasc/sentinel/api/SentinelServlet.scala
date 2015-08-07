@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Base servlet for all Sentinel controllers. */
 abstract class SentinelServlet extends ScalatraServlet
@@ -143,7 +143,7 @@ abstract class SentinelServlet extends ScalatraServlet
     }
 
   /** Implicit conversion from URL parameter to a sequence of database IDs. */
-  protected implicit val stringToObjectId: TypeConverter[String, Seq[DbId]] =
+  protected implicit val stringToSeqDbId: TypeConverter[String, Seq[DbId]] =
     new TypeConverter[String, Seq[DbId]] {
       def apply(str: String): Option[Seq[DbId]] = {
         val (validIds, invalidIds) = separateObjectIds(str.split(multiParamDelimiter).toSeq)
@@ -151,6 +151,12 @@ abstract class SentinelServlet extends ScalatraServlet
           halt(400, CommonMessages.InvalidDbId.copy(hint = invalidIds))
         else Option(validIds)
       }
+    }
+
+  /** Implicit conversion from URL parameter to a sequence of database IDs. */
+  protected implicit val stringToDbId: TypeConverter[String, DbId] =
+    new TypeConverter[String, DbId] {
+      def apply(str: String): Option[DbId] = tryMakeObjectId(str).toOption
     }
 
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.

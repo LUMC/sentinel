@@ -62,9 +62,7 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   get("/:refId", operation(referencesRefIdGetOperation)) {
     logger.info(requestLog)
     val errMsg = ApiMessage("Reference ID can not be found.")
-    val refId = params("refId")
-      .getObjectId
-      .getOrElse(halt(404, errMsg))
+    val refId = params.getAs[DbId]("refId").getOrElse(halt(404, errMsg))
     refs.getReference(refId) match {
       case None      => NotFound(ApiMessage("Reference ID can not be found."))
       case Some(ref) => Ok(ref)

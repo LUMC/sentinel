@@ -66,9 +66,7 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   get("/:annotId", operation(annotationsRefIdGetOperation)) {
     logger.info(requestLog)
     val errMsg = ApiMessage("Annotation ID can not be found.")
-    val annotId = params("annotId")
-      .getObjectId
-      .getOrElse(halt(404, errMsg))
+    val annotId = params.getAs[DbId]("annotId").getOrElse(halt(404, errMsg))
     new AsyncResult {
       val is = annots.getAnnotation(annotId)
         .map {

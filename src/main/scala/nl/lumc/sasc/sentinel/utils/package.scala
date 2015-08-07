@@ -23,7 +23,7 @@ import java.security.MessageDigest
 import java.time.Clock
 import scala.io.Source
 import scala.reflect.runtime.{ universe => ru }
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 import com.github.fge.jsonschema.core.report.ProcessingReport
 import org.bson.types.ObjectId
@@ -128,10 +128,9 @@ package object utils {
    * @return A tuple of 2 items: Object IDs and strings that can not be transformed to Object IDs.
    */
   def separateObjectIds(strs: Seq[String]): (Seq[ObjectId], Seq[String]) = {
-    val (oids, noids) = strs
-      .map { case str => (str.getObjectId, str) }
-      .partition { case (x, y) => x.isDefined }
-    (oids.flatMap(_._1), noids.map(_._2))
+    val ids = strs.map { str => (tryMakeObjectId(str), str) }
+    (ids.collect { case (Success(dbId), _) => dbId },
+      ids.collect { case (Failure(_), strId) => strId })
   }
 
   /** Gets the current UTC time. */
@@ -165,11 +164,6 @@ package object utils {
     /** Implicit class for adding our custom read function to an uploaded file item. */
     implicit class RichFileItem(fi: FileItem) {
       def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
-    }
-
-    /** Implicit class for creating database IDs from raw strings. */
-    implicit class DatabaseId(id: String) {
-      def getObjectId: Option[ObjectId] = tryMakeObjectId(id).toOption
     }
 
     /** Implicit class for creating enum values from raw strings. */
