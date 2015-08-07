@@ -25,7 +25,7 @@ import org.bson.types.ObjectId
 @Salat abstract class BaseUnitRecord {
 
   /** Internal database ID for the library document. */
-  def id: ObjectId
+  def dbId: ObjectId
 
   /** Name of the uploader of the run summary which contains this library. */
   def uploaderId: String

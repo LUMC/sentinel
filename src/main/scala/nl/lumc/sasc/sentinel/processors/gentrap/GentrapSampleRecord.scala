@@ -35,7 +35,7 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
  * @param sampleName Sample name.
  * @param runName Name of the run to which this sample belongs to.
  * @param creationTimeUtc UTC time when this sample entry was created.
- * @param id Internal database ID.
+ * @param dbId Internal database ID.
  */
 case class GentrapSampleRecord(
   uploaderId: String,
@@ -46,4 +46,4 @@ case class GentrapSampleRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") id: ObjectId = new ObjectId) extends BaseSampleRecord
+  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseSampleRecord

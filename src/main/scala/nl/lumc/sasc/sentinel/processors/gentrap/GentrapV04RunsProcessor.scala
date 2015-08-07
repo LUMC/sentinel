@@ -241,8 +241,8 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       refId = Option(refId),
       annotIds = Option(annotIds),
       runName = runName,
-      sampleIds = samples.map(_.id),
-      libIds = libs.map(_.id),
+      sampleIds = samples.map(_.dbId),
+      libIds = libs.map(_.dbId),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
       pipeline = pipelineName)

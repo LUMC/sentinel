@@ -40,7 +40,7 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
  * @param runName Name of the run to which the library belongs to.
  * @param uploaderId ID of the user that created the sample entry.
  * @param creationTimeUtc UTC time when this sample entry was created.
- * @param id Internal database ID.
+ * @param dbId Internal database ID.
  */
 case class GentrapLibRecord(
   alnStats: GentrapAlignmentStats,
@@ -57,4 +57,4 @@ case class GentrapLibRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") id: ObjectId = new ObjectId) extends BaseLibRecord
+  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseLibRecord
