@@ -51,7 +51,6 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       .extract[Map[String, ReferenceContigRecord]]
       .values.toSeq
     ReferenceRecord(
-      refId = new ObjectId,
       combinedMd5 = calcMd5(contigs.map(_.md5).sorted),
       contigs = contigs,
       species = (refJson \ "species").extractOpt[String],

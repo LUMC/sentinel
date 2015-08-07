@@ -33,11 +33,12 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
-  @Key("_id") refId: ObjectId,
   contigs: Seq[ReferenceContigRecord],
+  // TODO: update to lazy val when we update our Scalatra dependency
   combinedMd5: String,
   refName: Option[String] = None,
   species: Option[String] = None,
+  @Key("_id") refId: ObjectId = new ObjectId,
   creationTimeUtc: Date = getUtcTimeNow)
 
 /**
