@@ -75,6 +75,11 @@ class AnnotationsAdapterSpec extends Specification
 
   "getAnnotations" should {
 
+    val annot1 = testAnnotObj
+    val annot2 = AnnotationRecord("1c7041c7986dd97127df35e481ff4c36")
+    val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
+    val annots = Seq(annot1, annot3, annot2)
+
     "fail when the database operation raises any exception" in {
       val mockFongo = mock[Fongo]
       val mockDb = mock[com.mongodb.DB]
@@ -88,11 +93,7 @@ class AnnotationsAdapterSpec extends Specification
       testAdapter.getAnnotations() must beEqualTo(Seq.empty).await
     }
 
-    "succeed returning annotations (most recent first) when the database is not empty" in {
-      val annot1 = testAnnotObj
-      val annot2 = AnnotationRecord("1c7041c7986dd97127df35e481ff4c36")
-      val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
-      val annots = Seq(annot1, annot3, annot2)
+    "succeed returning all annotations (most recent first) when the database is not empty" in {
       val adapter = usingAdapter(makeFongo) { coll =>
         annots.foreach { obj =>
           val dbo = grater[AnnotationRecord].asDBObject(obj)
@@ -100,6 +101,16 @@ class AnnotationsAdapterSpec extends Specification
         }
       }
       adapter.getAnnotations() must beEqualTo(Seq(annot3, annot2, annot1)).await
+    }
+
+    "succeed returning N annotations (most recent first) when the database is not empty and maxReturn is set" in {
+      val adapter = usingAdapter(makeFongo) { coll =>
+        annots.foreach { obj =>
+          val dbo = grater[AnnotationRecord].asDBObject(obj)
+          coll.insert(dbo)
+        }
+      }
+      adapter.getAnnotations(Some(2)) must beEqualTo(Seq(annot3, annot2)).await
     }
   }
 

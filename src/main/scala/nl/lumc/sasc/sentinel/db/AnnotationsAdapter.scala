@@ -48,31 +48,26 @@ trait AnnotationsAdapter extends MongodbConnector with FutureAdapter {
    * @param annots Annotation records to store or retrieve.
    * @return Annotation records with existing database IDs.
    */
-  def getOrCreateAnnotations(annots: Seq[AnnotationRecord]): Seq[AnnotationRecord] =
-    // TODO: refactor to use Futures instead
-    annots
-      .map { annot =>
-        coll
-          .findOne(MongoDBObject("annotMd5" -> annot.annotMd5))
-          .map { dbo => grater[AnnotationRecord].asObject(dbo) } match {
-            case Some(obj) => obj
-            case None =>
-              coll.insert(grater[AnnotationRecord].asDBObject(annot))
-              annot
-          }
-      }
+  def getOrCreateAnnotations(annots: Seq[AnnotationRecord]): Future[Seq[AnnotationRecord]] =
+    Future { annots.map { getOrCreate } }
 
   /**
    * Retrieves all annotation records in the database.
    *
    * @return Annotation records.
    */
-  def getAnnotations(): Future[Seq[AnnotationRecord]] = Future {
-    coll
-      .find()
+  def getAnnotations(maxReturn: Option[Int] = None): Future[Seq[AnnotationRecord]] = Future {
+    val cursor = coll.find()
       .sort(MongoDBObject("creationTimeUtc" -> -1))
-      .map { dbo => grater[AnnotationRecord].asObject(dbo) }
-      .toSeq
+
+    maxReturn match {
+
+      case Some(num) if num > 0 => cursor.limit(num)
+        .map { dbo => grater[AnnotationRecord].asObject(dbo) }.toSeq
+
+      case otherwise => cursor
+        .map { dbo => grater[AnnotationRecord].asObject(dbo) }.toSeq
+    }
   }
 
   /**
