@@ -55,8 +55,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       combinedMd5 = calcMd5(contigs.map(_.md5).sorted),
       contigs = contigs,
       species = (refJson \ "species").extractOpt[String],
-      refName = (refJson \ "name").extractOpt[String],
-      creationTimeUtc = Option(getUtcTimeNow))
+      refName = (refJson \ "name").extractOpt[String])
   }
 
   /** Extracts annotation records from a Gentrap summary. */

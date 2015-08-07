@@ -21,6 +21,8 @@ import java.util.Date
 import com.novus.salat.annotations._
 import org.bson.types.ObjectId
 
+import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
+
 /**
  * Representation of an alignment reference sequence.
  *
@@ -36,7 +38,7 @@ case class ReferenceRecord(
   combinedMd5: String,
   refName: Option[String] = None,
   species: Option[String] = None,
-  creationTimeUtc: Option[Date] = None)
+  creationTimeUtc: Date = getUtcTimeNow)
 
 /**
  * Representation of a reference sequence contig / chromosome.
