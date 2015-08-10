@@ -39,7 +39,8 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  */
 class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     extends RunsProcessor(mongo)
-    with UnitsAdapter[GentrapSampleRecord, GentrapReadGroupRecord]
+    with SamplesAdapter[GentrapSampleRecord]
+    with ReadGroupsAdapter[GentrapReadGroupRecord]
     with JsonValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
