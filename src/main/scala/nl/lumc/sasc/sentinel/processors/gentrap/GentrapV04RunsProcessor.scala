@@ -39,7 +39,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  */
 class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     extends RunsProcessor(mongo)
-    with UnitsAdapter[GentrapSampleRecord, GentrapLibRecord]
+    with UnitsAdapter[GentrapSampleRecord, GentrapReadGroupRecord]
     with JsonValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
@@ -74,7 +74,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
           fileName = (fileJson \ "path").extractOpt[String].map { path => getName(path) })
       }
 
-  /** Extracts alignment statistics from a sample or library entry in a Gentrap summary. */
+  /** Extracts alignment statistics from a sample or read group entry in a Gentrap summary. */
   private[processors] def extractAlnStats(effJson: JValue): GentrapAlignmentStats = {
 
     val isPaired = (effJson \ "bammetrics" \ "stats" \ "CollectAlignmentSummaryMetrics" \ "PAIR") != JNothing
@@ -119,9 +119,9 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       normalizedTranscriptCoverage = (rnaHisto \ "All_Reads.normalized_coverage").extract[Seq[Double]])
   }
 
-  /** Extracts an input sequencing file from a library entry in a Gentrap summary. */
-  private[processors] def extractReadFile(libJson: JValue, fileKey: String): FileRecord =
-    (libJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileRecord]
+  /** Extracts an input sequencing file from a read group entry in a Gentrap summary. */
+  private[processors] def extractReadFile(readGroupJson: JValue, fileKey: String): FileRecord =
+    (readGroupJson \ "flexiprep" \ "files" \ "pipeline" \ fileKey).extract[FileRecord]
 
   /** Case class for containing per-base position statistics. */
   private[processors] case class PerBaseStat[T](index: Int, value: T)
@@ -148,9 +148,9 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       .takeWhile { case (PerBaseStat(actualIdx, value), expectedIdx) => actualIdx == expectedIdx }
       .map { case (PerBaseStat(_, value), _) => value }
 
-  /** Extracts a single read statistics from a library entry in a Gentrap summary. */
-  private[processors] def extractReadStats(libJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
-    val flexStats = libJson \ "flexiprep" \ "stats"
+  /** Extracts a single read statistics from a read group entry in a Gentrap summary. */
+  private[processors] def extractReadStats(readGroupJson: JValue, seqStatKey: String, fastqcKey: String): ReadStats = {
+    val flexStats = readGroupJson \ "flexiprep" \ "stats"
     val nuclCounts = flexStats \ seqStatKey \ "bases" \ "nucleotides"
 
     ReadStats(
@@ -165,29 +165,29 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       nReads = (flexStats \ seqStatKey \ "reads" \ "num_total").extract[Long])
   }
 
-  /** Extracts a library document from a library entry in a Gentrap summary. */
-  private[processors] def extractLibDocument(libJson: JValue, uploaderId: String, runId: ObjectId, refId: ObjectId,
-                                             annotIds: Seq[ObjectId], libName: String, sampleName: String,
-                                             runName: Option[String] = None): GentrapLibRecord = {
+  /** Extracts a read group document from a read group entry in a Gentrap summary. */
+  private[processors] def extractReadGroupDocument(readGroupJson: JValue, uploaderId: String, runId: ObjectId, refId: ObjectId,
+                                                   annotIds: Seq[ObjectId], readGroupName: String, sampleName: String,
+                                                   runName: Option[String] = None): GentrapReadGroupRecord = {
 
     val seqStatsRaw = SeqStats(
-      read1 = extractReadStats(libJson, "seqstat_R1", "fastqc_R1"),
-      read2 = Try(extractReadStats(libJson, "seqstat_R2", "fastqc_R2")).toOption)
+      read1 = extractReadStats(readGroupJson, "seqstat_R1", "fastqc_R1"),
+      read2 = Try(extractReadStats(readGroupJson, "seqstat_R2", "fastqc_R2")).toOption)
 
-    val seqStatsProcessed = Try(extractReadStats(libJson, "seqstat_R1_qc", "fastqc_R1_qc")).toOption
+    val seqStatsProcessed = Try(extractReadStats(readGroupJson, "seqstat_R1_qc", "fastqc_R1_qc")).toOption
       .map { r1proc =>
-        SeqStats(read1 = r1proc, read2 = Try(extractReadStats(libJson, "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
+        SeqStats(read1 = r1proc, read2 = Try(extractReadStats(readGroupJson, "seqstat_R2_qc", "fastqc_R2_qc")).toOption)
       }
 
     val seqFilesRaw = SeqFiles(
-      read1 = extractReadFile(libJson, "input_R1"),
-      read2 = Try(extractReadFile(libJson, "input_R2")).toOption)
+      read1 = extractReadFile(readGroupJson, "input_R1"),
+      read2 = Try(extractReadFile(readGroupJson, "input_R2")).toOption)
 
-    val seqFilesProcessed = Try(extractReadFile(libJson, "output_R1")).toOption
-      .map { r1f => SeqFiles(read1 = r1f, read2 = Try(extractReadFile(libJson, "output_R2")).toOption) }
+    val seqFilesProcessed = Try(extractReadFile(readGroupJson, "output_R1")).toOption
+      .map { r1f => SeqFiles(read1 = r1f, read2 = Try(extractReadFile(readGroupJson, "output_R2")).toOption) }
 
-    GentrapLibRecord(
-      alnStats = extractAlnStats(libJson),
+    GentrapReadGroupRecord(
+      alnStats = extractAlnStats(readGroupJson),
       seqStatsRaw = seqStatsRaw,
       seqStatsProcessed = seqStatsProcessed,
       seqFilesRaw = seqFilesRaw,
@@ -195,14 +195,14 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       referenceId = refId,
       annotationIds = annotIds,
       isPaired = seqStatsRaw.read2.isDefined,
-      libName = Option(libName),
+      readGroupName = Option(readGroupName),
       sampleName = Option(sampleName),
       runId = runId,
       uploaderId = uploaderId,
       runName = runName)
   }
 
-  /** Extracts samples and libraries from a Gentrap summary. */
+  /** Extracts samples and read groups from a Gentrap summary. */
   private[processors] def extractUnits(runJson: JValue, uploaderId: String, runId: ObjectId,
                                        refId: ObjectId, annotIds: Seq[ObjectId], runName: Option[String] = None) = {
     val parsed = (runJson \ "samples")
@@ -210,7 +210,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       .view
       .map {
         case (sampleName, sampleJson) =>
-          val libJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
+          val readGroupJsons = (sampleJson \ "libraries").extract[Map[String, JValue]]
           val gSample = GentrapSampleRecord(
             uploaderId = uploaderId,
             sampleName = Option(sampleName),
@@ -218,15 +218,16 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
             runName = runName,
             referenceId = refId,
             annotationIds = annotIds,
-            // NOTE: Duplication of value in sample level when there is only 1 lib is intended so db queries are simpler
-            alnStats = libJsons.toList match {
-              case (libName, libJson) :: Nil => extractAlnStats(libJson)
-              case otherwise                 => extractAlnStats(sampleJson)
+            // NOTE: Duplication of value in sample level when there is only 1 RG is intended so db queries are simpler
+            alnStats = readGroupJsons.toList match {
+              case (readGroupName, readGroupJson) :: Nil => extractAlnStats(readGroupJson)
+              case otherwise                             => extractAlnStats(sampleJson)
             })
-          val gLibs = libJsons
+          val gLibs = readGroupJsons
             .map {
-              case (libName, libJson) =>
-                extractLibDocument(libJson, uploaderId, runId, refId, annotIds, libName, sampleName, runName)
+              case (readGroupName, readGroupJson) =>
+                extractReadGroupDocument(readGroupJson, uploaderId, runId, refId, annotIds, readGroupName, sampleName,
+                  runName)
             }
             .toSeq
           (gSample, gLibs)
@@ -236,7 +237,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
   /** Helper function for creating run records. */
   private[processors] def createRun(fileId: ObjectId, refId: ObjectId, annotIds: Seq[ObjectId],
-                                    samples: Seq[GentrapSampleRecord], libs: Seq[GentrapLibRecord],
+                                    samples: Seq[GentrapSampleRecord], readGroups: Seq[GentrapReadGroupRecord],
                                     user: User, runName: Option[String] = None) =
     RunRecord(
       runId = fileId, // NOTE: runId kept intentionally the same as fileId
@@ -244,7 +245,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       annotIds = Option(annotIds),
       runName = runName,
       sampleIds = samples.map(_.dbId),
-      libIds = libs.map(_.dbId),
+      readGroupIds = readGroups.map(_.dbId),
       creationTimeUtc = getUtcTimeNow,
       uploaderId = user.id,
       pipeline = pipelineName)
@@ -273,11 +274,11 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       annotIds = annots.map(_.annotId)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]
-      (samples, libs) <- Future { extractUnits(runJson, user.id, fileId, refId, annotIds, runName) }
+      (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId, refId, annotIds, runName) }
       _ <- Future { storeSamples(samples) }
-      _ <- Future { storeLibs(libs) }
+      _ <- Future { storeReadGroups(readGroups) }
 
-      run = createRun(fileId, refId, annotIds, samples, libs, user, runName)
+      run = createRun(fileId, refId, annotIds, samples, readGroups, user, runName)
       _ <- Future { storeRun(run) }
     } yield run
 }

@@ -67,7 +67,7 @@ package object sentinel {
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
     type AccLevel = Value
-    val Lib = Value("lib")
+    val ReadGroup = Value("readGroup")
     val Sample = Value("sample")
   }
 

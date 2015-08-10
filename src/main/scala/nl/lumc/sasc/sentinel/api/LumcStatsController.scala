@@ -171,8 +171,8 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       halt(401, CommonMessages.UnauthenticatedOptional)
 
     val libSelector = accLevel match {
-      case AccLevel.Sample => EmptySelector
-      case AccLevel.Lib    => Selector.fromLibType(libType)
+      case AccLevel.Sample    => EmptySelector
+      case AccLevel.ReadGroup => Selector.fromLibType(libType)
     }
 
     val matchers = Selector.combineAnd(
@@ -182,8 +182,8 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       ManyIntersectMany("annotationIds", annotIds))
 
     val alnStatsFunc = accLevel match {
-      case AccLevel.Sample => gentrap.getSampleAlignmentStats
-      case AccLevel.Lib    => gentrap.getLibAlignmentStats
+      case AccLevel.Sample    => gentrap.getSampleAlignmentStats
+      case AccLevel.ReadGroup => gentrap.getReadGroupAlignmentStats
     }
 
     Ok(alnStatsFunc(matchers, user, sorted))
@@ -264,8 +264,8 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
     val libType = {
       val libType = params.getAs[LibType.Value]("libType")
       accLevel match {
-        case AccLevel.Sample => None
-        case AccLevel.Lib    => libType
+        case AccLevel.Sample    => None
+        case AccLevel.ReadGroup => libType
       }
     }
 

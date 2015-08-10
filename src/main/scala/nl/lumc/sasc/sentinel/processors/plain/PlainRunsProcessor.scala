@@ -32,8 +32,8 @@ import nl.lumc.sasc.sentinel.utils.implicits._
 /**
  * Input processor for generic run summary files.
  *
- * This input processor accepts any valid JSON files provided they are not empty. It does not store any samples and
- * libraries, nor does it store any references or annotations. Run summaries processed by this processor will not
+ * This input processor accepts any valid JSON files provided they are not empty. It does not store any samples or
+ * read groups, nor does it store any references or annotations. Run summaries processed by this processor will not
  * contribute to the statistics database.
  *
  * @param mongo MongoDB database access object.

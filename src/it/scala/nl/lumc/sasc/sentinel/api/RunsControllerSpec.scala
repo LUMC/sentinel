@@ -62,7 +62,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
     def uploadFile2 = Map("run" -> uploadPayload2)
     def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
-    def uploadPayload2 = SchemaExamples.Gentrap.V04.SSampleSLib
+    def uploadPayload2 = SchemaExamples.Gentrap.V04.SSampleSRG
     lazy val runId2 = (parse(priorResponses(1).body) \ "runId").extract[String]
 
     override def priorRequests = super.priorRequests ++ Seq(
@@ -171,7 +171,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run" in {
             priorResponse.contentType mustEqual "application/json"
             priorResponse.body must /("creationTimeUtc" -> ".+".r)
-            priorResponse.body must /("nLibs" -> 0)
+            priorResponse.body must /("nReadGroups" -> 0)
             priorResponse.body must /("nSamples" -> 0)
             priorResponse.body must /("pipeline" -> "plain")
             priorResponse.body must /("runId" -> """\S+""".r)
@@ -200,7 +200,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run" in {
             priorResponse.contentType mustEqual "application/json"
             priorResponse.body must /("creationTimeUtc" -> ".+".r)
-            priorResponse.body must /("nLibs" -> 0)
+            priorResponse.body must /("nReadGroups" -> 0)
             priorResponse.body must /("nSamples" -> 0)
             priorResponse.body must /("pipeline" -> "plain")
             priorResponse.body must /("runId" -> """\S+""".r)
@@ -232,7 +232,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run for the first upload" in {
             priorResponses.head.contentType mustEqual  "application/json"
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nReadGroups" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
             priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
@@ -250,7 +250,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run for the second upload" in {
             priorResponses.last.contentType mustEqual  "application/json"
             priorResponses.last.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("nReadGroups" -> 0)
             priorResponses.last.body must /("nSamples" -> 0)
             priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("runId" -> """\S+""".r)
@@ -341,7 +341,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run for the first upload" in {
             priorResponses.head.contentType mustEqual  "application/json"
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nReadGroups" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
             priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
@@ -386,7 +386,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the uploaded run for the first upload" in {
             priorResponses.head.contentType mustEqual  "application/json"
             priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nLibs" -> 0)
+            priorResponses.head.body must /("nReadGroups" -> 0)
             priorResponses.head.body must /("nSamples" -> 0)
             priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
@@ -525,7 +525,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def request = () =>
-            post(endpoint, params, Map("run" -> SchemaExamples.Gentrap.V04.SSampleSLib), headers) { response }
+            post(endpoint, params, Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response }
           def priorRequests = Seq(request)
 
           "return status 201" in {
@@ -538,7 +538,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.body must /("uploaderId" -> user.id)
             priorResponse.body must /("pipeline" -> "gentrap")
             priorResponse.body must /("nSamples" -> 1)
-            priorResponse.body must /("nLibs" -> 1)
+            priorResponse.body must /("nReadGroups" -> 1)
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must not /("sampleIds" -> ".+".r)
             priorResponse.body must not /("libIds" -> ".+".r)
@@ -715,7 +715,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 body must /#(0) */("uploaderId" -> user.id)
                 body must /#(0) */("pipeline" -> "plain")
                 body must /#(0) */("nSamples" -> 0)
-                body must /#(0) */("nLibs" -> 0)
+                body must /#(0) */("nReadGroups" -> 0)
                 body must not /("sampleIds" -> ".+".r)
                 body must not /("libIds" -> ".+".r)
                 body must not /# 0 */ "refId"
@@ -852,7 +852,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("runId" -> userRunId)
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
-                  body must /("nLibs" -> 0)
+                  body must /("nReadGroups" -> 0)
                   body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
                   body must not /("libIds" -> ".+".r)
@@ -906,7 +906,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must not /("sampleIds" -> ".+".r)
                       body must not /("libIds" -> ".+".r)
                       body must /("nSamples" -> 0)
-                      body must /("nLibs" -> 0)
+                      body must /("nReadGroups" -> 0)
                       body must /("pipeline" -> "plain")
                     }
                   }
@@ -971,7 +971,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                   body must /("runId" -> userRunId)
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
-                  body must /("nLibs" -> 0)
+                  body must /("nReadGroups" -> 0)
                   body must /("pipeline" -> "plain")
                   body must not /("sampleIds" -> ".+".r)
                   body must not /("libIds" -> ".+".r)
@@ -1025,7 +1025,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                       body must not /("sampleIds" -> ".+".r)
                       body must not /("libIds" -> ".+".r)
                       body must /("nSamples" -> 0)
-                      body must /("nLibs" -> 0)
+                      body must /("nReadGroups" -> 0)
                       body must /("pipeline" -> "plain")
                     }
                   }
@@ -1227,7 +1227,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must not /("libIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("nReadGroups" -> 0)
             priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
           }
@@ -1276,7 +1276,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
-          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
+          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSRG
           lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
           val params = Seq(("userId", user.id))
@@ -1300,7 +1300,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               priorResponses.last.body must /("annotIds" -> ".+".r)
               priorResponses.last.body must /("refId" -> """\S+""".r)
               priorResponses.last.body must /("nSamples" -> 1)
-              priorResponses.last.body must /("nLibs" -> 1)
+              priorResponses.last.body must /("nReadGroups" -> 1)
               priorResponses.last.body must /("pipeline" -> "gentrap")
               priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
             }
@@ -1372,7 +1372,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must not /("libIds" -> ".+".r)
             priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("nLibs" -> 0)
+            priorResponses.last.body must /("nReadGroups" -> 0)
             priorResponses.last.body must /("pipeline" -> "plain")
             priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
           }
@@ -1421,7 +1421,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
-          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSLib
+          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSRG
           lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
           val params = Seq(("userId", Users.admin.id))
@@ -1445,7 +1445,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               priorResponses.last.body must /("annotIds" -> ".+".r)
               priorResponses.last.body must /("refId" -> """\S+""".r)
               priorResponses.last.body must /("nSamples" -> 1)
-              priorResponses.last.body must /("nLibs" -> 1)
+              priorResponses.last.body must /("nReadGroups" -> 1)
               priorResponses.last.body must /("pipeline" -> "gentrap")
               priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
             }

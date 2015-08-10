@@ -25,9 +25,9 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
 
 /**
- * Gentrap library entry.
+ * Gentrap read group entry.
  *
- * @param alnStats Alignment statistics of the library.
+ * @param alnStats Alignment statistics of the read group.
  * @param seqStatsRaw Sequencing statistics of the raw input sequencing files.
  * @param seqStatsProcessed Sequencing statistics of the QC-ed input sequencing files.
  * @param seqFilesRaw Raw input sequencing file entries.
@@ -35,14 +35,14 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
  * @param referenceId Database ID of the reference alignment record used by this sample.
  * @param annotationIds Database IDs of the annotation records used by this sample.
  * @param isPaired Whether the library is paired-end or not.
- * @param libName Library name.
- * @param sampleName Name of the sample to which the library belongs to.
- * @param runName Name of the run to which the library belongs to.
+ * @param readGroupName Library name.
+ * @param sampleName Name of the sample to which the read group belongs to.
+ * @param runName Name of the run to which the read group belongs to.
  * @param uploaderId ID of the user that created the sample entry.
  * @param creationTimeUtc UTC time when this sample entry was created.
  * @param dbId Internal database ID.
  */
-case class GentrapLibRecord(
+case class GentrapReadGroupRecord(
   alnStats: GentrapAlignmentStats,
   seqStatsRaw: SeqStats,
   seqStatsProcessed: Option[SeqStats],
@@ -53,8 +53,8 @@ case class GentrapLibRecord(
   isPaired: Boolean,
   uploaderId: String,
   runId: ObjectId,
-  libName: Option[String] = None,
+  readGroupName: Option[String] = None,
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseLibRecord
+  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord

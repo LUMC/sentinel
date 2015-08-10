@@ -171,7 +171,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    *
    * When a run record is deleted, the following happens:
    *    - The underlying run summary file is removed from the database.
-   *    - All sample and library documents created from the run summary file is removed from the database.
+   *    - All unit documents created from the run summary file is removed from the database.
    *    - The run record itself is *not* removed from the database, but it is marked with a `deletionTimeUtc` attribute
    *      to mark when the delete request was made.
    *
@@ -213,16 +213,16 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
       docToDelete.foreach {
         case (doc, _) =>
           val samplesColl = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
-          val libsColl = mongo.db(collectionNames.pipelineLibs(doc.pipeline))
+          val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(doc.pipeline))
           // remove the GridFS entry
           mongo.gridfs.remove(doc.runId)
           // and all samples linked to this run
           doc.sampleIds.foreach {
             case oid => samplesColl.remove(MongoDBObject("_id" -> oid))
           }
-          // and all libs linked to this run
-          doc.libIds.foreach {
-            case oid => libsColl.remove(MongoDBObject("_id" -> oid))
+          // and all read groups linked to this run
+          doc.readGroupIds.foreach {
+            case oid => readGroupsColl.remove(MongoDBObject("_id" -> oid))
           }
       }
       docToDelete
@@ -239,13 +239,13 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
     coll
       .aggregate(List(
         MongoDBObject("$project" ->
-          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nLibs" -> 1)),
+          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
         MongoDBObject("$group" ->
           MongoDBObject(
             "_id" -> "$pipeline",
             "nRuns" -> MongoDBObject("$sum" -> 1),
             "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
-            "nLibs" -> MongoDBObject("$sum" -> "$nLibs"))),
+            "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
         MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
         AggregationOptions(AggregationOptions.CURSOR))
       .map { case pstat => grater[PipelineStats].asObject(pstat) }

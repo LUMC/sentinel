@@ -40,7 +40,7 @@ import org.bson.types.ObjectId
   def sampleIds: Seq[ObjectId]
 
   /** Library IDs linked to this run. */
-  def libIds: Seq[ObjectId]
+  def readGroupIds: Seq[ObjectId]
 
   /** UTC time when the run record was created. */
   def creationTimeUtc: Date
@@ -51,13 +51,13 @@ import org.bson.types.ObjectId
   /** Number of samples in the run summary file used for statistics. */
   @Persist val nSamples: Int = sampleIds.size
 
-  /** Number of libraries in the run summary file used for statistics. */
-  @Persist val nLibs: Int = libIds.size
+  /** Number of read groups in the run summary file used for statistics. */
+  @Persist val nReadGroups: Int = readGroupIds.size
 }
 
 object BaseRunRecord {
   /** Attributes that is hidden when this object is serialized into JSON. */
-  val hiddenAttributes = Set("sampleIds", "libIds")
+  val hiddenAttributes = Set("sampleIds", "readGroupIds")
 }
 
 /**
@@ -74,6 +74,6 @@ case class RunRecord(
   runName: Option[String] = None,
   deletionTimeUtc: Option[Date] = None,
   sampleIds: Seq[ObjectId] = Seq.empty,
-  libIds: Seq[ObjectId] = Seq.empty,
+  readGroupIds: Seq[ObjectId] = Seq.empty,
   refId: Option[ObjectId] = None,
   annotIds: Option[Seq[ObjectId]] = None) extends BaseRunRecord

@@ -103,7 +103,7 @@ abstract class SentinelServlet extends ScalatraServlet
   /** JSON format for Sentinel responses */
   protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
-  /** Implicit conversion from URL parameter to library accumulation level enum. */
+  /** Implicit conversion from URL parameter to accumulation level enum. */
   protected implicit val stringToAccLevel: TypeConverter[String, AccLevel.Value] =
     new TypeConverter[String, AccLevel.Value] {
       def apply(str: String): Option[AccLevel.Value] =

@@ -38,7 +38,7 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  * @param mongo Object for accessing the database.
  */
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
-                     runsProcessorMakers: Set[MongodbAccessObject => RunsProcessor])
+                     runsProcessorMakers: Set[MongodbAccessObject => RunsProcessor] = Set.empty)
     extends SentinelServlet
     with FileUploadSupport
     with AuthenticationSupport { self =>

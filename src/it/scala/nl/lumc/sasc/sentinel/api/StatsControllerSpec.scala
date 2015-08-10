@@ -68,10 +68,10 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib, "gentrap")
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMLib, "gentrap")
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG, "gentrap")
+        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRG, "gentrap")
         def upload3 = makeUpload(Users.avg2, SchemaExamples.Plain, "plain")
-        def upload4 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSLib, "gentrap")
+        def upload4 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG, "gentrap")
 
         def priorRequests = Seq(upload1, upload2, upload3, upload4)
 
@@ -111,14 +111,14 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
 
               "contain statistics over the first pipeline" in {
                 priorResponse.body must /#(0) /("pipelineName" -> "gentrap")
-                priorResponse.body must /#(0) /("nLibs" -> 10)
+                priorResponse.body must /#(0) /("nReadGroups" -> 10)
                 priorResponse.body must /#(0) /("nRuns" -> 3)
                 priorResponse.body must /#(0) /("nSamples" -> 6)
               }
 
               "contain statistics over the second pipeline" in {
                 priorResponse.body must /#(1) /("pipelineName" -> "plain")
-                priorResponse.body must /#(1) /("nLibs" -> 0)
+                priorResponse.body must /#(1) /("nReadGroups" -> 0)
                 priorResponse.body must /#(1) /("nRuns" -> 1)
                 priorResponse.body must /#(1) /("nSamples" -> 0)
               }

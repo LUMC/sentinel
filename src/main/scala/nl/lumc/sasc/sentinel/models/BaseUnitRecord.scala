@@ -24,16 +24,16 @@ import org.bson.types.ObjectId
 /** Representation of a sequencing accumulation level unit. */
 @Salat abstract class BaseUnitRecord {
 
-  /** Internal database ID for the library document. */
+  /** Internal database ID for the document. */
   def dbId: ObjectId
 
-  /** Name of the uploader of the run summary which contains this library. */
+  /** Name of the uploader of the run summary which contains this unit. */
   def uploaderId: String
 
   /** Database sample ID. */
   def runId: ObjectId
 
-  /** Name of the run that produced this library. */
+  /** Name of the run that produced this unit. */
   def runName: Option[String]
 
   /** UTC time when the sample document was created. */
@@ -47,15 +47,15 @@ import org.bson.types.ObjectId
   def sampleName: Option[String]
 }
 
-/** Representation of a library within a sample. */
-@Salat abstract class BaseLibRecord extends BaseUnitRecord {
+/** Representation of a read group metrics. */
+@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord {
 
-  /** Name of the sample which this library belongs to. */
+  /** Name of the sample which this read group belongs to. */
   def sampleName: Option[String]
 
   /** Library name. */
-  def libName: Option[String]
+  def readGroupName: Option[String]
 
-  /** Short hand attribute that returns true if the library was create from a paired-end sequence. */
+  /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
   @Persist def isPaired: Boolean
 }

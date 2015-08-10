@@ -72,7 +72,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           // labels
           priorResponse.body must /#(idx) */ "labels" /("runId" -> """\S+""".r) iff withAuth
           priorResponse.body must /#(idx) */ "labels" /("sampleName" -> """\S+""".r) iff withAuth
-          priorResponse.body must /#(idx) */ "labels" /("libName" -> """\S+""".r) iff (withAuth && isLib)
+          priorResponse.body must /#(idx) */ "labels" /("readGroupName" -> """\S+""".r) iff (withAuth && isLib)
 
           // stats
           priorResponse.body must /#(idx) /("nReadsTotal" -> bePositiveNum)
@@ -127,7 +127,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("hint" -> "Valid values are 'lib', 'sample'.")
+          priorResponse.body must /("hint" -> "Valid values are 'readGroup', 'sample'.")
         }
       }
     }
@@ -235,12 +235,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
+    "using the gentrap v0.4 summary (2 samples, 1 read group)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSRG
 
         "when using the default parameter should" >> inline {
 
@@ -249,12 +249,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+    "using the gentrap v0.4 summary (3 samples, 6 read groups, mixed library types)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -317,14 +317,14 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when queried with accLevel set to 'lib'" >> {
+        "when queried with accLevel set to 'readGroup'" >> {
           br
 
-          val accLevel = "lib"
+          val accLevel = "readGroup"
 
           "when the uploader authenticates correctly should" >> inline {
 
-            def params = Seq(("userId", uploadUser.id), ("accLevel", "lib"))
+            def params = Seq(("userId", uploadUser.id), ("accLevel", accLevel))
             def headers = Map(HeaderApiKey -> uploadUser.activeKey)
 
             new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, withAuth = true, isLib = true)
@@ -332,7 +332,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
           "when a non-uploader authenticates correctly should" >> inline {
 
-            def params = Seq(("userId", Users.avg2.id), ("accLevel", "lib"))
+            def params = Seq(("userId", Users.avg2.id), ("accLevel", accLevel))
             def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
 
             new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, isLib = true)
@@ -372,9 +372,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib)
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMLibMixedLib)
-        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSLib)
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRGMixedLib)
+        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG)
 
         def priorRequests = Stream(upload1, upload2, upload3)
 
@@ -395,9 +395,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           new StatsAlnGentrapOkTests(() => get(endpoint) { response }, 6)
         }
 
-        "when accumulation level is set to 'lib' should" >> inline {
+        "when accumulation level is set to 'readGroup' should" >> inline {
 
-          new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("accLevel", "lib"))) { response }, 10)
+          new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("accLevel", "readGroup"))) { response }, 10)
         }
 
         "when one of the uploaders authenticates correctly should" >> inline {
@@ -437,10 +437,10 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
             new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("runIds", runIds))) { response }, 4)
           }
 
-          "and accumulation level is set to 'lib' should" >> inline {
+          "and accumulation level is set to 'readGroup' should" >> inline {
 
             new StatsAlnGentrapOkTests(
-              () => get(endpoint, Seq(("runIds", runIds), ("accLevel", "lib"))) { response }, 8)
+              () => get(endpoint, Seq(("runIds", runIds), ("accLevel", "readGroup"))) { response }, 8)
           }
         }
 
@@ -454,10 +454,10 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
             new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("refIds", refIds))) { response }, 3)
           }
 
-          "and accumulation level is set to 'lib' should" >> inline {
+          "and accumulation level is set to 'readGroup' should" >> inline {
 
             new StatsAlnGentrapOkTests(
-              () => get(endpoint, Seq(("refIds", refIds), ("accLevel", "lib"))) { response }, 6)
+              () => get(endpoint, Seq(("refIds", refIds), ("accLevel", "readGroup"))) { response }, 6)
           }
         }
 
@@ -471,10 +471,10 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
             new StatsAlnGentrapOkTests(() => get(endpoint, Seq(("annotIds", annotIds))) { response }, 3)
           }
 
-          "and accumulation level is set to 'lib' should" >> inline {
+          "and accumulation level is set to 'readGroup' should" >> inline {
 
             new StatsAlnGentrapOkTests(
-              () => get(endpoint, Seq(("annotIds", annotIds), ("accLevel", "lib"))) { response }, 6)
+              () => get(endpoint, Seq(("annotIds", annotIds), ("accLevel", "readGroup"))) { response }, 6)
           }
         }
 
@@ -505,11 +505,11 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when queried multiple times with sorted set to 'yes' and accLevel set to 'lib' should" >> inline {
+        "when queried multiple times with sorted set to 'yes' and accLevel set to 'readGroup' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("sorted", "yes"), ("accLevel", "lib"))) { response }
+            def request = () => get(endpoint, Seq(("sorted", "yes"), ("accLevel", "readGroup"))) { response }
             def priorRequests = Stream.fill(10)(request)
 
             "return the items in the nonrandom order" in {
@@ -546,7 +546,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Accumulation level parameter is invalid.")
-          priorResponse.body must /("hint" -> "Valid values are 'lib', 'sample'.")
+          priorResponse.body must /("hint" -> "Valid values are 'readGroup', 'sample'.")
         }
       }
     }
@@ -637,12 +637,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+    "using the gentrap v0.4 summary (3 samples, 6 read groups, mixed library types)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -690,11 +690,11 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when accLevel is set to 'lib' should" >> inline {
+        "when accLevel is set to 'readGroup' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("accLevel", "lib"))) { response }
+            def request = () => get(endpoint, Seq(("accLevel", "readGroup"))) { response }
             def priorRequests = Seq(request)
 
             "return status 200" in {
@@ -736,11 +736,11 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when accLevel is set to 'lib' and libType set to 'paired' should" >> inline {
+        "when accLevel is set to 'readGroup' and libType set to 'paired' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("accLevel", "lib"), ("libType", "paired"))) { response }
+            def request = () => get(endpoint, Seq(("accLevel", "readGroup"), ("libType", "paired"))) { response }
             def priorRequests = Seq(request)
 
             "return status 200" in {
@@ -782,11 +782,11 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           }
         }
 
-        "when accLevel is set to 'lib' and libType set to 'single' should" >> inline {
+        "when accLevel is set to 'readGroup' and libType set to 'single' should" >> inline {
 
           new Context.PriorRequests {
 
-            def request = () => get(endpoint, Seq(("accLevel", "lib"), ("libType", "single"))) { response }
+            def request = () => get(endpoint, Seq(("accLevel", "readGroup"), ("libType", "single"))) { response }
             def priorRequests = Seq(request)
 
             "return status 200" in {
@@ -850,7 +850,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           // labels
           priorResponse.body must /#(idx) */ "labels" /("runId" -> """\S+""".r) iff withAuth
           priorResponse.body must /#(idx) */ "labels" /("sampleName" -> """\S+""".r) iff withAuth
-          priorResponse.body must /#(idx) */ "labels" /("libName" -> """\S+""".r) iff withAuth
+          priorResponse.body must /#(idx) */ "labels" /("readGroupName" -> """\S+""".r) iff withAuth
 
           // read 1
           priorResponse.body must /#(idx) */ "read1" /("nReads" -> bePositiveNum)
@@ -1017,12 +1017,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (2 samples, 1 library)" >> inline {
+    "using the gentrap v0.4 summary (2 samples, 1 read group)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSRG
 
         "when using the default parameter should" >> inline {
 
@@ -1031,12 +1031,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+    "using the gentrap v0.4 summary (3 samples, 6 read groups, mixed library types)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -1117,9 +1117,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib)
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMLib)
-        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSLib)
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRG)
+        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG)
 
         def priorRequests = Seq(upload1, upload2, upload3)
 
@@ -1311,12 +1311,12 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the gentrap v0.4 summary (3 samples, 6 library, mixed library types)" >> inline {
+    "using the gentrap v0.4 summary (3 samples, 6 read groups, mixed library types)" >> inline {
 
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMLibMixedLib
+        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 

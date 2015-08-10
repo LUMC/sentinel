@@ -33,17 +33,17 @@ class GentrapStatsProcessor(mongo: MongodbAccessObject) extends StatsProcessor(m
   /** Retrieves alignment statistics per sample. */
   def getSampleAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.Sample) _
 
-  /** Retrieves alignment statistics per library. */
-  def getLibAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.Lib) _
+  /** Retrieves alignment statistics per read group. */
+  def getReadGroupAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.ReadGroup) _
 
   /** Retrieves aggregated alignment statistics. */
   def getAlignmentAggr = getAggrStatsByAcc[GentrapAlignmentStatsAggr]("alnStats") _
 
   /** Retrieves raw sequencing statistics data points. */
-  def getSeqStatsRaw = getLibStats[SeqStats]("seqStatsRaw") _
+  def getSeqStatsRaw = getReadGroupStats[SeqStats]("seqStatsRaw") _
 
   /** Retrieves processed sequencing statistics data points. */
-  def getSeqStatsProcessed = getLibStats[SeqStats]("seqStatsProcessed") _
+  def getSeqStatsProcessed = getReadGroupStats[SeqStats]("seqStatsProcessed") _
 
   /** Retrieves aggregated raw sequencing statistics. */
   def getSeqStatsAggrRaw = getSeqAggregateStats[ReadStatsAggr]("seqStatsRaw") _

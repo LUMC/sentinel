@@ -79,7 +79,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
         def params = Seq(("userId", Users.avg.id), ("pipeline", "gentrap"))
         def headers = Map(HeaderApiKey -> Users.avg.activeKey)
         def request = () => post(uploadEndpoint, params,
-          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSLib), headers) { response}
+          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response}
         def priorRequests = Seq(request)
 
         "after the run summary file is uploaded" in {
@@ -130,9 +130,9 @@ class ReferencesControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMLib)
-        def upload2 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleMLib)
-        def upload3 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleSLib)
+        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleMRG)
+        def upload3 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleSRG)
         def upload4 = makeUpload(Users.avg, SchemaExamples.Plain)
 
         def priorRequests = Seq(upload1, upload2, upload3)
@@ -201,7 +201,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
         def params = Seq(("userId", Users.avg.id), ("pipeline", "gentrap"))
         def headers = Map(HeaderApiKey -> Users.avg.activeKey)
         def upload = () => post(uploadEndpoint, params,
-          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSLib), headers) { response}
+          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response}
         def priorRequests = Seq(upload)
         def refId = (parse(priorResponse.body) \ "refId").extract[String]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]

@@ -24,10 +24,10 @@ import com.novus.salat.annotations.Key
  * @param pipelineName Pipeline name.
  * @param nRuns Total number of runs of the pipeline.
  * @param nSamples Total number of samples from all runs of the pipeline.
- * @param nLibs Total number of libraries from all runs of the pipeline.
+ * @param nReadGroups Total number of read groups from all runs of the pipeline.
  */
 case class PipelineStats(
   @Key("_id") pipelineName: String,
   nRuns: Int,
   nSamples: Int,
-  nLibs: Int)
+  nReadGroups: Int)

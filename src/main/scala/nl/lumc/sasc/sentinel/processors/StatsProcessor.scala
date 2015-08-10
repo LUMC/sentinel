@@ -41,8 +41,8 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   /** MongoDB samples collection name of the pipeline. */
   protected lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
-  /** MongoDB libraries collection name of the pipeline. */
-  protected lazy val libsColl = mongo.db(collectionNames.pipelineLibs(pipelineName))
+  /** MongoDB read groups collection name of the pipeline. */
+  protected lazy val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
 
   /**
    * Match operation builder for collection aggregations.
@@ -203,7 +203,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
         "runId" -> "$runId",
         "runName" -> "$runName",
         "sampleName" -> "$sampleName") ++ {
-          if (accLevel == AccLevel.Lib) MongoDBObject("libName" -> "$libName")
+          if (accLevel == AccLevel.ReadGroup) MongoDBObject("readGroupName" -> "$readGroupName")
           else MongoDBObject.empty
         }
 
@@ -232,9 +232,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     // Collection to query on
     val coll = accLevel match {
-      case AccLevel.Sample => samplesColl
-      case AccLevel.Lib    => libsColl
-      case otherwise       => throw new NotImplementedError
+      case AccLevel.Sample    => samplesColl
+      case AccLevel.ReadGroup => readGroupsColl
+      case otherwise          => throw new NotImplementedError
     }
 
     lazy val results = coll
@@ -262,7 +262,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   }
 
   /**
-   * Retrieves library statistics.
+   * Retrieves read group statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
    * @param libType Library type of the returned sequence statistics.
@@ -277,14 +277,14 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Sequence of sequence statistics objects.
    */
   // format: OFF
-  def getLibStats[T <: AnyRef](metricName: String)
-                              (libType: Option[LibType.Value],
-                               user: Option[User],
-                               runs: Seq[ObjectId] = Seq.empty,
-                               references: Seq[ObjectId] = Seq.empty,
-                               annotations: Seq[ObjectId] = Seq.empty,
-                               timeSorted: Boolean = false)
-                              (implicit m: Manifest[T]): Seq[T] = {
+  def getReadGroupStats[T <: AnyRef](metricName: String)
+                                    (libType: Option[LibType.Value],
+                                     user: Option[User],
+                                     runs: Seq[ObjectId] = Seq.empty,
+                                     references: Seq[ObjectId] = Seq.empty,
+                                     annotations: Seq[ObjectId] = Seq.empty,
+                                     timeSorted: Boolean = false)
+                                    (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
     // Match operation to filter for run, reference, annotation IDs, and/or library type
@@ -302,7 +302,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
             "runId" -> "$runId",
             "runName" -> "$runName",
             "sampleName" -> "$sampleName",
-            "libName" -> "$libName")))
+            "readGroupName" -> "$readGroupName")))
     }
 
     val operations = timeSorted match {
@@ -310,7 +310,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
       case false => Seq(opMatchFilters, opProjectStats)
     }
 
-    lazy val results = libsColl
+    lazy val results = readGroupsColl
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map {
         case aggres =>
@@ -361,9 +361,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
     val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
 
     val coll = accLevel match {
-      case AccLevel.Sample => samplesColl
-      case AccLevel.Lib    => libsColl
-      case otherwise       => throw new NotImplementedError
+      case AccLevel.Sample    => samplesColl
+      case AccLevel.ReadGroup => readGroupsColl
+      case otherwise          => throw new NotImplementedError
     }
 
     def mapRecResults(attr: String) = coll
@@ -389,7 +389,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   }
 
   /**
-   * Retrieves aggregated library statistics.
+   * Retrieves aggregated read group statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
    * @param metricAttrNames Sequence of names of the metric container object attribute to aggregate on.
@@ -403,18 +403,18 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Alignment statistics aggregates.
    */
   // format: OFF
-  def getLibAggrStats[T <: AnyRef](metricName: String,
-                                   metricAttrNames: Seq[String])
-                                  (libType: Option[LibType.Value],
-                                   runs: Seq[ObjectId] = Seq.empty,
-                                   references: Seq[ObjectId] = Seq.empty,
-                                   annotations: Seq[ObjectId] = Seq.empty)
-                                  (implicit m: Manifest[T]): Option[T] = {
+  def getReadGroupAggrStats[T <: AnyRef](metricName: String,
+                                         metricAttrNames: Seq[String])
+                                        (libType: Option[LibType.Value],
+                                         runs: Seq[ObjectId] = Seq.empty,
+                                         references: Seq[ObjectId] = Seq.empty,
+                                         annotations: Seq[ObjectId] = Seq.empty)
+                                        (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
     val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
 
-    def mapRecResults(attr: String) = libsColl
+    def mapRecResults(attr: String) = readGroupsColl
       .mapReduce(
         mapFunction = mapFunc(s"$metricName.$attr", libType),
         reduceFunction = reduceFunc,
@@ -461,7 +461,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
     // Query for selecting documents pre-mapReduce
     val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
 
-    def mapRecResults(attr: String, readName: String) = libsColl
+    def mapRecResults(attr: String, readName: String) = readGroupsColl
       .mapReduce(
         mapFunction = mapFunc(s"$metricName.$readName.$attr", libType),
         reduceFunction = reduceFunc,

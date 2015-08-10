@@ -20,25 +20,25 @@ import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat._
 import com.novus.salat.global._
 
-import nl.lumc.sasc.sentinel.models.{ BaseLibRecord, BaseSampleRecord }
+import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, BaseSampleRecord }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /**
- * Trait for storing samples and libraries from run summaries.
+ * Trait for storing samples and read groups from run summaries.
  *
- * @tparam S Subclass of [[nl.lumc.sasc.sentinel.models.BaseSampleRecord]] representing a sample run by a pipeline.
- * @tparam L Subclass of [[nl.lumc.sasc.sentinel.models.BaseLibRecord]] representing a library run by a pipeline.
+ * @tparam S Subclass of [[nl.lumc.sasc.sentinel.models.BaseSampleRecord]] representing a sample sample-level metrics.
+ * @tparam R Subclass of [[nl.lumc.sasc.sentinel.models.BaseReadGroupRecord]] representing a read group-level metrics.
  */
-trait UnitsAdapter[S <: BaseSampleRecord, L <: BaseLibRecord] extends MongodbConnector { this: RunsProcessor =>
+trait UnitsAdapter[S <: BaseSampleRecord, R <: BaseReadGroupRecord] extends MongodbConnector { this: RunsProcessor =>
 
   /** Collection for the samples. */
   private lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
-  /** Collection for the libraries. */
-  private lazy val libsColl = mongo.db(collectionNames.pipelineLibs(pipelineName))
+  /** Collection for the read groups. */
+  private lazy val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
 
   /**
-   * Stores the given sequence of samples into the sample collection.
+   * Stores the given sequence of sample metrics into its collection.
    *
    * @param samples Samples to store.
    * @return Bulk write operation result.
@@ -52,15 +52,15 @@ trait UnitsAdapter[S <: BaseSampleRecord, L <: BaseLibRecord] extends MongodbCon
   }
 
   /**
-   * Stores the given sequence of libraries into the sample collection.
+   * Stores the given sequence of read group metrics into its collection.
    *
-   * @param libs Libraries to store.
+   * @param readGroups Read groups to store.
    * @return Bulk write operation result.
    */
-  def storeLibs(libs: Seq[L])(implicit m: Manifest[L]): BulkWriteResult = {
+  def storeReadGroups(readGroups: Seq[R])(implicit m: Manifest[R]): BulkWriteResult = {
     // TODO: refactor to use Futures instead
-    val builder = libsColl.initializeUnorderedBulkOperation
-    val docs = libs.map { case lib => grater[L].asDBObject(lib) }
+    val builder = readGroupsColl.initializeUnorderedBulkOperation
+    val docs = readGroups.map { case rg => grater[R].asDBObject(rg) }
     docs.foreach { case doc => builder.insert(doc) }
     builder.execute()
   }
