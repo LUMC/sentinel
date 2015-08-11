@@ -175,7 +175,7 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       case AccLevel.ReadGroup => Selector.fromLibType(libType)
     }
 
-    val matchers = Selector.combineAnd(
+    val selections = Selector.combineAnd(
       libSelector,
       ManyContainOne("runId", runIds),
       ManyContainOne("referenceId", refIds),
@@ -186,7 +186,7 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       case AccLevel.ReadGroup => gentrap.getReadGroupAlignmentStats
     }
 
-    Ok(alnStatsFunc(matchers, user, sorted))
+    Ok(alnStatsFunc(selections, user, sorted))
   }
 
   // format: OFF
@@ -379,7 +379,13 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       case SeqQcPhase.Processed => gentrap.getSeqStatsProcessed
     }
 
-    Ok(queryFunc(libType, user, runIds, refIds, annotIds, sorted))
+    val selections = Selector.combineAnd(
+      Selector.fromLibType(libType),
+      ManyContainOne("runId", runIds),
+      ManyContainOne("referenceId", refIds),
+      ManyIntersectMany("annotationIds", annotIds))
+
+    Ok(queryFunc(selections, user, sorted))
   }
 
   // format: OFF

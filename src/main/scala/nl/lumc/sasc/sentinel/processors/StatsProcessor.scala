@@ -265,49 +265,44 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * Retrieves read group statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
-   * @param libType Library type of the returned sequence statistics.
+   * @param matchers MongoDBObject containing query parameters.
    * @param user If defined, returned data points belonging to the user will show its labels.
-   * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
-   * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
-   *                   by reference IDs.
-   * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
-   *                    filtered by annotation IDs.
    * @param timeSorted Whether to time-sort the returned items or not.
    * @tparam T Case class representing the metrics object to return.
    * @return Sequence of sequence statistics objects.
    */
   // format: OFF
   def getReadGroupStats[T <: AnyRef](metricName: String)
-                                    (libType: Option[LibType.Value],
-                                     user: Option[User],
-                                     runs: Seq[ObjectId] = Seq.empty,
-                                     references: Seq[ObjectId] = Seq.empty,
-                                     annotations: Seq[ObjectId] = Seq.empty,
+                                    (matchers: MongoDBObject,
+                                     user: Option[User] = None,
                                      timeSorted: Boolean = false)
                                     (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
-    // Match operation to filter for run, reference, annotation IDs, and/or library type
-    val opMatchFilters = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired))
+    val operations = {
 
-    // Projection operation for retrieving innermost stats object
-    val opProjectStats = {
+      // Projection operation for retrieving innermost stats object
+      val opProjectStats = {
 
-      MongoDBObject("$project" ->
-        MongoDBObject(
-          "_id" -> 0,
-          "uploaderId" -> "$uploaderId",
-          metricName -> 1,
-          "labels" -> MongoDBObject(
-            "runId" -> "$runId",
-            "runName" -> "$runName",
-            "sampleName" -> "$sampleName",
-            "readGroupName" -> "$readGroupName")))
-    }
+        MongoDBObject("$project" ->
+          MongoDBObject(
+            "_id" -> 0,
+            "uploaderId" -> "$uploaderId",
+            metricName -> 1,
+            "labels" -> MongoDBObject(
+              "runId" -> "$runId",
+              "runName" -> "$runName",
+              "sampleName" -> "$sampleName",
+              "readGroupName" -> "$readGroupName")))
+      }
 
-    val operations = timeSorted match {
-      case true  => Seq(opMatchFilters, opSortUnit, opProjectStats)
-      case false => Seq(opMatchFilters, opProjectStats)
+      // Initial document selection
+      val opMatch = MongoDBObject("$match" -> matchers).asDBObject
+
+      timeSorted match {
+        case true  => Seq(opMatch, opSortUnit, opProjectStats)
+        case false => Seq(opMatch, opProjectStats)
+      }
     }
 
     lazy val results = readGroupsColl
