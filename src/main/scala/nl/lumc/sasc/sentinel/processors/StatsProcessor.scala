@@ -223,21 +223,18 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
-      .map {
-        case aggres =>
-          val uploaderId = aggres.getAs[String]("uploaderId")
-          val labels = aggres.getAs[DBObject]("labels")
-          val astat = aggres.getAs[DBObject](metricName)
-          val dbo = (user, uploaderId, astat, labels) match {
-            case (Some(u), Some(uid), Some(s), Some(n)) =>
-              if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
-              else Option(s)
-            case (None, _, Some(s), _) => Option(s)
-            case otherwise             => None
-          }
-          dbo.collect {
-            case obj => grater[T].asObject(obj)
-          }
+      .map { aggres =>
+        val uploaderId = aggres.getAs[String]("uploaderId")
+        val labels = aggres.getAs[DBObject]("labels")
+        val astat = aggres.getAs[DBObject](metricName)
+        val dbo = (user, uploaderId, astat, labels) match {
+          case (Some(u), Some(uid), Some(s), Some(n)) =>
+            if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
+            else Option(s)
+          case (None, _, Some(s), _) => Option(s)
+          case otherwise             => None
+        }
+        dbo.map { obj => grater[T].asObject(obj) }
       }.toSeq.flatten
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
@@ -291,21 +288,18 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     lazy val results = readGroupsColl
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
-      .map {
-        case aggres =>
-          val uploaderId = aggres.getAs[String]("uploaderId")
-          val labels = aggres.getAs[DBObject]("labels")
-          val astat = aggres.getAs[DBObject](metricName)
-          val dbo = (user, uploaderId, astat, labels) match {
-            case (Some(u), Some(uid), Some(s), Some(n)) =>
-              if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
-              else Option(s)
-            case (None, _, Some(s), _) => Option(s)
-            case otherwise             => None
-          }
-          dbo.collect {
-            case obj => grater[T].asObject(obj)
-          }
+      .map { aggres =>
+        val uploaderId = aggres.getAs[String]("uploaderId")
+        val labels = aggres.getAs[DBObject]("labels")
+        val astat = aggres.getAs[DBObject](metricName)
+        val dbo = (user, uploaderId, astat, labels) match {
+          case (Some(u), Some(uid), Some(s), Some(n)) =>
+            if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
+            else Option(s)
+          case (None, _, Some(s), _) => Option(s)
+          case otherwise             => None
+        }
+        dbo.map { obj => grater[T].asObject(obj) }
       }.toSeq.flatten
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
@@ -354,10 +348,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
         query = Option(query))
       .toSeq
       .headOption
-      .collect {
-        case res =>
-          MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty))
-      }
+      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
     val aggrStats = extractFieldNames[T].par
       .flatMap { mapRecResults }
@@ -402,10 +393,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
         query = Option(query))
       .toSeq
       .headOption
-      .collect {
-        case res =>
-          MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty))
-      }
+      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
     val aggrStats = metricAttrNames.par
       .flatMap { mapRecResults }
@@ -449,7 +437,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
         query = Option(query))
       .toSeq
       .headOption
-      .collect { case res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
+      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
     val readNames = libType match {
       case Some(LibType.Single) => Seq("read1")
@@ -459,20 +447,18 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
     val metricAttrNames = extractFieldNames[T].toSeq
 
     val aggrStats = readNames.par
-      .map {
-        case rn =>
-          val res = metricAttrNames.par
-            .flatMap { case an => mapRecResults(an, rn) }
-            .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-          if (res.nonEmpty) (rn, Option(grater[T].asObject(res)))
-          else (rn, None)
+      .map { rn =>
+        val res = metricAttrNames.par
+          .flatMap { an => mapRecResults(an, rn) }
+          .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
+        if (res.nonEmpty) (rn, Option(grater[T].asObject(res)))
+        else (rn, None)
       }.seq
-      .map { case (rn, res) => res.map(r => (rn, r)) }
-      .flatten
+      .flatMap { case (rn, res) => res.map(r => (rn, r)) }
       .toMap
 
-    aggrStats.get("read1").collect {
-      case r1 => SeqStatsAggr(read1 = r1, read2 = aggrStats.get("read2"), readAll = aggrStats.get("readAll"))
+    aggrStats.get("read1").map { r1 =>
+      SeqStatsAggr(read1 = r1, read2 = aggrStats.get("read2"), readAll = aggrStats.get("readAll"))
     }
   }
 }
