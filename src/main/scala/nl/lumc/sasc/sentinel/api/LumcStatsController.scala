@@ -261,15 +261,21 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
     val refIds = params.getAs[Seq[DbId]]("refIds").getOrElse(Seq.empty)
     val annotIds = params.getAs[Seq[DbId]]("annotIds").getOrElse(Seq.empty)
 
-    val libType = {
+    val libSelector = {
       val libType = params.getAs[LibType.Value]("libType")
       accLevel match {
-        case AccLevel.Sample    => None
-        case AccLevel.ReadGroup => libType
+        case AccLevel.Sample    => EmptySelector
+        case AccLevel.ReadGroup => Selector.fromLibType(libType)
       }
     }
 
-    gentrap.getAlignmentAggr(accLevel, libType, runIds, refIds, annotIds) match {
+    val selections = Selector.combineAnd(
+      libSelector,
+      ManyContainOne("runId", runIds),
+      ManyContainOne("referenceId", refIds),
+      ManyIntersectMany("annotationIds", annotIds))
+
+    gentrap.getAlignmentAggr(accLevel, selections) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
