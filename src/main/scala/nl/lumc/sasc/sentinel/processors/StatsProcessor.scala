@@ -86,42 +86,26 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   private[processors] val opSortUnit = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
 
   /** Raw string of the map function for mapReduce. */
-  private[processors] def mapFunc(metricName: String,
-                                  libType: Option[LibType.Value])(implicit pairAttrib: String): JSFunction = {
+  private[processors] def mapFunc(metricNames: String*)(implicit pairAttrib: String): JSFunction = {
 
-    val isPaired = libType match {
-      case None                 => "undefined" // don't check for pairs
-      case Some(LibType.Paired) => "true" // check for isPaired === true
-      case Some(LibType.Single) => "false" // check for isPaired === false
-      case otherwise            => throw new NotImplementedError
-    }
+    val metricName = metricNames.mkString(".")
+    val metricsArrayJs = "[ '" + metricNames.mkString("', '") + "' ]"
 
-    // nestedAttrCheck adapted from http://stackoverflow.com/a/2631521/243058
+    // getNestedValue adapted from http://stackoverflow.com/a/2631521/243058
     s"""function map() {
     |
-    |     // Given an object and a string denoting its property (nested with arbitrary depth), return whether
-    |     // the property exists.
-    |     function nestedAttrCheck(o, s) {
-    |       s = s.split('.');
-    |       var obj = o[s.shift()];
-    |       while (obj && s.length) obj = obj[s.shift()];
-    |       return (obj !== undefined);
-    |     }
+    |     var attrArray = $metricsArrayJs;
+    |     var res = this[attrArray.shift()];
+    |     while (res && attrArray.length) res = res[attrArray.shift()];
+    |     var nestedValue = res;
     |
-    |     var hasMetric = nestedAttrCheck(this, '$metricName');
-    |
-    |     // Checks whether the library is paired. Ignored if expected value is undefined.
-    |     if ($isPaired !== undefined) {
-    |       hasMetric = hasMetric && (this.$pairAttrib === $isPaired);
-    |     }
-    |
-    |     if (hasMetric) {
+    |     if (nestedValue !== undefined) {
     |       emit("$metricName",
     |         {
-    |           sum: this.$metricName,
-    |           min: this.$metricName,
-    |           max: this.$metricName,
-    |           arr: [this.$metricName],
+    |           sum: nestedValue,
+    |           min: nestedValue,
+    |           max: nestedValue,
+    |           arr: [nestedValue],
     |           nDataPoints: 1,
     |           diff: 0
     |         });
@@ -363,7 +347,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     def mapRecResults(attr: String) = coll
       .mapReduce(
-        mapFunction = mapFunc(s"$metricName.$attr", libType),
+        mapFunction = mapFunc(metricName, attr),
         reduceFunction = reduceFunc,
         output = MapReduceInlineOutput,
         finalizeFunction = Option(finalizeFunc),
@@ -411,7 +395,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     def mapRecResults(attr: String) = readGroupsColl
       .mapReduce(
-        mapFunction = mapFunc(s"$metricName.$attr", libType),
+        mapFunction = mapFunc(metricName, attr),
         reduceFunction = reduceFunc,
         output = MapReduceInlineOutput,
         finalizeFunction = Option(finalizeFunc),
@@ -458,7 +442,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
 
     def mapRecResults(attr: String, readName: String) = readGroupsColl
       .mapReduce(
-        mapFunction = mapFunc(s"$metricName.$readName.$attr", libType),
+        mapFunction = mapFunc(metricName, readName, attr),
         reduceFunction = reduceFunc,
         output = MapReduceInlineOutput,
         finalizeFunction = Option(finalizeFunc),
