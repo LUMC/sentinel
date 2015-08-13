@@ -31,23 +31,20 @@ class GentrapStatsProcessor(mongo: MongodbAccessObject) extends StatsProcessor(m
   def pipelineName = "gentrap"
 
   /** Retrieves alignment statistics per sample. */
-  def getSampleAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.Sample) _
-
-  /** Retrieves alignment statistics per read group. */
-  def getReadGroupAlignmentStats = getStatsByAcc[GentrapAlignmentStats]("alnStats")(AccLevel.ReadGroup) _
+  def getAlignmentStats = getStats[GentrapAlignmentStats]("alnStats") _
 
   /** Retrieves aggregated alignment statistics. */
-  def getAlignmentAggr = getAggrStatsByAcc[GentrapAlignmentStatsAggr]("alnStats") _
+  def getAggrAlignmentStats = getAggregateStats[GentrapAlignmentStatsAggr]("alnStats") _
 
   /** Retrieves raw sequencing statistics data points. */
-  def getSeqStatsRaw = getReadGroupStats[SeqStats]("seqStatsRaw") _
+  def getSeqStatsRaw = getStats[SeqStats]("seqStatsRaw")(AccLevel.ReadGroup) _
 
   /** Retrieves processed sequencing statistics data points. */
-  def getSeqStatsProcessed = getReadGroupStats[SeqStats]("seqStatsProcessed") _
+  def getSeqStatsProcessed = getStats[SeqStats]("seqStatsProcessed")(AccLevel.ReadGroup) _
 
   /** Retrieves aggregated raw sequencing statistics. */
-  def getSeqStatsAggrRaw = getSeqAggregateStats[ReadStatsAggr]("seqStatsRaw") _
+  def getAggrSeqStatsRaw = getAggregateSeqStats[SeqStatsAggr[ReadStatsAggr]]("seqStatsRaw") _
 
   /** Retrieves aggregated processed sequencing statistics. */
-  def getSeqStatsAggrProcessed = getSeqAggregateStats[ReadStatsAggr]("seqStatsProcessed") _
+  def getAggrSeqStatsProcessed = getAggregateSeqStats[SeqStatsAggr[ReadStatsAggr]]("seqStatsProcessed") _
 }

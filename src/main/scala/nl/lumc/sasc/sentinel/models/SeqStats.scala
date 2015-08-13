@@ -26,7 +26,7 @@ import nl.lumc.sasc.sentinel.utils.pctOf
  *
  * @tparam T Container for read-level statistics.
  */
-@Salat trait SeqStatsLike[T <: CaseClass] {
+@Salat trait SeqStatsLike[T <: CaseClass] { this: CaseClass =>
 
   /** Statistics of the first read. */
   val read1: T
@@ -59,7 +59,6 @@ case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: O
   }
 }
 
-// TODO: generate the aggregate stats programmatically (using macros?)
 /**
  * Aggregated sequencing input statistics.
  *

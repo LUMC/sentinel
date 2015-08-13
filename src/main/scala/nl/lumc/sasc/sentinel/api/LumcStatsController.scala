@@ -181,12 +181,7 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       ManyContainOne("referenceId", refIds),
       ManyIntersectMany("annotationIds", annotIds))
 
-    val alnStatsFunc = accLevel match {
-      case AccLevel.Sample    => gentrap.getSampleAlignmentStats
-      case AccLevel.ReadGroup => gentrap.getReadGroupAlignmentStats
-    }
-
-    Ok(alnStatsFunc(selections, user, sorted))
+    Ok(gentrap.getAlignmentStats(accLevel)(selections, user, sorted))
   }
 
   // format: OFF
@@ -275,7 +270,7 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       ManyContainOne("referenceId", refIds),
       ManyIntersectMany("annotationIds", annotIds))
 
-    gentrap.getAlignmentAggr(accLevel, selections) match {
+    gentrap.getAggrAlignmentStats(accLevel)(selections) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
@@ -464,8 +459,8 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
     val qcPhase = params.getAs[SeqQcPhase.Value]("qcPhase").getOrElse(SeqQcPhase.Raw)
 
     val queryFunc = qcPhase match {
-      case SeqQcPhase.Raw       => gentrap.getSeqStatsAggrRaw
-      case SeqQcPhase.Processed => gentrap.getSeqStatsAggrProcessed
+      case SeqQcPhase.Raw       => gentrap.getAggrSeqStatsRaw
+      case SeqQcPhase.Processed => gentrap.getAggrSeqStatsProcessed
     }
 
     val selections = Selector.combineAnd(
@@ -474,7 +469,7 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       ManyContainOne("referenceId", refIds),
       ManyIntersectMany("annotationIds", annotIds))
 
-    queryFunc(libType, selections) match {
+    queryFunc(selections, libType) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }

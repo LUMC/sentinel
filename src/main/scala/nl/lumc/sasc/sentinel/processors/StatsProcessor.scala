@@ -16,14 +16,14 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
-import scala.collection.mutable.ListBuffer
+import scala.language.higherKinds
 import scala.util.Random.shuffle
 
-import com.novus.salat._
-import com.novus.salat.global._
+import com.novus.salat.{ CaseClass => _, _ }
+import com.novus.salat.global.{ ctx => SalatContext }
 import com.mongodb.casbah.Imports._
 
-import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
+import nl.lumc.sasc.sentinel.{ AccLevel, CaseClass, LibType }
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.extractFieldNames
@@ -31,62 +31,44 @@ import nl.lumc.sasc.sentinel.utils.extractFieldNames
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.
  */
-abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends Processor {
-
-  // TODO: refactor functions in here ~ we can do with less duplication
+abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
 
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
   implicit val pairAttrib = StatsProcessor.pairAttrib
 
   /** MongoDB samples collection name of the pipeline. */
-  protected lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
+  protected[processors] lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
   /** MongoDB read groups collection name of the pipeline. */
-  protected lazy val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
-
-  /**
-   * Match operation builder for collection aggregations.
-   *
-   * @param runs Run IDs to filter in. If empty, no run ID filtering is done.
-   * @param references Reference IDs to filter in. If empty, no reference ID filtering is done.
-   * @param annotations Annotation IDs to filter in. If empty, no annotation ID filtering is done.
-   * @param paired If defined, a boolean denoting whether the unit is paired-end or not. If not defined, both paired-end
-   *               and single-end are included in the match.
-   * @param withKey Whether to return only the `query` object with the `$match` key or not.
-   * @return a [[DBObject]] representing the `$match` aggregation operation.
-   */
-  private[processors] def buildMatchOp(runs: Seq[ObjectId], references: Seq[ObjectId], annotations: Seq[ObjectId],
-                                       paired: Option[Boolean] = None, withKey: Boolean = true): DBObject = {
-    val matchBuffer = new ListBuffer[MongoDBObject]()
-
-    if (runs.nonEmpty)
-      matchBuffer += MongoDBObject("runId" -> MongoDBObject("$in" -> runs))
-
-    if (references.nonEmpty)
-      matchBuffer += MongoDBObject("referenceId" -> MongoDBObject("$in" -> references))
-
-    if (annotations.nonEmpty)
-      matchBuffer += MongoDBObject("annotationIds" ->
-        MongoDBObject("$elemMatch" -> MongoDBObject("$in" -> annotations)))
-
-    paired match {
-      case Some(isPaired) => matchBuffer += MongoDBObject(pairAttrib -> isPaired)
-      case None           => ;
-    }
-
-    val query =
-      if (matchBuffer.nonEmpty) MongoDBObject("$and" -> matchBuffer.toSeq)
-      else MongoDBObject.empty
-
-    if (withKey) MongoDBObject("$match" -> query)
-    else query
-  }
+  protected[processors] lazy val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
 
   /** Sort operation for unit documents */
-  private[processors] val opSortUnit = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
+  protected[processors] val opSortUnit = MongoDBObject("$sort" -> MongoDBObject("creationTimeUtc" -> -1))
+
+  /** Default mapReduce MongoDB output for this processor. */
+  protected[processors] def mapReduceOutput: MapReduceOutputTarget = MapReduceInlineOutput
+
+  /**
+   * Runs a map reduce query.
+   *
+   * @param coll MongoDB collection to run map reduce on.
+   * @param query MongoDB initial query for selecting documents for map reduce.
+   * @param attrIndexNames Names of attribute to perform map reduce on.
+   * @return MapReduce results.
+   */
+  protected[processors] def runMapReduce(coll: MongoCollection)(query: Option[DBObject])(attrIndexNames: Seq[String]) = coll
+    .mapReduce(
+      mapFunction = mapFunc(attrIndexNames),
+      reduceFunction = reduceFunc,
+      output = mapReduceOutput,
+      finalizeFunction = Option(finalizeFunc),
+      query = query)
+    .toSeq
+    .headOption
+    .map { res => MongoDBObject(attrIndexNames.last -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
   /** Raw string of the map function for mapReduce. */
-  private[processors] def mapFunc(metricNames: String*)(implicit pairAttrib: String): JSFunction = {
+  protected[processors] final def mapFunc(metricNames: Seq[String])(implicit pairAttrib: String): JSFunction = {
 
     val metricName = metricNames.mkString(".")
     val metricsArrayJs = "[ '" + metricNames.mkString("', '") + "' ]"
@@ -115,7 +97,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   }
 
   /** Reduce runction for mapReduce */
-  private[processors] val reduceFunc =
+  protected[processors] final val reduceFunc =
     """function reduce(key, values) {
       |
       |  var a = values[0];
@@ -141,7 +123,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
     """.stripMargin
 
   /** Finalize function for mapReduce */
-  private[processors] val finalizeFunc =
+  protected[processors] final val finalizeFunc =
     """function finalize(key, value) {
       |
       |  value.avg = value.sum / value.nDataPoints;
@@ -173,12 +155,12 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Sequence of unit statistics objects.
    */
   // format: OFF
-  def getStatsByAcc[T <: CaseClass](metricName: String)
-                                   (accLevel: AccLevel.Value)
-                                   (matchers: MongoDBObject,
-                                    user: Option[User] = None,
-                                    timeSorted: Boolean = false)
-                                   (implicit m: Manifest[T]): Seq[T] = {
+  def getStats[T <: CaseClass](metricName: String)
+                              (accLevel: AccLevel.Value)
+                              (matchers: MongoDBObject,
+                               user: Option[User] = None,
+                               timeSorted: Boolean = false)
+                              (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
     // Projection for data point label
@@ -243,71 +225,6 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
   }
 
   /**
-   * Retrieves read group statistics.
-   *
-   * @param metricName Name of the main metrics container object in the unit.
-   * @param matchers MongoDBObject containing query parameters.
-   * @param user If defined, returned data points belonging to the user will show its labels.
-   * @param timeSorted Whether to time-sort the returned items or not.
-   * @tparam T Case class representing the metrics object to return.
-   * @return Sequence of sequence statistics objects.
-   */
-  // format: OFF
-  def getReadGroupStats[T <: CaseClass](metricName: String)
-                                       (matchers: MongoDBObject,
-                                        user: Option[User] = None,
-                                        timeSorted: Boolean = false)
-                                       (implicit m: Manifest[T]): Seq[T] = {
-    // format: ON
-
-    val operations = {
-
-      // Projection operation for retrieving innermost stats object
-      val opProjectStats = {
-
-        MongoDBObject("$project" ->
-          MongoDBObject(
-            "_id" -> 0,
-            "uploaderId" -> "$uploaderId",
-            metricName -> 1,
-            "labels" -> MongoDBObject(
-              "runId" -> "$runId",
-              "runName" -> "$runName",
-              "sampleName" -> "$sampleName",
-              "readGroupName" -> "$readGroupName")))
-      }
-
-      // Initial document selection
-      val opMatch = MongoDBObject("$match" -> matchers).asDBObject
-
-      timeSorted match {
-        case true  => Seq(opMatch, opSortUnit, opProjectStats)
-        case false => Seq(opMatch, opProjectStats)
-      }
-    }
-
-    lazy val results = readGroupsColl
-      .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
-      .map { aggres =>
-        val uploaderId = aggres.getAs[String]("uploaderId")
-        val labels = aggres.getAs[DBObject]("labels")
-        val astat = aggres.getAs[DBObject](metricName)
-        val dbo = (user, uploaderId, astat, labels) match {
-          case (Some(u), Some(uid), Some(s), Some(n)) =>
-            if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
-            else Option(s)
-          case (None, _, Some(s), _) => Option(s)
-          case otherwise             => None
-        }
-        dbo.map { obj => grater[T].asObject(obj) }
-      }.toSeq.flatten
-
-    // TODO: switch to database-level randomization when SERVER-533 is resolved
-    if (timeSorted) results
-    else shuffle(results)
-  }
-
-  /**
    * Retrieves aggregated unit statistics.
    *
    * @param metricName Name of the main metrics container object in the unit.
@@ -317,9 +234,9 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Alignment statistics aggregates.
    */
   // format: OFF
-  def getAggrStatsByAcc[T <: CaseClass](metricName: String)
-                                       (accLevel: AccLevel.Value,
-                                        matchers: MongoDBObject)
+  def getAggregateStats[T <: CaseClass](metricName: String)
+                                       (accLevel: AccLevel.Value)
+                                       (matchers: MongoDBObject)
                                        (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
@@ -329,64 +246,10 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
       case otherwise          => throw new NotImplementedError
     }
 
-    def mapRecResults(attr: String) = coll
-      .mapReduce(
-        mapFunction = mapFunc(metricName, attr),
-        reduceFunction = reduceFunc,
-        output = MapReduceInlineOutput,
-        finalizeFunction = Option(finalizeFunc),
-        query = Option(matchers))
-      .toSeq
-      .headOption
-      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
+    val mapReduce = runMapReduce(coll)(Option(matchers)) _
 
     val aggrStats = extractFieldNames[T].par
-      .flatMap { mapRecResults }
-      .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-
-    if (aggrStats.isEmpty) None
-    else Option(grater[T].asObject(aggrStats))
-  }
-
-  /**
-   * Retrieves aggregated read group statistics.
-   *
-   * @param metricName Name of the main metrics container object in the unit.
-   * @param metricAttrNames Sequence of names of the metric container object attribute to aggregate on.
-   * @param libType Library type of the retrieved statistics. If not specified, all library types are used.
-   * @param runs Run IDs of the returned statistics. If not specified, unit statistics are not filtered by run ID.
-   * @param references Reference IDs of the returned statistics. If not specified, unit statistics are not filtered
-   *                   by reference IDs.
-   * @param annotations Annotations IDs of the returned statistics. If not specified, unit statistics are not
-   *                    filtered by annotation IDs.
-   * @tparam T Case class representing the aggregated metrics object to return.
-   * @return Alignment statistics aggregates.
-   */
-  // format: OFF
-  def getReadGroupAggrStats[T <: CaseClass](metricName: String,
-                                            metricAttrNames: Seq[String])
-                                           (libType: Option[LibType.Value],
-                                            runs: Seq[ObjectId] = Seq.empty,
-                                            references: Seq[ObjectId] = Seq.empty,
-                                            annotations: Seq[ObjectId] = Seq.empty)
-                                           (implicit m: Manifest[T]): Option[T] = {
-    // format: ON
-
-    val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
-
-    def mapRecResults(attr: String) = readGroupsColl
-      .mapReduce(
-        mapFunction = mapFunc(metricName, attr),
-        reduceFunction = reduceFunc,
-        output = MapReduceInlineOutput,
-        finalizeFunction = Option(finalizeFunc),
-        query = Option(query))
-      .toSeq
-      .headOption
-      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
-
-    val aggrStats = metricAttrNames.par
-      .flatMap { mapRecResults }
+      .flatMap { n => mapReduce(Seq(metricName, n)) }
       .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
 
     if (aggrStats.isEmpty) None
@@ -397,55 +260,46 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * Retrieves aggregated sequence statistics.
    *
    * @param metricName Name of the main metrics container object in the sequence.
-   * @param libType Library type of the returned sequence statistics.
    * @param matchers MongoDBObject containing query parameters.
+   * @param libType Library type of the returned sequence statistics.
    * @tparam T Case class representing the aggregated metrics object to return.
    * @return Sequence statistics aggregates.
    */
   // format: OFF
-  def getSeqAggregateStats[T <: AnyRef](metricName: String)
-                                       (libType: Option[LibType.Value],
-                                                                matchers: MongoDBObject)
+  def getAggregateSeqStats[T <: CaseClass with SeqStatsLike[_]](metricName: String)
+                                                               (matchers: MongoDBObject,
+                                                                libType: Option[LibType.Value])
                                                                (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
-    def mapRecResults(attr: String, readName: String) = readGroupsColl
-      .mapReduce(
-        mapFunction = mapFunc(metricName, readName, attr),
-        reduceFunction = reduceFunc,
-        output = MapReduceInlineOutput,
-        finalizeFunction = Option(finalizeFunc),
-        query = Option(matchers))
-      .toSeq
-      .headOption
-      .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
+    val mapReduce = runMapReduce(readGroupsColl)(Option(matchers)) _
 
+    // Manifest of the inner type of SeqStatsLike
+    // TODO: avoid casting directly
+    val readStatsManif = m.typeArguments.head.asInstanceOf[Manifest[CaseClass]]
+    val metricAttrNames = extractFieldNames(readStatsManif).toSeq
     val readNames = libType match {
       case Some(LibType.Single) => Seq("read1")
       case otherwise            => Seq("read1", "read2", "readAll")
     }
 
-    val metricAttrNames = extractFieldNames[T].toSeq
-
     val aggrStats = readNames.par
       .map { rn =>
         val res = metricAttrNames.par
-          .flatMap { an => mapRecResults(an, rn) }
+          .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
           .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-        if (res.nonEmpty) (rn, Option(grater[T].asObject(res)))
+        if (res.nonEmpty) (rn, Option(grater(SalatContext, readStatsManif).asObject(res)))
         else (rn, None)
       }.seq
       .flatMap { case (rn, res) => res.map(r => (rn, r)) }
       .toMap
 
-    aggrStats.get("read1").map { r1 =>
-      SeqStatsAggr(read1 = r1, read2 = aggrStats.get("read2"), readAll = aggrStats.get("readAll"))
-    }
+    if (aggrStats.contains("read1")) Option(grater[T].asObject(aggrStats.asDBObject))
+    else None
   }
 }
 
 object StatsProcessor {
-
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
   def pairAttrib = "isPaired"
 }
