@@ -25,7 +25,7 @@ import com.mongodb.casbah.Imports._
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
 import nl.lumc.sasc.sentinel.db._
-import nl.lumc.sasc.sentinel.models.{ SeqStatsAggr, User }
+import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.extractFieldNames
 
 /**
@@ -173,12 +173,12 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Sequence of unit statistics objects.
    */
   // format: OFF
-  def getStatsByAcc[T <: AnyRef](metricName: String)
-                                (accLevel: AccLevel.Value)
-                                (matchers: MongoDBObject,
-                                 user: Option[User] = None,
-                                 timeSorted: Boolean = false)
-                                (implicit m: Manifest[T]): Seq[T] = {
+  def getStatsByAcc[T <: CaseClass](metricName: String)
+                                   (accLevel: AccLevel.Value)
+                                   (matchers: MongoDBObject,
+                                    user: Option[User] = None,
+                                    timeSorted: Boolean = false)
+                                   (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
     // Projection for data point label
@@ -253,11 +253,11 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Sequence of sequence statistics objects.
    */
   // format: OFF
-  def getReadGroupStats[T <: AnyRef](metricName: String)
-                                    (matchers: MongoDBObject,
-                                     user: Option[User] = None,
-                                     timeSorted: Boolean = false)
-                                    (implicit m: Manifest[T]): Seq[T] = {
+  def getReadGroupStats[T <: CaseClass](metricName: String)
+                                       (matchers: MongoDBObject,
+                                        user: Option[User] = None,
+                                        timeSorted: Boolean = false)
+                                       (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
     val operations = {
@@ -317,10 +317,10 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Alignment statistics aggregates.
    */
   // format: OFF
-  def getAggrStatsByAcc[T <: AnyRef](metricName: String)
-                                    (accLevel: AccLevel.Value,
-                                     matchers: MongoDBObject)
-                                    (implicit m: Manifest[T]): Option[T] = {
+  def getAggrStatsByAcc[T <: CaseClass](metricName: String)
+                                       (accLevel: AccLevel.Value,
+                                        matchers: MongoDBObject)
+                                       (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
     val coll = accLevel match {
@@ -363,13 +363,13 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    * @return Alignment statistics aggregates.
    */
   // format: OFF
-  def getReadGroupAggrStats[T <: AnyRef](metricName: String,
-                                         metricAttrNames: Seq[String])
-                                        (libType: Option[LibType.Value],
-                                         runs: Seq[ObjectId] = Seq.empty,
-                                         references: Seq[ObjectId] = Seq.empty,
-                                         annotations: Seq[ObjectId] = Seq.empty)
-                                        (implicit m: Manifest[T]): Option[T] = {
+  def getReadGroupAggrStats[T <: CaseClass](metricName: String,
+                                            metricAttrNames: Seq[String])
+                                           (libType: Option[LibType.Value],
+                                            runs: Seq[ObjectId] = Seq.empty,
+                                            references: Seq[ObjectId] = Seq.empty,
+                                            annotations: Seq[ObjectId] = Seq.empty)
+                                           (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
     val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)

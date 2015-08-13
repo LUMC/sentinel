@@ -37,8 +37,6 @@ import nl.lumc.sasc.sentinel.processors.{ RunsProcessor, StatsProcessor }
 /** General utilities */
 package object utils {
 
-  import implicits._
-
   /** Magic byte for all Gzipped files. */
   private val GzipMagic = Seq(0x1f, 0x8b)
 
@@ -69,7 +67,7 @@ package object utils {
    * @tparam T Type of case class whose name will be returned.
    * @return Array of case class field names.
    */
-  def extractFieldNames[T <: AnyRef](implicit m: Manifest[T]) =
+  def extractFieldNames[T <: CaseClass](implicit m: Manifest[T]) =
     m.runtimeClass.getDeclaredFields
       .map(_.getName)
       .filter(!_.startsWith("$"))

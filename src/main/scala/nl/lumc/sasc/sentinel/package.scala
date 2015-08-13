@@ -77,4 +77,7 @@ package object sentinel {
     val Raw = Value("raw")
     val Processed = Value("processed")
   }
+
+  /** Type alias for case classes. */
+  type CaseClass = AnyRef with Product
 }

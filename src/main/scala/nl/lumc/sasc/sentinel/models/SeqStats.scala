@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.models
 
 import com.novus.salat.annotations.{ Persist, Salat }
 
+import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.utils.pctOf
 
 /**
@@ -25,19 +26,16 @@ import nl.lumc.sasc.sentinel.utils.pctOf
  *
  * @tparam T Container for read-level statistics.
  */
-@Salat trait SeqStatsLike[T] {
+@Salat trait SeqStatsLike[T <: CaseClass] {
 
   /** Statistics of the first read. */
-  def read1: T
+  val read1: T
 
   /** Statistics of the second read. */
-  def read2: Option[T]
+  val read2: Option[T]
 
   /** Combined statistics of the first and second read. */
-  def readAll: Option[_]
-
-  /** Data points labels. */
-  def labels: Option[DataPointLabels]
+  val readAll: Option[_]
 }
 
 /** Sequencing input statistics.*/
@@ -70,7 +68,8 @@ case class SeqStats(read1: ReadStats, read2: Option[ReadStats] = None, labels: O
  * @param readAll Aggregated statistics of both reads. Only defined if there is at least a paired-end data point
  *                in aggregation.
  */
-case class SeqStatsAggr[T <: AnyRef](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
+case class SeqStatsAggr[T <: CaseClass](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
+  extends SeqStatsLike[T]
 
 /**
  * Statistics of a single read file.
