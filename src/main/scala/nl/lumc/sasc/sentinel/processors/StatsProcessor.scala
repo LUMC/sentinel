@@ -398,25 +398,16 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
    *
    * @param metricName Name of the main metrics container object in the sequence.
    * @param libType Library type of the returned sequence statistics.
-   * @param runs Run IDs of the returned statistics. If not specified, sequence statistics are not filtered by run ID.
-   * @param references Reference IDs of the returned statistics. If not specified, sequence statistics are not filtered
-   *                   by reference IDs.
-   * @param annotations Annotations IDs of the returned statistics. If not specified, sequence statistics are not
-   *                    filtered by annotation IDs.
+   * @param matchers MongoDBObject containing query parameters.
    * @tparam T Case class representing the aggregated metrics object to return.
    * @return Sequence statistics aggregates.
    */
   // format: OFF
   def getSeqAggregateStats[T <: AnyRef](metricName: String)
                                        (libType: Option[LibType.Value],
-                                        runs: Seq[ObjectId] = Seq.empty,
-                                        references: Seq[ObjectId] = Seq.empty,
-                                        annotations: Seq[ObjectId] = Seq.empty)
-                                       (implicit m: Manifest[T]): Option[SeqStatsAggr[T]] = {
+                                                                matchers: MongoDBObject)
+                                                               (implicit m: Manifest[T]): Option[T] = {
     // format: ON
-
-    // Query for selecting documents pre-mapReduce
-    val query = buildMatchOp(runs, references, annotations, libType.map(_ == LibType.Paired), withKey = false)
 
     def mapRecResults(attr: String, readName: String) = readGroupsColl
       .mapReduce(
@@ -424,7 +415,7 @@ abstract class StatsProcessor(protected val mongo: MongodbAccessObject) extends 
         reduceFunction = reduceFunc,
         output = MapReduceInlineOutput,
         finalizeFunction = Option(finalizeFunc),
-        query = Option(query))
+        query = Option(matchers))
       .toSeq
       .headOption
       .map { res => MongoDBObject(attr -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }

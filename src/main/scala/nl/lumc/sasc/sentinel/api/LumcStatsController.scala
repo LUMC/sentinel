@@ -468,7 +468,13 @@ class LumcStatsController(implicit val swagger: Swagger, val mongo: MongodbAcces
       case SeqQcPhase.Processed => gentrap.getSeqStatsAggrProcessed
     }
 
-    queryFunc(libType, runIds, refIds, annotIds) match {
+    val selections = Selector.combineAnd(
+      Selector.fromLibType(libType),
+      ManyContainOne("runId", runIds),
+      ManyContainOne("referenceId", refIds),
+      ManyIntersectMany("annotationIds", annotIds))
+
+    queryFunc(libType, selections) match {
       case None      => NotFound(CommonMessages.MissingDataPoints)
       case Some(res) => Ok(transformMapReduceResult(res))
     }
