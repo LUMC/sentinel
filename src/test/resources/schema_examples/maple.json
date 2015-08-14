@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Maple pipeline schema",
+  "description": "Schema for Maple pipeline runs",
+  "type": "object",
+  "required": [ "samples", "run_name" ],
+
+  "properties": {
+
+    "run_name": { "type": "string" },
+
+    "samples": {
+      "description": "All samples analyzed in this run",
+      "type": "object",
+      "minItems": 1,
+      "additionalProperties": { "$ref": "#/definitions/sample" }
+    }
+  },
+
+  "definitions": {
+
+    "sample": {
+      "description": "A single Maple sample",
+      "type": "object",
+      "required": [ "readGroups", "nSnps" ],
+
+      "properties": {
+
+        "readGroups": {
+          "description": "All read groups belonging to the sample",
+          "type": "object",
+          "minItems": 1,
+          "additionalProperties": { "$ref": "#/definitions/readGroup" }
+        },
+
+        "nSnps": {
+          "description": "Number of SNPs called",
+          "type": "integer"
+        }
+      }
+    },
+
+    "readGroup": {
+      "description": "A single Maple readGroup",
+      "type": "object",
+      "required": [ "nReadsInput", "nReadsAligned" ],
+
+      "properties": {
+        "nReadsInput": { "type": "integer" },
+        "nReadsAligned": { "type": "integer" }
+      }
+    }
+  }
+}
