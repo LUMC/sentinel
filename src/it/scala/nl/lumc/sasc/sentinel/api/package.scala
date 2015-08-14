@@ -93,16 +93,16 @@ package object api {
   object SummaryExamples {
 
     /** Plain summary file. */
-    lazy val Plain = makeUploadable("/schema_examples/plain.json")
+    lazy val Plain = makeUploadable("/summary_examples/plain.json")
 
     /** Plain summary file, compressed. */
-    lazy val PlainCompressed = makeUploadable("/schema_examples/plain.json.gz")
+    lazy val PlainCompressed = makeUploadable("/summary_examples/plain.json.gz")
 
     /** Summary file that is JSON but invalid. */
-    lazy val Invalid = makeUploadable("/schema_examples/invalid.json")
+    lazy val Invalid = makeUploadable("/summary_examples/invalid.json")
 
     /** Non-JSON file. */
-    lazy val Not = makeUploadable("/schema_examples/not.json")
+    lazy val Not = makeUploadable("/summary_examples/not.json")
   }
 }
 

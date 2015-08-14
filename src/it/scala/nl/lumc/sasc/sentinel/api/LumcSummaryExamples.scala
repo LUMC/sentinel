@@ -25,16 +25,16 @@ object LumcSummaryExamples {
 
     object V04 {
       // 1 sample, 1 rg
-      lazy val SSampleSRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_rg.json")
+      lazy val SSampleSRG = makeUploadable("/summary_examples/biopet/v0.4/gentrap_single_sample_single_rg.json")
       // 1 sample, 2 rgs
-      lazy val SSampleMRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_multi_rg.json")
+      lazy val SSampleMRG = makeUploadable("/summary_examples/biopet/v0.4/gentrap_single_sample_multi_rg.json")
       // 2 samples (1, 1) rgs
-      lazy val MSampleSRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_rg.json")
+      lazy val MSampleSRG = makeUploadable("/summary_examples/biopet/v0.4/gentrap_multi_sample_single_rg.json")
       // 3 samples, (3, 2, 1) rgs
-      lazy val MSampleMRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_rg.json")
+      lazy val MSampleMRG = makeUploadable("/summary_examples/biopet/v0.4/gentrap_multi_sample_multi_rg.json")
       // 3 samples (3: single, 1: single, 2: paired) rgs
       lazy val MSampleMRGMixedLib =
-        makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_rg_mixedlib.json")
+        makeUploadable("/summary_examples/biopet/v0.4/gentrap_multi_sample_multi_rg_mixedlib.json")
     }
   }
 }
