@@ -16,8 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ Future, ExecutionContext }
 
 import org.scalatra.servlet.FileItem
 
@@ -28,6 +27,7 @@ import nl.lumc.sasc.sentinel.models._
  * Input processor that does not process incoming runs. Rather, it is used for querying run data of any pipelines.
  */
 class GenericRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo) {
+  implicit override protected def context: ExecutionContext = ExecutionContext.global
   def pipelineName = "generic"
   def processRun(fi: FileItem, user: User) = Future { throw new NotImplementedError }
 }

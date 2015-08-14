@@ -18,8 +18,7 @@ package nl.lumc.sasc.sentinel.processors.plain
 
 import java.time.Clock
 import java.util.Date
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ Future, ExecutionContext }
 
 import org.scalatra.servlet.FileItem
 
@@ -40,6 +39,8 @@ import nl.lumc.sasc.sentinel.utils.implicits._
  */
 class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
     with JsonValidationAdapter {
+
+  implicit override protected def context: ExecutionContext = ExecutionContext.global
 
   def pipelineName = "plain"
 
