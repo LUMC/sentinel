@@ -70,4 +70,4 @@ jrebel.lic
 /.lib/
 
 # generated documentation
-src/sphinx/_build
+*src/sphinx/_build
