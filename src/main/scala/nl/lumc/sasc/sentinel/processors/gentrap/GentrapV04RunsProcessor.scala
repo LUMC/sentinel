@@ -30,7 +30,6 @@ import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow, JsonValidationAdapter }
-import nl.lumc.sasc.sentinel.utils.implicits._
 
 /**
  * Input processor for Gentrap summary file version 0.4.

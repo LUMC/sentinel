@@ -22,6 +22,7 @@ import java.util.zip.GZIPInputStream
 import java.security.MessageDigest
 import java.time.Clock
 import scala.io.Source
+import scala.language.implicitConversions
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
 
@@ -36,6 +37,14 @@ import nl.lumc.sasc.sentinel.processors.{ RunsProcessor, StatsProcessor }
 
 /** General utilities */
 package object utils {
+
+  trait Implicits {
+
+    /** Implicit class for adding our custom read function to an uploaded file item. */
+    implicit class RichFileItem(fi: FileItem) {
+      def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
+    }
+  }
 
   /** Magic byte for all Gzipped files. */
   private val GzipMagic = Seq(0x1f, 0x8b)
@@ -153,21 +162,6 @@ package object utils {
 
     /** Exception that is thrown when a duplicate file (based on MD5 checksum value) is stored to the database. */
     class DuplicateFileException(msg: String, val existingId: String) extends RuntimeException(msg)
-  }
-
-  object implicits {
-
-    import scala.language.{ higherKinds, implicitConversions }
-
-    /** Implicit class for adding our custom read function to an uploaded file item. */
-    implicit class RichFileItem(fi: FileItem) {
-      def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
-    }
-
-    /** Implicit class for creating enum values from raw strings. */
-    implicit class EnumableString(raw: String) {
-      def asEnum[T <: Enumeration#Value](enm: Map[String, T]): Option[T] = enm.get(raw)
-    }
   }
 
   object reflect {

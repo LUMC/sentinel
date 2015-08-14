@@ -27,7 +27,7 @@ import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
-import nl.lumc.sasc.sentinel.utils.{ FutureAdapter, SentinelJsonFormats, calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ FutureAdapter, Implicits, SentinelJsonFormats, calcMd5, getUtcTimeNow }
 import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
 
 /**
@@ -35,6 +35,7 @@ import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
  */
 abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     extends Processor
+    with Implicits
     with FutureAdapter {
 
   /** JSON formats used by this processor. */

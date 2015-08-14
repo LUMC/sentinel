@@ -29,7 +29,6 @@ import nl.lumc.sasc.sentinel.processors.{ GenericRunsProcessor, RunsProcessor }
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.exceptions._
-import nl.lumc.sasc.sentinel.utils.implicits._
 
 /**
  * Controller for the `/runs` endpoint.

@@ -21,9 +21,6 @@ import org.scalatra.swagger._
 
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.implicits._
-
-import scala.concurrent.Future
 
 /**
  * Controller for the `/annotations` endpoint.

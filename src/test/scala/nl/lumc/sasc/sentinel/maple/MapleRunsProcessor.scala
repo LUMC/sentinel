@@ -25,7 +25,6 @@ import org.scalatra.servlet.FileItem
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.implicits._
 import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
 
 /**
