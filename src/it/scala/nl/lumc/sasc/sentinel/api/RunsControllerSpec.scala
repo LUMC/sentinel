@@ -30,10 +30,6 @@ import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class RunsControllerSpec extends SentinelServletSpec {
 
-  import SentinelServletSpec.SchemaExamples
-
-  sequential
-
   override def stop(): Unit = {
     deleteDirectory(tempDir)
     super.stop()
@@ -52,17 +48,17 @@ class RunsControllerSpec extends SentinelServletSpec {
 
   class PlainUploadContext extends Context.PriorRunUploadClean {
     def pipelineParam = "plain"
-    def uploadPayload = SchemaExamples.Plain
+    def uploadPayload = SummaryExamples.Plain
     lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
   }
 
   class PlainThenGentrapUploadContext extends PlainUploadContext {
 
     def pipeline2 = "gentrap"
-    def uploadParams2 = Seq(("userId", Users.avg2.id), ("pipeline", pipeline2))
+    def uploadParams2 = Seq(("userId", UserExamples.avg2.id), ("pipeline", pipeline2))
     def uploadFile2 = Map("run" -> uploadPayload2)
-    def uploadHeader2 = Map(HeaderApiKey -> Users.avg2.activeKey)
-    def uploadPayload2 = SchemaExamples.Gentrap.V04.SSampleSRG
+    def uploadHeader2 = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
+    def uploadPayload2 = LumcSummaryExamples.Gentrap.V04.SSampleSRG
     lazy val runId2 = (parse(priorResponses(1).body) \ "runId").extract[String]
 
     override def priorRequests = super.priorRequests ++ Seq(
@@ -98,7 +94,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     "when the pipeline is not specified should" >> inline {
 
       new Context.PriorRequests {
-        def request = () => post(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id))) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -115,7 +111,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     "when the request body is empty" >> inline {
 
       new Context.PriorRequests {
-        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "plain"))) { response }
+        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id), ("pipeline", "plain"))) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -131,11 +127,11 @@ class RunsControllerSpec extends SentinelServletSpec {
 
     "when an invalid pipeline is specified should" >> inline {
 
-      val fileMap = Map("run" -> SchemaExamples.Plain)
+      val fileMap = Map("run" -> SummaryExamples.Plain)
 
       new Context.PriorRequests {
 
-        def request = () => post(endpoint, Seq(("userId", Users.avg.id), ("pipeline", "devtest")), fileMap) { response }
+        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id), ("pipeline", "devtest")), fileMap) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -154,7 +150,7 @@ class RunsControllerSpec extends SentinelServletSpec {
       br
 
       val pipeline = "plain"
-      def fileMap = Map("run" -> SchemaExamples.Plain)
+      def fileMap = Map("run" -> SummaryExamples.Plain)
 
       "when a run summary that passes all validation is uploaded should" >> inline {
 
@@ -188,7 +184,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> SchemaExamples.UnsupportedCompressed)
+          def fileMap = Map("run" -> SummaryExamples.PlainCompressed)
           def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
             fileMap, Map(HeaderApiKey -> user.activeKey)) { response }
           def priorRequests = Seq(request)
@@ -218,8 +214,8 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def request1 = () =>
-            post(endpoint, Seq(("userId", Users.avg2.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> Users.avg2.activeKey)) { response }
+            post(endpoint, Seq(("userId", UserExamples.avg2.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response }
           def request2 = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -236,7 +232,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must /("nSamples" -> 0)
             priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
-            priorResponses.head.body must /("uploaderId" -> Users.avg2.id)
+            priorResponses.head.body must /("uploaderId" -> UserExamples.avg2.id)
             priorResponses.head.body must not /("annotIds" -> ".+".r)
             priorResponses.head.body must not /("refId" -> ".+".r)
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
@@ -285,7 +281,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> SchemaExamples.Not)
+          def fileMap = Map("run" -> SummaryExamples.Not)
           def request = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -306,7 +302,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def fileMap = Map("run" -> SchemaExamples.Invalid)
+          def fileMap = Map("run" -> SummaryExamples.Invalid)
           def request = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -376,7 +372,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           def request1 = () => post(endpoint, params, fileMap, headers) { response }
           def request2 = () => post(endpoint, params,
-            Map("run" -> SchemaExamples.UnsupportedCompressed), headers) { response }
+            Map("run" -> SummaryExamples.PlainCompressed), headers) { response }
           def priorRequests = Seq(request1, request2)
 
           "return status 201 for the first upload" in {
@@ -464,8 +460,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", Users.unverified.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          def params = Seq(("userId", UserExamples.unverified.id), ("pipeline", pipeline))
+          def headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
           def request = () => post(endpoint, params, fileMap, headers) { response }
           def priorRequests = Seq(request)
 
@@ -525,7 +521,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def request = () =>
-            post(endpoint, params, Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response }
+            post(endpoint, params, Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response }
           def priorRequests = Seq(request)
 
           "return status 201" in {
@@ -579,7 +575,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
@@ -618,8 +614,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", Users.unverified.id))
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val params = Seq(("userId", UserExamples.unverified.id))
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint, params, headers) { status mustEqual 403 }
@@ -641,7 +637,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
@@ -680,8 +676,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", Users.unverified.id))
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val params = Seq(("userId", UserExamples.unverified.id))
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint, params, headers) { status mustEqual 403 }
@@ -775,7 +771,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint(runId), Seq(), headers) { status mustEqual 400 }
@@ -814,8 +810,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", Users.unverified.id))
-          val headers = Map(HeaderApiKey -> Users.unverified.activeKey)
+          val params = Seq(("userId", UserExamples.unverified.id))
+          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint(runId), params, headers) { status mustEqual 403 }
@@ -951,8 +947,8 @@ class RunsControllerSpec extends SentinelServletSpec {
         "when an admin authenticates correctly" >> {
           br
 
-          val params = Seq(("userId", Users.admin.id))
-          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          val params = Seq(("userId", UserExamples.admin.id))
+          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
 
           "and queries a run he/she did not upload" >> {
             br
@@ -1276,7 +1272,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
-          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSRG
+          def uploadPayload = LumcSummaryExamples.Gentrap.V04.SSampleSRG
           lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
           val params = Seq(("userId", user.id))
@@ -1354,8 +1350,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new PlainUploadContext {
 
-          val params = Seq(("userId", Users.admin.id))
-          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          val params = Seq(("userId", UserExamples.admin.id))
+          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
           def userRunId = runId
           def request = () => delete(endpoint(userRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
@@ -1421,11 +1417,11 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRunUploadClean {
           def pipelineParam = "gentrap"
-          def uploadPayload = SchemaExamples.Gentrap.V04.SSampleSRG
+          def uploadPayload = LumcSummaryExamples.Gentrap.V04.SSampleSRG
           lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
 
-          val params = Seq(("userId", Users.admin.id))
-          val headers = Map(HeaderApiKey -> Users.admin.activeKey)
+          val params = Seq(("userId", UserExamples.admin.id))
+          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
           def userRunId = runId
           def request = () => delete(endpoint(userRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request

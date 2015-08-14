@@ -26,10 +26,6 @@ import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class StatsControllerSpec extends SentinelServletSpec { self =>
 
-  import SentinelServletSpec.SchemaExamples
-
-  sequential
-
   class TestStatsController(implicit val swagger: Swagger, val mongo: MongodbAccessObject)
       extends StatsController
 
@@ -68,10 +64,10 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG, "gentrap")
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRG, "gentrap")
-        def upload3 = makeUpload(Users.avg2, SchemaExamples.Plain, "plain")
-        def upload4 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG, "gentrap")
+        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG, "gentrap")
+        def upload2 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRG, "gentrap")
+        def upload3 = makeUpload(UserExamples.avg2, SummaryExamples.Plain, "plain")
+        def upload4 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG, "gentrap")
 
         def priorRequests = Seq(upload1, upload2, upload3, upload4)
 

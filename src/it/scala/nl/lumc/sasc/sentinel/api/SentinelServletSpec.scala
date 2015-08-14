@@ -16,15 +16,11 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import scala.util.Try
 import scala.concurrent._
 import scala.concurrent.duration._
 
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
-import org.specs2.data.Sized
 import org.specs2.matcher.JsonMatchers
 import org.specs2.mutable.Specification
 import org.specs2.specification.{ Fragments, Step }
@@ -32,97 +28,68 @@ import org.specs2.specification.{ Fragments, Step }
 import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes }
 
+/** Base trait for Sentinel servlet testing. */
 trait SentinelServletSpec extends MutableScalatraSpec
+    with IntegrationTestImplicits
     with EmbeddedMongodbRunner
     with JsonMatchers {
 
   sequential
 
+  /** Overridden start method that also starts the MongoDB runner. */
   override def start() = {
     super[MutableScalatraSpec].start()
     super[EmbeddedMongodbRunner].start()
   }
 
+  /** Overridden stop method that also stops the MongoDB runner. */
   override def stop() = {
     super[MutableScalatraSpec].stop()
     super[EmbeddedMongodbRunner].stop()
   }
 
-  implicit val formats = SentinelJsonFormats
+  /** Default JSON formats. */
+  implicit protected val jsonFormats = SentinelJsonFormats
 
-  implicit class RichClientResponse(httpres: ClientResponse) {
-
-    lazy val jsonBody: Option[JValue] = Try(parse(httpres.body)).toOption
-
-    lazy val contentType = httpres.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
-  }
-
+  /** Convenience method for testing content type. */
   def contentType = response.contentType
 
+  /** Convenience method for testing JSON response body. */
   def jsonBody = response.jsonBody
 
+  /** HTTP PATCH method for testing that accepts params, body, and headers. */
   def patch[A](uri: String, params: Iterable[(String, String)], body: Array[Byte], headers: Map[String, String])
               (f: => A): A =
     submit("PATCH", uri, params, headers, body) { f }
 
-  // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
-  implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
-    def size(t: Option[JValue]) = t match {
-      case None => -1
-      case Some(jvalue) => jvalue match {
-        case JArray(list) => list.size
-        case JObject(objects) => objects.size
-        case JString(str) => str.length
-        case otherwise => -1
-      }
-    }
-  }
-
-  implicit def jsonIsSized: Sized[JValue] =  new Sized[JValue] {
-    def size(t: JValue) = t match {
-      case JArray(list) => list.size
-      case JObject(objects) => objects.size
-      case JString(str) => str.length
-      case otherwise => -1
-    }
-  }
-
-  object Users {
-
-    import nl.lumc.sasc.sentinel.models.User.hashPassword
-
-    val avg =
-      User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false)
-    val avg2 =
-      User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false)
-    val admin =
-      User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true)
-    val unverified =
-      User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false)
-    def all = Set(avg, avg2, admin, unverified)
-  }
-
+  /** Various context providers for integration tests. */
   object Context {
 
+    /** Base trait for adding executions before and after all tests. */
     trait BeforeAllAfterAll extends Specification {
       override def map(fs: =>Fragments) = Step(beforeAll()) ^ fs ^ Step(afterAll())
       protected def beforeAll()
       protected def afterAll()
     }
 
+    /** Clean database test context. */
     trait CleanDatabase extends BeforeAllAfterAll {
       def beforeAll() = resetDatabase()
       def afterAll() = resetDatabase()
     }
 
+    /** Clean database test context with pre-added users. */
     trait CleanDatabaseWithUser extends CleanDatabase with UsersAdapter {
 
       lazy val mongo = dao
 
-      implicit def user: User = Users.avg
-      implicit def users: Set[User] = Users.all
+      /** Default user. */
+      implicit def user: User = UserExamples.avg
+
+      /** Default set of users. */
+      implicit def users: Set[User] = UserExamples.all
 
       override def beforeAll() = {
         super.beforeAll()
@@ -130,17 +97,24 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
 
+    /** Testing context with one or more requests sent before the actual test. */
     trait PriorRequests extends BeforeAllAfterAll {
+
       sequential
 
+      /** Type alias for the request. */
       type Req = () => ClientResponse
 
+      /** First of the prior requests. */
       def priorRequest: Req = priorRequests.head
 
+      /** All prior requests. */
       def priorRequests: Seq[Req]
 
+      /** Response of the first prior request. */
       lazy val priorResponse: ClientResponse = priorResponses.head
 
+      /** All responses of all requests. */
       lazy val priorResponses: Seq[ClientResponse] = priorRequests.map(f => f())
 
       def beforeAll() = {
@@ -151,6 +125,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       def afterAll() = {}
     }
 
+    /** Testing context with prior requests on a clean database populated with users. */
     trait PriorRequestsClean extends PriorRequests with CleanDatabaseWithUser {
 
       override def beforeAll() = {
@@ -164,15 +139,34 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
 
+    /** Testing context with a prior run summary upload. */
     trait PriorRunUploadClean extends PriorRequestsClean {
+
+      /** Pipeline name for the upload parameter. */
       def pipelineParam: String
+
+      /** Run summary payload to be uploaded. */
       def uploadPayload: Uploadable
+
+      /** User performing the upload. */
       def uploadUser = user
+
+      /** Expected HTTP status code after upload. */
       def expectedUploadStatus = 201
+
+      /** HTTP endpoint for the upload. */
       def uploadEndpoint = "/runs"
+
+      /** URL parameters for upload. */
       def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipelineParam))
+
+      /** URL file parameters for upload. */
       def uploadFile = Map("run" -> uploadPayload)
+
+      /** Request header for upload. */
       def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
+
+      /** Request function for performing the upload. */
       def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
 
       s"after the user uploads the '$pipelineParam' summary file to an empty database" in {
@@ -180,6 +174,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       }
     }
 
+    /** Convenience class for testing HTTP OPTION methods. */
     class OptionsMethodTest(endpoint: String, allowedMethods: String) extends PriorRequests {
 
       def request = () => options(endpoint) { response }
@@ -202,33 +197,13 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
 object SentinelServletSpec {
 
+  /**
+   * Convenience method for creating uploadable object from a resource URL.
+   *
+   * @param resourceUrl Resource URL pointing to the summary file to upload.
+   * @return Uploadable object.
+   */
   def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
     fileName = resourceUrl.split("/").last,
     content = getResourceBytes(resourceUrl))
-
-  object SchemaExamples {
-
-    object Gentrap {
-
-      object V04 {
-
-        // 1 sample, 1 rg
-        lazy val SSampleSRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_single_rg.json")
-        // 1 sample, 2 rgs
-        lazy val SSampleMRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_single_sample_multi_rg.json")
-        // 2 samples (1, 1) rgs
-        lazy val MSampleSRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_single_rg.json")
-        // 3 samples, (3, 2, 1) rgs
-        lazy val MSampleMRG = makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_rg.json")
-        // 3 samples (3: single, 1: single, 2: paired) rgs
-        lazy val MSampleMRGMixedLib =
-          makeUploadable("/schema_examples/biopet/v0.4/gentrap_multi_sample_multi_rg_mixedlib.json")
-      }
-    }
-
-    lazy val Plain = makeUploadable("/schema_examples/plain.json")
-    lazy val UnsupportedCompressed = makeUploadable("/schema_examples/plain.json.gz")
-    lazy val Invalid = makeUploadable("/schema_examples/invalid.json")
-    lazy val Not = makeUploadable("/schema_examples/not.json")
-  }
 }

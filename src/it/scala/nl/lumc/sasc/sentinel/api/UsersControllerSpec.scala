@@ -298,7 +298,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequests {
 
-        def request = () => get(endpoint(Users.avg.id)) { response }
+        def request = () => get(endpoint(UserExamples.avg.id)) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -316,7 +316,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        def request = () => get(endpoint(Users.avg.id), Seq(("userId", Users.avg.id))) { response }
+        def request = () => get(endpoint(UserExamples.avg.id), Seq(("userId", UserExamples.avg.id))) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in {
@@ -338,9 +338,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        def params = Seq(("userId", Users.avg.id))
+        def params = Seq(("userId", UserExamples.avg.id))
         def headers = Map(HeaderApiKey -> (user.activeKey + "nono"))
-        def request = () => get(endpoint(Users.avg.id), params, headers) { response }
+        def request = () => get(endpoint(UserExamples.avg.id), params, headers) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in {
@@ -362,9 +362,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        def params = Seq(("userId", Users.unverified.id))
-        def headers = Map(HeaderApiKey -> Users.unverified.activeKey)
-        def request = () => get(endpoint(Users.unverified.id), params, headers) { response }
+        def params = Seq(("userId", UserExamples.unverified.id))
+        def headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+        def request = () => get(endpoint(UserExamples.unverified.id), params, headers) { response }
         def priorRequests = Seq(request)
 
         "return status 403" in {
@@ -385,9 +385,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", Users.avg.id))
-          def headers = Map(HeaderApiKey -> Users.avg.activeKey)
-          def request = () => get(endpoint(Users.avg.id), params, headers = headers) { response }
+          def params = Seq(("userId", UserExamples.avg.id))
+          def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
+          def request = () => get(endpoint(UserExamples.avg.id), params, headers = headers) { response }
           def priorRequests = Seq(request)
 
           "return status 200" in {
@@ -396,9 +396,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected attributes" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("id" -> Users.avg.id)
-            priorResponse.body must /("email" -> Users.avg.email)
-            priorResponse.body must /("activeKey" -> Users.avg.activeKey)
+            priorResponse.body must /("id" -> UserExamples.avg.id)
+            priorResponse.body must /("email" -> UserExamples.avg.email)
+            priorResponse.body must /("activeKey" -> UserExamples.avg.activeKey)
           }
         }
       }
@@ -407,9 +407,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", Users.admin.id))
-          def headers = Map(HeaderApiKey -> Users.admin.activeKey)
-          def request = () => get(endpoint(Users.avg.id), params, headers = headers) { response }
+          def params = Seq(("userId", UserExamples.admin.id))
+          def headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
+          def request = () => get(endpoint(UserExamples.avg.id), params, headers = headers) { response }
           def priorRequests = Seq(request)
 
           "return status 200" in {
@@ -418,9 +418,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected attributes" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("id" -> Users.avg.id)
-            priorResponse.body must /("email" -> Users.avg.email)
-            priorResponse.body must /("activeKey" -> Users.avg.activeKey)
+            priorResponse.body must /("id" -> UserExamples.avg.id)
+            priorResponse.body must /("email" -> UserExamples.avg.email)
+            priorResponse.body must /("activeKey" -> UserExamples.avg.activeKey)
           }
         }
       }
@@ -429,9 +429,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", Users.admin.id))
-          def headers = Map(HeaderApiKey -> Users.admin.activeKey)
-          def request = () => get(endpoint(Users.admin.id), params, headers = headers) { response }
+          def params = Seq(("userId", UserExamples.admin.id))
+          def headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
+          def request = () => get(endpoint(UserExamples.admin.id), params, headers = headers) { response }
           def priorRequests = Seq(request)
 
           "return status 200" in {
@@ -440,9 +440,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected attributes" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("id" -> Users.admin.id)
-            priorResponse.body must /("email" -> Users.admin.email)
-            priorResponse.body must /("activeKey" -> Users.admin.activeKey)
+            priorResponse.body must /("id" -> UserExamples.admin.id)
+            priorResponse.body must /("email" -> UserExamples.admin.email)
+            priorResponse.body must /("activeKey" -> UserExamples.admin.activeKey)
           }
         }
       }
@@ -451,9 +451,9 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", Users.avg.id))
-          def headers = Map(HeaderApiKey -> Users.avg.activeKey)
-          def request = () => get(endpoint(Users.avg2.id), params, headers = headers) { response }
+          def params = Seq(("userId", UserExamples.avg.id))
+          def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
+          def request = () => get(endpoint(UserExamples.avg2.id), params, headers = headers) { response }
           def priorRequests = Seq(request)
 
           "return status 403" in {
@@ -497,7 +497,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         def payload = toByteArray(Seq(UserPatch("replace", "/password", "newPass123")))
-        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in {
@@ -519,7 +519,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        def request = () => patch(endpoint(Users.avg.id), Array[Byte](10, 20 ,30)) { response }
+        def request = () => patch(endpoint(UserExamples.avg.id), Array[Byte](10, 20 ,30)) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -538,7 +538,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         def payload = toByteArray(Seq())
-        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -558,7 +558,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         def payload = toByteArray(Seq("yalala", UserPatch("replace", "/password", "newPass123")))
-        def request = () => patch(endpoint(Users.avg.id), payload) { response }
+        def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
         def priorRequests = Seq(request)
 
         "return status 400" in {
@@ -580,10 +580,10 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           new Context.PriorRequestsClean {
 
-            def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
+            def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
             def payload = toByteArray(
               Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
-            def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+            def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 400" in {
@@ -606,16 +606,16 @@ class UsersControllerSpec extends SentinelServletSpec {
       "when done by an admin user" >> {
         br
 
-        def headers = Map("Authorization" -> makeBasicAuthHeader(Users.admin.id, "0PwdAdmin"))
+        def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.admin.id, "0PwdAdmin"))
 
         "when the password does not match should" >> inline {
 
-          def headers = Map("Authorization" -> makeBasicAuthHeader(Users.admin.id, "0PwdAdmin_nomatch"))
+          def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.admin.id, "0PwdAdmin_nomatch"))
 
           new Context.PriorRequestsClean {
 
             def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+            def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 401" in {
@@ -633,7 +633,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "not change the user authentication status" in {
               // TODO: find a way to use matcher without using Await explicitly
-              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
               results must beSome.like { case user => user.verified must beFalse }
             }
           }
@@ -647,7 +647,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-              def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+              def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 204" in {
@@ -661,7 +661,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "change the user verification status" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+                val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
                 results must beSome.like { case user => user.verified must beTrue }
               }
             }
@@ -674,7 +674,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
-              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 204" in {
@@ -688,7 +688,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "change the user password" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = servlet.users.getUser(Users.avg.id)
+                val results = servlet.users.getUser(UserExamples.avg.id)
                 Await.result(results, 1000.milli) must beSome.like { case user =>
                   user.passwordMatches(newPass) must beTrue
                   user.passwordMatches("0PwdAvg") must beFalse
@@ -704,7 +704,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
-              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 204" in {
@@ -718,7 +718,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "change the user email" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
                 results must beSome.like { case user => user.email mustEqual newEmail }
               }
             }
@@ -729,16 +729,16 @@ class UsersControllerSpec extends SentinelServletSpec {
       "when done by an non-admin user to his/her own account" >> {
         br
 
-        def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
+        def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
 
         "when the password does not match should" >> inline {
 
-          def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg_nomatch"))
+          def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg_nomatch"))
 
           new Context.PriorRequestsClean {
 
             def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+            def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 401" in {
@@ -756,7 +756,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "not change the verification status" in {
               // TODO: find a way to use matcher without using Await explicitly
-              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
               results must beSome.like { case user => user.verified must beFalse }
             }
           }
@@ -770,8 +770,8 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/verified", false)))
-              def headers = Map("Authorization" -> makeBasicAuthHeader(Users.avg.id, "0PwdAvg"))
-              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
+              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 403" in {
@@ -785,7 +785,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "not change the user verification status" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
                 results must beSome.like { case user => user.verified must beTrue }
               }
             }
@@ -798,7 +798,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
-              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 204" in {
@@ -812,7 +812,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "change the user password" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = servlet.users.getUser(Users.avg.id)
+                val results = servlet.users.getUser(UserExamples.avg.id)
                 Await.result(results, 1000.milli) must beSome.like { case user =>
                   user.passwordMatches(newPass) must beTrue
                   user.passwordMatches("0PwdAvg") must beFalse
@@ -828,7 +828,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             new Context.PriorRequestsClean {
 
               def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
-              def request = () => patch(endpoint(Users.avg.id), payload, headers) { response }
+              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
               "return status 204" in {
@@ -842,7 +842,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               "change the user email" in {
                 // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(Users.avg.id), 1000.milli)
+                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
                 results must beSome.like { case user => user.email mustEqual newEmail }
               }
             }
@@ -854,7 +854,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         br
 
         def password = "0PwdUnverified"
-        def userRecord = Users.unverified
+        def userRecord = UserExamples.unverified
         def headers = Map("Authorization" -> makeBasicAuthHeader(userRecord.id, password))
 
         "when the password does not match should" >> inline {
@@ -864,7 +864,7 @@ class UsersControllerSpec extends SentinelServletSpec {
           new Context.PriorRequestsClean {
 
             def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(Users.unverified.id), payload, headers) { response }
+            def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
             "return status 401" in {
@@ -882,7 +882,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "not change the user verification status" in {
               // TODO: find a way to use matcher without using Await explicitly
-              val results = Await.result(servlet.users.getUser(Users.unverified.id), 1000.milli)
+              val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
               results must beSome.like { case user => user.verified must beFalse }
             }
           }

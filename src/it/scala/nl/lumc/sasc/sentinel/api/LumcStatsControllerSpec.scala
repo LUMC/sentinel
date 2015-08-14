@@ -27,8 +27,6 @@ import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class LumcStatsControllerSpec extends SentinelServletSpec {
 
-  import SentinelServletSpec.SchemaExamples
-
   sequential
 
   implicit val swagger = new SentinelSwagger
@@ -204,7 +202,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
     "when a user tries to authenticate by only providing his/her user ID should" >> inline {
 
       new Context.PriorRequests {
-        def request = () => get(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def request = () => get(endpoint, Seq(("userId", UserExamples.avg.id))) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in  {
@@ -221,7 +219,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
     "when a user tries to authenticate by only providing his/her API key should" >> inline {
 
       new Context.PriorRequests {
-        def request = () => get(endpoint, headers = Map(HeaderApiKey -> Users.avg.activeKey)) { response }
+        def request = () => get(endpoint, headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in  {
@@ -240,7 +238,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSRG
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleSRG
 
         "when using the default parameter should" >> inline {
 
@@ -254,7 +252,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -271,8 +269,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
         "when a non-uploader authenticates correctly should" >> inline {
 
-          def params = Seq(("userId", Users.avg2.id))
-          def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+          def params = Seq(("userId", UserExamples.avg2.id))
+          def headers = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
 
           new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3)
         }
@@ -292,8 +290,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
           "when a non-uploader authenticates correctly should" >> inline {
 
-            def params = Seq(("userId", Users.avg2.id), ("accLevel", "sample"))
-            def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+            def params = Seq(("userId", UserExamples.avg2.id), ("accLevel", "sample"))
+            def headers = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
 
             new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 3)
           }
@@ -332,8 +330,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
           "when a non-uploader authenticates correctly should" >> inline {
 
-            def params = Seq(("userId", Users.avg2.id), ("accLevel", accLevel))
-            def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+            def params = Seq(("userId", UserExamples.avg2.id), ("accLevel", accLevel))
+            def headers = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
 
             new StatsAlnGentrapOkTests(() => get(endpoint, params, headers) { response }, 6, isLib = true)
           }
@@ -372,9 +370,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRGMixedLib)
-        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG)
+        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRGMixedLib)
+        def upload3 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG)
 
         def priorRequests = Stream(upload1, upload2, upload3)
 
@@ -404,8 +402,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
           new Context.PriorRequests {
 
-            def params = Seq(("userId", Users.avg.id))
-            def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+            def params = Seq(("userId", UserExamples.avg.id))
+            def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
             def request = () => get(endpoint, params, headers) { response }
             def priorRequests = Seq(request)
 
@@ -642,7 +640,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -986,7 +984,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
     "when a user tries to authenticate by only providing his/her user ID should" >> inline {
 
       new Context.PriorRequests {
-        def request = () => get(endpoint, Seq(("userId", Users.avg.id))) { response }
+        def request = () => get(endpoint, Seq(("userId", UserExamples.avg.id))) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in  {
@@ -1003,7 +1001,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
     "when a user tries to authenticate by only providing his/her API key should" >> inline {
 
       new Context.PriorRequests {
-        def request = () => get(endpoint, headers = Map(HeaderApiKey -> Users.avg.activeKey)) { response }
+        def request = () => get(endpoint, headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response }
         def priorRequests = Seq(request)
 
         "return status 401" in  {
@@ -1022,7 +1020,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleSRG
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleSRG
 
         "when using the default parameter should" >> inline {
 
@@ -1036,7 +1034,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 
@@ -1053,8 +1051,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
         "when a non-uploader authenticates correctly should" >> inline {
 
-          def params = Seq(("userId", Users.avg2.id))
-          def headers = Map(HeaderApiKey -> Users.avg2.activeKey)
+          def params = Seq(("userId", UserExamples.avg2.id))
+          def headers = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
 
           new StatsSeqGentrapOkTests(() => get(endpoint, params, headers) { response }, 6)
         }
@@ -1117,9 +1115,9 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
-        def upload2 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleMRG)
-        def upload3 = makeUpload(Users.avg, SchemaExamples.Gentrap.V04.MSampleSRG)
+        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRG)
+        def upload3 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG)
 
         def priorRequests = Seq(upload1, upload2, upload3)
 
@@ -1144,8 +1142,8 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
 
           new Context.PriorRequests {
 
-            def params = Seq(("userId", Users.avg.id))
-            def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+            def params = Seq(("userId", UserExamples.avg.id))
+            def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
             def request = () => get(endpoint, params, headers) { response }
             def priorRequests = Seq(request)
 
@@ -1316,7 +1314,7 @@ class LumcStatsControllerSpec extends SentinelServletSpec {
       new Context.PriorRunUploadClean {
 
         def pipelineParam = "gentrap"
-        def uploadPayload = SchemaExamples.Gentrap.V04.MSampleMRGMixedLib
+        def uploadPayload = LumcSummaryExamples.Gentrap.V04.MSampleMRGMixedLib
 
         "when using the default parameter should" >> inline {
 

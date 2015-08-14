@@ -27,8 +27,6 @@ import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
-  import SentinelServletSpec.SchemaExamples
-
   sequential
 
   implicit val swagger = new SentinelSwagger
@@ -77,10 +75,10 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         def uploadEndpoint = "/runs"
-        def params = Seq(("userId", Users.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
+        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
         def request = () => post(uploadEndpoint, params,
-          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response}
+          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
         def priorRequests = Seq(request)
 
         "after the run summary file is uploaded" in {
@@ -130,10 +128,10 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
           () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
         }
 
-        def upload1 = makeUpload(Users.admin, SchemaExamples.Gentrap.V04.SSampleMRG)
-        def upload2 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleMRG)
-        def upload3 = makeUpload(Users.avg2, SchemaExamples.Gentrap.V04.MSampleSRG)
-        def upload4 = makeUpload(Users.avg, SchemaExamples.Plain)
+        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG)
+        def upload2 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleMRG)
+        def upload3 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleSRG)
+        def upload4 = makeUpload(UserExamples.avg, SummaryExamples.Plain)
 
         def priorRequests = Seq(upload1, upload2, upload3)
 
@@ -197,10 +195,10 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         def uploadEndpoint = "/runs"
-        def params = Seq(("userId", Users.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> Users.avg.activeKey)
+        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
+        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
         def upload = () => post(uploadEndpoint, params,
-          Map("run" -> SchemaExamples.Gentrap.V04.SSampleSRG), headers) { response}
+          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
         def priorRequests = Seq(upload)
         def annotIds = (parse(priorResponse.body) \ "annotIds").extract[Seq[String]]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]
