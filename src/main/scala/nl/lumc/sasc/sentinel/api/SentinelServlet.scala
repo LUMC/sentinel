@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.api
 
 import javax.servlet.http.HttpServletRequest
 import scala.concurrent.ExecutionContext
+import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
 
 import org.bson.types.ObjectId
@@ -60,6 +61,22 @@ abstract class SentinelServlet extends ScalatraServlet
   override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
     formats.emptyValueStrategy.replaceEmpty(value)
 
+  /** Mirror for reflection. */
+  private val mirror = ru.runtimeMirror(getClass.getClassLoader)
+
+  /** Method to check whether a given class name (fully qualified) is a subclass of another type. */
+  private[api] def isSubclass[T: ru.TypeTag](qualifiedName: Option[String]): Boolean = {
+    val maybeSymbol = for {
+      qualName <- qualifiedName
+      classSymbol <- Try(mirror.staticClass(qualName)).toOption
+    } yield classSymbol
+
+    maybeSymbol match {
+      case Some(sym) => sym.selfType <:< ru.typeTag[T].tpe
+      case None      => false
+    }
+  }
+
   // FIXME: This is a bit hackish, but scalatra-swagger does not make it clear how to intercept / prevent certain
   //        models from being exposed. Until they have an officially documented way of doing so, we'll stick with this.
   // Intercept ObjectId model creation, to prevent its internal attributes from being exposed in the API
@@ -90,11 +107,11 @@ abstract class SentinelServlet extends ScalatraServlet
           (propName, interceptedProp)
       }
       val newModel =
-        if (model.id == "RunRecord")
+        if (isSubclass[BaseRunRecord](model.qualifiedName)) {
           model.copy(properties = interceptedProp.filter {
             case (propName, prop) => !BaseRunRecord.hiddenAttributes.contains(propName)
           })
-        else
+        } else
           model.copy(properties = interceptedProp)
       super.registerModel(newModel)
     }
