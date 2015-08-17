@@ -44,6 +44,8 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     with ReferencesAdapter
     with AnnotationsAdapter {
 
+  type RunRecord = nl.lumc.sasc.sentinel.models.RunRecord
+
   /** Execution context. */
   implicit override protected def context: ExecutionContext = ExecutionContext.global
 

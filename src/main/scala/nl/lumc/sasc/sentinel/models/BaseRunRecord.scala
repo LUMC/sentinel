@@ -62,6 +62,18 @@ object BaseRunRecord {
   val hiddenAttributes = Set("sampleIds", "readGroupIds")
 }
 
+/** Simple implementation of a run record for schema display. */
+// FIXME: Can we make the schema work with traits? Because this is essentially the traits made concrete.
+case class GenericRunRecord(
+  @Key("_id") runId: ObjectId,
+  uploaderId: String,
+  pipeline: String,
+  creationTimeUtc: Date,
+  runName: Option[String] = None,
+  deletionTimeUtc: Option[Date] = None,
+  sampleIds: Seq[ObjectId] = Seq.empty,
+  readGroupIds: Seq[ObjectId] = Seq.empty) extends BaseRunRecord
+
 /**
  * Simple implementation of a run record with a single reference and multiple annotations.
  *

@@ -131,7 +131,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
-  val runsRunIdGetOperation = (apiOperation[RunRecord]("runsRunIdGet")
+  val runsRunIdGetOperation = (apiOperation[GenericRunRecord]("runsRunIdGet")
     summary "Retrieves single run summaries."
     notes
       """This endpoint retrieves the a single record of an uploaded summary. Optionally, you can also download the
@@ -177,7 +177,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsPostOperation = (apiOperation[RunRecord]("runsPost")
+  val runsPostOperation = (apiOperation[GenericRunRecord]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
@@ -217,7 +217,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsGetOperation = (apiOperation[Seq[RunRecord]]("runsGet")
+  val runsGetOperation = (apiOperation[Seq[GenericRunRecord]]("runsGet")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.

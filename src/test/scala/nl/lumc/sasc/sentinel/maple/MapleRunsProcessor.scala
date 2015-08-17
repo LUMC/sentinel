@@ -37,6 +37,9 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
     with ReadGroupsAdapter[MapleReadGroupRecord]
     with JsonValidationAdapter {
 
+  /** Run records container. */
+  type RunRecord = MapleRunRecord
+
   /** Execution context. */
   implicit override protected def context: ExecutionContext = ExecutionContext.global
 

@@ -36,8 +36,11 @@ import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
  *
  * @param mongo MongoDB database access object.
  */
-class PlainRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
+class PlainRunsProcessor(mongo: MongodbAccessObject)
+    extends RunsProcessor(mongo)
     with JsonValidationAdapter {
+
+  type RunRecord = nl.lumc.sasc.sentinel.models.RunRecord
 
   implicit override protected def context: ExecutionContext = ExecutionContext.global
 

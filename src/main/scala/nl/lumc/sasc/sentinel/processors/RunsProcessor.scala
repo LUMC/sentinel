@@ -21,10 +21,11 @@ import scala.concurrent.Future
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
-import com.novus.salat._
-import com.novus.salat.global._
+import com.novus.salat.{ CaseClass => _, _ }
+import com.novus.salat.global.{ ctx => SalatContext }
 import org.scalatra.servlet.FileItem
 
+import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils.{ FutureAdapter, Implicits, SentinelJsonFormats, calcMd5, getUtcTimeNow }
@@ -37,6 +38,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     extends Processor
     with Implicits
     with FutureAdapter {
+
+  type RunRecord <: BaseRunRecord with CaseClass
 
   /** JSON formats used by this processor. */
   implicit val formats = SentinelJsonFormats
@@ -105,9 +108,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param run Run record to store.
    * @return Result of the store operation.
    */
-  def storeRun(run: BaseRunRecord): WriteResult = {
+  def storeRun(run: RunRecord)(implicit m: Manifest[RunRecord]): WriteResult = {
     // TODO: use Futures instead
-    val dbo = grater[BaseRunRecord].asDBObject(run)
+    val dbo = grater[RunRecord].asDBObject(run)
     coll.insert(dbo)
   }
 
@@ -121,7 +124,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User): Option[BaseRunRecord] = {
+  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Option[BaseRunRecord] = {
     // TODO: use Futures instead
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
@@ -157,7 +160,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param pipelineNames Pipeline names. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelineNames: Seq[String]): Seq[BaseRunRecord] = {
+  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Seq[BaseRunRecord] = {
     // TODO: use Futures instead
     val query =
       if (pipelineNames.isEmpty) $and("uploaderId" $eq user.id)
@@ -192,7 +195,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
    * @return Run record with `deletionTimeUtc` attribute and a boolean showing whether the deletion was performed or not.
    */
-  def deleteRun(runId: ObjectId, user: User): Option[(BaseRunRecord, Boolean)] = {
+  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Option[(BaseRunRecord, Boolean)] = {
     // TODO: use Futures instead
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty

@@ -21,13 +21,18 @@ import scala.concurrent.{ Future, ExecutionContext }
 import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
-import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.{ GenericRunRecord, User }
 
 /**
  * Input processor that does not process incoming runs. Rather, it is used for querying run data of any pipelines.
  */
 class GenericRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo) {
+
+  type RunRecord = GenericRunRecord
+
   implicit override protected def context: ExecutionContext = ExecutionContext.global
+
   def pipelineName = "generic"
+
   def processRun(fi: FileItem, user: User) = Future { throw new NotImplementedError }
 }
