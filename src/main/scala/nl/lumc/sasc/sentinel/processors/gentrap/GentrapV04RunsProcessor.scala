@@ -38,13 +38,20 @@ import nl.lumc.sasc.sentinel.utils.{ calcMd5, getUtcTimeNow, JsonValidationAdapt
  */
 class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     extends RunsProcessor(mongo)
-    with SamplesAdapter[GentrapSampleRecord]
-    with ReadGroupsAdapter[GentrapReadGroupRecord]
+    with SamplesAdapter
+    with ReadGroupsAdapter
     with JsonValidationAdapter
     with ReferencesAdapter
     with AnnotationsAdapter {
 
+  /** Run data container. */
   type RunRecord = nl.lumc.sasc.sentinel.models.RunRecord
+
+  /** Sample-level metrics container. */
+  type SampleRecord = GentrapSampleRecord
+
+  /** Read group-level metrics container. */
+  type ReadGroupRecord = GentrapReadGroupRecord
 
   /** Execution context. */
   implicit override protected def context: ExecutionContext = ExecutionContext.global

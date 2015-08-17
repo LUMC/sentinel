@@ -33,12 +33,18 @@ import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
  * @param mongo MongoDB access object.
  */
 class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
-    with SamplesAdapter[MapleSampleRecord]
-    with ReadGroupsAdapter[MapleReadGroupRecord]
+    with SamplesAdapter
+    with ReadGroupsAdapter
     with JsonValidationAdapter {
 
   /** Run records container. */
   type RunRecord = MapleRunRecord
+
+  /** Sample-level metrics container. */
+  type SampleRecord = MapleSampleRecord
+
+  /** Read group-level metrics container. */
+  type ReadGroupRecord = MapleReadGroupRecord
 
   /** Execution context. */
   implicit override protected def context: ExecutionContext = ExecutionContext.global

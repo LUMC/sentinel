@@ -17,18 +17,20 @@
 package nl.lumc.sasc.sentinel.db
 
 import com.mongodb.casbah.BulkWriteResult
-import com.novus.salat._
+import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global._
 
+import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseReadGroupRecord
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /**
  * Trait for storing read groups from run summaries.
- *
- * @tparam T Subclass of [[nl.lumc.sasc.sentinel.models.BaseReadGroupRecord]] representing a sample read group-level metrics.
  */
-trait ReadGroupsAdapter[T <: BaseReadGroupRecord] extends MongodbConnector { this: RunsProcessor =>
+trait ReadGroupsAdapter extends MongodbConnector { this: RunsProcessor =>
+
+  /** Read group-level metrics container. */
+  type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
 
   /** Collection of the units. */
   private lazy val coll = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
@@ -39,10 +41,10 @@ trait ReadGroupsAdapter[T <: BaseReadGroupRecord] extends MongodbConnector { thi
    * @param readGroups Read groups to store.
    * @return Bulk write operation result.
    */
-  protected def storeReadGroups(readGroups: Seq[T])(implicit m: Manifest[T]): BulkWriteResult = {
+  protected def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): BulkWriteResult = {
     // TODO: refactor to use Futures instead
     val builder = coll.initializeUnorderedBulkOperation
-    val docs = readGroups.map { case sample => grater[T].asDBObject(sample) }
+    val docs = readGroups.map { case sample => grater[ReadGroupRecord].asDBObject(sample) }
     docs.foreach { case doc => builder.insert(doc) }
     builder.execute()
   }
