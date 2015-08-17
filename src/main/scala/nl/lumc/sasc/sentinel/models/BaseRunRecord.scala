@@ -21,8 +21,10 @@ import java.util.Date
 import com.novus.salat.annotations.{ Key, Persist, Salat }
 import org.bson.types.ObjectId
 
+import nl.lumc.sasc.sentinel.CaseClass
+
 /** Representation of an uploaded run summary file. */
-@Salat abstract class BaseRunRecord {
+@Salat abstract class BaseRunRecord { this: CaseClass =>
 
   /** Run name. */
   def runName: Option[String]
