@@ -161,18 +161,20 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
 
-    if (doDownload) runs.getRunFile(runId, user) match {
-      case None => NotFound(CommonMessages.MissingRunId)
-      case Some(runFile) =>
-        contentType = "application/octet-stream"
-        response.setHeader("Content-Disposition",
-          "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
-        Ok(runFile.inputStream)
-    }
-
-    else runs.getRunRecord(runId, user) match {
-      case None         => NotFound(CommonMessages.MissingRunId)
-      case Some(runDoc) => Ok(runDoc)
+    new AsyncResult {
+      val is =
+        if (doDownload) runs.getRunFile(runId, user).map {
+          case None => NotFound(CommonMessages.MissingRunId)
+          case Some(runFile) =>
+            contentType = "application/octet-stream"
+            response.setHeader("Content-Disposition",
+              "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
+            Ok(runFile.inputStream)
+        }
+        else runs.getRunRecord(runId, user).map {
+          case None         => NotFound(CommonMessages.MissingRunId)
+          case Some(runDoc) => Ok(runDoc)
+        }
     }
   }
 
@@ -209,9 +211,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
-          val is =
-            p.processRun(uploadedRun, user)
-              .map(run => Created(run))
+          val is = p.processRun(uploadedRun, user).map(run => Created(run))
         }
     }
   }
@@ -250,7 +250,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       halt(400, ApiMessage("One or more pipeline is invalid.", hint = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
-      runs.getRuns(user, validPipelines)
+      new AsyncResult { val is = runs.getRuns(user, validPipelines).map(res => Ok(res)) }
     }
   }
 }

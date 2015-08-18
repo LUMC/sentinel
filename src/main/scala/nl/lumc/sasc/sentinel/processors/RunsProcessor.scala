@@ -73,40 +73,40 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param inputGzipped Whether the input file was gzipped or not.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(byteContents: Array[Byte], user: User, fileName: String, inputGzipped: Boolean): ObjectId = {
-    // TODO: use Futures instead
-    // TODO: stop using exceptions
-    val res =
-      try {
-        mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
-          f.filename = fileName
-          f.contentType = "application/json"
-          f.metaData = MongoDBObject(
-            "uploaderId" -> user.id,
-            "pipeline" -> pipelineName,
-            "inputGzipped" -> inputGzipped
-          )
-        }
-      } catch {
-        case dexc: com.mongodb.DuplicateKeyException =>
-          mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(byteContents)) match {
-            case Some(gfs) => gfs._id match {
-              case Some(oid) => throw new DuplicateFileException("Run summary already uploaded.", oid.toString)
-              case None      => throw dexc
-            }
-            case None => throw dexc
+  def storeFile(byteContents: Array[Byte], user: User, fileName: String, inputGzipped: Boolean): Future[ObjectId] =
+    Future {
+      // TODO: stop using exceptions
+      val res =
+        try {
+          mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
+            f.filename = fileName
+            f.contentType = "application/json"
+            f.metaData = MongoDBObject(
+              "uploaderId" -> user.id,
+              "pipeline" -> pipelineName,
+              "inputGzipped" -> inputGzipped
+            )
           }
-      }
+        } catch {
+          case dexc: com.mongodb.DuplicateKeyException =>
+            mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(byteContents)) match {
+              case Some(gfs) => gfs._id match {
+                case Some(oid) => throw new DuplicateFileException("Run summary already uploaded.", oid.toString)
+                case None      => throw dexc
+              }
+              case None => throw dexc
+            }
+        }
 
-    res match {
-      case Some(v) => v match {
-        case oid: ObjectId => oid
-        case otherwise =>
-          throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+      res match {
+        case Some(v) => v match {
+          case oid: ObjectId => oid
+          case otherwise =>
+            throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+        }
+        case None => throw new RuntimeException("Unexpected error when trying to store run summary.")
       }
-      case None => throw new RuntimeException("Unexpected error when trying to store run summary.")
     }
-  }
 
   /**
    * Stores the given run record into the runs collection.
@@ -114,8 +114,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param run Run record to store.
    * @return Result of the store operation.
    */
-  def storeRun(run: RunRecord)(implicit m: Manifest[RunRecord]): WriteResult = {
-    // TODO: use Futures instead
+  def storeRun(run: RunRecord)(implicit m: Manifest[RunRecord]): Future[WriteResult] = Future {
     val dbo = grater[RunRecord].asDBObject(run)
     coll.insert(dbo)
   }
@@ -130,14 +129,16 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Option[BaseRunRecord] = {
-    // TODO: use Futures instead
+  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[BaseRunRecord]] = {
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
-    coll
-      .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-      .collect { case dbo => grater[BaseRunRecord].asObject(dbo) }
+
+    Future {
+      coll
+        .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
+        .collect { case dbo => grater[BaseRunRecord].asObject(dbo) }
+    }
   }
 
   /**
@@ -150,13 +151,12 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user Run uploader.
    * @return Uploaded run file, if it exists.
    */
-  def getRunFile(runId: ObjectId, user: User): Option[GridFSDBFile] = {
-    // TODO: use Futures instead
+  def getRunFile(runId: ObjectId, user: User): Future[Option[GridFSDBFile]] = {
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("metadata.uploaderId" -> user.id)
-    mongo.gridfs
-      .findOne(MongoDBObject("_id" -> runId) ++ userCheck)
+
+    Future { mongo.gridfs.findOne(MongoDBObject("_id" -> runId) ++ userCheck) }
   }
 
   /**
@@ -166,16 +166,19 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param pipelineNames Pipeline names. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Seq[BaseRunRecord] = {
-    // TODO: use Futures instead
+  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Future[Seq[BaseRunRecord]] = {
+    val recordGrater = grater[BaseRunRecord]
     val query =
       if (pipelineNames.isEmpty) $and("uploaderId" $eq user.id)
       else $and("uploaderId" $eq user.id, $or(pipelineNames.map(pipeline => "pipeline" $eq pipeline)))
-    coll
-      .find($and(query :: ("deletionTimeUtc" $exists false)))
-      .sort(MongoDBObject("creationTimeUtc" -> -1))
-      .map { case dbo => grater[BaseRunRecord].asObject(dbo) }
-      .toSeq
+
+    Future {
+      coll
+        .find($and(query :: ("deletionTimeUtc" $exists false)))
+        .sort(MongoDBObject("creationTimeUtc" -> -1))
+        .map { case dbo => recordGrater.asObject(dbo) }
+        .toSeq
+    }
   }
 
   /**
@@ -246,8 +249,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    *
    * @return Objects containing statistics of each supported pipeline type.
    */
-  final def getGlobalRunStats(): Seq[PipelineStats] =
-    // TODO: use Futures instead
+  final def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
+    val statsGrater = grater[PipelineStats]
     coll
       .aggregate(List(
         MongoDBObject("$project" ->
@@ -260,6 +263,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
             "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
         MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
         AggregationOptions(AggregationOptions.CURSOR))
-      .map { case pstat => grater[PipelineStats].asObject(pstat) }
+      .map { case pstat => statsGrater.asObject(pstat) }
       .toSeq
+  }
 }

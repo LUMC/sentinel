@@ -273,7 +273,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     for {
       (byteContents, unzipped) <- Future { fi.readInputStream() }
       runJson <- Future { parseAndValidate(byteContents) }
-      fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
+      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
       runRef <- Future { extractReference(runJson) }
       ref <- getOrCreateReference(runRef)
       refId = ref.refId
@@ -288,6 +288,6 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       _ <- storeReadGroups(readGroups)
 
       run = createRun(fileId, refId, annotIds, samples, readGroups, user, runName)
-      _ <- Future { storeRun(run) }
+      _ <- storeRun(run)
     } yield run
 }

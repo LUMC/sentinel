@@ -115,7 +115,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       // Make sure it is JSON
       runJson <- Future { parseAndValidate(byteContents) }
       // Store the raw file in our database
-      fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
+      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
       // Extract run, samples, and read groups
       (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId) }
       // Store samples
@@ -125,7 +125,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       // Create run record
       run = MapleRunRecord(fileId, user.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
       // Store run record into database
-      _ <- Future { storeRun(run) }
+      _ <- storeRun(run)
     } yield run
   }
 }

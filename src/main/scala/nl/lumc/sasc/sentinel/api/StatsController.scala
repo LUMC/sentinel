@@ -28,7 +28,9 @@ import nl.lumc.sasc.sentinel.processors.GenericRunsProcessor
  * Controller for the `/stats` endpoint.
  *
  */
-abstract class StatsController extends SentinelServlet with AuthenticationSupport { self =>
+abstract class StatsController extends SentinelServlet
+    with FutureSupport
+    with AuthenticationSupport { self =>
 
   /** Object for accessing the database. */
   protected def mongo: MongodbAccessObject
@@ -61,6 +63,8 @@ abstract class StatsController extends SentinelServlet with AuthenticationSuppor
 
   get("/runs", operation(statsRunsGetOperation)) {
     logger.info(requestLog)
-    Ok(runs.getGlobalRunStats())
+    new AsyncResult {
+      val is = runs.getGlobalRunStats().map(res => Ok(res))
+    }
   }
 }

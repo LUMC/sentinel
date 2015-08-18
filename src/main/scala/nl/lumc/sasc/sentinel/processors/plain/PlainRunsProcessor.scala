@@ -53,8 +53,8 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
     for {
       (byteContents, unzipped) <- Future { fi.readInputStream() }
       _ <- Future { parseAndValidate(byteContents) }
-      fileId <- Future { storeFile(byteContents, user, fi.getName, unzipped) }
+      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
       run = RunRecord(fileId, user.id, pipelineName, Date.from(Clock.systemUTC().instant))
-      _ <- Future { storeRun(run) }
+      _ <- storeRun(run)
     } yield run
 }
