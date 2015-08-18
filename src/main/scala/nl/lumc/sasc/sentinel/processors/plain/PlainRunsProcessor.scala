@@ -46,7 +46,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def pipelineName = "plain"
 
-  val validator = createValidator("/schemas/plain.json")
+  def jsonSchemaUrl = "/schemas/plain.json"
 
   def processRun(fi: FileItem, user: User) =
 

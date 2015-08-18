@@ -264,7 +264,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
   def pipelineName = "gentrap"
 
-  val validator = createValidator("/schemas/biopet/v0.4/gentrap.json")
+  def jsonSchemaUrl = "/schemas/biopet/v0.4/gentrap.json"
 
   def processRun(fi: FileItem, user: User): Future[RunRecord] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).

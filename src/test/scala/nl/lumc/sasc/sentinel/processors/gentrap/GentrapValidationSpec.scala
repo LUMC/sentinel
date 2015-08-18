@@ -32,39 +32,39 @@ class GentrapValidationSpec extends Specification with JsonLoader with Mockito {
 
     "exclude non-gentrap summary files" in {
       val summary = loadJson("/summary_examples/plain.json")
-      ipv04.validator.validationMessages(summary) must not be empty
+      ipv04.jsonValidator.validationMessages(summary) must not be empty
     }
 
     "exclude invalid summary files" in {
       val summary = loadJson("/summary_examples/invalid.json")
-      ipv04.validator.validationMessages(summary) must not be empty
+      ipv04.jsonValidator.validationMessages(summary) must not be empty
     }
 
     "include the v0.4 schema for" >> {
 
       "summaries with single samples and single read groups" in {
         val summary = loadJson("/summary_examples/biopet/v0.4/gentrap_single_sample_single_rg.json")
-        ipv04.validator.validationMessages(summary) must beEmpty
+        ipv04.jsonValidator.validationMessages(summary) must beEmpty
       }
 
       "summaries with single samples and multiple read groups" in {
         val summary = loadJson("/summary_examples/biopet/v0.4/gentrap_single_sample_multi_rg.json")
-        ipv04.validator.validationMessages(summary) must beEmpty
+        ipv04.jsonValidator.validationMessages(summary) must beEmpty
       }
 
       "summaries with multiple samples and single read groups" in {
         val summary = loadJson("/summary_examples/biopet/v0.4/gentrap_multi_sample_single_rg.json")
-        ipv04.validator.validationMessages(summary) must beEmpty
+        ipv04.jsonValidator.validationMessages(summary) must beEmpty
       }
 
       "summaries with multiple samples and multiple read groups" in {
         val summary = loadJson("/summary_examples/biopet/v0.4/gentrap_multi_sample_multi_rg.json")
-        ipv04.validator.validationMessages(summary) must beEmpty
+        ipv04.jsonValidator.validationMessages(summary) must beEmpty
       }
 
       "summaries with multiple samples and multiple read groups containing mixed library types" in {
         val summary = loadJson("/summary_examples/biopet/v0.4/gentrap_multi_sample_multi_rg_mixedlib.json")
-        ipv04.validator.validationMessages(summary) must beEmpty
+        ipv04.jsonValidator.validationMessages(summary) must beEmpty
       }
     }
   }

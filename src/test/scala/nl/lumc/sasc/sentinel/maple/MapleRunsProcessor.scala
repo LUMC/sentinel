@@ -52,8 +52,8 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   /** Exposed pipeline name. */
   def pipelineName = "maple"
 
-  /** Validator object for incoming run summaries. */
-  val validator = createValidator("/schema_examples/maple.json")
+  /** JSON schema for incoming summaries. */
+  def jsonSchemaUrl = "/schema_examples/maple.json"
 
   /**
    * Extracts the raw summary JSON into samples and read groups containers.

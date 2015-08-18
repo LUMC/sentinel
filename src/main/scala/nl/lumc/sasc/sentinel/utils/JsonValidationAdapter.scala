@@ -25,8 +25,11 @@ import org.json4s.jackson.JsonMethods._
 /** Trait for validating input JSON with a schema. */
 trait JsonValidationAdapter {
 
+  /** Resource URL for JSON schema file. */
+  def jsonSchemaUrl: String
+
   /** JSON validator. */
-  val validator: JsonValidator
+  lazy val jsonValidator: JsonValidator = createJsonValidator(jsonSchemaUrl)
 
   /**
    * Creates a JSON validator from a JSON schema stored as a resource.
@@ -34,7 +37,7 @@ trait JsonValidationAdapter {
    * @param schemaResourceUrl URL of the JSON schema.
    * @return a JSON validator.
    */
-  def createValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
+  def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
 
   /**
    * Parses the given byte array into as a JSON file.
@@ -50,7 +53,7 @@ trait JsonValidationAdapter {
         case exc: Exception =>
           throw new JsonValidationException("File is not JSON-formatted.")
       }
-    val valResult = validator.validate(json)
+    val valResult = jsonValidator.validate(json)
     if (!valResult.isSuccess)
       throw new JsonValidationException("JSON run summary is invalid.", Option(valResult))
     else json
