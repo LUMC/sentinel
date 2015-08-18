@@ -84,10 +84,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
     /** Given the sample name and JSON section of the sample, create a sample container. */
     def makeSample(sampleName: String, sampleJson: JValue) =
       MapleSampleRecord(
-        stats = MapleSampleStats(
-          nSnps = (sampleJson \ "nSnps").extract[Long],
-          nReadsInput = (sampleJson \ "nReadsInput").extract[Long],
-          nReadsAligned = (sampleJson \ "nReadsAligned").extract[Long]),
+        stats = MapleSampleStats(nSnps = (sampleJson \ "nSnps").extract[Long]),
         uploaderId, runId, Option(sampleName), runName)
 
     /** Raw sample and read group containers. */
