@@ -24,18 +24,19 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseReadGroupRecord
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.FutureAdapter
 
 /**
  * Trait for storing read groups from run summaries.
  */
-trait ReadGroupsAdapter
-    extends MongodbConnector
-    with FutureAdapter { this: RunsProcessor =>
+trait ReadGroupsAdapter extends MongodbConnector
+    with FutureAdapter {
 
   /** Read group-level metrics container. */
   type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
+
+  /** Pipeline name of read group. */
+  def pipelineName: String
 
   /** Overridable execution context for this adapter. */
   protected def readGroupsAdapterExecutionContext = ExecutionContext.global
@@ -52,7 +53,7 @@ trait ReadGroupsAdapter
    * @param readGroups Read groups to store.
    * @return Bulk write operation result.
    */
-  protected def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): Future[BulkWriteResult] =
+  protected[db] def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
       val recordGrater = grater[ReadGroupRecord]

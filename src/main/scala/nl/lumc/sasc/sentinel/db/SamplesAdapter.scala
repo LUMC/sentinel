@@ -24,18 +24,19 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseSampleRecord
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.FutureAdapter
 
 /**
  * Trait for storing samples from run summaries.
  */
-trait SamplesAdapter
-    extends MongodbConnector
-    with FutureAdapter { this: RunsProcessor =>
+trait SamplesAdapter extends MongodbConnector
+    with FutureAdapter {
 
   /** Sample-level metrics container. */
   type SampleRecord <: BaseSampleRecord with CaseClass
+
+  /** Pipeline name of sample. */
+  def pipelineName: String
 
   /** Overridable execution context for this adapter. */
   protected def samplesAdapterExecutionContext = ExecutionContext.global
@@ -52,7 +53,7 @@ trait SamplesAdapter
    * @param samples Samples to store.
    * @return Bulk write operation result.
    */
-  protected def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): Future[BulkWriteResult] =
+  protected[db] def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
       val recordGrater = grater[SampleRecord]
