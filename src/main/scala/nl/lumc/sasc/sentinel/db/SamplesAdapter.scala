@@ -55,8 +55,9 @@ trait SamplesAdapter
   protected def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
-      val docs = samples.map { case sample => grater[SampleRecord].asDBObject(sample) }
-      docs.foreach { case doc => builder.insert(doc) }
+      val recordGrater = grater[SampleRecord]
+      val docs = samples.map { sample => recordGrater.asDBObject(sample) }
+      docs.foreach { doc => builder.insert(doc) }
       builder.execute()
     }
 }

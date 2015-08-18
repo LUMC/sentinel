@@ -55,8 +55,9 @@ trait ReadGroupsAdapter
   protected def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
-      val docs = readGroups.map { case sample => grater[ReadGroupRecord].asDBObject(sample) }
-      docs.foreach { case doc => builder.insert(doc) }
+      val recordGrater = grater[ReadGroupRecord]
+      val docs = readGroups.map { sample => recordGrater.asDBObject(sample) }
+      docs.foreach { doc => builder.insert(doc) }
       builder.execute()
     }
 }
