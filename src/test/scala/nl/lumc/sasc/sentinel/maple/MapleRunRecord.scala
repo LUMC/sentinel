@@ -18,7 +18,6 @@ package nl.lumc.sasc.sentinel.maple
 
 import java.util.Date
 
-import com.novus.salat.annotations.Key
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.models._
@@ -26,7 +25,7 @@ import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
 
 /** Container for a Maple run. */
 case class MapleRunRecord(
-  @Key("_id") runId: ObjectId,
+  runId: ObjectId,
   uploaderId: String,
   pipeline: String,
   sampleIds: Seq[ObjectId],
@@ -43,7 +42,7 @@ case class MapleSampleRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseSampleRecord
+  dbId: ObjectId = new ObjectId) extends BaseSampleRecord
 
 /** Container for a single Maple sample statistics. */
 case class MapleSampleStats(nSnps: Long)
@@ -61,7 +60,7 @@ case class MapleReadGroupRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord
+  dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord
 
 /** Container for a single Maple read group statistics. */
 case class MapleReadGroupStats(

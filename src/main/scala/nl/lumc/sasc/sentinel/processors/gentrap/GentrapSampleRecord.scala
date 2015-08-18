@@ -18,7 +18,6 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import java.util.Date
 
-import com.novus.salat.annotations.Key
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.models._
@@ -46,4 +45,4 @@ case class GentrapSampleRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseSampleRecord
+  dbId: ObjectId = new ObjectId) extends BaseSampleRecord

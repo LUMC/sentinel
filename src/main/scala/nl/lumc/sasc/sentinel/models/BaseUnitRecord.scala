@@ -18,14 +18,14 @@ package nl.lumc.sasc.sentinel.models
 
 import java.util.Date
 
-import com.novus.salat.annotations.{ Persist, Salat }
+import com.novus.salat.annotations.{ Key, Persist, Salat }
 import org.bson.types.ObjectId
 
 /** Representation of a sequencing accumulation level unit. */
 @Salat abstract class BaseUnitRecord {
 
   /** Internal database ID for the document. */
-  def dbId: ObjectId
+  @Key("_id") def dbId: ObjectId
 
   /** Name of the uploader of the run summary which contains this unit. */
   def uploaderId: String

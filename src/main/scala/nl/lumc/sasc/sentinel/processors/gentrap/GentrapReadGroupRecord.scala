@@ -18,7 +18,6 @@ package nl.lumc.sasc.sentinel.processors.gentrap
 
 import java.util.Date
 
-import com.novus.salat.annotations.{ Key, Persist }
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.models._
@@ -57,4 +56,4 @@ case class GentrapReadGroupRecord(
   sampleName: Option[String] = None,
   runName: Option[String] = None,
   creationTimeUtc: Date = getUtcTimeNow,
-  @Key("_id") dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord
+  dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord

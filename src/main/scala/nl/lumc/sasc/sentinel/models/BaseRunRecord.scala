@@ -30,7 +30,7 @@ import nl.lumc.sasc.sentinel.CaseClass
   def runName: Option[String]
 
   /** Database run ID. */
-  def runId: ObjectId
+  @Key("_id") def runId: ObjectId
 
   /** Run uploader ID. */
   def uploaderId: String
@@ -65,7 +65,7 @@ object BaseRunRecord {
 /** Simple implementation of a run record for schema display. */
 // FIXME: Can we make the schema work with traits? Because this is essentially the traits made concrete.
 case class GenericRunRecord(
-  @Key("_id") runId: ObjectId,
+  runId: ObjectId,
   uploaderId: String,
   pipeline: String,
   creationTimeUtc: Date,
@@ -81,7 +81,7 @@ case class GenericRunRecord(
  * @param annotIds Annotation record IDs contained in the sample.
  */
 case class RunRecord(
-  @Key("_id") runId: ObjectId,
+  runId: ObjectId,
   uploaderId: String,
   pipeline: String,
   creationTimeUtc: Date,
