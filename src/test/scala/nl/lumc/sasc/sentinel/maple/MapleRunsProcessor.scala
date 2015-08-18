@@ -92,7 +92,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       .map {
         case (sampleName, sampleJson) =>
           val sample = makeSample(sampleName, sampleJson)
-          val readGroups = (sampleJson \ "read_groups").extract[Map[String, JValue]]
+          val readGroups = (sampleJson \ "readGroups").extract[Map[String, JValue]]
             .map { case (readGroupName, readGroupJson) => makeReadGroup(sampleName, readGroupName, readGroupJson) }
             .toSeq
           (sample, readGroups)

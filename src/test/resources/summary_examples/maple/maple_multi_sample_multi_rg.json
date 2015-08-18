@@ -2,26 +2,26 @@
   "run_name": "MapleV_01",
   "samples": {
     "sample_A": {
-      "read_groups": {
+      "readGroups": {
         "rg_1": {
-          "nReadPairsFastq": 10000,
+          "nReadsInput": 10000,
           "nReadsAligned": 7500
         }
       },
-      "nSnp": 200
+      "nSnps": 200
     },
     "sample_B": {
-      "read_groups": {
+      "readGroups": {
         "rg_1": {
-          "nReadPairsFastq": 20000,
+          "nReadsInput": 20000,
           "nReadsAligned": 15000
         },
         "rg_2": {
-          "nReadPairsFastq": 40000,
+          "nReadsInput": 40000,
           "nReadsAligned": 30000
         }
       },
-      "nSnp": 250
+      "nSnps": 250
     }
   }
 }
