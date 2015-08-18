@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.db
 
+import scala.concurrent._
+
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global._
@@ -23,14 +25,20 @@ import com.novus.salat.global._
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseSampleRecord
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
+import nl.lumc.sasc.sentinel.utils.FutureAdapter
 
 /**
  * Trait for storing samples from run summaries.
  */
-trait SamplesAdapter extends MongodbConnector { this: RunsProcessor =>
+trait SamplesAdapter
+    extends MongodbConnector
+    with FutureAdapter { this: RunsProcessor =>
 
   /** Sample-level metrics container. */
   type SampleRecord <: BaseSampleRecord with CaseClass
+
+  /** Execution context for User database operations. */
+  implicit protected def context: ExecutionContext = ExecutionContext.global
 
   /** Collection of the units. */
   private lazy val coll = mongo.db(collectionNames.pipelineSamples(pipelineName))
@@ -41,11 +49,11 @@ trait SamplesAdapter extends MongodbConnector { this: RunsProcessor =>
    * @param samples Samples to store.
    * @return Bulk write operation result.
    */
-  protected def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): BulkWriteResult = {
-    // TODO: refactor to use Futures instead
-    val builder = coll.initializeUnorderedBulkOperation
-    val docs = samples.map { case sample => grater[SampleRecord].asDBObject(sample) }
-    docs.foreach { case doc => builder.insert(doc) }
-    builder.execute()
-  }
+  protected def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): Future[BulkWriteResult] =
+    Future {
+      val builder = coll.initializeUnorderedBulkOperation
+      val docs = samples.map { case sample => grater[SampleRecord].asDBObject(sample) }
+      docs.foreach { case doc => builder.insert(doc) }
+      builder.execute()
+    }
 }

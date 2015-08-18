@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.db
 
+import scala.concurrent._
+
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global._
@@ -23,14 +25,20 @@ import com.novus.salat.global._
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseReadGroupRecord
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
+import nl.lumc.sasc.sentinel.utils.FutureAdapter
 
 /**
  * Trait for storing read groups from run summaries.
  */
-trait ReadGroupsAdapter extends MongodbConnector { this: RunsProcessor =>
+trait ReadGroupsAdapter
+    extends MongodbConnector
+    with FutureAdapter { this: RunsProcessor =>
 
   /** Read group-level metrics container. */
   type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
+
+  /** Execution context for User database operations. */
+  implicit protected def context: ExecutionContext = ExecutionContext.global
 
   /** Collection of the units. */
   private lazy val coll = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
@@ -41,11 +49,11 @@ trait ReadGroupsAdapter extends MongodbConnector { this: RunsProcessor =>
    * @param readGroups Read groups to store.
    * @return Bulk write operation result.
    */
-  protected def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): BulkWriteResult = {
-    // TODO: refactor to use Futures instead
-    val builder = coll.initializeUnorderedBulkOperation
-    val docs = readGroups.map { case sample => grater[ReadGroupRecord].asDBObject(sample) }
-    docs.foreach { case doc => builder.insert(doc) }
-    builder.execute()
-  }
+  protected def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): Future[BulkWriteResult] =
+    Future {
+      val builder = coll.initializeUnorderedBulkOperation
+      val docs = readGroups.map { case sample => grater[ReadGroupRecord].asDBObject(sample) }
+      docs.foreach { case doc => builder.insert(doc) }
+      builder.execute()
+    }
 }

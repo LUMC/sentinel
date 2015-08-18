@@ -119,9 +119,9 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       // Extract run, samples, and read groups
       (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId) }
       // Store samples
-      _ <- Future { storeSamples(samples) }
+      _ <- storeSamples(samples)
       // Store read groups
-      _ <- Future { storeReadGroups(readGroups) }
+      _ <- storeReadGroups(readGroups)
       // Create run record
       run = MapleRunRecord(fileId, user.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
       // Store run record into database

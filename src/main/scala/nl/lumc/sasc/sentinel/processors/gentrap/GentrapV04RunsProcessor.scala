@@ -284,8 +284,8 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]
       (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId, refId, annotIds, runName) }
-      _ <- Future { storeSamples(samples) }
-      _ <- Future { storeReadGroups(readGroups) }
+      _ <- storeSamples(samples)
+      _ <- storeReadGroups(readGroups)
 
       run = createRun(fileId, refId, annotIds, samples, readGroups, user, runName)
       _ <- Future { storeRun(run) }
