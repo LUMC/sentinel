@@ -19,6 +19,8 @@ package nl.lumc.sasc.sentinel.api
 import scala.concurrent._
 import scala.concurrent.duration._
 
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.specs2.matcher.JsonMatchers
@@ -142,36 +144,25 @@ trait SentinelServletSpec extends MutableScalatraSpec
     /** Testing context with a prior run summary upload. */
     trait PriorRunUploadClean extends PriorRequestsClean {
 
-      /** Pipeline name for the upload parameter. */
-      def pipelineParam: String
+      /** Helper container for an upload. */
+      protected case class UploadSet(uploader: User, payload: Uploadable, pipelineName: String) {
 
-      /** Run summary payload to be uploaded. */
-      def uploadPayload: Uploadable
-
-      /** User performing the upload. */
-      def uploadUser = user
-
-      /** Expected HTTP status code after upload. */
-      def expectedUploadStatus = 201
+        /** Helper method for creating upload requests. */
+        lazy val request: Req = {
+          val params = Seq(("userId", uploader.id), ("pipeline", pipelineName))
+          val headers = Map(HeaderApiKey -> uploader.activeKey)
+          () => post(uploadEndpoint, params, Map("run" -> payload), headers) { response }
+        }
+      }
 
       /** HTTP endpoint for the upload. */
       def uploadEndpoint = "/runs"
 
-      /** URL parameters for upload. */
-      def uploadParams = Seq(("userId", uploadUser.id), ("pipeline", pipelineParam))
+      /** Store all uploaded run ID values. */
+      lazy val uploadedRunIds: Seq[String] = priorResponses.map { pr => (parse(pr.body) \ "runId").extract[String] }
 
-      /** URL file parameters for upload. */
-      def uploadFile = Map("run" -> uploadPayload)
-
-      /** Request header for upload. */
-      def uploadHeader = Map(HeaderApiKey -> uploadUser.activeKey)
-
-      /** Request function for performing the upload. */
-      def priorRequests = Seq(() => post(uploadEndpoint, uploadParams, uploadFile, uploadHeader) { response })
-
-      s"after the user uploads the '$pipelineParam' summary file to an empty database" in {
-        priorResponse.statusLine.code mustEqual expectedUploadStatus
-      }
+      /** Helper method to retrieve the first uploaded Run ID. */
+      lazy val uploadedRunId: String = uploadedRunIds.head
     }
 
     /** Convenience class for testing HTTP OPTION methods. */

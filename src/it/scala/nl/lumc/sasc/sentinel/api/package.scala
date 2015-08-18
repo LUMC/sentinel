@@ -103,6 +103,12 @@ package object api {
 
     /** Non-JSON file. */
     lazy val Not = makeUploadable("/summary_examples/not.json")
+
+    object Maple {
+
+      lazy val MSampleMRG = makeUploadable("/summary_examples/maple/maple_multi_sample_multi_rg.json")
+
+    }
   }
 }
 

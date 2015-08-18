@@ -17,11 +17,8 @@
 package nl.lumc.sasc.sentinel.api
 
 import org.scalatra.swagger.Swagger
-import org.scalatra.test.Uploadable
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
-import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class StatsControllerSpec extends SentinelServletSpec { self =>
@@ -54,38 +51,14 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
 
     "using multiple summary files from 2 different pipelines uploaded by different users" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
+        def upload1 = UploadSet(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG, "gentrap")
+        def upload2 = UploadSet(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRG, "gentrap")
+        def upload3 = UploadSet(UserExamples.avg2, SummaryExamples.Plain, "plain")
+        def upload4 = UploadSet(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG, "gentrap")
 
-        def makeUpload(uploader: User, uploaded: Uploadable, pipeline: String): Req = {
-          val params = Seq(("userId", uploader.id), ("pipeline", pipeline))
-          val headers = Map(HeaderApiKey -> uploader.activeKey)
-          () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
-        }
-
-        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG, "gentrap")
-        def upload2 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRG, "gentrap")
-        def upload3 = makeUpload(UserExamples.avg2, SummaryExamples.Plain, "plain")
-        def upload4 = makeUpload(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG, "gentrap")
-
-        def priorRequests = Seq(upload1, upload2, upload3, upload4)
-
-        "after the first file is uploaded" in {
-          priorResponses.head.status mustEqual 201
-        }
-
-        "after the second file is uploaded" in {
-          priorResponses(1).status mustEqual 201
-        }
-
-        "after the third file is uploaded" in {
-          priorResponses(2).status mustEqual 201
-        }
-
-        "after the fourth file is uploaded" in {
-          priorResponses(3).status mustEqual 201
-        }
+        def priorRequests = Seq(upload1, upload2, upload3, upload4).map(_.request)
 
         "when using the default parameter should" >> inline {
 

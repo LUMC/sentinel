@@ -21,24 +21,27 @@ import java.io.{ File, RandomAccessFile }
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.json4s._
-import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, RunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class RunsControllerSpec extends SentinelServletSpec {
 
+  /** Overridden stop method that deletes any created temporary directory. */
   override def stop(): Unit = {
     deleteDirectory(tempDir)
     super.stop()
   }
 
+  /** Helper method for creating temporary directories. */
   protected lazy val tempDir = Files.createTempDir()
 
+  /** Helper method for creating named temporary files. */
   protected def createTempFile(name: String): File = new File(tempDir, name)
 
+  /** Helper method to create file with arbitrary size. */
   protected def fillFile(file: File, size: Long): File = {
     val raf = new RandomAccessFile(file, "rw")
     raf.setLength(size)
@@ -46,34 +49,29 @@ class RunsControllerSpec extends SentinelServletSpec {
     file
   }
 
+  /** Upload context for plain summary files. */
   class PlainUploadContext extends Context.PriorRunUploadClean {
-    def pipelineParam = "plain"
-    def uploadPayload = SummaryExamples.Plain
-    lazy val runId = (parse(priorResponse.body) \ "runId").extract[String]
+    def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Plain, "plain")
+    def priorRequests = Seq(uploadSet.request)
   }
 
-  class PlainThenGentrapUploadContext extends PlainUploadContext {
+  /** Upload context for plain summary files. */
+  class MapleUploadContext extends Context.PriorRunUploadClean {
+    def uploadSet = UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
+    def priorRequests = Seq(uploadSet.request)
+  }
 
-    def pipeline2 = "gentrap"
-    def uploadParams2 = Seq(("userId", UserExamples.avg2.id), ("pipeline", pipeline2))
-    def uploadFile2 = Map("run" -> uploadPayload2)
-    def uploadHeader2 = Map(HeaderApiKey -> UserExamples.avg2.activeKey)
-    def uploadPayload2 = LumcSummaryExamples.Gentrap.V04.SSampleSRG
-    lazy val runId2 = (parse(priorResponses(1).body) \ "runId").extract[String]
-
-    override def priorRequests = super.priorRequests ++ Seq(
-      () => post(uploadEndpoint, uploadParams2, uploadFile2, uploadHeader2) { response }
-    )
-
-    s"and another user uploads the '$pipeline2' summary file" in {
-      priorResponses.head.statusLine.code mustEqual 201
-    }
+  /** Uploads plain first, then maple. */
+  class PlainThenMapleUploadContext extends Context.PriorRunUploadClean {
+    def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Plain, "plain")
+    def uploadSet2 = UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
+    def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
   }
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.maple.MapleRunsProcessor],
     runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val servlet = new RunsController
   val baseEndpoint = "/runs"
@@ -510,18 +508,18 @@ class RunsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the 'gentrap' pipeline summary run file" >> {
+    "using a pipeline summary file with samples and read groups ('maple')" >> {
       br
 
-      def params(implicit user: User) = Seq(("userId", user.id), ("pipeline", "gentrap"))
+      def params(implicit user: User) = Seq(("userId", user.id), ("pipeline", "maple"))
       def headers(implicit user: User) = Map(HeaderApiKey -> user.activeKey)
 
-      "when the v0.4 run summary (single sample, single lib) is uploaded to an empty database should" >> inline {
+      "when a multi sample, multi read group summary is uploaded to an empty database should" >> inline {
 
         new Context.PriorRequestsClean {
 
           def request = () =>
-            post(endpoint, params, Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response }
+            post(endpoint, params, Map("run" -> SummaryExamples.Maple.MSampleMRG), headers) { response }
           def priorRequests = Seq(request)
 
           "return status 201" in {
@@ -532,14 +530,12 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponse.contentType mustEqual "application/json"
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must /("uploaderId" -> user.id)
-            priorResponse.body must /("pipeline" -> "gentrap")
-            priorResponse.body must /("nSamples" -> 1)
-            priorResponse.body must /("nReadGroups" -> 1)
+            priorResponse.body must /("pipeline" -> "maple")
+            priorResponse.body must /("nSamples" -> 2)
+            priorResponse.body must /("nReadGroups" -> 3)
             priorResponse.body must /("runId" -> """\S+""".r)
             priorResponse.body must not /("sampleIds" -> ".+".r)
             priorResponse.body must not /("libIds" -> ".+".r)
-            // TODO: use raw JSON matchers when we upgrade specs2
-            priorResponse.jsonBody must beSome.like { case json => (json \ "annotIds") must haveSize(3) }
           }
         }
       }
@@ -631,9 +627,9 @@ class RunsControllerSpec extends SentinelServletSpec {
       }
     }
 
-    "using the 'plain' and the 'gentrap' run summary files" >> inline {
+    "using the 'plain' and the 'maple' run summary files" >> inline {
 
-      new PlainThenGentrapUploadContext {
+      new PlainThenMapleUploadContext {
 
         "when the user ID is not specified" should {
 
@@ -714,8 +710,6 @@ class RunsControllerSpec extends SentinelServletSpec {
                 body must /#(0) */("nReadGroups" -> 0)
                 body must not /("sampleIds" -> ".+".r)
                 body must not /("libIds" -> ".+".r)
-                body must not /# 0 */ "refId"
-                body must not /# 0 */ "annotIds"
               }
             }
           }
@@ -723,11 +717,11 @@ class RunsControllerSpec extends SentinelServletSpec {
           "and selects for a pipeline he/she has not uploaded" should {
 
             "return status 200" in {
-              get(endpoint, params :+ ("pipelines", "gentrap"), headers) { status mustEqual 200 }
+              get(endpoint, params :+ ("pipelines", "maple"), headers) { status mustEqual 200 }
             }
 
             "return an empty JSON list" in {
-              get(endpoint, params :+ ("pipelines", "gentrap"), headers) {
+              get(endpoint, params :+ ("pipelines", "maple"), headers) {
                 contentType mustEqual "application/json"
                 jsonBody must haveSize(0)
               }
@@ -763,22 +757,22 @@ class RunsControllerSpec extends SentinelServletSpec {
   s"GET '$baseEndpoint/:runId'" >> {
     br
 
-    def endpoint(runId: String) = s"$baseEndpoint/$runId"
+    def endpoint(uploadedRunId: String) = s"$baseEndpoint/$uploadedRunId"
 
-    "using the 'plain' and the 'gentrap' run summary files" >> inline {
+    "using the 'plain' and the 'maple' run summary files" >> inline {
 
-      new PlainThenGentrapUploadContext {
+      new PlainThenMapleUploadContext {
 
         "when the user ID is not specified" should {
 
           val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 400" in {
-            get(endpoint(runId), Seq(), headers) { status mustEqual 400 }
+            get(endpoint(uploadedRunId), Seq(), headers) { status mustEqual 400 }
           }
 
           "return a JSON object of the expected message" in {
-            get(endpoint(runId), Seq(), headers) {
+            get(endpoint(uploadedRunId), Seq(), headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
@@ -791,17 +785,17 @@ class RunsControllerSpec extends SentinelServletSpec {
           val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
 
           "return status 401" in {
-            get(endpoint(runId), params, headers) { status mustEqual 401 }
+            get(endpoint(uploadedRunId), params, headers) { status mustEqual 401 }
           }
 
           "return the authentication challenge header" in {
-            get(endpoint(runId), params, headers) {
+            get(endpoint(uploadedRunId), params, headers) {
               header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
             }
           }
 
           "return a JSON object of the expected message" in {
-            get(endpoint(runId), params, headers) {
+            get(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonMessages.Unauthenticated.message)
             }
@@ -814,11 +808,11 @@ class RunsControllerSpec extends SentinelServletSpec {
           val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
 
           "return status 403" in {
-            get(endpoint(runId), params, headers) { status mustEqual 403 }
+            get(endpoint(uploadedRunId), params, headers) { status mustEqual 403 }
           }
 
           "return a JSON object of the expected message" in {
-            get(endpoint(runId), params, headers) {
+            get(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonMessages.Unauthorized.message)
             }
@@ -834,18 +828,16 @@ class RunsControllerSpec extends SentinelServletSpec {
           "and queries a run he/she uploaded" >> {
             br
 
-            def userRunId = runId
-
             "with the default parameter" should {
 
               "return status 200" in {
-                get(endpoint(userRunId), params, headers) { status mustEqual 200 }
+                get(endpoint(uploadedRunId), params, headers) { status mustEqual 200 }
               }
 
               "return a JSON object of the run data" in {
-                get(endpoint(userRunId), params, headers) {
+                get(endpoint(uploadedRunId), params, headers) {
                   contentType mustEqual "application/json"
-                  body must /("runId" -> userRunId)
+                  body must /("runId" -> uploadedRunId)
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
                   body must /("nReadGroups" -> 0)
@@ -864,19 +856,19 @@ class RunsControllerSpec extends SentinelServletSpec {
                   val paramsWithDownload = params :+ ("download", dlParam)
 
                   "return status 200" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
                   }
 
                   "return the expected Content-Disposition header" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
-                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
+                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet1.payload.fileName))
                     }
                   }
 
                   "return the uploaded summary file" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
                       contentType mustEqual "application/octet-stream"
-                      body mustEqual new String(uploadPayload.content)
+                      body mustEqual new String(uploadSet1.payload.content)
                     }
                   }
                 }
@@ -891,13 +883,13 @@ class RunsControllerSpec extends SentinelServletSpec {
                   val paramsWithDownload = params :+ ("download", dlParam)
 
                   "return status 200" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
                   }
 
                   "return a JSON object of the run data" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
                       contentType mustEqual "application/json"
-                      body must /("runId" -> userRunId)
+                      body must /("runId" -> uploadedRunId)
                       body must /("uploaderId" -> user.id)
                       body must not /("sampleIds" -> ".+".r)
                       body must not /("libIds" -> ".+".r)
@@ -915,12 +907,14 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "and queries a run he/she did not upload" should {
 
+            lazy val uploadedRunId2 = uploadedRunIds.tail.head
+
             "return status 404" in {
-              get(endpoint(runId2), params, headers) { status mustEqual 404 }
+              get(endpoint(uploadedRunId2), params, headers) { status mustEqual 404 }
             }
 
             "return a JSON object of the expected message" in {
-              get(endpoint(runId2), params, headers) {
+              get(endpoint(uploadedRunId2), params, headers) {
                 contentType mustEqual "application/json"
                 body must /("message" -> CommonMessages.MissingRunId.message)
               }
@@ -953,18 +947,16 @@ class RunsControllerSpec extends SentinelServletSpec {
           "and queries a run he/she did not upload" >> {
             br
 
-            def userRunId = runId
-
             "with the default parameter" should {
 
               "return status 200" in {
-                get(endpoint(userRunId), params, headers) { status mustEqual 200 }
+                get(endpoint(uploadedRunId), params, headers) { status mustEqual 200 }
               }
 
               "return a JSON object of the run data" in {
-                get(endpoint(userRunId), params, headers) {
+                get(endpoint(uploadedRunId), params, headers) {
                   contentType mustEqual "application/json"
-                  body must /("runId" -> userRunId)
+                  body must /("runId" -> uploadedRunId)
                   body must /("uploaderId" -> user.id)
                   body must /("nSamples" -> 0)
                   body must /("nReadGroups" -> 0)
@@ -983,19 +975,19 @@ class RunsControllerSpec extends SentinelServletSpec {
                   val paramsWithDownload = params :+ ("download", dlParam)
 
                   "return status 200" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
                   }
 
                   "return the expected Content-Disposition header" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
-                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
+                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet1.payload.fileName))
                     }
                   }
 
                   "return the uploaded summary file" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
                       contentType mustEqual "application/octet-stream"
-                      body mustEqual new String(uploadPayload.content)
+                      body mustEqual new String(uploadSet1.payload.content)
                     }
                   }
                 }
@@ -1010,13 +1002,13 @@ class RunsControllerSpec extends SentinelServletSpec {
                   val paramsWithDownload = params :+ ("download", dlParam)
 
                   "return status 200" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) { status mustEqual 200 }
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
                   }
 
                   "return a JSON object of the run data" in {
-                    get(endpoint(userRunId), paramsWithDownload, headers) {
+                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
                       contentType mustEqual "application/json"
-                      body must /("runId" -> userRunId)
+                      body must /("runId" -> uploadedRunId)
                       body must /("uploaderId" -> user.id)
                       body must not /("sampleIds" -> ".+".r)
                       body must not /("libIds" -> ".+".r)
@@ -1064,18 +1056,18 @@ class RunsControllerSpec extends SentinelServletSpec {
           val headers = Map(HeaderApiKey -> user.activeKey)
 
           "return status 400" in {
-            delete(endpoint(runId), Seq(), headers) { status mustEqual 400 }
+            delete(endpoint(uploadedRunId), Seq(), headers) { status mustEqual 400 }
           }
 
           "return a JSON object of the expected message" in {
-            delete(endpoint(runId), Seq(), headers) {
+            delete(endpoint(uploadedRunId), Seq(), headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonMessages.UnspecifiedUserId.message)
             }
           }
 
           "not remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
@@ -1083,12 +1075,12 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
               contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadPayload.content)
+              body mustEqual new String(uploadSet.payload.content)
             }
           }
 
@@ -1119,7 +1111,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "not remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), headers) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), headers) {
               status mustEqual 200
               body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
@@ -1127,12 +1119,12 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
               contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadPayload.content)
+              body mustEqual new String(uploadSet.payload.content)
             }
           }
 
@@ -1152,24 +1144,24 @@ class RunsControllerSpec extends SentinelServletSpec {
           val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
 
           "return status 401" in {
-            delete(endpoint(runId), params, headers) { status mustEqual 401 }
+            delete(endpoint(uploadedRunId), params, headers) { status mustEqual 401 }
           }
 
           "return the authentication challenge header" in {
-            delete(endpoint(runId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
             }
           }
 
           "return a JSON object of the expected message" in {
-            delete(endpoint(runId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> CommonMessages.Unauthenticated.message)
             }
           }
 
           "not remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
               body must /("runId" -> """\S+""".r)
               body must not /("deletionTimeUtc" -> ".+".r)
@@ -1177,12 +1169,12 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadPayload.fileName))
+              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
               contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadPayload.content)
+              body mustEqual new String(uploadSet.payload.content)
             }
           }
 
@@ -1207,8 +1199,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
-          def userRunId = runId
-          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request
 
@@ -1218,7 +1209,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
             priorResponses.last.contentType mustEqual "application/json"
-            priorResponses.last.body must /("runId" -> userRunId)
+            priorResponses.last.body must /("runId" -> uploadedRunId)
             priorResponses.last.body must /("uploaderId" -> user.id)
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must not /("libIds" -> ".+".r)
@@ -1229,7 +1220,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
               body must /("message" -> CommonMessages.MissingRunId.message)
@@ -1237,7 +1228,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
                 status mustEqual 404
                 contentType mustEqual "application/json"
@@ -1254,13 +1245,13 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return status 410 when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               status mustEqual 410
             }
           }
 
           "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> "Run summary already deleted.")
             }
@@ -1268,17 +1259,14 @@ class RunsControllerSpec extends SentinelServletSpec {
         }
       }
 
-      "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
+      "with the default parameters for the 'maple' pipeline (multi sample, multi read group) should" >> inline {
 
-        new Context.PriorRunUploadClean {
-          def pipelineParam = "gentrap"
-          def uploadPayload = LumcSummaryExamples.Gentrap.V04.SSampleSRG
-          lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
+        new MapleUploadContext {
 
+          override def user = uploadSet.uploader
           val params = Seq(("userId", user.id))
           val headers = Map(HeaderApiKey -> user.activeKey)
-          def userRunId = runId
-          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request
 
@@ -1287,23 +1275,21 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               priorResponses.last.contentType mustEqual "application/json"
-              priorResponses.last.body must /("runId" -> userRunId)
+              priorResponses.last.body must /("runId" -> uploadedRunId)
               priorResponses.last.body must /("uploaderId" -> user.id)
               priorResponses.last.body must not /("sampleIds" -> ".+".r)
-              priorResponses.last.body must not /("libIds" -> ".+".r)
-              priorResponses.last.body must /("annotIds" -> ".+".r)
-              priorResponses.last.body must /("refId" -> """\S+""".r)
-              priorResponses.last.body must /("nSamples" -> 1)
-              priorResponses.last.body must /("nReadGroups" -> 1)
-              priorResponses.last.body must /("pipeline" -> "gentrap")
+              priorResponses.last.body must not /("readGroupIds" -> ".+".r)
+              priorResponses.last.body must /("nSamples" -> 2)
+              priorResponses.last.body must /("nReadGroups" -> 3)
+              priorResponses.last.body must /("pipeline" -> "maple")
               priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
             }
           }
 
           "remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
               body must /("message" -> CommonMessages.MissingRunId.message)
@@ -1311,7 +1297,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               contentType mustEqual "application/json"
@@ -1328,13 +1314,13 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return status 410 again when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               status mustEqual 410
             }
           }
 
           "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> "Run summary already deleted.")
             }
@@ -1352,8 +1338,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           val params = Seq(("userId", UserExamples.admin.id))
           val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
-          def userRunId = runId
-          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request
 
@@ -1363,7 +1348,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
             priorResponses.last.contentType mustEqual "application/json"
-            priorResponses.last.body must /("runId" -> userRunId)
+            priorResponses.last.body must /("runId" -> uploadedRunId)
             priorResponses.last.body must /("uploaderId" -> user.id)
             priorResponses.last.body must not /("sampleIds" -> ".+".r)
             priorResponses.last.body must not /("libIds" -> ".+".r)
@@ -1374,7 +1359,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
               body must /("message" -> CommonMessages.MissingRunId.message)
@@ -1382,7 +1367,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               contentType mustEqual "application/json"
@@ -1399,13 +1384,13 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return status 410 when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               status mustEqual 410
             }
           }
 
           "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> "Run summary already deleted.")
             }
@@ -1413,17 +1398,13 @@ class RunsControllerSpec extends SentinelServletSpec {
         }
       }
 
-      "with the default parameters for the 'gentrap' pipeline (v0.4, single sample, single library) should" >> inline {
+      "with the default parameters for the 'maple' pipeline (multi sample, multi read group) should" >> inline {
 
-        new Context.PriorRunUploadClean {
-          def pipelineParam = "gentrap"
-          def uploadPayload = LumcSummaryExamples.Gentrap.V04.SSampleSRG
-          lazy val runId = parse(priorResponse.body).extract[RunRecord].runId.toString
+        new MapleUploadContext {
 
           val params = Seq(("userId", UserExamples.admin.id))
           val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
-          def userRunId = runId
-          def request = () => delete(endpoint(userRunId), params, headers) { response }
+          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request
 
@@ -1432,23 +1413,21 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               priorResponses.last.contentType mustEqual "application/json"
-              priorResponses.last.body must /("runId" -> userRunId)
-              priorResponses.last.body must /("uploaderId" -> user.id)
+              priorResponses.last.body must /("runId" -> uploadedRunId)
+              priorResponses.last.body must /("uploaderId" -> uploadSet.uploader.id)
               priorResponses.last.body must not /("sampleIds" -> ".+".r)
-              priorResponses.last.body must not /("libIds" -> ".+".r)
-              priorResponses.last.body must /("annotIds" -> ".+".r)
-              priorResponses.last.body must /("refId" -> """\S+""".r)
-              priorResponses.last.body must /("nSamples" -> 1)
-              priorResponses.last.body must /("nReadGroups" -> 1)
-              priorResponses.last.body must /("pipeline" -> "gentrap")
+              priorResponses.last.body must not /("readGroupIds" -> ".+".r)
+              priorResponses.last.body must /("nSamples" -> 2)
+              priorResponses.last.body must /("nReadGroups" -> 3)
+              priorResponses.last.body must /("pipeline" -> "maple")
               priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
             }
           }
 
           "remove the run record" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
               body must /("message" -> CommonMessages.MissingRunId.message)
@@ -1456,7 +1435,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$runId", Seq(("userId", user.id), ("download", "true")),
+            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
               Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               contentType mustEqual "application/json"
@@ -1473,13 +1452,13 @@ class RunsControllerSpec extends SentinelServletSpec {
           }
 
           "return status 410 again when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               status mustEqual 410
             }
           }
 
           "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(userRunId), params, headers) {
+            delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
               body must /("message" -> "Run summary already deleted.")
             }
