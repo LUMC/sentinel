@@ -253,6 +253,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     val statsGrater = grater[PipelineStats]
     coll
       .aggregate(List(
+        MongoDBObject("$match" ->
+          MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false))
+        ),
         MongoDBObject("$project" ->
           MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
         MongoDBObject("$group" ->
