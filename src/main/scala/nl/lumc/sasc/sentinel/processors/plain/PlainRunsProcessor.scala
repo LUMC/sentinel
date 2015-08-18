@@ -20,8 +20,6 @@ import java.time.Clock
 import java.util.Date
 import scala.concurrent.{ Future, ExecutionContext }
 
-import org.scalatra.servlet.FileItem
-
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.{ RunRecord, User }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
@@ -48,13 +46,12 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def jsonSchemaUrl = "/schemas/plain.json"
 
-  def processRun(fi: FileItem, user: User) =
-
+  def processRunUpload(uploaded: FileUpload, uploader: User) =
     for {
-      (byteContents, unzipped) <- Future { fi.readInputStream() }
+      (byteContents, unzipped) <- Future { uploaded.readInputStream() }
       _ <- Future { parseAndValidate(byteContents) }
-      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
-      run = RunRecord(fileId, user.id, pipelineName, Date.from(Clock.systemUTC().instant))
+      fileId <- storeFile(byteContents, uploader, uploaded.getName, unzipped)
+      run = RunRecord(fileId, uploader.id, pipelineName, Date.from(Clock.systemUTC().instant))
       _ <- storeRun(run)
     } yield run
 }

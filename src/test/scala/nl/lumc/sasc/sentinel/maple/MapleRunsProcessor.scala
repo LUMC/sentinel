@@ -20,7 +20,6 @@ import scala.concurrent._
 
 import org.bson.types.ObjectId
 import org.json4s.JValue
-import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models.User
@@ -104,26 +103,26 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   /**
    * Validates and stores uploaded run summaries.
    *
-   * @param fi Run summary file uploaded via an HTTP endpoint.
-   * @param user Uploader of the run summary file.
+   * @param uploaded Run summary file uploaded via an HTTP endpoint.
+   * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRun(fi: FileItem, user: User) = {
+  def processRunUpload(uploaded: FileUpload, uploader: User) = {
     for {
       // Read input stream and checks whether the uploaded file is unzipped or not
-      (byteContents, unzipped) <- Future { fi.readInputStream() }
+      (byteContents, unzipped) <- Future { uploaded.readInputStream() }
       // Make sure it is JSON
       runJson <- Future { parseAndValidate(byteContents) }
       // Store the raw file in our database
-      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
+      fileId <- storeFile(byteContents, uploader, uploaded.getName, unzipped)
       // Extract run, samples, and read groups
-      (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId) }
+      (samples, readGroups) <- Future { extractUnits(runJson, uploader.id, fileId) }
       // Store samples
       _ <- storeSamples(samples)
       // Store read groups
       _ <- storeReadGroups(readGroups)
       // Create run record
-      run = MapleRunRecord(fileId, user.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
+      run = MapleRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
       // Store run record into database
       _ <- storeRun(run)
     } yield run

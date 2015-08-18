@@ -23,7 +23,6 @@ import org.apache.commons.io.FilenameUtils.getName
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.JsonDSL._
-import org.scalatra.servlet.FileItem
 import scalaz.{ Failure => _, _ }, Scalaz._
 
 import nl.lumc.sasc.sentinel.db._
@@ -266,14 +265,14 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
 
   def jsonSchemaUrl = "/schemas/biopet/v0.4/gentrap.json"
 
-  def processRun(fi: FileItem, user: User): Future[RunRecord] =
+  def processRunUpload(uploaded: FileUpload, uploader: User): Future[RunRecord] =
     // NOTE: This returns as an all-or-nothing operation, but it may fail midway (the price we pay for using Mongo).
     //       It does not break our application though, so it's an acceptable trade off.
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
-      (byteContents, unzipped) <- Future { fi.readInputStream() }
+      (byteContents, unzipped) <- Future { uploaded.readInputStream() }
       runJson <- Future { parseAndValidate(byteContents) }
-      fileId <- storeFile(byteContents, user, fi.getName, unzipped)
+      fileId <- storeFile(byteContents, uploader, uploaded.getName, unzipped)
       runRef <- Future { extractReference(runJson) }
       ref <- getOrCreateReference(runRef)
       refId = ref.refId
@@ -283,11 +282,11 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
       annotIds = annots.map(_.annotId)
 
       runName = (runJson \ "meta" \ "run_name").extractOpt[String]
-      (samples, readGroups) <- Future { extractUnits(runJson, user.id, fileId, refId, annotIds, runName) }
+      (samples, readGroups) <- Future { extractUnits(runJson, uploader.id, fileId, refId, annotIds, runName) }
       _ <- storeSamples(samples)
       _ <- storeReadGroups(readGroups)
 
-      run = createRun(fileId, refId, annotIds, samples, readGroups, user, runName)
+      run = createRun(fileId, refId, annotIds, samples, readGroups, uploader, runName)
       _ <- storeRun(run)
     } yield run
 }

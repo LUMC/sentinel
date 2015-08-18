@@ -41,6 +41,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
 
   type RunRecord <: BaseRunRecord with CaseClass
 
+  /** Type alias for Scalatra file uploads. */
+  type FileUpload = FileItem
+
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
 
@@ -53,11 +56,11 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   /**
    * Processes and stores the given uploaded file to the run records collection.
    *
-   * @param fi Run summary file uploaded via an HTTP endpoint.
-   * @param user Uploader of the run summary file.
+   * @param uploaded Run summary file uploaded via an HTTP endpoint.
+   * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRun(fi: FileItem, user: User): Future[BaseRunRecord]
+  def processRunUpload(uploaded: FileUpload, uploader: User): Future[BaseRunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)

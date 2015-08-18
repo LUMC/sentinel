@@ -18,8 +18,6 @@ package nl.lumc.sasc.sentinel.processors
 
 import scala.concurrent.{ Future, ExecutionContext }
 
-import org.scalatra.servlet.FileItem
-
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ GenericRunRecord, User }
 
@@ -34,5 +32,5 @@ class GenericRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mon
 
   def pipelineName = "generic"
 
-  def processRun(fi: FileItem, user: User) = Future { throw new NotImplementedError }
+  def processRunUpload(uploaded: FileUpload, uploader: User) = Future { throw new NotImplementedError }
 }
