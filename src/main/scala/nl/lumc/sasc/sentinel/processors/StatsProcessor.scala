@@ -203,6 +203,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       case otherwise          => throw new NotImplementedError
     }
 
+    val statsGrater = grater[T]
+
     lazy val results = coll
       .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
       .map { aggres =>
@@ -216,7 +218,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
           case (None, _, Some(s), _) => Option(s)
           case otherwise             => None
         }
-        dbo.map { obj => grater[T].asObject(obj) }
+        dbo.map { obj => statsGrater.asObject(obj) }
       }.toSeq.flatten
 
     // TODO: switch to database-level randomization when SERVER-533 is resolved
@@ -277,6 +279,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     // Manifest of the inner type of SeqStatsLike
     // TODO: avoid casting directly
     val readStatsManif = m.typeArguments.head.asInstanceOf[Manifest[CaseClass]]
+    val seqGrater = grater(SalatContext, readStatsManif)
+
     val metricAttrNames = extractFieldNames(readStatsManif).toSeq
     val readNames = libType match {
       case Some(LibType.Single) => Seq("read1")
@@ -288,7 +292,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
         val res = metricAttrNames.par
           .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
           .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-        if (res.nonEmpty) (rn, Option(grater(SalatContext, readStatsManif).asObject(res)))
+        if (res.nonEmpty) (rn, Option(seqGrater.asObject(res)))
         else (rn, None)
       }.seq
       .flatMap { case (rn, res) => res.map(r => (rn, r)) }
