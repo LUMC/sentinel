@@ -30,7 +30,7 @@ class GenericRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mon
 
   type RunRecord = GenericRunRecord
 
-  implicit override protected def context: ExecutionContext = ExecutionContext.global
+  implicit private def context: ExecutionContext = ExecutionContext.global
 
   def pipelineName = "generic"
 

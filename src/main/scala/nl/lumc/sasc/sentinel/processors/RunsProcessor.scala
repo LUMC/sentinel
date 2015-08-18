@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
-import scala.concurrent.Future
+import scala.concurrent.{ Future, ExecutionContext }
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
@@ -40,6 +40,12 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     with FutureAdapter {
 
   type RunRecord <: BaseRunRecord with CaseClass
+
+  /** Overridable execution context for this processor. */
+  protected def runsProcessorContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = runsProcessorContext
 
   /** JSON formats used by this processor. */
   implicit val formats = SentinelJsonFormats

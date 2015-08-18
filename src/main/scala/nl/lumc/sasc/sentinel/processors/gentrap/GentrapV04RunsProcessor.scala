@@ -54,7 +54,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
   type ReadGroupRecord = GentrapReadGroupRecord
 
   /** Execution context. */
-  implicit override protected def context: ExecutionContext = ExecutionContext.global
+  implicit private def context: ExecutionContext = ExecutionContext.global
 
   /** Extracts a reference record from a Gentrap summary. */
   private[processors] def extractReference(runJson: JValue): ReferenceRecord = {

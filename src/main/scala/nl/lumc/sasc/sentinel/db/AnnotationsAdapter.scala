@@ -28,8 +28,11 @@ import nl.lumc.sasc.sentinel.utils.FutureAdapter
 /** Trait for connecting to an annotation records collection. */
 trait AnnotationsAdapter extends MongodbConnector with FutureAdapter {
 
-  /** Execution context for User database operations. */
-  implicit protected def context: ExecutionContext = ExecutionContext.global
+  /** Overridable execution context for this adapter. */
+  protected def annotationsAdapterContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = annotationsAdapterContext
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Annotations)

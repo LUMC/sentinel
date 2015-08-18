@@ -30,8 +30,11 @@ import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends MongodbConnector with FutureAdapter {
 
-  /** Execution context for User database operations. */
-  implicit protected def context: ExecutionContext = ExecutionContext.global
+  /** Overridable execution context for this adapter. */
+  protected def usersAdapterContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = usersAdapterContext
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Users)

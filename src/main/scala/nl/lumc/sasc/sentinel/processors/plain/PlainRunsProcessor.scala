@@ -42,7 +42,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   type RunRecord = nl.lumc.sasc.sentinel.models.RunRecord
 
-  implicit override protected def context: ExecutionContext = ExecutionContext.global
+  implicit private def context: ExecutionContext = ExecutionContext.global
 
   def pipelineName = "plain"
 

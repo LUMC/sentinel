@@ -26,9 +26,6 @@ import scalaz._
  */
 trait FutureAdapter {
 
-  /** Default execution context. */
-  implicit protected def context: ExecutionContext
-
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds
 

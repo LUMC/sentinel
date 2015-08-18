@@ -37,8 +37,11 @@ trait SamplesAdapter
   /** Sample-level metrics container. */
   type SampleRecord <: BaseSampleRecord with CaseClass
 
-  /** Execution context for User database operations. */
-  implicit protected def context: ExecutionContext = ExecutionContext.global
+  /** Overridable execution context for this adapter. */
+  protected def samplesAdapterExecutionContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = samplesAdapterExecutionContext
 
   /** Collection of the units. */
   private lazy val coll = mongo.db(collectionNames.pipelineSamples(pipelineName))

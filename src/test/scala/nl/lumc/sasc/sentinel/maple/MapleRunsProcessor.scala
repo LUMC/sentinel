@@ -47,7 +47,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   type ReadGroupRecord = MapleReadGroupRecord
 
   /** Execution context. */
-  implicit override protected def context: ExecutionContext = ExecutionContext.global
+  implicit private def context: ExecutionContext = ExecutionContext.global
 
   /** Exposed pipeline name. */
   def pipelineName = "maple"

@@ -37,8 +37,11 @@ trait ReadGroupsAdapter
   /** Read group-level metrics container. */
   type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
 
-  /** Execution context for User database operations. */
-  implicit protected def context: ExecutionContext = ExecutionContext.global
+  /** Overridable execution context for this adapter. */
+  protected def readGroupsAdapterExecutionContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = readGroupsAdapterExecutionContext
 
   /** Collection of the units. */
   private lazy val coll = mongo.db(collectionNames.pipelineReadGroups(pipelineName))
