@@ -71,6 +71,8 @@ object SentinelBuild extends Build {
       .setPreference(SpacesWithinPatternBinders, true)
   }
 
+  lazy val IntegrationTest = config("it").extend(Test)
+
   lazy val headerSettings = Seq(HeaderPlugin.autoImport.headers := Map(
     "scala" -> (
       HeaderPattern.cStyleBlockComment,
