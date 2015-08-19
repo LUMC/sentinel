@@ -30,6 +30,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.servlet.FileItem
+import org.scalatra.util.io.readBytes
 
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.BaseRunRecord
@@ -71,7 +72,7 @@ package object utils {
   }
 
   /** Retrieves a resource as a byte array. */
-  def getResourceBytes = getResourceStream _ andThen getByteArray andThen ((res: (Array[Byte], Boolean)) => res._1)
+  def readResourceBytes = getResourceStream _ andThen readBytes
 
   /**
    * Given a case class type, return the names of its fields.

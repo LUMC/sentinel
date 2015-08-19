@@ -30,7 +30,7 @@ import org.specs2.specification.{ Fragments, Step }
 import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
 import nl.lumc.sasc.sentinel.db.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, getResourceBytes }
+import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, readResourceBytes }
 
 /** Base trait for Sentinel servlet testing. */
 trait SentinelServletSpec extends MutableScalatraSpec
@@ -196,5 +196,5 @@ object SentinelServletSpec {
    */
   def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
     fileName = resourceUrl.split("/").last,
-    content = getResourceBytes(resourceUrl))
+    content = readResourceBytes(resourceUrl))
 }
