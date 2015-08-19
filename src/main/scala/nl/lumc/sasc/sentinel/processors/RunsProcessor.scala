@@ -23,7 +23,6 @@ import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
-import org.scalatra.servlet.FileItem
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
@@ -40,9 +39,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     with FutureAdapter {
 
   type RunRecord <: BaseRunRecord with CaseClass
-
-  /** Type alias for Scalatra file uploads. */
-  type FileUpload = FileItem
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global

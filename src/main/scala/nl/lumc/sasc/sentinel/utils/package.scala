@@ -40,6 +40,9 @@ package object utils {
 
   trait Implicits {
 
+    /** Type alias for Scalatra file uploads. */
+    type FileUpload = FileItem
+
     /** Implicit class for adding our custom read function to an uploaded file item. */
     implicit class RichFileItem(fi: FileItem) {
       def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
