@@ -53,9 +53,9 @@ case class MapleSampleStatsAggr(nSnps: DataPointAggr)
 /** Container for a single Maple read group. */
 case class MapleReadGroupRecord(
   stats: MapleReadGroupStats,
-  isPaired: Boolean = true,
   uploaderId: String,
   runId: ObjectId,
+  isPaired: Boolean = true,
   readGroupName: Option[String] = None,
   sampleName: Option[String] = None,
   runName: Option[String] = None,
@@ -64,9 +64,9 @@ case class MapleReadGroupRecord(
 
 /** Container for a single Maple read group statistics. */
 case class MapleReadGroupStats(
-  labels: Option[DataPointLabels] = None,
   nReadsInput: Long,
-  nReadsAligned: Long)
+  nReadsAligned: Long,
+  labels: Option[DataPointLabels] = None)
 
 /** Container for aggregated Maple read group statistics. */
 case class MapleReadGroupStatsAggr(
