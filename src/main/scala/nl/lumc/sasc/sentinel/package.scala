@@ -28,7 +28,7 @@ package object sentinel {
   val CurrentApiVersion = "0.1.0"
 
   /** Header API key */
-  val HeaderApiKey = "X-SENTINEL-KEY"
+  val HeaderApiKey = "X-Sentinel-Key"
 
   object settings {
 
