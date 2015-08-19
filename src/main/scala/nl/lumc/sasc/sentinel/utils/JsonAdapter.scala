@@ -17,13 +17,27 @@
 package nl.lumc.sasc.sentinel.utils
 
 import java.io.ByteArrayInputStream
+import scala.util.{ Failure, Success, Try }
+
+import org.json4s._
+import org.json4s.jackson.JsonMethods.parse
 
 import nl.lumc.sasc.sentinel.utils.exceptions.JsonValidationException
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
+
+/** Trait for parsing JSON. */
+trait JsonAdapter {
+
+  /**
+   * Parses the given byte array into JSON.
+   *
+   * @param byteContents Raw bytes to parse.
+   * @return JValue object.
+   */
+  def parseJson(byteContents: Array[Byte]): JValue = parse(new ByteArrayInputStream(byteContents))
+}
 
 /** Trait for validating input JSON with a schema. */
-trait JsonValidationAdapter {
+trait JsonValidationAdapter extends JsonAdapter {
 
   /** Resource URL for JSON schema file. */
   def jsonSchemaUrl: String
@@ -37,7 +51,7 @@ trait JsonValidationAdapter {
    * @param schemaResourceUrl URL of the JSON schema.
    * @return a JSON validator.
    */
-  def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
+  protected def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
 
   /**
    * Parses the given byte array into as a JSON file.
@@ -45,17 +59,13 @@ trait JsonValidationAdapter {
    * @param byteContents raw byte contents to parse.
    * @return JSON object representation.
    */
-  def parseAndValidate(byteContents: Array[Byte]): JValue = {
-    val json =
-      try {
-        parse(new ByteArrayInputStream(byteContents))
-      } catch {
-        case exc: Exception =>
-          throw new JsonValidationException("File is not JSON-formatted.")
-      }
+  def parseAndValidateJson(byteContents: Array[Byte]): JValue = {
+    val json = Try(parseJson(byteContents)) match {
+      case Success(jv) => jv
+      case Failure(_)  => throw new JsonValidationException("File is not JSON-formatted.")
+    }
     val valResult = jsonValidator.validate(json)
-    if (!valResult.isSuccess)
-      throw new JsonValidationException("JSON run summary is invalid.", Option(valResult))
+    if (!valResult.isSuccess) throw new JsonValidationException("JSON run summary is invalid.", Option(valResult))
     else json
   }
 }

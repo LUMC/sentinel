@@ -112,7 +112,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       // Read uncompressed input stream
       byteContents <- Future { uploaded.readUncompressedBytes() }
       // Make sure it is JSON
-      runJson <- Future { parseAndValidate(byteContents) }
+      runJson <- Future { parseAndValidateJson(byteContents) }
       // Store the raw file in our database
       fileId <- storeFile(byteContents, uploader, uploaded.getName)
       // Extract run, samples, and read groups

@@ -105,7 +105,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     logger.info(requestLog)
     // validate and load patch operations ~ based on the JSON patch spec *not* our own requirements (yet)
-    val patchOps = Try(patchValidator.parseAndValidate(request.body.getBytes)) match {
+    val patchOps = Try(patchValidator.parseAndValidateJson(request.body.getBytes)) match {
 
       // validation fails
       case Failure(f) =>

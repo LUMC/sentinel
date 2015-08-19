@@ -271,7 +271,7 @@ class GentrapV04RunsProcessor(mongo: MongodbAccessObject)
     // TODO: Explore other types that are more expressive than Try to store state.
     for {
       byteContents <- Future { uploaded.readUncompressedBytes() }
-      runJson <- Future { parseAndValidate(byteContents) }
+      runJson <- Future { parseAndValidateJson(byteContents) }
       fileId <- storeFile(byteContents, uploader, uploaded.getName)
       runRef <- Future { extractReference(runJson) }
       ref <- getOrCreateReference(runRef)
