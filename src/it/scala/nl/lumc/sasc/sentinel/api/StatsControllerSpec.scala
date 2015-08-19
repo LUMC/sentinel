@@ -29,7 +29,7 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.maple.MapleRunsProcessor],
     runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/stats"
   val statsServlet = new TestStatsController
@@ -53,10 +53,10 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
 
       new Context.PriorRunUploadClean {
 
-        def upload1 = UploadSet(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG, "gentrap")
-        def upload2 = UploadSet(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleMRG, "gentrap")
+        def upload1 = UploadSet(UserExamples.admin, SummaryExamples.Maple.SSampleMRG, "maple")
+        def upload2 = UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleMRG, "maple")
         def upload3 = UploadSet(UserExamples.avg2, SummaryExamples.Plain, "plain")
-        def upload4 = UploadSet(UserExamples.avg, LumcSummaryExamples.Gentrap.V04.MSampleSRG, "gentrap")
+        def upload4 = UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleSRG, "maple")
 
         def priorRequests = Seq(upload1, upload2, upload3, upload4).map(_.request)
 
@@ -78,14 +78,14 @@ class StatsControllerSpec extends SentinelServletSpec { self =>
 
             "which" should {
 
-              "contain statistics over the first pipeline" in {
-                priorResponse.body must /#(0) /("pipelineName" -> "gentrap")
-                priorResponse.body must /#(0) /("nReadGroups" -> 10)
+              "contain statistics of the first pipeline" in {
+                priorResponse.body must /#(0) /("pipelineName" -> "maple")
+                priorResponse.body must /#(0) /("nReadGroups" -> 7)
                 priorResponse.body must /#(0) /("nRuns" -> 3)
-                priorResponse.body must /#(0) /("nSamples" -> 6)
+                priorResponse.body must /#(0) /("nSamples" -> 5)
               }
 
-              "contain statistics over the second pipeline" in {
+              "contain statistics of the second pipeline" in {
                 priorResponse.body must /#(1) /("pipelineName" -> "plain")
                 priorResponse.body must /#(1) /("nReadGroups" -> 0)
                 priorResponse.body must /#(1) /("nRuns" -> 1)
