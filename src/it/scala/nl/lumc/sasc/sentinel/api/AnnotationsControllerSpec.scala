@@ -16,23 +16,17 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import org.scalatra.test.Uploadable
-
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
-  sequential
-
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.pann.PannRunsProcessor],
     runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/annotations"
   val annotsServlet = new AnnotationsController
@@ -72,14 +66,10 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
     "using a summary file that contain annotation entries" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
-        def request = () => post(uploadEndpoint, params,
-          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
-        def priorRequests = Seq(request)
+        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
+        def priorRequests = Seq(uploadSet.request)
 
         "after the run summary file is uploaded" in {
           priorResponses.head.status mustEqual 201
@@ -96,13 +86,13 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
               priorResponse.status mustEqual 200
             }
 
-            "return a JSON list containing 3 objects" in {
+            "return a JSON list containing 2 objects" in {
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(3)
+              priorResponse.jsonBody must haveSize(2)
             }
 
             "each of which" should {
-              Range(0 ,3) foreach { idx =>
+              Range(0 ,2) foreach { idx =>
                 val item = idx + 1
                 s"have the expected attributes (object #$item)" in {
                   priorResponse.body must /#(idx) /("annotId" -> """\S+""".r)
@@ -117,23 +107,11 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
     "using multiple summary files that contain overlapping annotation entries should" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def pipeline = "gentrap"
-
-        def makeUpload(uploader: User, uploaded: Uploadable): Req = {
-          val params = Seq(("userId", uploader.id), ("pipeline", pipeline))
-          val headers = Map(HeaderApiKey -> uploader.activeKey)
-          () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
-        }
-
-        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG)
-        def upload2 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleMRG)
-        def upload3 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleSRG)
-        def upload4 = makeUpload(UserExamples.avg, SummaryExamples.Plain)
-
-        def priorRequests = Seq(upload1, upload2, upload3)
+        def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
+        def uploadSet2 = UploadSet(UserExamples.admin, SummaryExamples.Pann.Ann2, "pann")
+        def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
 
         "after the first file is uploaded" in {
           priorResponses.head.status mustEqual 201
@@ -141,10 +119,6 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
         "after the second file is uploaded" in {
           priorResponses(1).status mustEqual 201
-        }
-
-        "after the third file is uploaded" in {
-          priorResponses(2).status mustEqual 201
         }
 
         "when using the default parameters should" >> inline {
@@ -192,14 +166,10 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
     "using a run summary file that contain annotation entries" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
-        def upload = () => post(uploadEndpoint, params,
-          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
-        def priorRequests = Seq(upload)
+        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
+        def priorRequests = Seq(uploadSet.request)
         def annotIds = (parse(priorResponse.body) \ "annotIds").extract[Seq[String]]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]
 
