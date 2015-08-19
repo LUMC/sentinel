@@ -1,5 +1,5 @@
 {
-  "run_name": "Maple_04",
+  "run_name": "Maple_03",
   "samples": {
     "sample_A": {
       "readGroups": {
@@ -15,10 +15,6 @@
         "rg_1": {
           "nReadsInput": 20000,
           "nReadsAligned": 15000
-        },
-        "rg_2": {
-          "nReadsInput": 40000,
-          "nReadsAligned": 30000
         }
       },
       "nSnps": 250

@@ -106,6 +106,16 @@ package object api {
 
     object Maple {
 
+      /** Single sample, single read group. */
+      lazy val SSampleSRG = makeUploadable("/summary_examples/maple/maple_single_sample_single_rg.json")
+
+      /** Single sample, multiple read groups. */
+      lazy val SSampleMRG = makeUploadable("/summary_examples/maple/maple_single_sample_multi_rg.json")
+
+      /** Multiple samples, single read group each. */
+      lazy val MSampleSRG = makeUploadable("/summary_examples/maple/maple_multi_sample_single_rg.json")
+
+      /** Multiple samples, multiple read groups. */
       lazy val MSampleMRG = makeUploadable("/summary_examples/maple/maple_multi_sample_multi_rg.json")
 
     }
