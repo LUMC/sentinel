@@ -21,14 +21,16 @@ import java.io.File
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
-import scalaz._, Scalaz._
+import scalaz._
 
 import nl.lumc.sasc.sentinel.{ DeletionError, HeaderApiKey }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
-import nl.lumc.sasc.sentinel.db._
-import nl.lumc.sasc.sentinel.processors.{ GenericRunsProcessor, RunsProcessor }
+import nl.lumc.sasc.sentinel.adapters._
+import nl.lumc.sasc.sentinel.exts.plain._
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.utils.exceptions._
 
 /**
@@ -38,7 +40,7 @@ import nl.lumc.sasc.sentinel.utils.exceptions._
  * @param mongo Object for accessing the database.
  */
 class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
-                     runsProcessorMakers: Set[MongodbAccessObject => RunsProcessor] = Set.empty)
+                     runsProcessors: Set[MongodbAccessObject => RunsProcessor] = Set.empty)
     extends SentinelServlet
     with FileUploadSupport
     with AuthenticationSupport { self =>
@@ -50,16 +52,19 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
 
   /** Adapter for connecting to run collections. */
-  val runs = new GenericRunsProcessor(mongo)
+  val runs = new PlainRunsProcessor(mongo)
 
   /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Container for supported pipelines. */
-  protected lazy val supportedPipelines = runsProcessorMakers.map { f =>
+  protected lazy val supportedPipelines = runsProcessors.map { f =>
     val proc = f(mongo)
     (proc.pipelineName, proc)
   }.toMap
+
+  /** Documentation string for available pipeline parameters. */
+  protected lazy val supportedPipelineParams = "`" + supportedPipelines.keySet.mkString("`, `") + "`"
 
   /** Set maximum allowed file upload size. */
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))
@@ -139,7 +144,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
-  val runsRunIdGetOperation = (apiOperation[GenericRunRecord]("runsRunIdGet")
+  val runsRunIdGetOperation = (apiOperation[PlainRunRecord]("runsRunIdGet")
     summary "Retrieves single run summaries."
     notes
       """This endpoint retrieves the a single record of an uploaded summary. Optionally, you can also download the
@@ -187,13 +192,13 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsPostOperation = (apiOperation[GenericRunRecord]("runsPost")
+  val runsPostOperation = (apiOperation[PlainRunRecord]("runsPost")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
       headerParam[String](HeaderApiKey).description("User API key."),
       queryParam[String]("pipeline")
-        .description("Name of the pipeline that produces the uploaded summary. Valid values are `gentrap` or `plain`.")
+        .description(s"Name of the pipeline that produces the uploaded summary. Valid values are $supportedPipelineParams.")
         .allowableValues(supportedPipelines.keys),
       formParam[File]("run").description("Run summary file."))
     responseMessages (
@@ -225,7 +230,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsGetOperation = (apiOperation[Seq[GenericRunRecord]]("runsGet")
+  val runsGetOperation = (apiOperation[Seq[PlainRunRecord]]("runsGet")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
@@ -237,7 +242,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       headerParam[String](HeaderApiKey).description("Run summary uploader API key."),
       queryParam[Seq[String]]("pipelines")
         .description(
-          """Filters for summaries produced by the given pipeline. Valid values are `gentrap`, `plain`. If not
+          s"""Filters for summaries produced by the given pipeline. Valid values are $supportedPipelineParams. If not
             | specified, all run summaries are returned.""".stripMargin.replaceAll("\n", ""))
         .allowableValues(supportedPipelines.keys)
         .optional)

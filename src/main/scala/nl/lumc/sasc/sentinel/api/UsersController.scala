@@ -25,10 +25,10 @@ import scalaz._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
-import nl.lumc.sasc.sentinel.db._
+import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.exceptions.{ ExistingUserIdException, JsonValidationException }
-import nl.lumc.sasc.sentinel.utils.JsonValidationAdapter
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /**
  * Controller for the `/users` endpoint.

@@ -19,8 +19,9 @@ package nl.lumc.sasc.sentinel.api
 import org.scalatra._
 import org.scalatra.swagger._
 
-import nl.lumc.sasc.sentinel.db._
+import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /**
  * Controller for the `/annotations` endpoint.

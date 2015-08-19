@@ -25,16 +25,16 @@ import scala.language.reflectiveCalls
 import org.scalatra.auth.{ ScentryConfig, ScentrySupport }
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
-import nl.lumc.sasc.sentinel.db.UsersAdapter
+import nl.lumc.sasc.sentinel.adapters.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
+import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /**
  * Authentication trait for Sentinel controllers.
  *
  * Supported authentication methods are Basic HTTP and API key authentication (via parameters in the
  * HTTP header and request URL). Controllers mixing in this trait must define a `users` field which is an instance
- * of the [[nl.lumc.sasc.sentinel.db.UsersAdapter]] object.
+ * of the [[nl.lumc.sasc.sentinel.adapters.UsersAdapter]] object.
  *
  * This trait is meant to be mixed with any Sentinel controller that needs to secure one or more of its endpoints with
  * authentication.
@@ -65,6 +65,6 @@ trait AuthenticationSupport extends ScentrySupport[User]
 
   // NOTE: Scentry caches authentication and we've turned it off using our ad-hoc ScentryAuthStore. But these two methods
   //       still needs to be implemented, so we are implementing something minimum
-  protected def fromSession = { case id: String => User(id, "", "", "", verified = false, isAdmin = false, getUtcTimeNow) }
+  protected def fromSession = { case id: String => User(id, "", "", "", verified = false, isAdmin = false, utcTimeNow) }
   protected def toSession = { case user: User => user.id }
 }

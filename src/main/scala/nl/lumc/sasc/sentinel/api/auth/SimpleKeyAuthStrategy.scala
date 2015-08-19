@@ -26,7 +26,7 @@ import org.scalatra.auth.{ ScentryStrategy, ScentrySupport }
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.SentinelServlet
-import nl.lumc.sasc.sentinel.db.UsersAdapter
+import nl.lumc.sasc.sentinel.adapters.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
 
 /**
@@ -36,7 +36,7 @@ import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
  * him/herself by providing a `userId` parameter in the request URL and an X-SENTINEL-KEY in the HTTP request header.
  *
  * Servlets using this authentication strategy must define an attribute `users` which points to a
- * [[nl.lumc.sasc.sentinel.db.UsersAdapter]] instance.
+ * [[nl.lumc.sasc.sentinel.adapters.UsersAdapter]] instance.
  *
  * @param app [[SentinelServlet]] object using this authentication strategy.
  */

@@ -62,32 +62,41 @@ object BaseRunRecord {
   val hiddenAttributes = Set("sampleIds", "readGroupIds")
 }
 
-/** Simple implementation of a run record for schema display. */
-// FIXME: Can we make the schema work with traits? Because this is essentially the traits made concrete.
-case class GenericRunRecord(
-  runId: ObjectId,
-  uploaderId: String,
-  pipeline: String,
-  creationTimeUtc: Date,
-  runName: Option[String] = None,
-  deletionTimeUtc: Option[Date] = None,
-  sampleIds: Seq[ObjectId] = Seq.empty,
-  readGroupIds: Seq[ObjectId] = Seq.empty) extends BaseRunRecord
+/** Representation of a sequencing accumulation level unit. */
+@Salat abstract class BaseUnitRecord {
 
-/**
- * Simple implementation of a run record with a single reference and multiple annotations.
- *
- * @param refId Reference record ID contained in the sample.
- * @param annotIds Annotation record IDs contained in the sample.
- */
-case class RunRecord(
-  runId: ObjectId,
-  uploaderId: String,
-  pipeline: String,
-  creationTimeUtc: Date,
-  runName: Option[String] = None,
-  deletionTimeUtc: Option[Date] = None,
-  sampleIds: Seq[ObjectId] = Seq.empty,
-  readGroupIds: Seq[ObjectId] = Seq.empty,
-  refId: Option[ObjectId] = None,
-  annotIds: Option[Seq[ObjectId]] = None) extends BaseRunRecord
+  /** Internal database ID for the document. */
+  @Key("_id") def dbId: ObjectId
+
+  /** Name of the uploader of the run summary which contains this unit. */
+  @Persist def uploaderId: String
+
+  /** Database sample ID. */
+  @Persist def runId: ObjectId
+
+  /** Name of the run that produced this unit. */
+  @Persist def runName: Option[String]
+
+  /** UTC time when the sample document was created. */
+  @Persist def creationTimeUtc: Date
+}
+
+/** Representation of a sample within a run. */
+@Salat abstract class BaseSampleRecord extends BaseUnitRecord {
+
+  /** Sample name. */
+  @Persist def sampleName: Option[String]
+}
+
+/** Representation of a read group metrics. */
+@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord {
+
+  /** Name of the sample which this read group belongs to. */
+  @Persist def sampleName: Option[String]
+
+  /** Library name. */
+  @Persist def readGroupName: Option[String]
+
+  /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
+  @Persist def isPaired: Boolean
+}

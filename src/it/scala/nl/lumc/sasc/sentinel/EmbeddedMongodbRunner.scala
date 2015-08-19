@@ -27,7 +27,7 @@ import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
 import org.slf4j.helpers.NOPLoggerFactory
 
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 trait EmbeddedMongodbRunner {
 

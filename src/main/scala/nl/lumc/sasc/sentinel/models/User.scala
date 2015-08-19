@@ -25,7 +25,7 @@ import org.mindrot.jbcrypt.BCrypt
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.settings._
-import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
+import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /**
  * Representation of a user.
@@ -46,7 +46,7 @@ case class User(
     activeKey: String,
     verified: Boolean,
     isAdmin: Boolean,
-    creationTimeUtc: Date = getUtcTimeNow,
+    creationTimeUtc: Date = utcTimeNow,
     _id: ObjectId = new ObjectId,
     updateTimeUtc: Option[Date] = None) {
 
@@ -180,7 +180,7 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
       activeKey = User.generateApiKey(),
       verified = false,
       isAdmin = false,
-      creationTimeUtc = getUtcTimeNow,
+      creationTimeUtc = utcTimeNow,
       _id = new ObjectId)
 }
 

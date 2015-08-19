@@ -24,9 +24,8 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import com.mongodb.casbah.Imports._
 
 import nl.lumc.sasc.sentinel.{ AccLevel, CaseClass, LibType }
-import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.extractFieldNames
+import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, MongodbAccessObject }
 
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.

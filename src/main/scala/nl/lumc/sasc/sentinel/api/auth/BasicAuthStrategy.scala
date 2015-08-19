@@ -25,7 +25,7 @@ import org.scalatra.{ Forbidden, ScalatraBase }
 import org.scalatra.auth.ScentrySupport
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
-import nl.lumc.sasc.sentinel.db.UsersAdapter
+import nl.lumc.sasc.sentinel.adapters.UsersAdapter
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
 
 /**
@@ -34,7 +34,7 @@ import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
  * Encapsulates the basic HTTP method authentication used by sentinel.
  *
  * Servlets using this authentication strategy must define an attribute `users` which points to a
- * [[nl.lumc.sasc.sentinel.db.UsersAdapter]] instance.
+ * [[nl.lumc.sasc.sentinel.adapters.UsersAdapter]] instance.
  *
  * @param app [[SentinelServlet]] object using this authentication strategy.
  * @param realm Name of the realm which uses this authentication strategy.

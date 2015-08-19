@@ -19,15 +19,15 @@ package nl.lumc.sasc.sentinel.api
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
+import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.pann.PannRunsProcessor],
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
+    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.pann.PannRunsProcessor],
+    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
   val baseEndpoint = "/annotations"
   val annotsServlet = new AnnotationsController
   val runsServlet = new RunsController

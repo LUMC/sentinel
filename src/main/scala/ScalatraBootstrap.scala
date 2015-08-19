@@ -23,8 +23,9 @@ import scala.util.Try
 
 import nl.lumc.sasc.sentinel.{ HeaderApiKey, settings }, settings._
 import nl.lumc.sasc.sentinel.api._
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
-import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
+import nl.lumc.sasc.sentinel.biopet.gentrap.GentrapRunsProcessor
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 /** Main entry point for mounted servlets. */
 class ScalatraBootstrap extends LifeCycle {
@@ -43,9 +44,7 @@ class ScalatraBootstrap extends LifeCycle {
 
     implicit val mongo = MongodbAccessObject.withDefaultSettings
     implicit val system = ActorSystem("appActorSystem")
-    implicit val runsProcessorMakers = Set(
-      runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
-      runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
+    implicit val runsProcessors = Set(makeDelayedProcessor[GentrapRunsProcessor])
 
     // Check that we have a live connection to the DB
     mongo.db.getStats()
@@ -53,7 +52,7 @@ class ScalatraBootstrap extends LifeCycle {
     // TODO: separate production and development behavior more cleanly
     try {
       context mount (new RootController, "/*")
-      context mount (new LumcStatsController, "/stats/*")
+      context mount (new StatsController, "/stats/*")
       context mount (new ReferencesController, "/references/*")
       context mount (new AnnotationsController, "/annotations/*")
       context mount (new RunsController, "/runs/*")

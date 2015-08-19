@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.models
 
 import com.novus.salat.annotations.Salat
 
-/** Base class for file entries in [[nl.lumc.sasc.sentinel.models.RunRecord]]. */
+/** Base class for file entries. */
 @Salat abstract class BaseFileRecord {
 
   /** File system path of the file. */
@@ -30,3 +30,11 @@ import com.novus.salat.annotations.Salat
 
 /** Minimal implementation of a file entry. */
 case class FileRecord(path: String, md5: String) extends BaseFileRecord
+
+/**
+ * Sequencing input files, which can be single-end or paired-end.
+ *
+ * @param read1 The first read (if paired-end) or the only read (if single end).
+ * @param read2 The second read. Only defined for paired-end inputs.
+ */
+case class SeqFiles(read1: FileRecord, read2: Option[FileRecord] = None)

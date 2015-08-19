@@ -29,31 +29,13 @@ import scala.util.{ Failure, Success, Try }
 import com.github.fge.jsonschema.core.report.ProcessingReport
 import org.bson.types.ObjectId
 import org.json4s._
-import org.scalatra.servlet.FileItem
 import org.scalatra.util.io.readBytes
 
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.BaseRunRecord
-import nl.lumc.sasc.sentinel.processors.{ RunsProcessor, StatsProcessor }
+import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /** General utilities */
 package object utils {
-
-  trait Implicits {
-
-    /** Type alias for Scalatra file uploads. */
-    type FileUpload = FileItem
-
-    /** Implicit class for adding our custom read function to an uploaded file item. */
-    implicit class RichFileUpload(fi: FileItem) {
-
-      /** Reads the uncompressed contents of the file upload. */
-      def readUncompressedBytes(): Array[Byte] = utils.readUncompressedBytes(fi.getInputStream)._1
-
-      /** Reads the contents of the file upload as is. */
-      def readBytes(): Array[Byte] = org.scalatra.util.io.readBytes(fi.getInputStream)
-    }
-  }
 
   /** Magic byte for all Gzipped files. */
   private val GzipMagic = Seq(0x1f, 0x8b)
@@ -150,7 +132,7 @@ package object utils {
   }
 
   /** Gets the current UTC time. */
-  def getUtcTimeNow: Date = Date.from(Clock.systemUTC().instant)
+  def utcTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
   /** Serializer for outgoing JSON payloads. */
   val RunDocumentSerializer =
@@ -180,35 +162,18 @@ package object utils {
 
     /**
      * Given a [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass, returns a single-parameter function that
-     * takes a [[nl.lumc.sasc.sentinel.db.MongodbAccessObject]] instance and instantiates the runs processor. In other
+     * takes a [[nl.lumc.sasc.sentinel.utils.MongodbAccessObject]] instance and instantiates the runs processor. In other
      * words, the function creates a delayed constructor for the runs processor.
      *
      * @tparam T [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass.
      * @return Delayed constructor for the given class.
      */
-    def runsProcessorMaker[T <: RunsProcessor](implicit m: Manifest[T]) = {
+    def makeDelayedProcessor[T <: RunsProcessor](implicit m: Manifest[T]) = {
       val klass = ru.typeOf[T].typeSymbol.asClass
       val km = mirror.reflectClass(klass)
       val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
       val ctorm = km.reflectConstructor(ctor)
       (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[RunsProcessor]
     }
-
-    /**
-     * Given a [[nl.lumc.sasc.sentinel.processors.StatsProcessor]] subclass, returns a single-parameter function that
-     * takes a [[nl.lumc.sasc.sentinel.db.MongodbAccessObject]] instance and instantiates the stats processor. In other
-     * words, the function creates a delayed constructor for the stats processor.
-     *
-     * @tparam T [[nl.lumc.sasc.sentinel.processors.StatsProcessor]] subclass.
-     * @return Delayed constructor for the given class.
-     */
-    def statsProcessorMaker[T <: StatsProcessor](implicit m: Manifest[T]) = {
-      val klass = ru.typeOf[T].typeSymbol.asClass
-      val km = mirror.reflectClass(klass)
-      val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
-      val ctorm = km.reflectConstructor(ctor)
-      (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[StatsProcessor]
-    }
   }
-
 }

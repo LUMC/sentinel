@@ -20,15 +20,15 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.models.ReferenceRecord
-import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
+import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.pref.PrefRunsProcessor],
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
+    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor],
+    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
   val baseEndpoint = "/references"
   val refsServlet = new ReferencesController
   val runsServlet = new RunsController

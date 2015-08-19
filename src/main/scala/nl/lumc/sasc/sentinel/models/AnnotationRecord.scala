@@ -22,7 +22,7 @@ import com.novus.salat.annotations._
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.utils.getUtcTimeNow
+import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /**
  * Representation of an annotation file used in a pipeline run.
@@ -36,7 +36,7 @@ case class AnnotationRecord(
     annotMd5: String,
     fileName: Option[String] = None,
     @Key("_id") annotId: ObjectId = new ObjectId,
-    creationTimeUtc: Date = getUtcTimeNow) {
+    creationTimeUtc: Date = utcTimeNow) {
 
   /* Extension of the annotation file (lower case). */
   lazy val extension: Option[String] = fileName.map { fname => getExtension(fname.toLowerCase) }

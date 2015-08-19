@@ -17,6 +17,8 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
+import nl.lumc.sasc.sentinel.adapters.FutureAdapter
+
 import scala.concurrent.{ Future, ExecutionContext }
 
 import com.mongodb.casbah.Imports._
@@ -26,9 +28,8 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._
 
 import nl.lumc.sasc.sentinel.{ CaseClass, DeletionError }
-import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
-import nl.lumc.sasc.sentinel.utils.{ FutureAdapter, Implicits, SentinelJsonFormats, calcMd5, getUtcTimeNow }
+import nl.lumc.sasc.sentinel.utils._
 import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
 
 /**
@@ -285,7 +286,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
         .findAndModify(
           query = MongoDBObject("_id" -> runId,
             "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck,
-          update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getUtcTimeNow)),
+          update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> utcTimeNow)),
           returnNew = true,
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
         .map { dbo => recordGrater.asObject(dbo) }
