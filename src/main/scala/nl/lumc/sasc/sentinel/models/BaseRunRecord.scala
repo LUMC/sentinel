@@ -27,28 +27,28 @@ import nl.lumc.sasc.sentinel.CaseClass
 @Salat abstract class BaseRunRecord { this: CaseClass =>
 
   /** Run name. */
-  def runName: Option[String]
+  @Persist def runName: Option[String]
 
   /** Database run ID. */
   @Key("_id") def runId: ObjectId
 
   /** Run uploader ID. */
-  def uploaderId: String
+  @Persist def uploaderId: String
 
   /** Name of the pipeline that produced the run. */
-  def pipeline: String
+  @Persist def pipeline: String
 
   /** Sample IDs linked to this run. */
-  def sampleIds: Seq[ObjectId]
+  @Persist def sampleIds: Seq[ObjectId]
 
   /** Library IDs linked to this run. */
-  def readGroupIds: Seq[ObjectId]
+  @Persist def readGroupIds: Seq[ObjectId]
 
   /** UTC time when the run record was created. */
-  def creationTimeUtc: Date
+  @Persist def creationTimeUtc: Date
 
   /** UTC time when the run record was deleted. */
-  def deletionTimeUtc: Option[Date]
+  @Persist def deletionTimeUtc: Option[Date]
 
   /** Number of samples in the run summary file used for statistics. */
   @Persist val nSamples: Int = sampleIds.size

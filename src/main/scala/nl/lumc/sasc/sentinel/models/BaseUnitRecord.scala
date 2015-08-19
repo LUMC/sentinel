@@ -28,33 +28,33 @@ import org.bson.types.ObjectId
   @Key("_id") def dbId: ObjectId
 
   /** Name of the uploader of the run summary which contains this unit. */
-  def uploaderId: String
+  @Persist def uploaderId: String
 
   /** Database sample ID. */
-  def runId: ObjectId
+  @Persist def runId: ObjectId
 
   /** Name of the run that produced this unit. */
-  def runName: Option[String]
+  @Persist def runName: Option[String]
 
   /** UTC time when the sample document was created. */
-  def creationTimeUtc: Date
+  @Persist def creationTimeUtc: Date
 }
 
 /** Representation of a sample within a run. */
 @Salat abstract class BaseSampleRecord extends BaseUnitRecord {
 
   /** Sample name. */
-  def sampleName: Option[String]
+  @Persist def sampleName: Option[String]
 }
 
 /** Representation of a read group metrics. */
 @Salat abstract class BaseReadGroupRecord extends BaseUnitRecord {
 
   /** Name of the sample which this read group belongs to. */
-  def sampleName: Option[String]
+  @Persist def sampleName: Option[String]
 
   /** Library name. */
-  def readGroupName: Option[String]
+  @Persist def readGroupName: Option[String]
 
   /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
   @Persist def isPaired: Boolean
