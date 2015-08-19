@@ -1,22 +1,22 @@
 {
-  "run_name": "Maple_04",
+  "runName": "Maple_04",
   "samples": {
-    "sample_A": {
+    "sampleA": {
       "readGroups": {
-        "rg_1": {
+        "rg1": {
           "nReadsInput": 10000,
           "nReadsAligned": 7500
         }
       },
       "nSnps": 200
     },
-    "sample_B": {
+    "sampleB": {
       "readGroups": {
-        "rg_1": {
+        "rg1": {
           "nReadsInput": 20000,
           "nReadsAligned": 15000
         },
-        "rg_2": {
+        "rg2": {
           "nReadsInput": 40000,
           "nReadsAligned": 30000
         }

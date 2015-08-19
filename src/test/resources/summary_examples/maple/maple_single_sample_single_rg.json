@@ -1,9 +1,9 @@
 {
-  "run_name": "Maple_01",
+  "runName": "Maple_01",
   "samples": {
-    "sample_A": {
+    "sampleA": {
       "readGroups": {
-        "rg_1": {
+        "rg1": {
           "nReadsInput": 10000,
           "nReadsAligned": 7500
         }

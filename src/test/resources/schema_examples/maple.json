@@ -3,7 +3,7 @@
   "title": "Maple pipeline schema",
   "description": "Schema for Maple pipeline runs",
   "type": "object",
-  "required": [ "samples", "run_name" ],
+  "required": [ "samples", "runName" ],
 
   "properties": {
 
