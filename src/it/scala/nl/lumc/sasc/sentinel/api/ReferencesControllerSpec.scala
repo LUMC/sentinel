@@ -18,10 +18,8 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.scalatra.test.Uploadable
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.models.ReferenceRecord
 import nl.lumc.sasc.sentinel.utils.reflect.runsProcessorMaker
 
 class ReferencesControllerSpec extends SentinelServletSpec {
@@ -29,7 +27,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
   implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
-    runsProcessorMaker[nl.lumc.sasc.sentinel.processors.gentrap.GentrapV04RunsProcessor],
+    runsProcessorMaker[nl.lumc.sasc.sentinel.pref.PrefRunsProcessor],
     runsProcessorMaker[nl.lumc.sasc.sentinel.processors.plain.PlainRunsProcessor])
   val baseEndpoint = "/references"
   val refsServlet = new ReferencesController
@@ -69,14 +67,10 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
     "using a summary file that contain a reference entry" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
-        def request = () => post(uploadEndpoint, params,
-          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
-        def priorRequests = Seq(request)
+        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
+        def priorRequests = Seq(uploadSet.request)
 
         "after the run summary file is uploaded" in {
           priorResponses.head.status mustEqual 201
@@ -115,23 +109,12 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
     "using multiple summary files that contain overlapping reference entries should" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def pipeline = "gentrap"
-
-        def makeUpload(uploader: User, uploaded: Uploadable): Req = {
-          val params = Seq(("userId", uploader.id), ("pipeline", pipeline))
-          val headers = Map(HeaderApiKey -> uploader.activeKey)
-          () => post(uploadEndpoint, params, Map("run" -> uploaded), headers) { response }
-        }
-
-        def upload1 = makeUpload(UserExamples.admin, LumcSummaryExamples.Gentrap.V04.SSampleMRG)
-        def upload2 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleMRG)
-        def upload3 = makeUpload(UserExamples.avg2, LumcSummaryExamples.Gentrap.V04.MSampleSRG)
-        def upload4 = makeUpload(UserExamples.avg, SummaryExamples.Plain)
-
-        def priorRequests = Seq(upload1, upload2, upload3)
+        def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
+        def uploadSet2 = UploadSet(UserExamples.admin, SummaryExamples.Pref.Ref2, "pref")
+        def uploadSet3 = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref3, "pref")
+        def priorRequests = Seq(uploadSet1, uploadSet2, uploadSet3).map(_.request)
 
         "after the first file is uploaded" in {
           priorResponses.head.status mustEqual 201
@@ -156,18 +139,20 @@ class ReferencesControllerSpec extends SentinelServletSpec {
               priorResponse.status mustEqual 200
             }
 
-            "return a JSON list containing 1 object" in {
+            "return a JSON list containing 2 object" in {
               priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(1)
+              priorResponse.jsonBody must haveSize(2)
             }
 
-            "which should" should {
-              s"have the expected attributes" in {
-                priorResponse.body must /#(0) /("refId" -> """\S+""".r)
-                priorResponse.body must /#(0) /("combinedMd5" -> """\S+""".r)
-                priorResponse.jsonBody must beSome.like { case json =>
-                  (json(0) \ "contigs" \\ "md5").children
-                    .map(_.extract[String]).size must beGreaterThan(0)
+            "each of which" should {
+              Range(0, 2) foreach { idx =>
+                val item = idx + 1
+                s"have the expected attributes (object #$item)" in {
+                  priorResponse.body must /#(idx) /("refId" -> """\S+""".r)
+                  priorResponse.body must /#(idx) /("combinedMd5" -> """\S+""".r)
+                  priorResponse.jsonBody must beSome.like { case json =>
+                    json(idx).extract[ReferenceRecord].contigs.size must beGreaterThan(0)
+                  }
                 }
               }
             }
@@ -191,14 +176,10 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
     "using a run summary file that contains a reference entry" >> inline {
 
-      new Context.PriorRequestsClean {
+      new Context.PriorRunUploadClean {
 
-        def uploadEndpoint = "/runs"
-        def params = Seq(("userId", UserExamples.avg.id), ("pipeline", "gentrap"))
-        def headers = Map(HeaderApiKey -> UserExamples.avg.activeKey)
-        def upload = () => post(uploadEndpoint, params,
-          Map("run" -> LumcSummaryExamples.Gentrap.V04.SSampleSRG), headers) { response}
-        def priorRequests = Seq(upload)
+        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
+        def priorRequests = Seq(uploadSet.request)
         def refId = (parse(priorResponse.body) \ "refId").extract[String]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]
 
