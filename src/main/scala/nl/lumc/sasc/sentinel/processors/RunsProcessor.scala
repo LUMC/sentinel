@@ -69,10 +69,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param byteContents Byte array to store.
    * @param user Uploader of the byte array.
    * @param fileName Original uploaded file name.
-   * @param inputGzipped Whether the input file was gzipped or not.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(byteContents: Array[Byte], user: User, fileName: String, inputGzipped: Boolean): Future[ObjectId] =
+  def storeFile(byteContents: Array[Byte], user: User, fileName: String): Future[ObjectId] =
     Future {
       // TODO: stop using exceptions
       val res =
@@ -82,8 +81,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
             f.contentType = "application/json"
             f.metaData = MongoDBObject(
               "uploaderId" -> user.id,
-              "pipeline" -> pipelineName,
-              "inputGzipped" -> inputGzipped
+              "pipeline" -> pipelineName
             )
           }
         } catch {

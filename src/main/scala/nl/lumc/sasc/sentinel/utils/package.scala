@@ -45,8 +45,13 @@ package object utils {
     type FileUpload = FileItem
 
     /** Implicit class for adding our custom read function to an uploaded file item. */
-    implicit class RichFileItem(fi: FileItem) {
-      def readInputStream(): (Array[Byte], Boolean) = getByteArray(fi.getInputStream)
+    implicit class RichFileUpload(fi: FileItem) {
+
+      /** Reads the uncompressed contents of the file upload. */
+      def readUncompressedBytes(): Array[Byte] = utils.readUncompressedBytes(fi.getInputStream)._1
+
+      /** Reads the contents of the file upload as is. */
+      def readBytes(): Array[Byte] = org.scalatra.util.io.readBytes(fi.getInputStream)
     }
   }
 
@@ -111,12 +116,12 @@ package object utils {
   }
 
   /**
-   * Transforms the given input stream into a byte array.
+   * Transforms the given input stream into a byte array. If the input stream is gzipped, it will be unzipped first.
    *
    * @param is Input stream.
    * @return A tuple of 2 items: the byte array and a boolean indicating whether the input stream was gzipped or not.
    */
-  def getByteArray(is: InputStream): (Array[Byte], Boolean) = {
+  def readUncompressedBytes(is: InputStream): (Array[Byte], Boolean) = {
 
     def readAll(i: InputStream) = Source.fromInputStream(i).map(_.toByte).toArray
 

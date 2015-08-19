@@ -109,12 +109,12 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
    */
   def processRunUpload(uploaded: FileUpload, uploader: User) = {
     for {
-      // Read input stream and checks whether the uploaded file is unzipped or not
-      (byteContents, unzipped) <- Future { uploaded.readInputStream() }
+      // Read uncompressed input stream
+      byteContents <- Future { uploaded.readUncompressedBytes() }
       // Make sure it is JSON
       runJson <- Future { parseAndValidate(byteContents) }
       // Store the raw file in our database
-      fileId <- storeFile(byteContents, uploader, uploaded.getName, unzipped)
+      fileId <- storeFile(byteContents, uploader, uploaded.getName)
       // Extract run, samples, and read groups
       (samples, readGroups) <- Future { extractUnits(runJson, uploader.id, fileId) }
       // Store samples
