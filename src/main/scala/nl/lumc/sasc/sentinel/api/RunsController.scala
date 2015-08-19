@@ -21,8 +21,9 @@ import java.io.File
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
+import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.HeaderApiKey
+import nl.lumc.sasc.sentinel.{ DeletionError, HeaderApiKey }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.db._
 import nl.lumc.sasc.sentinel.processors.{ GenericRunsProcessor, RunsProcessor }
@@ -119,12 +120,19 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     logger.info(requestLog)
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
-    runs.deleteRun(runId, user) match {
-      case None => NotFound(CommonMessages.MissingRunId)
-      case Some((deletedRun, deletionPerformed)) =>
-        if (deletionPerformed) Ok(deletedRun)
-        else Gone(ApiMessage("Run summary already deleted."))
+
+    new AsyncResult {
+      val is = runs.deleteRun(runId, user).map {
+        case \/-(deletedDoc) => Ok(deletedDoc)
+        case -\/(deletionError) => deletionError match {
+          case DeletionError.AlreadyDeleted   => Gone(ApiMessage("Run summary already deleted."))
+          case DeletionError.ResourceNotFound => NotFound(CommonMessages.MissingRunId)
+          case DeletionError.Incomplete       => InternalServerError("Deletion incomplete. Please repeat request.")
+          case otherwise                      => InternalServerError(CommonMessages.Unexpected)
+        }
+      }
     }
+
   }
 
   // Helper matcher for "DELETE /:runId" so that we return the correct error message

@@ -23,8 +23,9 @@ import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
+import scalaz._
 
-import nl.lumc.sasc.sentinel.CaseClass
+import nl.lumc.sasc.sentinel.{ CaseClass, DeletionError }
 import nl.lumc.sasc.sentinel.db.MongodbAccessObject
 import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils.{ FutureAdapter, Implicits, SentinelJsonFormats, calcMd5, getUtcTimeNow }
@@ -39,6 +40,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     with FutureAdapter {
 
   type RunRecord <: BaseRunRecord with CaseClass
+
+  /** Type alias for deletion result. */
+  type DeletionResult[+A] = DeletionError.Value \/ A
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
@@ -179,6 +183,43 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   }
 
   /**
+   * Deletes the raw uploaded file of the given run record.
+   *
+   * @param record Run record of the raw file to delete.
+   * @return
+   */
+  // TODO: how to get the WriteResult of this operation? The underlying Java driver just hides it :(.
+  def deleteRunGridFSEntry(record: RunRecord): Future[Unit] = Future { mongo.gridfs.remove(record.runId) }
+
+  /**
+   * Deletes the sample records of the given run record.
+   *
+   * @param record Run record of the samples to delete.
+   * @return
+   */
+  def deleteRunSamples(record: RunRecord): Future[BulkWriteResult] = Future {
+    val samplesColl = mongo.db(collectionNames.pipelineSamples(record.pipeline))
+    val deleter = samplesColl.initializeUnorderedBulkOperation
+    val query = MongoDBObject("runId" -> record.runId)
+    deleter.find(query).remove()
+    deleter.execute()
+  }
+
+  /**
+   * Deletes the read group records of the given run record.
+   *
+   * @param record Run record of the read groups to delete.
+   * @return
+   */
+  def deleteRunReadGroups(record: RunRecord): Future[BulkWriteResult] = Future {
+    val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(record.pipeline))
+    val builder = readGroupsColl.initializeUnorderedBulkOperation
+    val query = MongoDBObject("runId" -> record.runId)
+    builder.find(query).remove()
+    builder.execute()
+  }
+
+  /**
    * Deletes a run record and its linked entries.
    *
    * When a run record is deleted, the following happens:
@@ -199,46 +240,70 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    *
    * @param runId Run ID to remove.
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
-   * @return Run record with `deletionTimeUtc` attribute and a boolean showing whether the deletion was performed or not.
+   * @return Run record with `deletionTimeUtc` attribute or an enum indicating any deletion errors.
    */
-  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Option[(BaseRunRecord, Boolean)] = {
-    // TODO: use Futures instead
+  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[DeletionResult[RunRecord]] = {
+
+    val recordGrater = grater[RunRecord]
+
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
 
-    val docDeleted = coll
-      .findOne(MongoDBObject("_id" -> runId,
-        "deletionTimeUtc" -> MongoDBObject("$exists" -> true)) ++ userCheck)
-      .map { case dbo => (grater[BaseRunRecord].asObject(dbo), false) }
+    /** Helper method to retrieve run record to delete. */
+    def getExistingRecord(): Future[DeletionResult[RunRecord]] = Future {
+      val maybeDoc = coll
+        .findOne(MongoDBObject("_id" -> runId) ++ userCheck)
+        .map { dbo => recordGrater.asObject(dbo) }
+      maybeDoc match {
+        case Some(doc) => doc.deletionTimeUtc match {
+          case Some(_) => -\/(DeletionError.AlreadyDeleted)
+          case None    => \/-(doc)
+        }
+        case None => -\/(DeletionError.ResourceNotFound)
+      }
+    }
 
-    if (docDeleted.isDefined) docDeleted
-    else {
-      val docToDelete = coll
+    /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
+    def deleteGridFS(record: RunRecord): Future[DeletionResult[Unit]] = deleteRunGridFSEntry(record)
+      .map { unit => \/-(unit) }
+      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+
+    /** Helper method that marks all sample deletion errors as incomplete deletion. */
+    def deleteSamples(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunSamples(record)
+      .map { bwr => \/-(bwr) }
+      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+
+    /** Helper method that marks all read groups deletion errors as incomplete deletion. */
+    def deleteReadGroups(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunReadGroups(record)
+      .map { bwr => \/-(bwr) }
+      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+
+    /** Helper method to mark run document as deleted. */
+    def markRecord(): Future[DeletionResult[RunRecord]] = Future {
+      val doc = coll
         .findAndModify(
           query = MongoDBObject("_id" -> runId,
             "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck,
           update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> getUtcTimeNow)),
           returnNew = true,
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
-        .map { case dbo => (grater[BaseRunRecord].asObject(dbo), true) }
-      docToDelete.foreach {
-        case (doc, _) =>
-          val samplesColl = mongo.db(collectionNames.pipelineSamples(doc.pipeline))
-          val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(doc.pipeline))
-          // remove the GridFS entry
-          mongo.gridfs.remove(doc.runId)
-          // and all samples linked to this run
-          doc.sampleIds.foreach {
-            case oid => samplesColl.remove(MongoDBObject("_id" -> oid))
-          }
-          // and all read groups linked to this run
-          doc.readGroupIds.foreach {
-            case oid => readGroupsColl.remove(MongoDBObject("_id" -> oid))
-          }
+        .map { dbo => recordGrater.asObject(dbo) }
+      doc match {
+        case Some(obj) => \/-(obj)
+        case None      => -\/(DeletionError.Incomplete)
       }
-      docToDelete
     }
+
+    val result = for {
+      record <- EitherT(getExistingRecord())
+      _ <- EitherT(deleteGridFS(record))
+      _ <- EitherT(deleteSamples(record))
+      _ <- EitherT(deleteReadGroups(record))
+      markedRecord <- EitherT(markRecord())
+    } yield markedRecord
+
+    result.run
   }
 
   /**
