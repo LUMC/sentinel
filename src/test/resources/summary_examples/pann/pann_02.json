@@ -1,0 +1,21 @@
+{
+  "runName": "Pann_02",
+  "annotations": {
+    "bed": {
+      "md5": "md5bed",
+      "path": "/path/to/annot.bed"
+    },
+    "vcf2": {
+      "md5": "md5vcf2",
+      "path": "/path/to/annot2.vcf"
+    }
+  },
+  "samples": {
+    "sampleA": {
+      "num": 200
+    },
+    "sampleB": {
+      "num": 250
+    }
+  }
+}

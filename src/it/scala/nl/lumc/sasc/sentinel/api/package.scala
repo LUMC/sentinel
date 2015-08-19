@@ -131,6 +131,15 @@ package object api {
       /** Contains the same reference as Ref2. */
       lazy val Ref3 = makeUploadable("/summary_examples/pref/pref_03.json")
     }
+
+    object Pann {
+
+      /** Contains two annotations. */
+      lazy val Ann1 = makeUploadable("/summary_examples/pann/pann_01.json")
+
+      /** Contains one annotation already in Ann1. */
+      lazy val Ann2 = makeUploadable("/summary_examples/pann/pann_02.json")
+    }
   }
 }
 
