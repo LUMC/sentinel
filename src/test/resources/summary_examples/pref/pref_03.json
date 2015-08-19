@@ -1,0 +1,17 @@
+{
+  "runName": "Pref_03",
+  "reference": {
+    "contigs": {
+      "chr1": {
+        "length": 1100,
+        "md5": "md511"
+      }
+    },
+    "name": "testRef2"
+  },
+  "samples": {
+    "sampleA": {
+      "num": 250
+    }
+  }
+}

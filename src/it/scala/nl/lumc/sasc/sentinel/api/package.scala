@@ -119,6 +119,18 @@ package object api {
       lazy val MSampleMRG = makeUploadable("/summary_examples/maple/maple_multi_sample_multi_rg.json")
 
     }
+
+    object Pref {
+
+      /** Contains a reference. */
+      lazy val Ref1 = makeUploadable("/summary_examples/pref/pref_01.json")
+
+      /** Contains another reference. */
+      lazy val Ref2 = makeUploadable("/summary_examples/pref/pref_02.json")
+
+      /** Contains the same reference as Ref2. */
+      lazy val Ref3 = makeUploadable("/summary_examples/pref/pref_03.json")
+    }
   }
 }
 
