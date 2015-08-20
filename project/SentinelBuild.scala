@@ -12,14 +12,12 @@ import uk.gov.hmrc.gitstamp.GitStampPlugin._
 object SentinelBuild extends Build {
 
   val Organization = "nl.lumc.sasc"
-  val Name = "Sentinel"
   val Version = "0.2.0-SNAPSHOT"
   val ScalaVersion = "2.11.6"
   val JavaVersion = "1.8"
   val ScalatraVersion = "2.3.1"
   val Json4sVersion = "3.2.11"
   val JettyVersion = "9.2.10.v20150310"
-  val JettyRunnerModule = "org.eclipse.jetty" % "jetty-runner" % JettyVersion % "container"
 
   lazy val dependencies = Seq(
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
@@ -95,64 +93,88 @@ object SentinelBuild extends Build {
         |""".stripMargin
       ))) ++ AutomateHeaderPlugin.automateFor(IntegrationTest)
 
-  lazy val jettyRunnerSettings = jetty(Seq(JettyRunnerModule))
+  lazy val rootSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++
+    Seq(
+    initialize := {
+      val _ = initialize.value
+      if (sys.props("java.specification.version") != JavaVersion)
+        sys.error("Sentinel requires Java 8.")
+    },
+    scalaVersion := ScalaVersion,
+    scalacOptions ++= Seq(
+      "-unchecked",
+      "-deprecation",
+      "-feature",
+      "-target:jvm-1.8",
+      "-Xmax-classfile-name", "200"),
+    scapegoatConsoleOutput := false,
+    // Since we use a lot of MongoDB operators, which look like interpolated strings.
+    scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),
+    testOptions in Test += Tests.Argument("console", "junitxml"),
+    testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
+    ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
+    resolvers += Classpaths.typesafeReleases,
+    resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
+    resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
+    resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
+    ScalariformKeys.preferences := formattingPreferences)
+
+  val commonSettings = rootSettings ++ Defaults.itSettings ++ headerSettings
 
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
-  lazy val commandAliases = addCommandAlias("assembly-fulltest", ";test; it:test; assembly")
-
-  lazy val projectSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++ jettyRunnerSettings ++
-    headerSettings ++ Defaults.itSettings ++ docsSiteSettings ++ gitStampSettings ++ commandAliases ++
-    Seq(
-      organization := Organization,
-      name := Name,
-      version := Version,
-      initialize := {
-        val _ = initialize.value
-        if (sys.props("java.specification.version") != JavaVersion)
-          sys.error("Sentinel requires Java 8.")
-      },
-      scalaVersion := ScalaVersion,
-      scalacOptions ++= Seq(
-        "-unchecked",
-        "-deprecation",
-        "-feature",
-        "-target:jvm-1.8",
-        "-Xmax-classfile-name", "200"),
-      scapegoatConsoleOutput := false,
-      // Since we use a lot of MongoDB operators, which look like interpolated strings.
-      scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),
-      testOptions in Test += Tests.Argument("console", "junitxml"),
-      testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
-      resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
-        (managedBase, base) =>
-          val webappBase = base / "src" / "main" / "webapp"
-          for {
-            (from, to) <- webappBase ** "*" pair rebase(webappBase, managedBase / "main" / "webapp")
-          } yield {
-            Sync.copy(from, to)
-            to
-          }
-      },
-      mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
-      test in assembly := {},
-      assemblyMergeStrategy in assembly := {
-        // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
-        case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
-        case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
-      },
-      assemblyJarName in assembly := Name + "-" + Version + ".jar",
-      ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-      resolvers += Classpaths.typesafeReleases,
-      resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
-      resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-      resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
-      ScalariformKeys.preferences := formattingPreferences,
-      dependencyOverrides ++= Set(JettyRunnerModule),
-      libraryDependencies ++= dependencies)
-
-  lazy val project = Project("sentinel",  file("."))
+  lazy val sentinel = Project(
+      id = "sentinel",
+      base = file("sentinel"),
+      settings = commonSettings ++ docsSiteSettings ++ Seq(
+        organization := Organization,
+        name := "sentinel",
+        version := Version,
+        libraryDependencies ++= dependencies))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-    .settings(projectSettings)
+
+  lazy val sentinelLumcVersion = "0.2.0-SNAPSHOT"
+
+  lazy val noPublish = Seq(publish := {}, publishLocal := {})
+
+  lazy val JettyRunnerModule = "org.eclipse.jetty" % "jetty-runner" % JettyVersion % "container"
+
+  lazy val sentinelLumc = Project(
+      id = "sentinel-lumc",
+      base = file("sentinel-lumc"),
+      settings = noPublish ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++
+        jetty(Seq(JettyRunnerModule)) ++ gitStampSettings ++ commonSettings ++
+        Seq(
+          organization := Organization,
+          name := "sentinel-lumc",
+          version := sentinelLumcVersion,
+          resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
+            (managedBase, base) =>
+              val webappBase = base / "src" / "main" / "webapp"
+              for {
+                (from, to) <- webappBase ** "*" pair rebase(webappBase, managedBase / "main" / "webapp")
+              } yield {
+                Sync.copy(from, to)
+                to
+              }
+          },
+          mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
+          test in assembly := {},
+          assemblyMergeStrategy in assembly := {
+            // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
+            case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
+            case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
+          },
+          assemblyJarName in assembly := "Sentinel-" + sentinelLumcVersion + ".jar",
+          dependencyOverrides ++= Set(JettyRunnerModule)))
+    .enablePlugins(AutomateHeaderPlugin)
+    .configs(IntegrationTest)
+    .dependsOn(sentinel % "it->it;test->test;compile->compile")
+
+  lazy val sentinelRoot = Project(
+    id = "sentinel-root",
+    base = file("."),
+    settings = rootSettings ++ noPublish,
+    aggregate = Seq(sentinel, sentinelLumc))
 }
