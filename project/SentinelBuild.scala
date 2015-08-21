@@ -93,7 +93,7 @@ object SentinelBuild extends Build {
         |""".stripMargin
       ))) ++ AutomateHeaderPlugin.automateFor(IntegrationTest)
 
-  lazy val rootSettings = ScalatraPlugin.scalatraWithJRebel ++ scalariformSettings ++
+  lazy val rootSettings = scalariformSettings ++
     Seq(
     initialize := {
       val _ = initialize.value
@@ -119,11 +119,11 @@ object SentinelBuild extends Build {
     resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
     ScalariformKeys.preferences := formattingPreferences)
 
-  val commonSettings = rootSettings ++ Defaults.itSettings ++ headerSettings
+  val commonSettings = rootSettings ++ Defaults.itSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings
 
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
-  lazy val sentinel = Project(
+  lazy val sentinelCore = Project(
       id = "sentinel",
       base = file("sentinel"),
       settings = commonSettings ++ docsSiteSettings ++ Seq(
@@ -167,14 +167,15 @@ object SentinelBuild extends Build {
             case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
           },
           assemblyJarName in assembly := "Sentinel-" + sentinelLumcVersion + ".jar",
+          libraryDependencies ++= Seq("ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime"),
           dependencyOverrides ++= Set(JettyRunnerModule)))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-    .dependsOn(sentinel % "it->it;test->test;compile->compile")
+    .dependsOn(sentinelCore % "it->it;test->test;compile->compile")
 
   lazy val sentinelRoot = Project(
     id = "sentinel-root",
     base = file("."),
     settings = rootSettings ++ noPublish,
-    aggregate = Seq(sentinel, sentinelLumc))
+    aggregate = Seq(sentinelCore, sentinelLumc))
 }
