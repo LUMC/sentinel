@@ -95,7 +95,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
       override def beforeAll() = {
         super.beforeAll()
-        users.foreach { user => Await.result(addUser(user), 1000.milli) }
+        Await.ready(Future.sequence(users.toSeq.map { addUser }), Duration.Inf)
       }
     }
 
