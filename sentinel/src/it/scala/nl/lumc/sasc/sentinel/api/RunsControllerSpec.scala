@@ -25,6 +25,7 @@ import org.json4s._
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
 import nl.lumc.sasc.sentinel.settings._
+import nl.lumc.sasc.sentinel.testing.{ SentinelServletSpec, UserExamples }
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class RunsControllerSpec extends SentinelServletSpec {
@@ -51,20 +52,20 @@ class RunsControllerSpec extends SentinelServletSpec {
 
   /** Upload context for plain summary files. */
   class PlainUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Plain, "plain")
+    def uploadSet = UploadSet(users.avg, SummaryExamples.Plain, "plain")
     def priorRequests = Seq(uploadSet.request)
   }
 
   /** Upload context for plain summary files. */
   class MapleUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet = UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
+    def uploadSet = UploadSet(users.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
     def priorRequests = Seq(uploadSet.request)
   }
 
   /** Uploads plain first, then maple. */
   class PlainThenMapleUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Plain, "plain")
-    def uploadSet2 = UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
+    def uploadSet1 = UploadSet(users.avg, SummaryExamples.Plain, "plain")
+    def uploadSet2 = UploadSet(users.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
     def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
   }
 
@@ -211,8 +212,8 @@ class RunsControllerSpec extends SentinelServletSpec {
         new Context.PriorRequestsClean {
 
           def request1 = () =>
-            post(endpoint, Seq(("userId", UserExamples.avg2.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response }
+            post(endpoint, Seq(("userId", users.avg2.id), ("pipeline", pipeline)), fileMap,
+              Map(HeaderApiKey -> users.avg2.activeKey)) { response }
           def request2 = () =>
             post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
               Map(HeaderApiKey -> user.activeKey)) { response }
@@ -229,7 +230,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.head.body must /("nSamples" -> 0)
             priorResponses.head.body must /("pipeline" -> "plain")
             priorResponses.head.body must /("runId" -> """\S+""".r)
-            priorResponses.head.body must /("uploaderId" -> UserExamples.avg2.id)
+            priorResponses.head.body must /("uploaderId" -> users.avg2.id)
             priorResponses.head.body must not /("annotIds" -> ".+".r)
             priorResponses.head.body must not /("refId" -> ".+".r)
             priorResponses.head.body must not /("sampleIds" -> ".+".r)
@@ -457,8 +458,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new Context.PriorRequestsClean {
 
-          def params = Seq(("userId", UserExamples.unverified.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          def params = Seq(("userId", users.unverified.id), ("pipeline", pipeline))
+          def headers = Map(HeaderApiKey -> users.unverified.activeKey)
           def request = () => post(endpoint, params, fileMap, headers) { response }
           def priorRequests = Seq(request)
 
@@ -570,7 +571,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
@@ -609,8 +610,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", UserExamples.unverified.id))
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val params = Seq(("userId", users.unverified.id))
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint, params, headers) { status mustEqual 403 }
@@ -632,7 +633,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint, Seq(), headers) { status mustEqual 400 }
@@ -671,8 +672,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", UserExamples.unverified.id))
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val params = Seq(("userId", users.unverified.id))
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint, params, headers) { status mustEqual 403 }
@@ -764,7 +765,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the user ID is not specified" should {
 
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 400" in {
             get(endpoint(uploadedRunId), Seq(), headers) { status mustEqual 400 }
@@ -803,8 +804,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         "when the authenticated user is not verified" should {
 
-          val params = Seq(("userId", UserExamples.unverified.id))
-          val headers = Map(HeaderApiKey -> UserExamples.unverified.activeKey)
+          val params = Seq(("userId", users.unverified.id))
+          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
 
           "return status 403" in {
             get(endpoint(uploadedRunId), params, headers) { status mustEqual 403 }
@@ -940,8 +941,8 @@ class RunsControllerSpec extends SentinelServletSpec {
         "when an admin authenticates correctly" >> {
           br
 
-          val params = Seq(("userId", UserExamples.admin.id))
-          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
+          val params = Seq(("userId", users.admin.id))
+          val headers = Map(HeaderApiKey -> users.admin.activeKey)
 
           "and queries a run he/she did not upload" >> {
             br
@@ -1335,8 +1336,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new PlainUploadContext {
 
-          val params = Seq(("userId", UserExamples.admin.id))
-          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
+          val params = Seq(("userId", users.admin.id))
+          val headers = Map(HeaderApiKey -> users.admin.activeKey)
           def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request
@@ -1401,8 +1402,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         new MapleUploadContext {
 
-          val params = Seq(("userId", UserExamples.admin.id))
-          val headers = Map(HeaderApiKey -> UserExamples.admin.activeKey)
+          val params = Seq(("userId", users.admin.id))
+          val headers = Map(HeaderApiKey -> users.admin.activeKey)
           def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
           // make priorRequests a Stream so we can use the runId returned from the first request in the second request
           override def priorRequests = super.priorRequests.toStream :+ request

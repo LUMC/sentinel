@@ -21,6 +21,7 @@ import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.exts.pann.PannRunsProcessor
 import nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor
+import nl.lumc.sasc.sentinel.testing.SentinelServletSpec
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class AnnotationsControllerSpec extends SentinelServletSpec {
@@ -69,7 +70,7 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
+        def uploadSet = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
         def priorRequests = Seq(uploadSet.request)
 
         "after the run summary file is uploaded" in {
@@ -110,8 +111,8 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
-        def uploadSet2 = UploadSet(UserExamples.admin, SummaryExamples.Pann.Ann2, "pann")
+        def uploadSet1 = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
+        def uploadSet2 = UploadSet(users.admin, SummaryExamples.Pann.Ann2, "pann")
         def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
 
         "after the first file is uploaded" in {
@@ -169,7 +170,7 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1, "pann")
+        def uploadSet = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
         def priorRequests = Seq(uploadSet.request)
         def annotIds = (parse(priorResponse.body) \ "annotIds").extract[Seq[String]]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]

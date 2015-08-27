@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel
+package nl.lumc.sasc.sentinel.testing
 
 import scala.annotation.tailrec
 import scala.util.{ Failure, Success, Try }

@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.api
 
 import org.scalatra.swagger.Swagger
 
+import nl.lumc.sasc.sentinel.testing.SentinelServletSpec
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
@@ -52,10 +53,10 @@ class BaseStatsControllerSpec extends SentinelServletSpec { self =>
 
       new Context.PriorRunUploadClean {
 
-        def upload1 = UploadSet(UserExamples.admin, SummaryExamples.Maple.SSampleMRG, "maple")
-        def upload2 = UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleMRG, "maple")
-        def upload3 = UploadSet(UserExamples.avg2, SummaryExamples.Plain, "plain")
-        def upload4 = UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleSRG, "maple")
+        def upload1 = UploadSet(users.admin, SummaryExamples.Maple.SSampleMRG, "maple")
+        def upload2 = UploadSet(users.avg, SummaryExamples.Maple.MSampleMRG, "maple")
+        def upload3 = UploadSet(users.avg2, SummaryExamples.Plain, "plain")
+        def upload4 = UploadSet(users.avg, SummaryExamples.Maple.MSampleSRG, "maple")
 
         def priorRequests = Seq(upload1, upload2, upload3, upload4).map(_.request)
 

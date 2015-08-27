@@ -16,78 +16,9 @@
  */
 package nl.lumc.sasc.sentinel
 
-import scala.util.Try
-
-import org.scalatra.test.specs2.BaseScalatraSpec
-import org.specs2.matcher.ThrownExpectations
-
-import org.json4s._
-import org.json4s.jackson.JsonMethods._
-import org.scalatra.test.ClientResponse
-import org.specs2.data.Sized
-
-import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.api.SentinelServletSpec.makeUploadable
+import nl.lumc.sasc.sentinel.testing.SentinelServletSpec._
 
 package object api {
-
-  trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations =>
-
-    /** Implicit class for testing convenience. */
-    implicit class RichClientResponse(httpres: ClientResponse) {
-
-      /** Response body represented as JSON, if possible. */
-      lazy val jsonBody: Option[JValue] = Try(parse(httpres.body)).toOption
-
-      /** Response content type. */
-      lazy val contentType = httpres.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
-    }
-
-    // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6
-    /** Specs2 matcher for testing size of JSON response bodies. */
-    implicit def jsonBodyIsSized: Sized[Option[JValue]] = new Sized[Option[JValue]] {
-      def size(t: Option[JValue]) = t match {
-        case None => -1
-        case Some(jvalue) => jvalue match {
-          case JArray(list) => list.size
-          case JObject(objects) => objects.size
-          case JString(str) => str.length
-          case otherwise => -1
-        }
-      }
-    }
-
-    /** Specs2 matcher for size of JSON objects. */
-    implicit def jsonIsSized: Sized[JValue] =  new Sized[JValue] {
-      def size(t: JValue) = t match {
-        case JArray(list) => list.size
-        case JObject(objects) => objects.size
-        case JString(str) => str.length
-        case otherwise => -1
-      }
-    }
-  }
-
-  /** Various types of User objects for testing. */
-  object UserExamples {
-
-    import User.hashPassword
-
-    /** Expected normal user: verified but not an admin. */
-    val avg = User("avg", "avg@test.id", hashPassword("0PwdAvg"), "key1", verified = true, isAdmin = false)
-
-    /** Also an expected normal user: verified but not an admin. */
-    val avg2 = User("avg2", "avg2@test.id", hashPassword("0PwdAvg2"), "key2", verified = true, isAdmin = false)
-
-    /** Admin user. */
-    val admin = User("admin", "admin@test.id", hashPassword("0PwdAdmin"), "key3", verified = true, isAdmin = true)
-
-    /** Unverified user. */
-    val unverified = User("unv", "unv@test.id", hashPassword("0PwdUnverified"), "key4", verified = false, isAdmin = false)
-
-    /** Set of all testing users. */
-    def all = Set(avg, avg2, admin, unverified)
-  }
 
   /** Convenience container for uploadable run summaries. */
   object SummaryExamples {
@@ -142,4 +73,3 @@ package object api {
     }
   }
 }
-

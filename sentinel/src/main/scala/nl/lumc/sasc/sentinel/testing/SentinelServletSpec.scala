@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.api
+package nl.lumc.sasc.sentinel.testing
 
 import scala.concurrent._
 import scala.concurrent.duration._
@@ -28,7 +28,7 @@ import org.specs2.matcher.JsonMatchers
 import org.specs2.mutable.Specification
 import org.specs2.specification.{ Fragments, Step }
 
-import nl.lumc.sasc.sentinel.{ EmbeddedMongodbRunner, HeaderApiKey }
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.adapters.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, readResourceBytes }
@@ -80,8 +80,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
   def jsonBody = response.jsonBody
 
   /** HTTP PATCH method for testing that accepts params, body, and headers. */
-  def patch[A](uri: String, params: Iterable[(String, String)], body: Array[Byte], headers: Map[String, String])
-              (f: => A): A =
+  def patch[A](uri: String, params: Iterable[(String, String)], body: Array[Byte], headers: Map[String, String])(f: => A): A =
     submit("PATCH", uri, params, headers, body) { f }
 
   /** Various context providers for integration tests. */
@@ -89,7 +88,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
     /** Base trait for adding executions before and after all tests. */
     trait BeforeAllAfterAll extends Specification {
-      override def map(fs: =>Fragments) = Step(beforeAll()) ^ fs ^ Step(afterAll())
+      override def map(fs: => Fragments) = Step(beforeAll()) ^ fs ^ Step(afterAll())
       protected def beforeAll()
       protected def afterAll()
     }
@@ -106,14 +105,14 @@ trait SentinelServletSpec extends MutableScalatraSpec
       lazy val mongo = dao
 
       /** Default user. */
-      implicit def user: User = UserExamples.avg
+      implicit def user: User = users.avg
 
       /** Default set of users. */
-      implicit def users: Set[User] = UserExamples.all
+      implicit def users = UserExamples
 
       override def beforeAll() = {
         super.beforeAll()
-        Await.ready(Future.sequence(users.toSeq.map { addUser }), Duration.Inf)
+        Await.ready(Future.sequence(users.all.map { addUser }), Duration.Inf)
       }
     }
 

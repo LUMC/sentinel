@@ -24,6 +24,7 @@ import com.google.common.io.BaseEncoding
 import org.json4s.jackson.Serialization.write
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
+import nl.lumc.sasc.sentinel.testing.{ SentinelServletSpec, UserExamples }
 import nl.lumc.sasc.sentinel.models.{UserPatch, UserRequest}
 
 class UsersControllerSpec extends SentinelServletSpec {

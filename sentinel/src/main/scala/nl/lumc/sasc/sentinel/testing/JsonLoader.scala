@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel
+package nl.lumc.sasc.sentinel.testing
 
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods.parse

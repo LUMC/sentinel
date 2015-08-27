@@ -20,6 +20,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.models.ReferenceRecord
+import nl.lumc.sasc.sentinel.testing.SentinelServletSpec
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class ReferencesControllerSpec extends SentinelServletSpec {
@@ -68,7 +69,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
+        def uploadSet = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
         def priorRequests = Seq(uploadSet.request)
 
         "after the run summary file is uploaded" in {
@@ -110,9 +111,9 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet1 = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
-        def uploadSet2 = UploadSet(UserExamples.admin, SummaryExamples.Pref.Ref2, "pref")
-        def uploadSet3 = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref3, "pref")
+        def uploadSet1 = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
+        def uploadSet2 = UploadSet(users.admin, SummaryExamples.Pref.Ref2, "pref")
+        def uploadSet3 = UploadSet(users.avg, SummaryExamples.Pref.Ref3, "pref")
         def priorRequests = Seq(uploadSet1, uploadSet2, uploadSet3).map(_.request)
 
         "after the first file is uploaded" in {
@@ -177,7 +178,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRunUploadClean {
 
-        def uploadSet = UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1, "pref")
+        def uploadSet = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
         def priorRequests = Seq(uploadSet.request)
         def refId = (parse(priorResponse.body) \ "refId").extract[String]
         def runId = (parse(priorResponse.body) \ "runId").extract[String]
