@@ -31,7 +31,6 @@ class UsersControllerSpec extends SentinelServletSpec {
   private def toByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
   private def makeBasicAuthHeader(userId: String, password: String): String =
     "Basic " + BaseEncoding.base64().encode(s"$userId:$password".getBytes(Charsets.UTF_8))
-  implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   val servlet = new UsersController
   val baseEndpoint = "/users"

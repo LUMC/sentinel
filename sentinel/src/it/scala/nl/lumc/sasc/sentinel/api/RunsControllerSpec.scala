@@ -68,7 +68,6 @@ class RunsControllerSpec extends SentinelServletSpec {
     def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
   }
 
-  implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor],

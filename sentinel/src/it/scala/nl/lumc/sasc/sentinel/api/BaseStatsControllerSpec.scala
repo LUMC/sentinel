@@ -26,7 +26,6 @@ class BaseStatsControllerSpec extends SentinelServletSpec { self =>
   class TestBaseStatsController(implicit val swagger: Swagger, val mongo: MongodbAccessObject)
       extends BaseStatsController
 
-  implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor],

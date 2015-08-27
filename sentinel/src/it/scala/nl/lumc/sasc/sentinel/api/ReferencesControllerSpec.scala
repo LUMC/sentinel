@@ -24,7 +24,6 @@ import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
-  implicit val swagger = new SentinelSwagger
   implicit val mongo = dao
   implicit val runsProcessorMakers = Set(
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor],

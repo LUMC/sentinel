@@ -21,6 +21,7 @@ import scala.concurrent.duration._
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.scalatra.swagger._
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
 import org.specs2.matcher.JsonMatchers
@@ -51,6 +52,23 @@ trait SentinelServletSpec extends MutableScalatraSpec
     super[MutableScalatraSpec].stop()
     super[EmbeddedMongodbRunner].stop()
   }
+
+  /** Default swagger ApiInfo for testing. */
+  class TestSwagger extends Swagger(apiInfo = TestSwagger.apiInfo, apiVersion = "TEST",
+    swaggerVersion = Swagger.SpecVersion)
+
+  /** General API info. */
+  object TestSwagger {
+    val apiInfo = ApiInfo(
+      title = "placeholder",
+      description = "placeholder",
+      termsOfServiceUrl = "http://placehold.er",
+      contact = "test@placehold.er",
+      license = "",
+      licenseUrl = "")
+  }
+
+  implicit val swager = new TestSwagger
 
   /** Default JSON formats. */
   implicit protected val jsonFormats = SentinelJsonFormats
