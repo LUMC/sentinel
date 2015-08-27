@@ -68,7 +68,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
       licenseUrl = "")
   }
 
-  implicit val swager = new TestSwagger
+  implicit val swagger: Swagger = new TestSwagger
 
   /** Default JSON formats. */
   implicit protected val jsonFormats = SentinelJsonFormats
