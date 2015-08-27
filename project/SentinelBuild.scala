@@ -91,7 +91,7 @@ object SentinelBuild extends Build {
         | * limitations under the License.
         | */
         |""".stripMargin
-      ))) ++ AutomateHeaderPlugin.automateFor(IntegrationTest)
+      )))
 
   lazy val rootSettings = scalariformSettings ++
     Seq(
@@ -126,15 +126,13 @@ object SentinelBuild extends Build {
   lazy val sentinelCore = Project(
       id = "sentinel",
       base = file("sentinel"),
-      settings = commonSettings ++ docsSiteSettings ++ Seq(
+      settings = commonSettings ++ docsSiteSettings ++ AutomateHeaderPlugin.automateFor(IntegrationTest) ++ Seq(
         organization := Organization,
         name := "sentinel",
         version := Version,
         libraryDependencies ++= dependencies))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-
-  lazy val sentinelLumcVersion = "0.2.0-SNAPSHOT"
 
   lazy val noPublish = Seq(publish := {}, publishLocal := {})
 
@@ -144,11 +142,11 @@ object SentinelBuild extends Build {
       id = "sentinel-lumc",
       base = file("sentinel-lumc"),
       settings = noPublish ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++
-        jetty(Seq(JettyRunnerModule)) ++ gitStampSettings ++ commonSettings ++
-        Seq(
+        jetty(Seq(JettyRunnerModule)) ++ AutomateHeaderPlugin.automateFor(IntegrationTest) ++ gitStampSettings ++
+        commonSettings ++ Seq(
           organization := Organization,
           name := "sentinel-lumc",
-          version := sentinelLumcVersion,
+          version := Version,
           resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
             (managedBase, base) =>
               val webappBase = base / "src" / "main" / "webapp"
@@ -166,12 +164,12 @@ object SentinelBuild extends Build {
             case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
             case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
           },
-          assemblyJarName in assembly := "Sentinel-" + sentinelLumcVersion + ".jar",
+          assemblyJarName in assembly := "Sentinel-" + Version + ".jar",
           libraryDependencies ++= Seq("ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime"),
           dependencyOverrides ++= Set(JettyRunnerModule)))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-    .dependsOn(sentinelCore % "it->it;test->test;compile->compile")
+    .dependsOn(sentinelCore % "it->it; test->test; compile->compile")
 
   lazy val sentinelRoot = Project(
     id = "sentinel-root",
