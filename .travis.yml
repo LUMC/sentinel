@@ -13,4 +13,7 @@ cache:
     - $HOME/.ivy2
 
 script:
-    - sbt ++$TRAVIS_SCALA_VERSION clean sentinel/test sentinel/it:test
+    - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
+
+after_success:
+    - sbt coveralls
