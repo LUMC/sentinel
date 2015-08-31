@@ -21,7 +21,7 @@ object SentinelBuild extends Build {
 
   lazy val dependencies = Seq(
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
-    "com.github.fakemongo"    %  "fongo"                      % "1.6.2"               % "test",
+    "com.github.fakemongo"    %  "fongo"                      % "1.6.2"               % "it;test",
     "com.github.fge"          %  "json-schema-validator"      % "2.2.6",
     "com.novus"               %% "salat"                      % "1.9.9",
     "com.typesafe"            %  "config"                     % "1.3.0",
@@ -68,8 +68,6 @@ object SentinelBuild extends Build {
       .setPreference(SpaceInsideParentheses, false)
       .setPreference(SpacesWithinPatternBinders, true)
   }
-
-  lazy val IntegrationTest = config("it").extend(Test)
 
   lazy val headerSettings = Seq(HeaderPlugin.autoImport.headers := Map(
     "scala" -> (
@@ -119,18 +117,23 @@ object SentinelBuild extends Build {
     resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
     ScalariformKeys.preferences := formattingPreferences)
 
-  val commonSettings = rootSettings ++ Defaults.itSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings
+  val commonSettings = rootSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings
 
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
   lazy val sentinelCore = Project(
       id = "sentinel",
       base = file("sentinel"),
-      settings = commonSettings ++ docsSiteSettings ++ AutomateHeaderPlugin.automateFor(IntegrationTest) ++ Seq(
-        organization := Organization,
-        name := "sentinel",
-        version := Version,
-        libraryDependencies ++= dependencies))
+      settings = commonSettings ++ docsSiteSettings ++ Defaults.itSettings ++
+        AutomateHeaderPlugin.automateFor(IntegrationTest) ++ Seq(
+          organization := Organization,
+          name := "sentinel",
+          version := Version,
+          unmanagedSourceDirectories in IntegrationTest <++= baseDirectory { base =>
+            Seq(base / "src/it/scala", base / "src/test/scala/nl/lumc/sasc/sentinel/exts")
+          },
+          unmanagedResourceDirectories in IntegrationTest ++= (unmanagedResourceDirectories in Test).value,
+          libraryDependencies ++= dependencies))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
 
@@ -142,11 +145,12 @@ object SentinelBuild extends Build {
       id = "sentinel-lumc",
       base = file("sentinel-lumc"),
       settings = noPublish ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++
-        jetty(Seq(JettyRunnerModule)) ++ AutomateHeaderPlugin.automateFor(IntegrationTest) ++ gitStampSettings ++
+        jetty(Seq(JettyRunnerModule)) ++ Defaults.itSettings ++ gitStampSettings ++
         commonSettings ++ Seq(
           organization := Organization,
           name := "sentinel-lumc",
           version := Version,
+          unmanagedResourceDirectories in IntegrationTest ++= (unmanagedResourceDirectories in Test).value,
           resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
             (managedBase, base) =>
               val webappBase = base / "src" / "main" / "webapp"
@@ -169,7 +173,7 @@ object SentinelBuild extends Build {
           dependencyOverrides ++= Set(JettyRunnerModule)))
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
-    .dependsOn(sentinelCore % "it->it; test->test; compile->compile")
+    .dependsOn(sentinelCore % "test->test; compile->compile")
 
   lazy val sentinelRoot = Project(
     id = "sentinel-root",
