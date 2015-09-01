@@ -16,4 +16,4 @@ script:
     - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
 
 after_success:
-    - sbt ++$TRAVIS_SCALA_VERSION sentinel/coveralls
+    - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel' coveralls
