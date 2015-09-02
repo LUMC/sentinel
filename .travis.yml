@@ -1,19 +1,28 @@
 language: scala
 
 scala:
-    - 2.11.6
+  - 2.11.6
 
 jdk:
-    - oraclejdk8
+  - oraclejdk8
 
 cache:
   directories:
-    - $HOME/.m2/repository
-    - $HOME/.sbt
-    - $HOME/.ivy2
+    - "$HOME/.m2/repository"
+    - "$HOME/.sbt"
+    - "$HOME/.ivy2"
 
 script:
-    - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
 
 after_success:
-    - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel' coveralls
+  - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel' coveralls
+
+notifications:
+  email: false
+  slack:
+    on_success: change
+    on_failure: always
+    on_start: change
+    rooms:
+      secure: ZsjV60ifLkmm5aGXQsOQ9WC09n2zgT7FYKs5lDwP/vvCqJxxOfHt5Do8Bh9Oi/s5zPjwmmnl5UzmSjNckj0sfkFDmYB+IZg3MhNCIHlOlJFuL5X8IG+/9gb+MhRXBV0DHDoYbp80WIRUDMNlLRsYKVMwWVpgNFWJH2j1PvuJcue8NwirGJHQwiYUfGkmiJK8gP2Zi9Txgq3GWlFi5S+w2CPenZjHOwsLhmgIYvSjSeDQaXf8CSd+ZXmeHX/QTg8rmseYn+c293nPbd4F0zrsE8ePJyjwRY340u06odlbfIiXHL1GkMCbQMvv09vWrJtfpsg3Wj3+DZ9lMiyCn8YfBEh1HmkvBpcsm6sxso09IMVQdwNSkITake8iQD+lcPUl0iGgKWGZQ7OG5ExezCs2ghi4Cu52bnwLfnDEXfICJx4/AFhRmf5XWQW2ZmvRnxxjON0ZGt+zn2o2O3oAyrs8fvgtfU7s0LBkua+l4aUS1i2LIr2amB+ynUt+snJzKIso0fXqEhh6nSsV74lzrQ7VwNntqsCbmxxBBDmiR/Lyd8HUFaKGSK6cCUG0B2jmFgdJMFdG+CA+3MQ62FlR4xbae+MjdKT9gJpyzA/pDK9elhkC7wDhWx4BQCJ1XAF6/kCSNG//eEs//NH9dak0Iu2UhkThOXX/8o5a8+eivfAvdKw=
