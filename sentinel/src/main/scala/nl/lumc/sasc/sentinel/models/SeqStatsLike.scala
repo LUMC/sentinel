@@ -37,6 +37,11 @@ import nl.lumc.sasc.sentinel.CaseClass
   val readAll: Option[_]
 }
 
+object SeqStatsLike {
+  /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
+  def pairAttrib = "isPaired"
+}
+
 /**
  * Aggregated sequencing input statistics.
  *

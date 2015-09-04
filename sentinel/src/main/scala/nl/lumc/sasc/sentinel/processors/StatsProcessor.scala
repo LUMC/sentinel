@@ -32,9 +32,6 @@ import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, MongodbAccessObject }
  */
 abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
 
-  /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
-  implicit val pairAttrib = StatsProcessor.pairAttrib
-
   /** MongoDB samples collection name of the pipeline. */
   protected[processors] lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
@@ -67,7 +64,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     .map { res => MongoDBObject(attrIndexNames.last -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
 
   /** Raw string of the map function for mapReduce. */
-  protected[processors] final def mapFunc(metricNames: Seq[String])(implicit pairAttrib: String): JSFunction = {
+  protected[processors] final def mapFunc(metricNames: Seq[String]): JSFunction = {
 
     val metricName = metricNames.mkString(".")
     val metricsArrayJs = "[ '" + metricNames.mkString("', '") + "' ]"
@@ -300,9 +297,4 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     if (aggrStats.contains("read1")) Option(grater[T].asObject(aggrStats.asDBObject))
     else None
   }
-}
-
-object StatsProcessor {
-  /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
-  def pairAttrib = "isPaired"
 }
