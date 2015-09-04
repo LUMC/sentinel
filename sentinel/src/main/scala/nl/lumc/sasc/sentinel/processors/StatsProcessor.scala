@@ -258,6 +258,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * Retrieves aggregated sequence statistics.
    *
    * @param metricName Name of the main metrics container object in the sequence.
+   * @param accLevel Accumulation level of the retrieved statistics.
    * @param matchers MongoDBObject containing query parameters.
    * @param libType Library type of the returned sequence statistics.
    * @tparam T Case class representing the aggregated metrics object to return.
@@ -265,12 +266,20 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    */
   // format: OFF
   def getAggregateSeqStats[T <: CaseClass with SeqStatsLike[_]](metricName: String)
+                                                               (accLevel: AccLevel.Value)
                                                                (matchers: MongoDBObject,
                                                                 libType: Option[LibType.Value])
                                                                (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
-    val mapReduce = runMapReduce(readGroupsColl)(Option(matchers)) _
+    // Collection to query on
+    val coll = accLevel match {
+      case AccLevel.Sample    => samplesColl
+      case AccLevel.ReadGroup => readGroupsColl
+      case otherwise          => throw new NotImplementedError
+    }
+
+    val mapReduce = runMapReduce(coll)(Option(matchers)) _
 
     // Manifest of the inner type of SeqStatsLike
     // TODO: avoid casting directly
