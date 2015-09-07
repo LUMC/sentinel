@@ -203,7 +203,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     logger.info(requestLog)
     val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
 
-    if (userRequest.validationMessages.size > 0)
+    if (userRequest.validationMessages.nonEmpty)
       BadRequest(ApiMessage("Invalid user request.", hint = userRequest.validationMessages))
     else {
       new AsyncResult {
