@@ -21,11 +21,11 @@ import com.novus.salat.annotations.Salat
 import nl.lumc.sasc.sentinel.CaseClass
 
 /**
- * Trait for sequence statistics container.
+ * Trait for sequence fragment statistics container.
  *
  * @tparam T Container for read-level statistics.
  */
-@Salat trait SeqStatsLike[T <: CaseClass] { this: CaseClass =>
+@Salat trait FragmentStatsLike[T <: CaseClass] { this: CaseClass =>
 
   /** Statistics of the first read. */
   val read1: T
@@ -37,7 +37,7 @@ import nl.lumc.sasc.sentinel.CaseClass
   val readAll: Option[_]
 }
 
-object SeqStatsLike {
+object FragmentStatsLike {
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
   def pairAttrib = "isPaired"
 }
@@ -50,5 +50,5 @@ object SeqStatsLike {
  * @param readAll Aggregated statistics of both reads. Only defined if there is at least a paired-end data point
  *                in aggregation.
  */
-case class SeqStatsAggr[T <: CaseClass](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
-  extends SeqStatsLike[T]
+case class FragmentStatsAggr[T <: CaseClass](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
+  extends FragmentStatsLike[T]

@@ -265,7 +265,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * @return Sequence statistics aggregates.
    */
   // format: OFF
-  def getAggregateSeqStats[T <: CaseClass with SeqStatsLike[_]](metricName: String)
+  def getAggregateSeqStats[T <: CaseClass with FragmentStatsLike[_]](metricName: String)
                                                                (accLevel: AccLevel.Value)
                                                                (matchers: MongoDBObject,
                                                                 libType: Option[LibType.Value])

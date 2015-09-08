@@ -19,7 +19,7 @@ package nl.lumc.sasc.sentinel.utils
 import com.mongodb.casbah.Imports._
 
 import nl.lumc.sasc.sentinel.LibType
-import nl.lumc.sasc.sentinel.models.SeqStatsLike
+import nl.lumc.sasc.sentinel.models.FragmentStatsLike
 
 trait Selector {
 
@@ -45,7 +45,7 @@ object Selector {
 
   def fromLibType(lt: Option[LibType.Value]) = lt.map(_ == LibType.Paired) match {
     case None    => EmptySelector
-    case Some(t) => OneMatchOne(SeqStatsLike.pairAttrib, t)
+    case Some(t) => OneMatchOne(FragmentStatsLike.pairAttrib, t)
   }
 }
 
