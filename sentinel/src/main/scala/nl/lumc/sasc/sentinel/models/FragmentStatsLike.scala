@@ -48,6 +48,9 @@ object FragmentStatsLike {
   lazy val readAttrs = Seq(singleReadAttr, "read2", "readAll")
 }
 
+/** Trait for aggregated sequence fragment statistics container. */
+trait FragmentStatsAggrLike[T <: CaseClass] extends FragmentStatsLike[T] { this: CaseClass => }
+
 /**
  * Aggregated sequencing input statistics.
  *
@@ -57,4 +60,4 @@ object FragmentStatsLike {
  *                in aggregation.
  */
 case class FragmentStatsAggr[T <: CaseClass](read1: T, read2: Option[T] = None, readAll: Option[T] = None)
-  extends FragmentStatsLike[T]
+  extends FragmentStatsAggrLike[T]
