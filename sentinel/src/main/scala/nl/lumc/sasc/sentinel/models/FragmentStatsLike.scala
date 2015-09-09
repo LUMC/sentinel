@@ -40,6 +40,12 @@ import nl.lumc.sasc.sentinel.CaseClass
 object FragmentStatsLike {
   /** Name of the unit attribute that denotes whether it comes from a paired-end library or not. */
   def pairAttrib = "isPaired"
+
+  /** Attribute name of a single read. */
+  lazy val singleReadAttr = "read1"
+
+  /** Read attribute names of FragmentStatsLike. */
+  lazy val readAttrs = Seq(singleReadAttr, "read2", "readAll")
 }
 
 /**
