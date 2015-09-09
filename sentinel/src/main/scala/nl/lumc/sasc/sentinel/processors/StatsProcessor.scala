@@ -22,6 +22,7 @@ import scala.util.Random.shuffle
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import com.mongodb.casbah.Imports._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.{ AccLevel, CaseClass, LibType }
 import nl.lumc.sasc.sentinel.models._
@@ -248,10 +249,10 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
 
     val aggrStats = extractFieldNames[T].par
       .flatMap { n => mapReduce(Seq(metricName, n)) }
-      .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
+      .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-    if (aggrStats.isEmpty) None
-    else Option(grater[T].asObject(aggrStats))
+    aggrStats.nonEmpty
+      .option { grater[T].asObject(aggrStats) }
   }
 
   /**
@@ -265,11 +266,11 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * @return Sequence statistics aggregates.
    */
   // format: OFF
-  def getAggregateSeqStats[T <: CaseClass with FragmentStatsLike[_]](metricName: String)
-                                                               (accLevel: AccLevel.Value)
-                                                               (matchers: MongoDBObject,
-                                                                libType: Option[LibType.Value])
-                                                               (implicit m: Manifest[T]): Option[T] = {
+  def getAggregateSeqStats[T <: CaseClass with FragmentStatsAggrLike[_]](metricName: String)
+                                                                        (accLevel: AccLevel.Value)
+                                                                        (matchers: MongoDBObject,
+                                                                         libType: Option[LibType.Value])
+                                                                        (implicit m: Manifest[T]): Option[T] = {
     // format: ON
 
     // Collection to query on
@@ -281,29 +282,37 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
 
     val mapReduce = runMapReduce(coll)(Option(matchers)) _
 
-    // Manifest of the inner type of SeqStatsLike
+    // Manifest of the inner type of FragmentStatsLike
     // TODO: avoid casting directly
     val readStatsManif = m.typeArguments.head.asInstanceOf[Manifest[CaseClass]]
     val seqGrater = grater(SalatContext, readStatsManif)
 
     val metricAttrNames = extractFieldNames(readStatsManif).toSeq
     val readNames = libType match {
-      case Some(LibType.Single) => Seq("read1")
-      case otherwise            => Seq("read1", "read2", "readAll")
+      case Some(LibType.Single) => Seq(FragmentStatsLike.singleReadAttr)
+      case otherwise            => FragmentStatsLike.readAttrs
     }
 
-    val aggrStats = readNames.par
-      .map { rn =>
+    // Process inner read statistics first
+    val innerStats = readNames.par
+      .flatMap { rn =>
         val res = metricAttrNames.par
           .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
-          .foldLeft(MongoDBObject.empty) { case (acc, x) => acc ++ x }
-        if (res.nonEmpty) (rn, Option(seqGrater.asObject(res)))
-        else (rn, None)
-      }.seq
-      .flatMap { case (rn, res) => res.map(r => (rn, r)) }
-      .toMap
+          .foldLeft(MongoDBObject.empty)(_ ++ _)
+        res.nonEmpty
+          .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
+      }
+      .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-    if (aggrStats.contains("read1")) Option(grater[T].asObject(aggrStats.asDBObject))
-    else None
+    // Then process outer fragment statistics
+    val outerStats = extractFieldNames(m).par
+      .filterNot { FragmentStatsLike.readAttrs.contains }
+      .flatMap { n => mapReduce(Seq(metricName, n)) }
+      .foldLeft(MongoDBObject.empty)(_ ++ _)
+
+    val aggrStats = innerStats ++ outerStats
+    aggrStats
+      .contains(FragmentStatsLike.singleReadAttr)
+      .option { grater[T].asObject(aggrStats) }
   }
 }
