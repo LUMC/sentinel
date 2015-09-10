@@ -6,6 +6,7 @@ import com.sksamuel.scapegoat.sbt.ScapegoatSbtPlugin.autoImport._
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
+import net.virtualvoid.sbt.graph.Plugin.graphSettings
 import sbtassembly.{ AssemblyKeys, MergeStrategy, PathList }, AssemblyKeys._
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
@@ -117,7 +118,7 @@ object SentinelBuild extends Build {
     resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
     ScalariformKeys.preferences := formattingPreferences)
 
-  val commonSettings = rootSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings
+  val commonSettings = rootSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings ++ graphSettings
 
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
