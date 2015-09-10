@@ -167,6 +167,10 @@ object SentinelBuild extends Build {
           assemblyMergeStrategy in assembly := {
             // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
             case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
+            // NOTE: these all come from the test dependencies, so we don't expect anything to break in runtime
+            case PathList("org", "mockito", xs @ _*) => MergeStrategy.first
+            case PathList("org", "objenesis", xs @ _*) => MergeStrategy.first
+            case PathList("org", "hamcrest", xs @ _*) => MergeStrategy.first
             case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
           },
           assemblyJarName in assembly := "Sentinel-" + Version + ".jar",
