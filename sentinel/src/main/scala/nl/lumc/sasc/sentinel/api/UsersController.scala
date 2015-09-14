@@ -85,7 +85,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         | `email`.
       """.stripMargin.replaceAll("\n", "")
     parameters (
-      pathParam[String]("userId").description("User ID."),
+      pathParam[String]("userRecordId").description("User ID to update."),
       headerParam[String](HeaderApiKey).description("User API key."),
       bodyParam[Seq[UserPatch]]("body").description("Patch operations to apply."))
     responseMessages (
