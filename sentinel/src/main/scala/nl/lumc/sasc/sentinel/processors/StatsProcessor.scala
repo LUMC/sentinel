@@ -321,12 +321,21 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
   /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
   private def adjustMapReduceLongs(dbo: DBObject): DBObject = {
 
-    val value = for {
-      v1 <- Option(dbo.get("nDataPoints"))
-      v2 <- Try(v1.asInstanceOf[Long]).toOption
-    } yield v2
+    dbo.keys.foreach { k =>
+      dbo(k) = dbo(k) match {
 
-    value.foreach { v => dbo("nDataPoints") = Long.box(v) }
+        case innerDbo: DBObject =>
+
+          val value = for {
+            v1 <- Option(innerDbo.get("nDataPoints"))
+            v2 <- Try(v1.toString.toDouble.toLong).toOption
+          } yield v2
+          value.foreach { v => innerDbo("nDataPoints") = Long.box(v) }
+          innerDbo
+
+        case otherwise => otherwise
+      }
+    }
 
     dbo
   }
