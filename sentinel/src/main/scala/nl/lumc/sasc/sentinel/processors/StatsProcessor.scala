@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.processors
 
 import scala.language.higherKinds
 import scala.util.Random.shuffle
+import scala.util.Try
 
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
@@ -249,7 +250,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
 
     val aggrStats = extractFieldNames[T].par
       .flatMap { n => mapReduce(Seq(metricName, n)) }
-      .foldLeft(MongoDBObject.empty)(_ ++ _)
+      .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
 
     aggrStats.nonEmpty
       .option { grater[T].asObject(aggrStats) }
@@ -298,7 +299,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       .flatMap { rn =>
         val res = metricAttrNames.par
           .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
-          .foldLeft(MongoDBObject.empty)(_ ++ _)
+          .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
         res.nonEmpty
           .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
       }
@@ -308,11 +309,25 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     val outerStats = extractFieldNames(m).par
       .filterNot { FragmentStatsLike.readAttrs.contains }
       .flatMap { n => mapReduce(Seq(metricName, n)) }
-      .foldLeft(MongoDBObject.empty)(_ ++ _)
+      .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
 
     val aggrStats = innerStats ++ outerStats
     aggrStats
       .contains(FragmentStatsLike.singleReadAttr)
       .option { grater[T].asObject(aggrStats) }
+  }
+
+  // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
+  /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
+  private def adjustMapReduceLongs(dbo: DBObject): DBObject = {
+
+    val value = for {
+      v1 <- Option(dbo.get("nDataPoints"))
+      v2 <- Try(v1.asInstanceOf[Long]).toOption
+    } yield v2
+
+    value.foreach { v => dbo("nDataPoints") = Long.box(v) }
+
+    dbo
   }
 }

@@ -176,12 +176,6 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[DbId] = tryMakeObjectId(str).toOption
     }
 
-  // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
-  /** Transforms MongoDB mapReduce nDataPoints attribute to the proper type */
-  protected def transformMapReduceResult(results: Any): JValue =
-    Extraction.decompose(results)
-      .transformField { case JField("nDataPoints", JDouble(n)) => ("nDataPoints", JInt(n.toLong)) }
-
   before() {
     contentType = formats("json")
     response.headers += ("Access-Control-Allow-Origin" -> "*")
