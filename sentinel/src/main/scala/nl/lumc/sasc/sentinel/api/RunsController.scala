@@ -101,7 +101,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsRunIdDeleteOperation = (apiOperation[Unit]("runsRunIdDelete")
+  val runIdDeleteOp = (apiOperation[Unit]("runIdDelete")
     summary "Deletes an uploaded run summary."
     notes
       """This endpoint deletes an uploaded run summary. Only administrators and the run summary uploader can delete a
@@ -121,7 +121,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  delete("/:runId", operation(runsRunIdDeleteOperation)) {
+  delete("/:runId", operation(runIdDeleteOp)) {
     logger.info(requestLog)
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
     val user = simpleKeyAuth(params => params.get("userId"))
@@ -144,7 +144,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
-  val runsRunIdGetOperation = (apiOperation[PlainRunRecord]("runsRunIdGet")
+  val runIdGetOp = (apiOperation[PlainRunRecord]("runIdGet")
     summary "Retrieves single run summaries."
     notes
       """This endpoint retrieves the a single record of an uploaded summary. Optionally, you can also download the
@@ -168,7 +168,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       "application/octet-stream"))
   // format: ON
 
-  get("/:runId", operation(runsRunIdGetOperation)) {
+  get("/:runId", operation(runIdGetOp)) {
     logger.info(requestLog)
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, CommonMessages.MissingRunId))
@@ -192,7 +192,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsPostOperation = (apiOperation[PlainRunRecord]("runsPost")
+  val postOp = (apiOperation[PlainRunRecord]("post")
     summary "Uploads a JSON run summary."
     parameters (
       queryParam[String]("userId").description("Run summary uploader ID."),
@@ -214,7 +214,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  post("/", operation(runsPostOperation)) {
+  post("/", operation(postOp)) {
     logger.info(requestLog)
     val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
     val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
@@ -230,7 +230,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // format: OFF
-  val runsGetOperation = (apiOperation[Seq[PlainRunRecord]]("runsGet")
+  val getOp = (apiOperation[Seq[PlainRunRecord]]("get")
     summary "Retrieves run summary records."
     notes
       """This endpoint retrieves run summaries uploaded by the given user sorted by last upload date first.
@@ -254,7 +254,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  get("/", operation(runsGetOperation)) {
+  get("/", operation(getOp)) {
 
     logger.info(requestLog)
 

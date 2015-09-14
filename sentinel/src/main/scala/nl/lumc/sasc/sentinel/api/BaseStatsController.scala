@@ -58,11 +58,11 @@ abstract class BaseStatsController extends SentinelServlet
   }
 
   // format: OFF
-  val statsRunsGetOperation = (apiOperation[Seq[PipelineStats]]("statsRunsGet")
+  val runsGetOp = (apiOperation[Seq[PipelineStats]]("runsGet")
     summary "Retrieves general statistics of uploaded run summaries.")
   // format: ON
 
-  get("/runs", operation(statsRunsGetOperation)) {
+  get("/runs", operation(runsGetOp)) {
     logger.info(requestLog)
     new AsyncResult {
       val is = runs.getGlobalRunStats().map(res => Ok(res))

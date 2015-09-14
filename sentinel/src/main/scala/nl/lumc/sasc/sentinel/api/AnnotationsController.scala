@@ -55,13 +55,13 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   }
 
   // format: OFF
-  val annotationsRefIdGetOperation = (apiOperation[Seq[AnnotationRecord]]("annotationsRefIdGet")
+  val annotIdGetOp = (apiOperation[Seq[AnnotationRecord]]("annotIdGet")
     summary "Retrieves a single full annotation item."
     parameters pathParam[String]("annotId").description("Annotation ID query.")
     responseMessages StringResponseMessage(404, "Annotation ID can not be found."))
   // format: ON
 
-  get("/:annotId", operation(annotationsRefIdGetOperation)) {
+  get("/:annotId", operation(annotIdGetOp)) {
     logger.info(requestLog)
     val errMsg = ApiMessage("Annotation ID can not be found.")
     val annotId = params.getAs[DbId]("annotId").getOrElse(halt(404, errMsg))
@@ -75,11 +75,11 @@ class AnnotationsController(implicit val swagger: Swagger, mongo: MongodbAccessO
   }
 
   // format: OFF
-  val annotationsGetOperation = (apiOperation[Seq[AnnotationRecord]]("annotationsGet")
+  val getOp = (apiOperation[Seq[AnnotationRecord]]("get")
     summary "Retrieves all available annotation items.")
   // format: ON
 
-  get("/", operation(annotationsGetOperation)) {
+  get("/", operation(getOp)) {
     logger.info(requestLog)
     new AsyncResult {
       val is = annots.getAnnotations().map(annots => Ok(annots))

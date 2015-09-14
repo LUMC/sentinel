@@ -55,13 +55,13 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   }
 
   // format: OFF
-  val referencesRefIdGetOperation = (apiOperation[Seq[ReferenceRecord]]("referencesRefIdGet")
+  val refIdGetOp = (apiOperation[Seq[ReferenceRecord]]("refIdGet")
     summary "Retrieves a single reference record."
     parameters pathParam[String]("refId").description("Reference ID query.")
     responseMessages StringResponseMessage(404, "Reference ID can not be found."))
   // format: ON
 
-  get("/:refId", operation(referencesRefIdGetOperation)) {
+  get("/:refId", operation(refIdGetOp)) {
     logger.info(requestLog)
     val errMsg = ApiMessage("Reference ID can not be found.")
     val refId = params.getAs[DbId]("refId").getOrElse(halt(404, errMsg))
@@ -74,11 +74,11 @@ class ReferencesController(implicit val swagger: Swagger, mongo: MongodbAccessOb
   }
 
   // format: OFF
-  val referencesGetOperation = (apiOperation[ReferenceRecord]("referencesGet")
+  val getOp = (apiOperation[ReferenceRecord]("get")
     summary "Retrieves all available reference records.")
   // format: ON
 
-  get("/", operation(referencesGetOperation)) {
+  get("/", operation(getOp)) {
     logger.info(requestLog)
     new AsyncResult {
       val is = refs.getReferences().map(res => Ok(res))

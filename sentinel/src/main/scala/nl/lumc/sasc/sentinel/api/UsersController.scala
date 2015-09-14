@@ -77,7 +77,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // format: OFF
-  val usersUserIdPatchOperation = (apiOperation[Unit]("usersUserIdPatch")
+  val userRecordIdPatchOp = (apiOperation[Unit]("userRecordIdPatch")
     summary "Updates an existing user record."
     notes
       """This endpoint is used for updating an existing user record. Operations are defined using a subset of the JSON
@@ -99,7 +99,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  patch("/:userRecordId", operation(usersUserIdPatchOperation)) {
+  patch("/:userRecordId", operation(userRecordIdPatchOp)) {
 
     // TODO: refactor this endpoint ~ use less explicit halts
 
@@ -150,7 +150,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   patch("/?") { halt(400, ApiMessage("User record ID not specified.")) }
 
   // format: OFF
-  val usersUserIdGetOperation = (apiOperation[UserResponse]("usersUserIdGet")
+  val userRecordIdGetOp = (apiOperation[UserResponse]("userRecordIdGet")
     summary "Retrieves record of the given user ID."
     notes "This endpoint is only available to the particular user and administrators."
     parameters (
@@ -165,7 +165,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
-  get("/:userRecordId", operation(usersUserIdGetOperation)) {
+  get("/:userRecordId", operation(userRecordIdGetOp)) {
     logger.info(requestLog)
     val userRecordId = params("userRecordId")
     val user = simpleKeyAuth(params => params.get("userId"))
@@ -183,7 +183,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   get("/?") { halt(400, ApiMessage("User record ID not specified.")) }
 
   // format: OFF
-  val usersUserIdPostOperation = (apiOperation[ApiMessage]("usersPost")
+  val postOp = (apiOperation[ApiMessage]("post")
     summary "Creates a user account."
     notes
       """This endpoint is used for creating new user accounts. The user data must be supplied in the body of the request
@@ -199,7 +199,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(409, "User record with the given ID already exists.")))
   // format: OFF
 
-  post("/", operation(usersUserIdPostOperation)) {
+  post("/", operation(postOp)) {
     logger.info(requestLog)
     val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
 
