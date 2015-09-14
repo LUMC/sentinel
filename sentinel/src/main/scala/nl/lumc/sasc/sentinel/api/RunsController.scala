@@ -255,15 +255,22 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   // format: ON
 
   get("/", operation(runsGetOperation)) {
+
     logger.info(requestLog)
+
     val pipelines = params.getAs[Seq[String]]("pipelines").getOrElse(Seq.empty)
     val (validPipelines, invalidPipelines) = pipelines.partition { supportedPipelines.contains }
 
     if (invalidPipelines.nonEmpty)
-      halt(400, ApiMessage("One or more pipeline is invalid.", hint = Map("invalid pipelines" -> invalidPipelines)))
+      BadRequest(
+        ApiMessage("One or more pipeline is invalid.",
+          hint = Map("invalid pipelines" -> invalidPipelines)))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
-      new AsyncResult { val is = runs.getRuns(user, validPipelines).map(res => Ok(res)) }
+      new AsyncResult {
+        val is =
+          runs.getRuns(user, validPipelines).map(res => Ok(res))
+      }
     }
   }
 }
