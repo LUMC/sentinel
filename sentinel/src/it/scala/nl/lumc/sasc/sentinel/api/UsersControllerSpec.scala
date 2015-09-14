@@ -567,7 +567,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "JSON run summary is invalid.")
+          priorResponse.body must /("message" -> "JSON is invalid.")
         }
       }
     }

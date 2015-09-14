@@ -66,7 +66,7 @@ trait JsonValidationAdapter extends JsonAdapter {
       case Failure(_)  => throw new JsonValidationException("File is not JSON-formatted.")
     }
     val valResult = jsonValidator.validate(json)
-    if (!valResult.isSuccess) throw new JsonValidationException("JSON run summary is invalid.", Option(valResult))
+    if (!valResult.isSuccess) throw new JsonValidationException("JSON is invalid.", Option(valResult))
     else json
   }
 }
