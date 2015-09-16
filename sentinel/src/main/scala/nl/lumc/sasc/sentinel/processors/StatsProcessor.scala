@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.processors
 
 import scala.language.higherKinds
+import scala.reflect.runtime.{ universe => ru }
 import scala.util.Random.shuffle
 import scala.util.Try
 
@@ -28,6 +29,7 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.{ AccLevel, CaseClass, LibType }
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.reflect.getReadStatsManifest
 
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.
@@ -271,7 +273,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                                                         (accLevel: AccLevel.Value)
                                                                         (matchers: MongoDBObject,
                                                                          libType: Option[LibType.Value])
-                                                                        (implicit m: Manifest[T]): Option[T] = {
+                                                                        (implicit m: Manifest[T], tt: ru.TypeTag[T]): Option[T] = {
     // format: ON
 
     // Collection to query on
@@ -284,8 +286,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     val mapReduce = runMapReduce(coll)(Option(matchers)) _
 
     // Manifest of the inner type of FragmentStatsLike
-    // TODO: avoid casting directly
-    val readStatsManif = m.typeArguments.head.asInstanceOf[Manifest[CaseClass]]
+    val readStatsManif = getReadStatsManifest[T]
     val seqGrater = grater(SalatContext, readStatsManif)
 
     val metricAttrNames = extractFieldNames(readStatsManif).toSeq

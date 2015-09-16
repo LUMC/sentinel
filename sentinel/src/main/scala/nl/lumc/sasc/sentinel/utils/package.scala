@@ -23,6 +23,7 @@ import java.security.MessageDigest
 import java.time.Clock
 import scala.io.Source
 import scala.language.implicitConversions
+import scala.reflect.{ ClassTag, ManifestFactory }
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
 
@@ -157,6 +158,8 @@ package object utils {
 
   object reflect {
 
+    import ru._
+
     /** Shared mirror instance. */
     private val mirror = ru.runtimeMirror(getClass.getClassLoader)
 
@@ -174,6 +177,27 @@ package object utils {
       val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
       val ctorm = km.reflectConstructor(ctor)
       (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[RunsProcessor]
+    }
+
+    // modified from: http://stackoverflow.com/a/29131875
+    /** Method to fetch the type used for storing read statistics in a fragment statistics object dynamically. */
+    def getReadStatsManifest[T: TypeTag]: Manifest[T] = {
+      val read1Name = "read1"
+      val t = typeTag[T]
+      val mirror = t.mirror
+      def toManifestRec(t: Type): Manifest[_] = {
+        val clazz = ClassTag[T](mirror.runtimeClass(t)).runtimeClass.getMethod(read1Name).getReturnType
+        if (t.typeArgs.length == 1) {
+          val arg = toManifestRec(t.typeArgs.head)
+          ManifestFactory.classType(clazz, arg)
+        } else if (t.typeArgs.length > 1) {
+          val args = t.typeArgs.map(x => toManifestRec(x))
+          ManifestFactory.classType(clazz, args.head, args.tail: _*)
+        } else {
+          ManifestFactory.classType(clazz)
+        }
+      }
+      toManifestRec(t.tpe).asInstanceOf[Manifest[T]]
     }
   }
 }
