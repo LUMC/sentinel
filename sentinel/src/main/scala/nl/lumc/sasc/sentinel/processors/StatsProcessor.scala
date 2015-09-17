@@ -232,14 +232,16 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * @param metricName Name of the main metrics container object in the unit.
    * @param accLevel Accumulation level of the retrieved statistics.
    * @param matchers MongoDBObject containing query parameters.
+   * @param libType Library type of the returned statistics.
    * @tparam T Case class representing the aggregated metrics object to return.
-   * @return Alignment statistics aggregates.
+   * @return Unit statistics aggregates.
    */
   // format: OFF
   def getAggregateStats[T <: CaseClass](metricName: String)
                                        (accLevel: AccLevel.Value)
+                                       (libType: Option[LibType.Value])
                                        (matchers: MongoDBObject)
-                                       (implicit m: Manifest[T]): Option[T] = {
+                                       (implicit m: Manifest[T], tt: ru.TypeTag[T]): Option[T] = {
     // format: ON
 
     val coll = accLevel match {
@@ -250,72 +252,50 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
 
     val mapReduce = runMapReduce(coll)(Option(matchers)) _
 
-    val aggrStats = extractFieldNames[T].par
-      .flatMap { n => mapReduce(Seq(metricName, n)) }
-      .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+    //ru.typeOf[T].baseClasses.contains(typeOf)
 
-    aggrStats.nonEmpty
-      .option { grater[T].asObject(aggrStats) }
-  }
+    if (!(tt.tpe <:< ru.weakTypeTag[FragmentStatsAggrLike[_]].tpe)) {
 
-  /**
-   * Retrieves aggregated sequence statistics.
-   *
-   * @param metricName Name of the main metrics container object in the sequence.
-   * @param accLevel Accumulation level of the retrieved statistics.
-   * @param matchers MongoDBObject containing query parameters.
-   * @param libType Library type of the returned sequence statistics.
-   * @tparam T Case class representing the aggregated metrics object to return.
-   * @return Sequence statistics aggregates.
-   */
-  // format: OFF
-  def getAggregateSeqStats[T <: CaseClass with FragmentStatsAggrLike[_]](metricName: String)
-                                                                        (accLevel: AccLevel.Value)
-                                                                        (matchers: MongoDBObject,
-                                                                         libType: Option[LibType.Value])
-                                                                        (implicit m: Manifest[T], tt: ru.TypeTag[T]): Option[T] = {
-    // format: ON
+      val aggrStats = extractFieldNames[T].par
+        .flatMap { n => mapReduce(Seq(metricName, n)) }
+        .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
 
-    // Collection to query on
-    val coll = accLevel match {
-      case AccLevel.Sample    => samplesColl
-      case AccLevel.ReadGroup => readGroupsColl
-      case otherwise          => throw new NotImplementedError
-    }
+      aggrStats.nonEmpty
+        .option { grater[T].asObject(aggrStats) }
 
-    val mapReduce = runMapReduce(coll)(Option(matchers)) _
+    } else {
 
-    // Manifest of the inner type of FragmentStatsLike
-    val readStatsManif = getReadStatsManifest[T]
-    val seqGrater = grater(SalatContext, readStatsManif)
-
-    val metricAttrNames = extractFieldNames(readStatsManif).toSeq
-    val readNames = libType match {
-      case Some(LibType.Single) => Seq(FragmentStatsLike.singleReadAttr)
-      case otherwise            => FragmentStatsLike.readAttrs
-    }
-
-    // Process inner read statistics first
-    val innerStats = readNames.par
-      .flatMap { rn =>
-        val res = metricAttrNames.par
-          .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
-          .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
-        res.nonEmpty
-          .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
+      // Manifest of the inner type of FragmentStatsLike
+      val readStatsManif = getReadStatsManifest[T]
+      val seqGrater = grater(SalatContext, readStatsManif)
+      val metricAttrNames = extractFieldNames(readStatsManif).toSeq
+      val readNames = libType match {
+        case Some(LibType.Single) => Seq(FragmentStatsLike.singleReadAttr)
+        case otherwise            => FragmentStatsLike.readAttrs
       }
-      .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-    // Then process outer fragment statistics
-    val outerStats = extractFieldNames(m).par
-      .filterNot { FragmentStatsLike.readAttrs.contains }
-      .flatMap { n => mapReduce(Seq(metricName, n)) }
-      .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+      // Process inner read statistics first
+      val innerStats = readNames.par
+        .flatMap { rn =>
+          val res = metricAttrNames.par
+            .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
+            .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+          res.nonEmpty
+            .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
+        }
+        .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-    val aggrStats = innerStats ++ outerStats
-    aggrStats
-      .contains(FragmentStatsLike.singleReadAttr)
-      .option { grater[T].asObject(aggrStats) }
+      // Then process outer fragment statistics
+      val outerStats = extractFieldNames(m).par
+        .filterNot { FragmentStatsLike.readAttrs.contains }
+        .flatMap { n => mapReduce(Seq(metricName, n)) }
+        .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+
+      val aggrStats = innerStats ++ outerStats
+      aggrStats
+        .contains(FragmentStatsLike.singleReadAttr)
+        .option { grater[T].asObject(aggrStats) }
+    }
   }
 
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
