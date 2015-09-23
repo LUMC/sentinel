@@ -65,7 +65,10 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       query = query)
     .toSeq
     .headOption
-    .map { res => MongoDBObject(attrIndexNames.last -> res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)) }
+    .map { res =>
+      val resValue = res.getAsOrElse[MongoDBObject]("value", MongoDBObject.empty)
+      MongoDBObject(attrIndexNames.last -> adjustMapReduceLongs(resValue))
+    }
 
   /** Raw string of the map function for mapReduce. */
   protected[processors] final def mapFunc(metricNames: Seq[String]): JSFunction = {
@@ -250,15 +253,13 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       case otherwise          => throw new NotImplementedError
     }
 
-    val mapReduce = runMapReduce(coll)(Option(matchers)) _
-
-    //ru.typeOf[T].baseClasses.contains(typeOf)
+    val mapReduceFunc = runMapReduce(coll)(Option(matchers)) _
 
     if (!(tt.tpe <:< ru.weakTypeTag[FragmentStatsAggrLike[_]].tpe)) {
 
       val aggrStats = extractFieldNames[T].par
-        .flatMap { n => mapReduce(Seq(metricName, n)) }
-        .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+        .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
+        .foldLeft(MongoDBObject.empty)(_ ++ _)
 
       aggrStats.nonEmpty
         .option { grater[T].asObject(aggrStats) }
@@ -278,8 +279,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       val innerStats = readNames.par
         .flatMap { rn =>
           val res = metricAttrNames.par
-            .flatMap { an => mapReduce(Seq(metricName, rn, an)) }
-            .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+            .flatMap { an => mapReduceFunc(Seq(metricName, rn, an)) }
+            .foldLeft(MongoDBObject.empty)(_ ++ _)
           res.nonEmpty
             .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
         }
@@ -288,8 +289,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       // Then process outer fragment statistics
       val outerStats = extractFieldNames(m).par
         .filterNot { FragmentStatsLike.readAttrs.contains }
-        .flatMap { n => mapReduce(Seq(metricName, n)) }
-        .foldLeft(MongoDBObject.empty) { case (a, b) => a ++ adjustMapReduceLongs(b) }
+        .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
+        .foldLeft(MongoDBObject.empty)(_ ++ _)
 
       val aggrStats = innerStats ++ outerStats
       aggrStats
