@@ -63,7 +63,7 @@ object BaseRunRecord {
 }
 
 /** Representation of a sequencing accumulation level unit. */
-@Salat abstract class BaseUnitRecord {
+@Salat sealed abstract class BaseUnitRecord { this: CaseClass =>
 
   /** Internal database ID for the document. */
   @Key("_id") def dbId: ObjectId
@@ -82,14 +82,14 @@ object BaseRunRecord {
 }
 
 /** Representation of a sample within a run. */
-@Salat abstract class BaseSampleRecord extends BaseUnitRecord {
+@Salat abstract class BaseSampleRecord extends BaseUnitRecord { this: CaseClass =>
 
   /** Sample name. */
   @Persist def sampleName: Option[String]
 }
 
 /** Representation of a read group metrics. */
-@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord {
+@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord { this: CaseClass =>
 
   /** Name of the sample which this read group belongs to. */
   @Persist def sampleName: Option[String]
