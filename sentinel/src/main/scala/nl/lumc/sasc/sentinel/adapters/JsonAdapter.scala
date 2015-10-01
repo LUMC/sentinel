@@ -22,11 +22,14 @@ import scala.util.{ Failure, Success, Try }
 import org.json4s._
 import org.json4s.jackson.JsonMethods.parse
 
-import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator }
+import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator, SentinelJsonFormats }
 import nl.lumc.sasc.sentinel.utils.exceptions.JsonValidationException
 
 /** Trait for parsing JSON. */
 trait JsonAdapter {
+
+  /** JSON format for Sentinel. */
+  implicit val formats = SentinelJsonFormats
 
   /**
    * Parses the given byte array into JSON.

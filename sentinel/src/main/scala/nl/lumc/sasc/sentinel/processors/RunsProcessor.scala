@@ -51,9 +51,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   /** Execution context for Future operations. */
   implicit private def context: ExecutionContext = runsProcessorContext
 
-  /** JSON formats used by this processor. */
-  implicit val formats = SentinelJsonFormats
-
   /**
    * Processes and stores the given uploaded file to the run records collection.
    *
