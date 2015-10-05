@@ -18,13 +18,10 @@ package nl.lumc.sasc.sentinel.utils
 
 import org.scalatra.servlet.FileItem
 
-trait Implicits {
-
-  /** Type alias for Scalatra file uploads. */
-  type FileUpload = FileItem
+object Implicits {
 
   /** Implicit class for adding our custom read function to an uploaded file item. */
-  implicit class RichFileUpload(fi: FileItem) {
+  implicit class RichFileItem(fi: FileItem) {
 
     /** Reads the uncompressed contents of the file upload. */
     def readUncompressedBytes(): Array[Byte] =

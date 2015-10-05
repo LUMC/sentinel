@@ -44,11 +44,10 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def jsonSchemaUrl = "/schemas/plain.json"
 
-  def processRunUpload(uploaded: FileUpload, uploader: User) =
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) =
     for {
-      byteContents <- Future { uploaded.readUncompressedBytes() }
-      _ <- Future { parseAndValidateJson(byteContents) }
-      fileId <- storeFile(byteContents, uploader, uploaded.getName)
+      _ <- Future { parseAndValidateJson(contents) }
+      fileId <- storeFile(contents, uploader, uploadName)
       run = PlainRunRecord(fileId, uploader.id, pipelineName, utcTimeNow)
       _ <- storeRun(run)
     } yield run

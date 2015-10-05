@@ -32,6 +32,7 @@ import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.utils.exceptions._
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
  * Controller for the `/runs` endpoint.
@@ -217,14 +218,16 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   post("/", operation(postOp)) {
     logger.info(requestLog)
     val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
-    val uploadedRun = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
+    val upload = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
     supportedPipelines.get(pipeline) match {
       case None => BadRequest(CommonMessages.invalidPipeline(supportedPipelines.keySet.toSeq))
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
-          val is = p.processRunUpload(uploadedRun, user).map(run => Created(run))
+          val is = {
+            p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map(run => Created(run))
+          }
         }
     }
   }

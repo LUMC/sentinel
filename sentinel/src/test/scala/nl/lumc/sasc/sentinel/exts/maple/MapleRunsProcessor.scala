@@ -103,18 +103,17 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   /**
    * Validates and stores uploaded run summaries.
    *
-   * @param uploaded Run summary file uploaded via an HTTP endpoint.
+   * @param contents Upload contents as a byte array.
+   * @param uploadName File name of the upload.
    * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRunUpload(uploaded: FileUpload, uploader: User) = {
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
     for {
-      // Read uncompressed input stream
-      byteContents <- Future { uploaded.readUncompressedBytes() }
       // Make sure it is JSON
-      runJson <- Future { parseAndValidateJson(byteContents) }
+      runJson <- Future { parseAndValidateJson(contents) }
       // Store the raw file in our database
-      fileId <- storeFile(byteContents, uploader, uploaded.getName)
+      fileId <- storeFile(contents, uploader, uploadName)
       // Extract run, samples, and read groups
       (samples, readGroups) <- Future { extractUnits(runJson, uploader.id, fileId) }
       // Store samples

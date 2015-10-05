@@ -37,7 +37,6 @@ import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
  */
 abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     extends Processor
-    with Implicits
     with FutureAdapter {
 
   type RunRecord <: BaseRunRecord with CaseClass
@@ -54,11 +53,12 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   /**
    * Processes and stores the given uploaded file to the run records collection.
    *
-   * @param uploaded Run summary file uploaded via an HTTP endpoint.
+   * @param contents Upload contents as a byte array.
+   * @param uploadName File name of the upload.
    * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRunUpload(uploaded: FileUpload, uploader: User): Future[RunRecord]
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[RunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -68,17 +68,17 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    *
    * This method is meant for storing uploaded run summary files in GridFS.
    *
-   * @param byteContents Byte array to store.
+   * @param contents Byte array to store.
    * @param user Uploader of the byte array.
    * @param fileName Original uploaded file name.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(byteContents: Array[Byte], user: User, fileName: String): Future[ObjectId] =
+  def storeFile(contents: Array[Byte], user: User, fileName: String): Future[ObjectId] =
     Future {
       // TODO: stop using exceptions
       val res =
         try {
-          mongo.gridfs(new ByteArrayInputStream(byteContents)) { f =>
+          mongo.gridfs(new ByteArrayInputStream(contents)) { f =>
             f.filename = fileName
             f.contentType = "application/json"
             f.metaData = MongoDBObject(
@@ -88,7 +88,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
           }
         } catch {
           case dexc: com.mongodb.DuplicateKeyException =>
-            mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(byteContents)) match {
+            mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(contents)) match {
               case Some(gfs) => gfs._id match {
                 case Some(oid) => throw new DuplicateFileException("Run summary already uploaded.", oid.toString)
                 case None      => throw dexc
