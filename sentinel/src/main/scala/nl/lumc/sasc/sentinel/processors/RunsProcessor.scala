@@ -58,7 +58,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRunUpload(uploaded: FileUpload, uploader: User): Future[BaseRunRecord]
+  def processRunUpload(uploaded: FileUpload, uploader: User): Future[RunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
