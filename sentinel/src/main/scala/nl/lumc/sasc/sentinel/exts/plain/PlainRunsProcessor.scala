@@ -46,7 +46,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) =
     for {
-      _ <- Future { parseAndValidateJson(contents) }
+      _ <- Future { parseAndValidate(contents) }
       fileId <- storeFile(contents, uploader, uploadName)
       run = PlainRunRecord(fileId, uploader.id, pipelineName, utcTimeNow)
       _ <- storeRun(run)

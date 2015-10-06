@@ -79,6 +79,22 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
         } yield patchedUsr
     }
 
+  /**
+   * Checks whether the given user patch operations are valid.
+   *
+   * The methods adds additional validation steps that only applies to user patch operations, on top of the base
+   * patch operations.
+   *
+   * @param patchOps Patch operations to validate.
+   * @param requester User requesting to apply the patch operations.
+   * @return Either the validation messages or the user patches.
+   */
+  def validatePatches(patchOps: Seq[UserPatch], requester: User): Seq[String] \/ Seq[UserPatch] =
+    patchOps.foldLeft(Seq.empty[String]) { (acc, p) => acc ++ p.validationMessages } match {
+      case vms if vms.nonEmpty => vms.left
+      case otherwise           => patchOps.right
+    }
+
   /** Updates an existing user record in the database. */
   def updateUser(user: User): Future[WriteResult] = Future {
     coll
@@ -98,7 +114,7 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
         case Some(u) => u.right[Seq[String]]
         case None    => Seq(s"User ID '$userId' not found.").left[User]
       })
-      patchedUser <- EitherT(Future { patchUser(currentUser, patchOps) })
+      patchedUser <- EitherT(Future.successful(patchUser(currentUser, patchOps)))
       writeResult <- EitherT(updateUser(patchedUser).map(_.right[Seq[String]]))
     } yield writeResult
 

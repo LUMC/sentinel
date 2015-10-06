@@ -17,6 +17,7 @@
             { "$ref": "#/definitions/oneOperation" }
         ]
     },
+    "minItems": 1,
     "definitions": {
         "jsonPointer": {
             "type": "string",

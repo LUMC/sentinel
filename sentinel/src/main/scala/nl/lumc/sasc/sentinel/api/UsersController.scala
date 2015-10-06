@@ -16,18 +16,18 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.Future.{ successful => sf }
 
 import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
-import scalaz._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.exceptions.{ ExistingUserIdException, JsonValidationException }
+import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /**
@@ -101,49 +101,38 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   patch("/:userRecordId", operation(userRecordIdPatchOp)) {
 
-    // TODO: refactor this endpoint ~ use less explicit halts
-
     logger.info(requestLog)
-    // validate and load patch operations ~ based on the JSON patch spec *not* our own requirements (yet)
-    val patchOps = Try(patchValidator.parseAndValidateJson(request.body.getBytes)) match {
 
-      // validation fails
-      case Failure(f) =>
-        f match {
-          case vexc: JsonValidationException =>
-            halt(400, ApiMessage(vexc.getMessage,
-              hint = vexc.report.collect { case r => r.toString }))
-          case otherwise =>
-            halt(500, CommonMessages.Unexpected)
-        }
-
-      // validation succeeds
-      case Success(jv) =>
-        val patches = jv.extractOpt[Seq[UserPatch]] match {
-          // and patch list has size > 0
-          case Some(ps) if ps.nonEmpty => ps
-          // if patch list is empty
-          case otherwise               => halt(400, ApiMessage("Invalid user patch.", hint = "Operations can not be empty."))
-        }
-        patches
-    }
-
-    val userRecordId = params("userRecordId")
+    val userRecordId = params.getAs[String]("userRecordId")
+      .getOrElse(halt(400, ApiMessage("User Record ID not specified.")))
     val user = basicAuth()
 
-    // the '/verified'  operation is only allowed for admins
-    if (!user.isAdmin && patchOps.exists(p => p.path == "/verified")) halt(403, CommonMessages.Unauthorized)
-    // any other operations are only allowed for admins or for the same user
-    else if (userRecordId == user.id || user.isAdmin) new AsyncResult {
+    new AsyncResult {
       val is =
-        users.patchAndUpdateUser(userRecordId, patchOps)
-          .map {
-            case -\/(errs)                 => BadRequest(ApiMessage("Error encountered when patching.", hint = errs.mkString(", ")))
-            case \/-(res) if res.getN == 1 => NoContent()
-            case otherwise                 => InternalServerError()
+        if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(CommonMessages.Unauthorized))
+        else {
+
+          val operations = for {
+            json <- patchValidator.fParseAndValidate(request.body.getBytes)
+            patches <- json.extract[Seq[UserPatch]].right
+            validPatches <- users.validatePatches(patches, user)
+          } yield validPatches
+
+          operations match {
+            case -\/(errs) => sf(BadRequest(ApiMessage("Invalid patch operation(s).", hint = errs)))
+
+            case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
+              sf(Forbidden(CommonMessages.Unauthorized))
+
+            case \/-(ops) =>
+              users.patchAndUpdateUser(userRecordId, ops).map {
+                case -\/(errs)                   => BadRequest(ApiMessage("Error encountered when patching.", hint = errs))
+                case \/-(wres) if wres.getN == 1 => NoContent()
+                case otherwise                   => InternalServerError(CommonMessages.Unexpected)
+              }
           }
+        }
     }
-    else halt(403, CommonMessages.Unauthorized)
   }
 
   // Helper endpoint to capture PATCH request with unspecified user ID

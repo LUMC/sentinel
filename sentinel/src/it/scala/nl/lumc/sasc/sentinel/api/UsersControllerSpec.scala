@@ -511,339 +511,256 @@ class UsersControllerSpec extends SentinelServletSpec {
       }
     }
 
-    //"when the specified user record ID does not exist should" >> inline {}
-
-    //"when the specified user ID does not exist should" >> inline {}
-
-    "when the patch document is non-JSON should" >> inline {
-
-      new Context.PriorRequestsClean {
-
-        def request = () => patch(endpoint(UserExamples.avg.id), Array[Byte](10, 20 ,30)) { response }
-        def priorRequests = Seq(request)
-
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "File is not JSON-formatted.")
-        }
-      }
-    }
-
-    "when the patch document is empty should" >> inline {
-
-      new Context.PriorRequestsClean {
-
-        def payload = toByteArray(Seq())
-        def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
-        def priorRequests = Seq(request)
-
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Invalid user patch.")
-          priorResponse.body must /("hint" -> "Operations can not be empty.")
-        }
-      }
-    }
-
-    "when the patch document contains an invalid entry should" >> inline {
-
-      new Context.PriorRequestsClean {
-
-        def payload = toByteArray(Seq("yalala", UserPatch("replace", "/password", "newPass123")))
-        def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
-        def priorRequests = Seq(request)
-
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "JSON is invalid.")
-        }
-      }
-    }
-
-    "when the patch document contains disallowed 'op' values which" can {
-
-      Seq("add", "remove", "test") foreach { case op =>
-
-        s"be '$op' should" >> inline {
-
-          new Context.PriorRequestsClean {
-
-            def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
-            def payload = toByteArray(
-              Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
-            def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-            def priorRequests = Seq(request)
-
-            "return status 400" in {
-              priorResponse.status mustEqual 400
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Error encountered when patching.")
-              priorResponse.body must /("hint" -> s"Unexpected operation: '$op'.")
-            }
-          }
-        }
-      }
-    }
-
     "using basic HTTP authentication" >> {
       br
 
-      "when done by an admin user" >> {
-        br
+      "when done by a valid user which" can {
 
-        def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.admin.id, "0PwdAdmin"))
+        val userSets = Seq(
+          ("an admin user", "0PwdAdmin", UserExamples.admin),
+          ("a non-admin user to his/her own account", "0PwdAvg", UserExamples.avg))
 
-        "when the password does not match should" >> inline {
+        userSets foreach { case (utype, pwd, uobj) =>
 
-          def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.admin.id, "0PwdAdmin_nomatch"))
+          s"be $utype" should {
 
-          new Context.PriorRequestsClean {
+            def headers = Map("Authorization" -> makeBasicAuthHeader(uobj.id, pwd))
 
-            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
-            def priorRequests = Seq(request)
+            "when the password does not match should" >> inline {
 
-            "return status 401" in {
-              priorResponse.status mustEqual 401
-            }
+              def headers = Map("Authorization" -> makeBasicAuthHeader(uobj.id, s"${pwd}_nomatch"))
 
-            "return the challenge response header key" in {
-              priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
-            }
+              new Context.PriorRequestsClean {
 
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Authentication required to access resource.")
-            }
+                def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+                def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
+                def priorRequests = Seq(request)
 
-            "not change the user authentication status" in {
-              // TODO: find a way to use matcher without using Await explicitly
-              val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
-              results must beSome.like { case user => user.verified must beFalse }
-            }
-          }
-        }
+                "return status 401" in {
+                  priorResponse.status mustEqual 401
+                }
 
-        "when he/she authenticates correctly" >> {
-          br
+                "return the challenge response header key" in {
+                  priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
+                }
 
-          "when the patch contains an op with path '/verified' should" >> inline {
+                "return a JSON object containing the expected message" in {
+                  priorResponse.contentType mustEqual "application/json"
+                  priorResponse.body must /("message" -> "Authentication required to access resource.")
+                }
 
-            new Context.PriorRequestsClean {
-
-              def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-              def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
-              def priorRequests = Seq(request)
-
-              "return status 204" in {
-                priorResponse.status mustEqual 204
-              }
-
-              "return an empty body" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must beEmpty
-              }
-
-              "change the user verification status" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
-                results must beSome.like { case user => user.verified must beTrue }
-              }
-            }
-          }
-
-          "when the patch contains an op with path '/password' should" >> inline {
-
-            val newPass = "newPass123"
-
-            new Context.PriorRequestsClean {
-
-              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
-              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-              def priorRequests = Seq(request)
-
-              "return status 204" in {
-                priorResponse.status mustEqual 204
-              }
-
-              "return an empty body" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must beEmpty
-              }
-
-              "change the user password" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = servlet.users.getUser(UserExamples.avg.id)
-                Await.result(results, 1000.milli) must beSome.like { case user =>
-                  user.passwordMatches(newPass) must beTrue
-                  user.passwordMatches("0PwdAvg") must beFalse
+                "not change the user authentication status" in {
+                  // TODO: find a way to use matcher without using Await explicitly
+                  val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
+                  results must beSome.like { case user => user.verified must beFalse }
                 }
               }
             }
-          }
 
-          "when the patch contains an op with path '/email' should" >> inline {
+            "when he/she authenticates correctly" >> {
+              br
 
-            val newEmail = "new@email.com"
+              "when the patch document is non-JSON should" >> inline {
 
-            new Context.PriorRequestsClean {
+                new Context.PriorRequestsClean {
 
-              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
-              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-              def priorRequests = Seq(request)
+                  def request = () => patch(endpoint(uobj.id), Array[Byte](10, 20 ,30), headers) { response }
+                  def priorRequests = Seq(request)
 
-              "return status 204" in {
-                priorResponse.status mustEqual 204
-              }
+                  "return status 400" in {
+                    priorResponse.status mustEqual 400
+                  }
 
-              "return an empty body" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must beEmpty
-              }
-
-              "change the user email" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
-                results must beSome.like { case user => user.email mustEqual newEmail }
-              }
-            }
-          }
-        }
-      }
-
-      "when done by an non-admin user to his/her own account" >> {
-        br
-
-        def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
-
-        "when the password does not match should" >> inline {
-
-          def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg_nomatch"))
-
-          new Context.PriorRequestsClean {
-
-            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
-            def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
-            def priorRequests = Seq(request)
-
-            "return status 401" in {
-              priorResponse.status mustEqual 401
-            }
-
-            "return the challenge response header key" in {
-              priorResponse.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Authentication required to access resource.")
-            }
-
-            "not change the verification status" in {
-              // TODO: find a way to use matcher without using Await explicitly
-              val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
-              results must beSome.like { case user => user.verified must beFalse }
-            }
-          }
-        }
-
-        "when he/she authenticates correctly" >> {
-          br
-
-          "when the patch contains an op with path '/verified' should" >> inline {
-
-            new Context.PriorRequestsClean {
-
-              def payload = toByteArray(Seq(UserPatch("replace", "/verified", false)))
-              def headers = Map("Authorization" -> makeBasicAuthHeader(UserExamples.avg.id, "0PwdAvg"))
-              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-              def priorRequests = Seq(request)
-
-              "return status 403" in {
-                priorResponse.status mustEqual 403
-              }
-
-              "return a JSON object containing the expected message" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must /("message" -> "Unauthorized to access resource.")
-              }
-
-              "not change the user verification status" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
-                results must beSome.like { case user => user.verified must beTrue }
-              }
-            }
-          }
-
-          "when the patch contains an op with path '/password' should" >> inline {
-
-            val newPass = "newPass123"
-
-            new Context.PriorRequestsClean {
-
-              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
-              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-              def priorRequests = Seq(request)
-
-              "return status 204" in {
-                priorResponse.status mustEqual 204
-              }
-
-              "return a JSON object containing the expected message" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must beEmpty
-              }
-
-              "change the user password" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = servlet.users.getUser(UserExamples.avg.id)
-                Await.result(results, 1000.milli) must beSome.like { case user =>
-                  user.passwordMatches(newPass) must beTrue
-                  user.passwordMatches("0PwdAvg") must beFalse
+                  "return a JSON object containing the expected message" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                    priorResponse.body must /("hint") /# 0 / "File is not JSON."
+                  }
                 }
               }
-            }
-          }
 
-          "when the patch contains an op with path '/email' should" >> inline {
+              "when the patch document is empty should" >> inline {
 
-            val newEmail = "new@email.com"
+                new Context.PriorRequestsClean {
 
-            new Context.PriorRequestsClean {
+                  def payload = toByteArray(Seq())
+                  def request = () => patch(endpoint(uobj.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
 
-              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
-              def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
-              def priorRequests = Seq(request)
+                  "return status 400" in {
+                    priorResponse.status mustEqual 400
+                  }
 
-              "return status 204" in {
-                priorResponse.status mustEqual 204
+                  "return a JSON object containing the expected message" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                  }
+                }
               }
 
-              "return an empty body" in {
-                priorResponse.contentType mustEqual "application/json"
-                priorResponse.body must beEmpty
+              "when the patch document contains an invalid entry should" >> inline {
+
+                new Context.PriorRequestsClean {
+
+                  def payload = toByteArray(Seq("yalala", UserPatch("replace", "/password", "newPass123")))
+                  def request = () => patch(endpoint(uobj.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return status 400" in {
+                    priorResponse.status mustEqual 400
+                  }
+
+                  "return a JSON object containing the expected message" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                  }
+                }
               }
 
-              "change the user email" in {
-                // TODO: find a way to use matcher without using Await explicitly
-                val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
-                results must beSome.like { case user => user.email mustEqual newEmail }
+              "when the patch document contains disallowed 'op' values which" can {
+
+                Seq("add", "remove", "test") foreach { case op =>
+
+                  s"be '$op' should" >> inline {
+
+                    new Context.PriorRequestsClean {
+
+                      def payload = toByteArray(
+                        Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
+                      def request = () => patch(endpoint(uobj.id), payload, headers) { response }
+                      def priorRequests = Seq(request)
+
+                      "return status 400" in {
+                        priorResponse.status mustEqual 400
+                      }
+
+                      "return a JSON object containing the expected message" in {
+                        priorResponse.contentType mustEqual "application/json"
+                        priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                        priorResponse.body must /("hint") /# 0 / s"Unexpected operation: '$op'."
+                      }
+                    }
+                  }
+                }
+              }
+
+              "when the patch contains an op with path '/verified' and targets another user" >> inline {
+
+                new Context.PriorRequestsClean {
+
+                  def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+                  def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return the expected status code" in {
+                    if (uobj == UserExamples.admin) priorResponse.status mustEqual 204
+                    else priorResponse.status mustEqual 403
+
+                  }
+
+                  "return the expected body" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    if (uobj == UserExamples.admin) priorResponse.body must beEmpty
+                    else priorResponse.body must /("message" -> "Unauthorized to access resource.")
+                  }
+
+                  "change the user verification status if admin and not if not admin" in {
+                    // TODO: find a way to use matcher without using Await explicitly
+                    val results = Await.result(servlet.users.getUser(UserExamples.unverified.id), 1000.milli)
+                    results must beSome.like { case user =>
+                      if (uobj == UserExamples.admin) user.verified must beTrue
+                      else user.verified must beFalse
+                    }
+                  }
+                }
+              }
+
+              "when the patch contains an op with path '/verified' and targets the same user" >> inline {
+
+                new Context.PriorRequestsClean {
+
+                  def payload = toByteArray(Seq(UserPatch("replace", "/verified", false)))
+                  def request = () => patch(endpoint(uobj.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return the expected status code" in {
+                    if (uobj == UserExamples.admin) priorResponse.status mustEqual 204
+                    else priorResponse.status mustEqual 403
+
+                  }
+
+                  "return the expected body" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    if (uobj == UserExamples.admin) priorResponse.body must beEmpty
+                    else priorResponse.body must /("message" -> "Unauthorized to access resource.")
+                  }
+
+                  "change the user verification status if admin and not if not admin" in {
+                    // TODO: find a way to use matcher without using Await explicitly
+                    val results = Await.result(servlet.users.getUser(uobj.id), 1000.milli)
+                    results must beSome.like { case user =>
+                      if (uobj == UserExamples.admin) user.verified must beFalse
+                      else user.verified must beTrue
+                    }
+                  }
+                }
+              }
+
+              "when the patch contains an op with path '/password' should" >> inline {
+
+                val newPass = "newPass123"
+
+                new Context.PriorRequestsClean {
+
+                  def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+                  def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return status 204" in {
+                    priorResponse.status mustEqual 204
+                  }
+
+                  "return an empty body" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must beEmpty
+                  }
+
+                  "change the user password" in {
+                    // TODO: find a way to use matcher without using Await explicitly
+                    val results = servlet.users.getUser(UserExamples.avg.id)
+                    Await.result(results, 1000.milli) must beSome.like { case user =>
+                      user.passwordMatches(newPass) must beTrue
+                      user.passwordMatches("0PwdAvg") must beFalse
+                    }
+                  }
+                }
+              }
+
+              "when the patch contains an op with path '/email' should" >> inline {
+
+                val newEmail = "new@email.com"
+
+                new Context.PriorRequestsClean {
+
+                  def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+                  def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return status 204" in {
+                    priorResponse.status mustEqual 204
+                  }
+
+                  "return an empty body" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must beEmpty
+                  }
+
+                  "change the user email" in {
+                    // TODO: find a way to use matcher without using Await explicitly
+                    val results = Await.result(servlet.users.getUser(UserExamples.avg.id), 1000.milli)
+                    results must beSome.like { case user => user.email mustEqual newEmail }
+                  }
+                }
               }
             }
           }
