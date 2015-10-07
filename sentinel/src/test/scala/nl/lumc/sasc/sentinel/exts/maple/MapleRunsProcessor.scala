@@ -106,24 +106,26 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
    * @param contents Upload contents as a byte array.
    * @param uploadName File name of the upload.
    * @param uploader Uploader of the run summary file.
-   * @return A run record of the uploaded run summary file.
+   * @return A run record of the uploaded run summary file or a list of error messages.
    */
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
-    for {
+    val stack = for {
       // Make sure it is JSON
-      runJson <- Future { parseAndValidate(contents) }
+      runJson <- ? <~ parseAndValidate(contents)
       // Store the raw file in our database
-      fileId <- storeFile(contents, uploader, uploadName)
-      // Extract run, samples, and read groups
-      (samples, readGroups) <- Future { extractUnits(runJson, uploader.id, fileId) }
+      fileId <- ? <~ storeFile(contents, uploader, uploadName)
+      // Extract samples and read groups
+      (samples, readGroups) <- ? <~ extractUnits(runJson, uploader.id, fileId)
       // Store samples
-      _ <- storeSamples(samples)
+      _ <- ? <~ storeSamples(samples)
       // Store read groups
-      _ <- storeReadGroups(readGroups)
+      _ <- ? <~ storeReadGroups(readGroups)
       // Create run record
       run = MapleRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
       // Store run record into database
-      _ <- storeRun(run)
+      _ <- ? <~ storeRun(run)
     } yield run
+
+    stack.run
   }
 }

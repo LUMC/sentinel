@@ -73,15 +73,17 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
 
   /** Uploaded file processor. */
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
-    for {
-      runJson <- Future { parseJson(contents) }
-      fileId <- storeFile(contents, uploader, uploadName)
-      runRef <- Future { extractReference(runJson) }
-      ref <- getOrCreateReference(runRef)
-      samples <- Future { extractSamples(runJson, uploader.id, ref.refId, fileId) }
-      _ <- storeSamples(samples)
+    val result = for {
+      runJson <- ? <~ parseJson(contents)
+      fileId <- ? <~ storeFile(contents, uploader, uploadName)
+      runRef <- ? <~ extractReference(runJson)
+      ref <- ? <~ getOrCreateReference(runRef)
+      samples <- ? <~ extractSamples(runJson, uploader.id, ref.refId, fileId)
+      _ <- ? <~ storeSamples(samples)
       run = PrefRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), ref.refId)
-      _ <- storeRun(run)
+      _ <- ? <~ storeRun(run)
     } yield run
+
+    result.run
   }
 }

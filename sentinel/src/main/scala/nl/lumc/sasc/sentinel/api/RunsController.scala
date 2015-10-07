@@ -21,7 +21,7 @@ import java.io.File
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
-import scalaz._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.{ DeletionError, HeaderApiKey }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
@@ -75,14 +75,6 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     case sexc: SizeConstraintExceededException =>
       contentType = formats("json")
       RequestEntityTooLarge(CommonMessages.RunSummaryTooLarge)
-
-    case vexc: JsonValidationException =>
-      contentType = formats("json")
-      BadRequest(ApiMessage(vexc.getMessage, hint = vexc.report.collect { case r => r.toString }))
-
-    case dexc: DuplicateFileException =>
-      contentType = formats("json")
-      Conflict(ApiMessage(dexc.getMessage, hint = Map("uploadedId" -> dexc.existingId)))
 
     case otherwise =>
       contentType = formats("json")
@@ -221,12 +213,24 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     val upload = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
 
     supportedPipelines.get(pipeline) match {
+
       case None => BadRequest(CommonMessages.invalidPipeline(supportedPipelines.keySet.toSeq))
+
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
           val is = {
-            p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map(run => Created(run))
+
+            p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map {
+
+              case -\/(errs) if errs.length == 1 =>
+                if (errs.head.startsWith(CommonMessages.AlreadyUploaded.message.init)) Conflict(ApiMessage(errs.head))
+                else BadRequest(ApiMessage(errs.head))
+
+              case -\/(errs) => BadRequest(errs.map { err => ApiMessage(err) })
+
+              case \/-(run)  => Created(run)
+            }
           }
         }
     }

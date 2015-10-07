@@ -70,15 +70,17 @@ class PannRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
 
   /** Uploaded file processor. */
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
-    for {
-      runJson <- Future { parseJson(contents) }
-      fileId <- storeFile(contents, uploader, uploadName)
-      runAnnots <- Future { extractAnnotations(runJson) }
-      annots <- getOrCreateAnnotations(runAnnots)
-      samples <- Future { extractSamples(runJson, uploader.id, annots.map(_.annotId), fileId) }
-      _ <- storeSamples(samples)
+    val result = for {
+      runJson <- ? <~ parseJson(contents)
+      fileId <- ? <~ storeFile(contents, uploader, uploadName)
+      runAnnots <- ? <~ extractAnnotations(runJson)
+      annots <- ? <~ getOrCreateAnnotations(runAnnots)
+      samples <- ? <~ extractSamples(runJson, uploader.id, annots.map(_.annotId), fileId)
+      _ <- ? <~ storeSamples(samples)
       run = PannRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), annots.map(_.annotId))
-      _ <- storeRun(run)
+      _ <- ? <~ storeRun(run)
     } yield run
+
+    result.run
   }
 }

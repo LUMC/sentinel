@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.exts.plain
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.ExecutionContext
 
 import nl.lumc.sasc.sentinel.adapters.JsonValidationAdapter
 import nl.lumc.sasc.sentinel.models.User
@@ -44,11 +44,14 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def jsonSchemaUrl = "/schemas/plain.json"
 
-  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) =
-    for {
-      _ <- Future { parseAndValidate(contents) }
-      fileId <- storeFile(contents, uploader, uploadName)
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
+    val result = for {
+      _ <- ? <~ parseAndValidate(contents)
+      fileId <- ? <~ storeFile(contents, uploader, uploadName)
       run = PlainRunRecord(fileId, uploader.id, pipelineName, utcTimeNow)
-      _ <- storeRun(run)
+      _ <- ? <~ storeRun(run)
     } yield run
+
+    result.run
+  }
 }

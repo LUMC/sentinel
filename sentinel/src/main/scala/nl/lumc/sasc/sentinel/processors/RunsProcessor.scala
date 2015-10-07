@@ -17,20 +17,20 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
-import nl.lumc.sasc.sentinel.adapters.FutureAdapter
 
 import scala.concurrent.{ Future, ExecutionContext }
+import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
-import scalaz._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.{ CaseClass, DeletionError }
-import nl.lumc.sasc.sentinel.models.{ PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.adapters.FutureAdapter
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
-import nl.lumc.sasc.sentinel.utils.exceptions.DuplicateFileException
 
 /**
  * Base class for processing run summary files.
@@ -39,7 +39,11 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     extends Processor
     with FutureAdapter {
 
+  /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass
+
+  /** Type alias for the result of parsing uploads into run records. */
+  type UploadResult = List[String] \/ RunRecord
 
   /** Type alias for deletion result. */
   type DeletionResult[+A] = DeletionError.Value \/ A
@@ -58,7 +62,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[RunRecord]
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[List[String] \/ RunRecord]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -73,37 +77,43 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param fileName Original uploaded file name.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(contents: Array[Byte], user: User, fileName: String): Future[ObjectId] =
+  def storeFile(contents: Array[Byte], user: User, fileName: String): Future[List[String] \/ ObjectId] =
     Future {
-      // TODO: stop using exceptions
-      val res =
-        try {
-          mongo.gridfs(new ByteArrayInputStream(contents)) { f =>
-            f.filename = fileName
-            f.contentType = "application/json"
-            f.metaData = MongoDBObject(
-              "uploaderId" -> user.id,
-              "pipeline" -> pipelineName
-            )
-          }
-        } catch {
+
+      /** Helper method to store raw files. */
+      def storeSummary() =
+        mongo.gridfs.withNewFile(new ByteArrayInputStream(contents)) { f =>
+          f.filename = fileName
+          f.contentType = "application/json"
+          f.metaData = MongoDBObject(
+            "uploaderId" -> user.id,
+            "pipeline" -> pipelineName)
+        }
+
+      Try(storeSummary()) match {
+
+        case scala.util.Failure(f) => f match {
+
           case dexc: com.mongodb.DuplicateKeyException =>
             mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(contents)) match {
               case Some(gfs) => gfs._id match {
-                case Some(oid) => throw new DuplicateFileException("Run summary already uploaded.", oid.toString)
-                case None      => throw dexc
+                case Some(oid) => List(CommonMessages.AlreadyUploaded.message.init + s" ('${oid.toString}').").left
+                case None      => List("Unexpected database error: file has no ID.").left
               }
-              case None => throw dexc
+              case None => List("Unexpected database error: conflicting duplicate detection.").left
             }
+
+          case otherwise => List("Unexpected database error.").left
         }
 
-      res match {
-        case Some(v) => v match {
-          case oid: ObjectId => oid
-          case otherwise =>
-            throw new RuntimeException("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.")
+        case scala.util.Success(s) => s match {
+
+          case Some(v) => v match {
+            case oid: ObjectId => oid.right
+            case otherwise     => List("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.").left
+          }
+          case None => List("Unexpected error when trying to store run summary.").left
         }
-        case None => throw new RuntimeException("Unexpected error when trying to store run summary.")
       }
     }
 

@@ -113,7 +113,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
         else {
 
           val operations = for {
-            json <- patchValidator.fParseAndValidate(request.body.getBytes)
+            json <- patchValidator.parseAndValidate(request.body.getBytes)
             patches <- json.extract[Seq[UserPatch]].right
             validPatches <- users.validatePatches(patches, user)
           } yield validPatches

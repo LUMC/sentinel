@@ -44,6 +44,8 @@ object CommonMessages {
 
   val InvalidDbId = ApiMessage("Invalid ID(s) provided.")
 
+  val AlreadyUploaded = ApiMessage("Run summary already uploaded.")
+
   val UnspecifiedUserId = ApiMessage("User ID not specified.")
 
   val UnspecifiedRunId = ApiMessage("Run summary ID not specified.")

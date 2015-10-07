@@ -291,7 +291,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "File is not JSON-formatted.")
+            priorResponse.body must /("message" -> "File is not JSON.")
           }
         }
       }
@@ -312,7 +312,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "JSON is invalid.")
+            priorResponse.body must /("message" -> startingWith("error: instance failed to match"))
           }
         }
       }
@@ -352,9 +352,9 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message for the second upload" in {
             priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.last.body must /("message" -> "Run summary already uploaded.")
             priorResponses.head.jsonBody must beSome.like { case json =>
-              priorResponses.last.body must /("hint") /("uploadedId" -> (json \ "runId").extract[String])
+              val id = (json \ "runId").extract[String]
+              priorResponses.last.body must /("message" -> s"Run summary already uploaded ('$id').")
             }
           }
 
@@ -397,9 +397,9 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message for the second upload" in {
             priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.last.body must /("message" -> "Run summary already uploaded.")
             priorResponses.head.jsonBody must beSome.like { case json =>
-              priorResponses.last.body must /("hint") /("uploadedId" -> (json \ "runId").extract[String])
+              val id = (json \ "runId").extract[String]
+              priorResponses.last.body must /("message" -> s"Run summary already uploaded ('$id').")
             }
           }
 
