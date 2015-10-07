@@ -147,13 +147,6 @@ package object utils {
 
     /** Exception that is thrown when trying to add a user with an existing ID. */
     class ExistingUserIdException(msg: String) extends RuntimeException(msg)
-
-    /** Exception that is thrown when a JSON validation fails. */
-    class JsonValidationException(msg: String, val report: Option[ProcessingReport] = None)
-      extends RuntimeException(msg)
-
-    /** Exception that is thrown when a duplicate file (based on MD5 checksum value) is stored to the database. */
-    class DuplicateFileException(msg: String, val existingId: String) extends RuntimeException(msg)
   }
 
   object reflect {
