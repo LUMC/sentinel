@@ -62,6 +62,10 @@ object CommonMessages {
   val InvalidSeqQcPhaseError = ApiPayload("Sequencing QC phase parameter is invalid.",
     List("Valid values are '" + SeqQcPhase.values.toList.map(_.toString).sorted.mkString("', '") + "'."))
 
+  val ResourceGoneError = ApiPayload("Resource already deleted.")
+
+  val IncompleteDeletionError = ApiPayload("Unexpected database error: deletion incomplete.")
+
   val UnspecifiedUserId = ApiPayload("User ID not specified.")
 
   val UnspecifiedRunId = ApiPayload("Run summary ID not specified.")

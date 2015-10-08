@@ -27,9 +27,9 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.{ CaseClass, DeletionError }
+import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.adapters.FutureAdapter
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, CommonMessages, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
 /**
@@ -46,7 +46,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   type UploadResult = List[String] \/ RunRecord
 
   /** Type alias for deletion result. */
-  type DeletionResult[+A] = DeletionError.Value \/ A
+  type DeletionResult[+A] = ApiPayload \/ A
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
@@ -265,27 +265,27 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
         .map { dbo => recordGrater.asObject(dbo) }
       maybeDoc match {
         case Some(doc) => doc.deletionTimeUtc match {
-          case Some(_) => -\/(DeletionError.AlreadyDeleted)
-          case None    => \/-(doc)
+          case Some(_) => CommonMessages.ResourceGoneError.left
+          case None    => doc.right
         }
-        case None => -\/(DeletionError.ResourceNotFound)
+        case None => CommonMessages.MissingRunId.left
       }
     }
 
     /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
     def deleteGridFS(record: RunRecord): Future[DeletionResult[Unit]] = deleteRunGridFSEntry(record)
-      .map { unit => \/-(unit) }
-      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+      .map(_.right)
+      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method that marks all sample deletion errors as incomplete deletion. */
     def deleteSamples(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunSamples(record)
-      .map { bwr => \/-(bwr) }
-      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+      .map(_.right)
+      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method that marks all read groups deletion errors as incomplete deletion. */
     def deleteReadGroups(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunReadGroups(record)
-      .map { bwr => \/-(bwr) }
-      .recover { case e: Exception => -\/(DeletionError.Incomplete) }
+      .map(_.right)
+      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method to mark run document as deleted. */
     def markRecord(): Future[DeletionResult[RunRecord]] = Future {
@@ -298,8 +298,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
         .map { dbo => recordGrater.asObject(dbo) }
       doc match {
-        case Some(obj) => \/-(obj)
-        case None      => -\/(DeletionError.Incomplete)
+        case Some(obj) => obj.right
+        case None      => CommonMessages.IncompleteDeletionError.left
       }
     }
 

@@ -1253,7 +1253,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> "Run summary already deleted.")
+              body must /("message" -> "Resource already deleted.")
             }
           }
         }
@@ -1322,7 +1322,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> "Run summary already deleted.")
+              body must /("message" -> "Resource already deleted.")
             }
           }
         }
@@ -1392,7 +1392,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> "Run summary already deleted.")
+              body must /("message" -> "Resource already deleted.")
             }
           }
         }
@@ -1460,7 +1460,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message when repeated" in {
             delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> "Run summary already deleted.")
+              body must /("message" -> "Resource already deleted.")
             }
           }
         }

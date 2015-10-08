@@ -45,20 +45,6 @@ package object sentinel {
     val SentinelConfKey = "sentinel"
   }
 
-  /** Various deletion errors for DELETE operations. */
-  object DeletionError extends Enumeration {
-    type DeletionStatus = Value
-
-    /** Resource already deleted. */
-    val AlreadyDeleted = Value
-
-    /** Resource to delete can not be found. */
-    val ResourceNotFound = Value
-
-    /** Deletion performed but not complete, may be repeated. */
-    val Incomplete = Value
-  }
-
   /** Supported aggregation parameters */
   object AggrStat extends Enumeration {
     type AggrStat = Value

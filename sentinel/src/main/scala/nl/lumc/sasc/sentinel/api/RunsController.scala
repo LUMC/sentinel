@@ -23,7 +23,7 @@ import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
 import scalaz._
 
-import nl.lumc.sasc.sentinel.{ DeletionError, HeaderApiKey }
+import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.exts.plain._
@@ -109,7 +109,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       StringResponseMessage(401, CommonMessages.Unauthenticated.message),
       StringResponseMessage(403, CommonMessages.Unauthorized.message),
       StringResponseMessage(404, CommonMessages.MissingRunId.message),
-      StringResponseMessage(410, "Run summary already deleted.")))
+      StringResponseMessage(410, CommonMessages.ResourceGoneError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -120,12 +120,12 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
     new AsyncResult {
       val is = runs.deleteRun(runId, user).map {
-        case \/-(deletedDoc) => Ok(deletedDoc)
-        case -\/(deletionError) => deletionError match {
-          case DeletionError.AlreadyDeleted   => Gone(ApiPayload("Run summary already deleted."))
-          case DeletionError.ResourceNotFound => NotFound(CommonMessages.MissingRunId)
-          case DeletionError.Incomplete       => InternalServerError("Deletion incomplete. Please repeat request.")
-          case otherwise                      => InternalServerError(CommonMessages.Unexpected)
+        case \/-(doc) => Ok(doc)
+        case -\/(err) => err match {
+          case CommonMessages.IncompleteDeletionError => InternalServerError(err)
+          case CommonMessages.ResourceGoneError       => Gone(err)
+          case CommonMessages.MissingRunId            => NotFound(err)
+          case otherwise                              => InternalServerError(CommonMessages.Unexpected)
         }
       }
     }
