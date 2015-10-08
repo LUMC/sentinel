@@ -754,7 +754,7 @@ class RunsControllerSpec extends SentinelServletSpec {
   s"OPTIONS '$baseEndpoint/:runId'" >> {
     br
     "when using the default parameter should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint/runId", "DELETE,GET,HEAD")
+      new Context.OptionsMethodTest(s"$baseEndpoint/runId", "DELETE,GET,HEAD,PATCH")
     }
   }
 

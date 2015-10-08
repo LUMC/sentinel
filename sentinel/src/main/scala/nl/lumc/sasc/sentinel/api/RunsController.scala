@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
+import scala.concurrent.Future.{ successful => sf }
 
 import org.scalatra._
 import org.scalatra.swagger._
@@ -89,7 +90,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   options("/:runId") {
     logger.info(requestLog)
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
-    response.setHeader("Access-Control-Allow-Methods", "DELETE,GET,HEAD")
+    response.setHeader("Access-Control-Allow-Methods", "DELETE,GET,HEAD,PATCH")
+    response.setHeader("Accept-Patch", formats("json"))
   }
 
   // format: OFF
@@ -134,6 +136,50 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
   // Helper matcher for "DELETE /:runId" so that we return the correct error message
   delete("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
+
+  // format: OFF
+  val runIdPatchOp = (apiOperation[Unit]("runIdPatch")
+    summary "Updates an uploaded run record."
+    notes
+    """This endpoint is used for updating an existing run record. Operations are defined using a subset of the JSON
+      | patch specification. Only the `add`, `remove`, and `replace` operations on tags are supported and only
+      | administrators or the run record uploader can perform patching.
+    """.stripMargin.replaceAll("\n", "")
+    parameters (
+      queryParam[String]("userId").description("User ID."),
+      pathParam[String]("runId").description("Run ID to patch."),
+      queryParam[List[String]]("sampleNames")
+        .description("Sample names to update. If specified, only the specified samples will be patched.")
+        .optional,
+      queryParam[List[String]]("readGroupNames")
+        .description("Read group namess to update. If specified, only the specified read groups will be patched.")
+        .optional,
+      headerParam[String](HeaderApiKey).description("User API key."),
+      bodyParam[List[_]]("body").description("Patch operations to apply."))
+    responseMessages (
+    StringResponseMessage(204, "Record(s) patched successfully."),
+    StringResponseMessage(400, "Patch document is invalid or malformed."),
+    StringResponseMessage(400, CommonMessages.UnspecifiedRunId.message),
+    StringResponseMessage(401, CommonMessages.Unauthenticated.message),
+    StringResponseMessage(403, CommonMessages.Unauthorized.message),
+    StringResponseMessage(404, CommonMessages.MissingRunId.message)))
+  // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
+  // format: ON
+
+  patch("/:runId", operation(runIdPatchOp)) {
+
+    logger.info(requestLog)
+
+    val runId = params.getAs[String]("runId").getOrElse(halt(400, CommonMessages.UnspecifiedRunId))
+    val user = simpleKeyAuth(params => params.get("userId"))
+
+    new AsyncResult {
+      val is = ???
+    }
+  }
+
+  // Helper endpoint to capture PATCH request with unspecified user ID
+  patch("/?") { halt(400, CommonMessages.UnspecifiedRunId) }
 
   // format: OFF
   val runIdGetOp = (apiOperation[PlainRunRecord]("runIdGet")
