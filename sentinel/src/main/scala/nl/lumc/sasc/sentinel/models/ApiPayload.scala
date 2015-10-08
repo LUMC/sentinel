@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.models
 
+import org.scalatra._
+
 import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
 
@@ -35,11 +37,26 @@ object CommonMessages {
     def apply(existingId: String) = ApiPayload(message, hints = List(s"Existing ID: $existingId."))
   }
 
+  object UnexpectedDatabaseError {
+    def message = "Unexpected database error."
+    def apply(hint: String) = ApiPayload(message, hints = List(hint))
+    def apply() = ApiPayload(message)
+  }
+
   val AlreadyUploaded = ApiPayload("Run summary already uploaded.")
 
-  object JsonValidationError {
-    def message = "JSON summary is invalid."
-    def apply(validationMessages: List[String]) = ApiPayload(message, validationMessages)
+  trait ValidationErrorLike {
+    def message: String
+    final def apply(validationMessages: Seq[String]) = ApiPayload(message, validationMessages.toList)
+    final def apply(validationMessage: String) = ApiPayload(message, List(validationMessage))
+  }
+
+  object JsonValidationError extends ValidationErrorLike {
+    def message = "JSON is invalid."
+  }
+
+  object PatchValidationError extends ValidationErrorLike {
+    def message = "Invalid patch operation(s)."
   }
 
   object InvalidDbError {
@@ -72,7 +89,11 @@ object CommonMessages {
 
   val UnspecifiedPipeline = ApiPayload("Pipeline not specified.")
 
-  val MissingUserId = ApiPayload("User ID can not be found.")
+  object MissingUserId {
+    def message = "User ID can not be found."
+    def apply(missingId: String) = ApiPayload(message, hints = List(s"ID '$missingId' does not exist."))
+    def apply() = ApiPayload(message)
+  }
 
   val MissingRunId = ApiPayload("Run summary ID can not be found.")
 
@@ -88,5 +109,5 @@ object CommonMessages {
 
   val RunSummaryTooLarge = ApiPayload(s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
 
-  val Unexpected = ApiPayload("Unexpected error. Please contact the site administrators.")
+  val Unexpected = ApiPayload("Unexpected error.", hints = List("Please contact the site administrators."))
 }

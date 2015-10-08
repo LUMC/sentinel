@@ -573,7 +573,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                   "return a JSON object containing the expected message" in {
                     priorResponse.contentType mustEqual "application/json"
-                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                    priorResponse.body must /("message" -> "JSON is invalid.")
                     priorResponse.body must /("hints") /# 0 / "File is not JSON."
                   }
                 }
@@ -593,7 +593,8 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                   "return a JSON object containing the expected message" in {
                     priorResponse.contentType mustEqual "application/json"
-                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                    priorResponse.body must /("message" -> "JSON is invalid.")
+                    priorResponse.body must /("hints") /# 0 / startWith("error: array is too short")
                   }
                 }
               }
@@ -612,7 +613,8 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                   "return a JSON object containing the expected message" in {
                     priorResponse.contentType mustEqual "application/json"
-                    priorResponse.body must /("message" -> "Invalid patch operation(s).")
+                    priorResponse.body must /("message" -> "JSON is invalid.")
+                    priorResponse.body must /("hints") /# 0 / startWith("error: instance failed to match")
                   }
                 }
               }

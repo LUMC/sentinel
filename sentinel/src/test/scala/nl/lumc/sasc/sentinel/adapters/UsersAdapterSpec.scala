@@ -25,7 +25,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.scalaz.DisjunctionMatchers
 
-import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, User, UserPatch }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
@@ -200,7 +200,7 @@ class UsersAdapterSpec extends Specification
       val patches = List(UserPatch("add", "/email", "t@t.com"))
       testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
-          errs mustEqual List("Unexpected operation: 'add'.")
+          errs mustEqual CommonMessages.PatchValidationError(List("Unexpected operation: 'add'."))
       }
     }
 
@@ -208,7 +208,7 @@ class UsersAdapterSpec extends Specification
       val patches = List(UserPatch("replace", "/invalid", 100))
       testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
-          errs mustEqual List("Invalid path: '/invalid'.")
+          errs mustEqual CommonMessages.PatchValidationError(List("Invalid path: '/invalid'."))
       }
     }
 
@@ -222,7 +222,7 @@ class UsersAdapterSpec extends Specification
         case (path, value) =>
           testAdapter.patchUser(testUserObj, List(UserPatch("replace", path, value))) must beLeftDisjunction.like {
             case errs =>
-              errs mustEqual List(s"Invalid value for path '$path': '$value'.")
+              errs mustEqual CommonMessages.PatchValidationError(List(s"Invalid value for path '$path': '$value'."))
           }
       }
     }
@@ -259,7 +259,7 @@ class UsersAdapterSpec extends Specification
     "return the expected error message when user does not exist" in {
       testAdapter.patchAndUpdateUser("nonexistent", List.empty).map { ret =>
         ret must beLeftDisjunction.like {
-          case errs => errs mustEqual List("User ID 'nonexistent' not found.")
+          case errs => errs mustEqual CommonMessages.MissingUserId("nonexistent")
         }
       }.await
     }

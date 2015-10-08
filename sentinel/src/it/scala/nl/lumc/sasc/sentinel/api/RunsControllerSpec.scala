@@ -291,7 +291,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "File is not JSON.")
+            priorResponse.body must /("message" -> "JSON is invalid.")
+            priorResponse.body must /("hints") /# 0 / "File is not JSON."
           }
         }
       }
@@ -312,7 +313,8 @@ class RunsControllerSpec extends SentinelServletSpec {
 
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> startingWith("error: instance failed to match"))
+            priorResponse.body must /("message" -> "JSON is invalid.")
+            priorResponse.body must /("hints") /# 0 / startWith("error: instance failed to match")
           }
         }
       }
@@ -354,7 +356,8 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.contentType mustEqual  "application/json"
             priorResponses.head.jsonBody must beSome.like { case json =>
               val id = (json \ "runId").extract[String]
-              priorResponses.last.body must /("message" -> s"Run summary already uploaded ('$id').")
+              priorResponses.last.body must /("message" -> "Run summary already uploaded.")
+              priorResponses.last.body must /("hints") /# 0 / s"Existing ID: $id."
             }
           }
 
@@ -399,7 +402,8 @@ class RunsControllerSpec extends SentinelServletSpec {
             priorResponses.last.contentType mustEqual  "application/json"
             priorResponses.head.jsonBody must beSome.like { case json =>
               val id = (json \ "runId").extract[String]
-              priorResponses.last.body must /("message" -> s"Run summary already uploaded ('$id').")
+              priorResponses.last.body must /("message" -> "Run summary already uploaded.")
+              priorResponses.last.body must /("hints") /# 0 / s"Existing ID: $id."
             }
           }
 

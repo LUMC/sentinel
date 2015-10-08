@@ -222,13 +222,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
             p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map {
 
-              case -\/(errs) if errs.length == 1 =>
-                if (errs.head.startsWith(CommonMessages.AlreadyUploaded.message.init)) Conflict(ApiPayload(errs.head))
-                else BadRequest(ApiPayload(errs.head))
-
-              case -\/(errs) => BadRequest(errs.map { err => ApiPayload(err) })
-
-              case \/-(run)  => Created(run)
+              case -\/(err) if err.message == CommonMessages.DuplicateSummaryError.message => Conflict(err)
+              case -\/(err) if err.message == CommonMessages.JsonValidationError.message => BadRequest(err)
+              case \/-(run) => Created(run)
+              case otherwise => InternalServerError(CommonMessages.Unexpected)
             }
           }
         }

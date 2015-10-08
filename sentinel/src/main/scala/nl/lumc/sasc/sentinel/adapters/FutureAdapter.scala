@@ -21,10 +21,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 import scalaz._, Scalaz._
 
+import nl.lumc.sasc.sentinel.models.ApiPayload
+
 /**
  * Base adapter that uses Scala's Futures.
  */
 trait FutureAdapter {
+
+  /** Type alias for operations that returns a user-visible payloads when failing. */
+  type Perhaps[+A] = ApiPayload \/ A
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds
@@ -36,25 +41,41 @@ trait FutureAdapter {
   }
 
   /**
-   * For easier access to Scalaz's `Monoid[_]` conversion for subclasses.
-   * See: https://groups.google.com/forum/#!topic/scalaz/9SJbGlpS7Kw
+   * Implicit method for making [[nl.lumc.sasc.sentinel.models.ApiPayload]] a monoid instance.
+   *
+   * This is required so that for-comprehensions using `ApiMessage` as the left disjunction type
+   * works. Scalaz requires that type to be a monoid instance so that when we do `filter`, a zero
+   * value can be returned.
+   *
+   * More at: https://groups.google.com/forum/#!topic/scalaz/9SJbGlpS7Kw
    */
-  protected final implicit def lMonoid[A] = listMonoid[A]
+  protected final implicit def apiPayloadMonoid = new Monoid[ApiPayload] {
+    def zero = ApiPayload("")
+    def append(f1: ApiPayload, f2: => ApiPayload) = {
+      val f2c = f2 // force computation
+      (f1, f2c) match {
+        case (m1, m2) if m1.message.isEmpty && m2.message.isEmpty => m1
+        case (m1 @ _, m2) if m2.message.isEmpty => m1
+        case (m1, m2 @ _) if m1.message.isEmpty => m2
+        case otherwise => ApiPayload(s"${f1.message} | ${f2c.message}", f1.hints ++ f2.hints)
+      }
+    }
+  }
 
   /**
    * Helper object for stacking the disjunction (`\/`) and `Future` monads.
    *
-   * Without this object, we have to wrap methods returning Future[A], List[String] \/ A, or A manually in EitherT:
+   * Without this object, we have to wrap methods returning Future[T], ApiPayload \/ T, or T manually in EitherT:
    *
    * {{{
    *   def f1(): Future[T] = ...
-   *   def f2(): List[String] \/ T = ...
+   *   def f2(): ApiPayload \/ T = ...
    *   def f3(): T = ...
    *
    *   val result = for {
    *       a <- EitherT(Future { f1() })
    *       b <- EitherT(Future.successful(f2()))
-   *       c <- EitherT(Future { f3().right[List[String]] })
+   *       c <- EitherT(Future { f3().right[ApiPayload] })
    *   } yield c
    * }}}
    *
@@ -68,7 +89,7 @@ trait FutureAdapter {
    *   } yield c
    * }}}
    *
-   * In both cases, the type of `result` is EitherT[Future, List[String], T], so its `run` method must still be invoked
+   * In both cases, the type of `result` is EitherT[Future, ApiPayload, T], so its `run` method must still be invoked
    * to obtain the final value.
    *
    * Adapted from: http://www.47deg.com/blog/fp-for-the-average-joe-part-2-scalaz-monad-transformers
@@ -76,14 +97,14 @@ trait FutureAdapter {
   object ? {
 
     /** Type alias for our stacked monads. */
-    type Result[T] = EitherT[Future, List[String], T]
+    type Stacked[T] = EitherT[Future, ApiPayload, T]
 
-    def <~[T](v: Future[List[String] \/ T]): Result[T] = EitherT(v)
+    def <~[T](v: Future[Perhaps[T]]): Stacked[T] = EitherT(v)
 
-    def <~[T](v: List[String] \/ T): Result[T] = EitherT(Future.successful(v))
+    def <~[T](v: Perhaps[T]): Stacked[T] = EitherT(Future.successful(v))
 
-    def <~[T](v: Future[T])(implicit context: ExecutionContext): Result[T] = EitherT(v.map(_.right[List[String]]))
+    def <~[T](v: Future[T])(implicit context: ExecutionContext): Stacked[T] = EitherT(v.map(_.right[ApiPayload]))
 
-    def <~[T](v: T)(implicit context: ExecutionContext): Result[T] = v.point[Result]
+    def <~[T](v: T)(implicit context: ExecutionContext): Stacked[T] = v.point[Stacked]
   }
 }

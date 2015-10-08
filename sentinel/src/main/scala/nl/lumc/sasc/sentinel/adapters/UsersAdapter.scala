@@ -23,7 +23,8 @@ import com.novus.salat._
 import com.novus.salat.global._
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ User, UserPatch }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, User, UserPatch }
+import nl.lumc.sasc.sentinel.models.CommonMessages.{ MissingUserId, PatchValidationError }
 import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
 /** Trait for performing operations on user records. */
@@ -70,12 +71,12 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param patchOps Patch operations.
    * @return Either a sequence of error messages or the patched user object.
    */
-  def patchUser(user: User, patchOps: List[UserPatch]): List[String] \/ User =
-    patchOps.foldLeft(user.right[List[String]]) {
+  def patchUser(user: User, patchOps: List[UserPatch]): Perhaps[User] =
+    patchOps.foldLeft(user.right[ApiPayload]) {
       case (usr, p) =>
         for {
           u <- usr
-          patchedUsr <- p.apply(u)
+          patchedUsr <- p(u).leftMap { msgs => PatchValidationError(msgs) }
         } yield patchedUsr
     }
 
@@ -89,9 +90,9 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param requester User requesting to apply the patch operations.
    * @return Either the validation messages or the user patches.
    */
-  def validatePatches(patchOps: List[UserPatch], requester: User): List[String] \/ List[UserPatch] =
+  def validatePatches(patchOps: List[UserPatch], requester: User): Perhaps[List[UserPatch]] =
     patchOps.foldLeft(List.empty[String]) { (acc, p) => acc ++ p.validationMessages } match {
-      case vms if vms.nonEmpty => vms.left
+      case vms if vms.nonEmpty => PatchValidationError(vms).left
       case otherwise           => patchOps.right
     }
 
@@ -108,14 +109,14 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param patchOps Patch operations to apply.
    * @return Either error messages or write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: List[UserPatch]): Future[List[String] \/ WriteResult] = {
+  def patchAndUpdateUser(userId: String, patchOps: List[UserPatch]): Future[Perhaps[WriteResult]] = {
     val result = for {
-      currentUser <- EitherT(getUser(userId).map {
-        case Some(u) => u.right[List[String]]
-        case None    => List(s"User ID '$userId' not found.").left[User]
-      })
-      patchedUser <- EitherT(Future.successful(patchUser(currentUser, patchOps)))
-      writeResult <- EitherT(updateUser(patchedUser).map(_.right[List[String]]))
+      currentUser <- ? <~ getUser(userId).map {
+        case Some(u) => u.right
+        case None    => MissingUserId(userId).left
+      }
+      patchedUser <- ? <~ patchUser(currentUser, patchOps)
+      writeResult <- ? <~ updateUser(patchedUser)
     } yield writeResult
 
     result.run

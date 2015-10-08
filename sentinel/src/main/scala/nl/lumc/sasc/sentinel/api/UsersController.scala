@@ -94,8 +94,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(400, "Patch document is invalid or malformed."),
       StringResponseMessage(401, CommonMessages.Unauthenticated.message),
       StringResponseMessage(403, CommonMessages.Unauthorized.message),
-      StringResponseMessage(404, CommonMessages.MissingUserId.message),
-      StringResponseMessage(422, "Patch operation not supported.")))
+      StringResponseMessage(404, CommonMessages.MissingUserId.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -119,14 +118,12 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           } yield validPatches
 
           operations match {
-            case -\/(errs) => sf(BadRequest(ApiPayload("Invalid patch operation(s).", hints = errs)))
-
+            case -\/(err) => sf(BadRequest(err))
             case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
               sf(Forbidden(CommonMessages.Unauthorized))
-
             case \/-(ops) =>
               users.patchAndUpdateUser(userRecordId, ops).map {
-                case -\/(errs)                   => BadRequest(ApiPayload("Error encountered when patching.", hints = errs))
+                case -\/(err)                    => BadRequest(err)
                 case \/-(wres) if wres.getN == 1 => NoContent()
                 case otherwise                   => InternalServerError(CommonMessages.Unexpected)
               }

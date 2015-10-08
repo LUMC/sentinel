@@ -29,7 +29,7 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.adapters.FutureAdapter
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, CommonMessages, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
 /**
@@ -41,12 +41,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
 
   /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass
-
-  /** Type alias for the result of parsing uploads into run records. */
-  type UploadResult = List[String] \/ RunRecord
-
-  /** Type alias for deletion result. */
-  type DeletionResult[+A] = ApiPayload \/ A
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
@@ -62,7 +56,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param uploader Uploader of the run summary file.
    * @return A run record of the uploaded run summary file.
    */
-  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[List[String] \/ RunRecord]
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[Perhaps[RunRecord]]
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -77,7 +71,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param fileName Original uploaded file name.
    * @return GridFS ID of the stored entry.
    */
-  def storeFile(contents: Array[Byte], user: User, fileName: String): Future[List[String] \/ ObjectId] =
+  def storeFile(contents: Array[Byte], user: User, fileName: String): Future[Perhaps[ObjectId]] =
     Future {
 
       /** Helper method to store raw files. */
@@ -97,22 +91,24 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
           case dexc: com.mongodb.DuplicateKeyException =>
             mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(contents)) match {
               case Some(gfs) => gfs._id match {
-                case Some(oid) => List(CommonMessages.AlreadyUploaded.message.init + s" ('${oid.toString}').").left
-                case None      => List("Unexpected database error: file has no ID.").left
+                case Some(oid) => CommonMessages.DuplicateSummaryError(oid.toString).left
+                case None      => CommonMessages.UnexpectedDatabaseError("File has no ID.").left
               }
-              case None => List("Unexpected database error: conflicting duplicate detection.").left
+              case None => CommonMessages.UnexpectedDatabaseError("Conflicting duplicate detection.").left
             }
 
-          case otherwise => List("Unexpected database error.").left
+          case otherwise => CommonMessages.UnexpectedDatabaseError().left
         }
 
         case scala.util.Success(s) => s match {
 
           case Some(v) => v match {
             case oid: ObjectId => oid.right
-            case otherwise     => List("Expected ObjectId from storing file, got '" + otherwise.toString + "' instead.").left
+            case otherwise =>
+              val hint = s"Expected ObjectId from storing file, got '${otherwise.toString}' instead."
+              CommonMessages.UnexpectedDatabaseError(hint).left
           }
-          case None => List("Unexpected error when trying to store run summary.").left
+          case None => CommonMessages.UnexpectedDatabaseError().left
         }
       }
     }
@@ -250,7 +246,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
    * @return Run record with `deletionTimeUtc` attribute or an enum indicating any deletion errors.
    */
-  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[DeletionResult[RunRecord]] = {
+  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Perhaps[RunRecord]] = {
 
     val recordGrater = grater[RunRecord]
 
@@ -259,7 +255,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
       else MongoDBObject("uploaderId" -> user.id)
 
     /** Helper method to retrieve run record to delete. */
-    def getExistingRecord(): Future[DeletionResult[RunRecord]] = Future {
+    def getExistingRecord(): Future[Perhaps[RunRecord]] = Future {
       val maybeDoc = coll
         .findOne(MongoDBObject("_id" -> runId) ++ userCheck)
         .map { dbo => recordGrater.asObject(dbo) }
@@ -273,22 +269,22 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     }
 
     /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
-    def deleteGridFS(record: RunRecord): Future[DeletionResult[Unit]] = deleteRunGridFSEntry(record)
+    def deleteGridFS(record: RunRecord): Future[Perhaps[Unit]] = deleteRunGridFSEntry(record)
       .map(_.right)
       .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method that marks all sample deletion errors as incomplete deletion. */
-    def deleteSamples(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunSamples(record)
+    def deleteSamples(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunSamples(record)
       .map(_.right)
       .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method that marks all read groups deletion errors as incomplete deletion. */
-    def deleteReadGroups(record: RunRecord): Future[DeletionResult[BulkWriteResult]] = deleteRunReadGroups(record)
+    def deleteReadGroups(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunReadGroups(record)
       .map(_.right)
       .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
 
     /** Helper method to mark run document as deleted. */
-    def markRecord(): Future[DeletionResult[RunRecord]] = Future {
+    def markRecord(): Future[Perhaps[RunRecord]] = Future {
       val doc = coll
         .findAndModify(
           query = MongoDBObject("_id" -> runId,
