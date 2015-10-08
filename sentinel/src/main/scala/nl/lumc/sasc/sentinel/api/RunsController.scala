@@ -21,7 +21,7 @@ import java.io.File
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
-import scalaz._, Scalaz._
+import scalaz._
 
 import nl.lumc.sasc.sentinel.{ DeletionError, HeaderApiKey }
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
@@ -31,7 +31,6 @@ import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
-import nl.lumc.sasc.sentinel.utils.exceptions._
 import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
@@ -123,7 +122,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       val is = runs.deleteRun(runId, user).map {
         case \/-(deletedDoc) => Ok(deletedDoc)
         case -\/(deletionError) => deletionError match {
-          case DeletionError.AlreadyDeleted   => Gone(ApiMessage("Run summary already deleted."))
+          case DeletionError.AlreadyDeleted   => Gone(ApiPayload("Run summary already deleted."))
           case DeletionError.ResourceNotFound => NotFound(CommonMessages.MissingRunId)
           case DeletionError.Incomplete       => InternalServerError("Deletion incomplete. Please repeat request.")
           case otherwise                      => InternalServerError(CommonMessages.Unexpected)
@@ -210,11 +209,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   post("/", operation(postOp)) {
     logger.info(requestLog)
     val pipeline = params.getOrElse("pipeline", halt(400, CommonMessages.UnspecifiedPipeline))
-    val upload = fileParams.getOrElse("run", halt(400, ApiMessage("Run summary file not specified.")))
+    val upload = fileParams.getOrElse("run", halt(400, ApiPayload("Run summary file not specified.")))
 
     supportedPipelines.get(pipeline) match {
 
-      case None => BadRequest(CommonMessages.invalidPipeline(supportedPipelines.keySet.toSeq))
+      case None => BadRequest(CommonMessages.InvalidPipelineError(supportedPipelines.keySet.toSeq))
 
       case Some(p) =>
         val user = simpleKeyAuth(params => params.get("userId"))
@@ -224,10 +223,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
             p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map {
 
               case -\/(errs) if errs.length == 1 =>
-                if (errs.head.startsWith(CommonMessages.AlreadyUploaded.message.init)) Conflict(ApiMessage(errs.head))
-                else BadRequest(ApiMessage(errs.head))
+                if (errs.head.startsWith(CommonMessages.AlreadyUploaded.message.init)) Conflict(ApiPayload(errs.head))
+                else BadRequest(ApiPayload(errs.head))
 
-              case -\/(errs) => BadRequest(errs.map { err => ApiMessage(err) })
+              case -\/(errs) => BadRequest(errs.map { err => ApiPayload(err) })
 
               case \/-(run)  => Created(run)
             }
@@ -270,8 +269,8 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
     if (invalidPipelines.nonEmpty)
       BadRequest(
-        ApiMessage("One or more pipeline is invalid.",
-          hint = Map("invalid pipelines" -> invalidPipelines)))
+        ApiPayload("One or more pipeline is invalid.",
+          hints = List("invalid pipelines: " + invalidPipelines.mkString(", ") + ".")))
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
       new AsyncResult {

@@ -139,7 +139,7 @@ class RunsControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Pipeline parameter is invalid.")
-          priorResponse.body must /("hint" -> "Valid values are .+".r)
+          priorResponse.body must /("hints") /# 0 / "Valid values are .+".r
         }
       }
     }
@@ -738,7 +738,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               get(endpoint, params :+ ("pipelines", "nonexistent"), headers) {
                 contentType mustEqual "application/json"
                 body must /("message" -> "One or more pipeline is invalid.")
-                body must /("hint") / "invalid pipelines" /# 0 / "nonexistent"
+                body must /("hints") /# 0 / "invalid pipelines: nonexistent."
               }
             }
           }

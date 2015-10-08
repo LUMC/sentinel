@@ -150,7 +150,7 @@ class UsersAdapterSpec extends Specification
   "patchUser" should {
 
     "return the user unchanged when patchOps is empty" in {
-      testAdapter.patchUser(testUserObj, Seq.empty) must beRightDisjunction.like {
+      testAdapter.patchUser(testUserObj, List.empty) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj
       }
@@ -158,7 +158,7 @@ class UsersAdapterSpec extends Specification
 
     "return a user with updated email when patchOps has one email patch operation" in {
       val newEmail = "new@email.com"
-      val patches = Seq(UserPatch("replace", "/email", newEmail))
+      val patches = List(UserPatch("replace", "/email", newEmail))
       testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj.copy(email = newEmail)
@@ -167,7 +167,7 @@ class UsersAdapterSpec extends Specification
 
     "return a user with updated password when patchOps has one password patch operation" in {
       val newPw = "myNewPass123"
-      val patches = Seq(UserPatch("replace", "/password", newPw))
+      val patches = List(UserPatch("replace", "/password", newPw))
       testUserObj.passwordMatches(newPw) must beFalse
       testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
@@ -177,7 +177,7 @@ class UsersAdapterSpec extends Specification
 
     "return a user with updated verification status when patchOps has one verification status patch operation" in {
       val newStatus = !testUserObj.verified
-      val patches = Seq(UserPatch("replace", "/verified", newStatus))
+      val patches = List(UserPatch("replace", "/verified", newStatus))
       testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
         case user =>
           user mustEqual testUserObj.copy(verified = newStatus)
@@ -188,7 +188,7 @@ class UsersAdapterSpec extends Specification
       val patch1 = UserPatch("replace", "/verified", false)
       val patch2 = UserPatch("replace", "/email", "my@email.com")
       val patch3 = UserPatch("replace", "/password", "SuperSecret126")
-      testAdapter.patchUser(testUserObj, Seq(patch1, patch2, patch3)) must beRightDisjunction.like {
+      testAdapter.patchUser(testUserObj, List(patch1, patch2, patch3)) must beRightDisjunction.like {
         case user =>
           user.email mustEqual "my@email.com"
           user.verified must beFalse
@@ -197,32 +197,32 @@ class UsersAdapterSpec extends Specification
     }
 
     "return the correct error message when op is invalid" in {
-      val patches = Seq(UserPatch("add", "/email", "t@t.com"))
+      val patches = List(UserPatch("add", "/email", "t@t.com"))
       testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
-          errs mustEqual Seq("Unexpected operation: 'add'.")
+          errs mustEqual List("Unexpected operation: 'add'.")
       }
     }
 
     "return the correct error message when path is invalid" in {
-      val patches = Seq(UserPatch("replace", "/invalid", 100))
+      val patches = List(UserPatch("replace", "/invalid", 100))
       testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
         case errs =>
-          errs mustEqual Seq("Invalid path: '/invalid'.")
+          errs mustEqual List("Invalid path: '/invalid'.")
       }
     }
 
     "return the correct error message when the value for a valid path is invalid" in {
-      val invalidCombinations = Seq(
+      val invalidCombinations = List(
         ("/verified", 1),
         ("/verified", "yes"),
         ("/password", 1235),
         ("/email", true))
       foreach(invalidCombinations) {
         case (path, value) =>
-          testAdapter.patchUser(testUserObj, Seq(UserPatch("replace", path, value))) must beLeftDisjunction.like {
+          testAdapter.patchUser(testUserObj, List(UserPatch("replace", path, value))) must beLeftDisjunction.like {
             case errs =>
-              errs mustEqual Seq(s"Invalid value for path '$path': '$value'.")
+              errs mustEqual List(s"Invalid value for path '$path': '$value'.")
           }
       }
     }
@@ -257,9 +257,9 @@ class UsersAdapterSpec extends Specification
   "patchAndUpdateUser" should {
 
     "return the expected error message when user does not exist" in {
-      testAdapter.patchAndUpdateUser("nonexistent", Seq.empty).map { ret =>
+      testAdapter.patchAndUpdateUser("nonexistent", List.empty).map { ret =>
         ret must beLeftDisjunction.like {
-          case errs => errs mustEqual Seq("User ID 'nonexistent' not found.")
+          case errs => errs mustEqual List("User ID 'nonexistent' not found.")
         }
       }.await
     }
@@ -273,7 +273,7 @@ class UsersAdapterSpec extends Specification
       val newStatus = !testUserObj.verified
       val patch1 = UserPatch("replace", "/verified", newStatus)
       val patch2 = UserPatch("replace", "/email", newEmail)
-      val patches = Seq(patch1, patch2)
+      val patches = List(patch1, patch2)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 0
       adapter.patchAndUpdateUser(testUserObj.id, patches).map { ret =>

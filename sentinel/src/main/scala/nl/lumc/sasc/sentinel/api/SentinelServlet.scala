@@ -30,7 +30,7 @@ import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
-import nl.lumc.sasc.sentinel.models.{ ApiMessage, BaseRunRecord, CommonMessages }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CommonMessages }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Base servlet for all Sentinel controllers. */
@@ -128,7 +128,7 @@ abstract class SentinelServlet extends ScalatraServlet
           case Success(s) => Option(s)
           // Halt when the supplied string parameter is not convertible to enum. This allows us to return a useful
           // error message instead of just silently failing.
-          case Failure(_) => halt(400, CommonMessages.InvalidAccLevel)
+          case Failure(_) => halt(400, CommonMessages.InvalidAccLevelError)
         }
     }
 
@@ -138,7 +138,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[LibType.Value] =
         Try(LibType.withName(str)) match {
           case Success(s) => Option(s)
-          case Failure(_) => halt(400, CommonMessages.InvalidLibType)
+          case Failure(_) => halt(400, CommonMessages.InvalidLibError)
         }
     }
 
@@ -148,7 +148,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[SeqQcPhase.Value] =
         Try(SeqQcPhase.withName(str)) match {
           case Success(s) => Option(s)
-          case Failure(_) => halt(400, CommonMessages.InvalidSeqQcPhase)
+          case Failure(_) => halt(400, CommonMessages.InvalidSeqQcPhaseError)
         }
     }
 
@@ -165,7 +165,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[Seq[DbId]] = {
         val (validIds, invalidIds) = separateObjectIds(str.split(multiParamDelimiter).toSeq)
         if (invalidIds.nonEmpty)
-          halt(400, CommonMessages.InvalidDbId.copy(hint = invalidIds))
+          halt(400, CommonMessages.InvalidDbError(invalidIds.toList))
         else Option(validIds)
       }
     }
@@ -189,6 +189,6 @@ abstract class SentinelServlet extends ScalatraServlet
   }
 
   notFound {
-    NotFound(ApiMessage("Requested resource not found."))
+    NotFound(ApiPayload("Requested resource not found."))
   }
 }

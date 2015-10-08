@@ -70,8 +70,8 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param patchOps Patch operations.
    * @return Either a sequence of error messages or the patched user object.
    */
-  def patchUser(user: User, patchOps: Seq[UserPatch]): \/[Seq[String], User] =
-    patchOps.foldLeft(user.right[Seq[String]]) {
+  def patchUser(user: User, patchOps: List[UserPatch]): List[String] \/ User =
+    patchOps.foldLeft(user.right[List[String]]) {
       case (usr, p) =>
         for {
           u <- usr
@@ -89,8 +89,8 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param requester User requesting to apply the patch operations.
    * @return Either the validation messages or the user patches.
    */
-  def validatePatches(patchOps: Seq[UserPatch], requester: User): Seq[String] \/ Seq[UserPatch] =
-    patchOps.foldLeft(Seq.empty[String]) { (acc, p) => acc ++ p.validationMessages } match {
+  def validatePatches(patchOps: List[UserPatch], requester: User): List[String] \/ List[UserPatch] =
+    patchOps.foldLeft(List.empty[String]) { (acc, p) => acc ++ p.validationMessages } match {
       case vms if vms.nonEmpty => vms.left
       case otherwise           => patchOps.right
     }
@@ -108,14 +108,14 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
    * @param patchOps Patch operations to apply.
    * @return Either error messages or write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: Seq[UserPatch]): Future[Seq[String] \/ WriteResult] = {
+  def patchAndUpdateUser(userId: String, patchOps: List[UserPatch]): Future[List[String] \/ WriteResult] = {
     val result = for {
       currentUser <- EitherT(getUser(userId).map {
-        case Some(u) => u.right[Seq[String]]
-        case None    => Seq(s"User ID '$userId' not found.").left[User]
+        case Some(u) => u.right[List[String]]
+        case None    => List(s"User ID '$userId' not found.").left[User]
       })
       patchedUser <- EitherT(Future.successful(patchUser(currentUser, patchOps)))
-      writeResult <- EitherT(updateUser(patchedUser).map(_.right[Seq[String]]))
+      writeResult <- EitherT(updateUser(patchedUser).map(_.right[List[String]]))
     } yield writeResult
 
     result.run

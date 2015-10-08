@@ -89,13 +89,13 @@ object User {
     lazy val PasswordCheckers = Set(HasUpperCase, HasLowerCase, HasNumbers)
 
     /** Validation messages for ID validation. */
-    def idMessages(id: String): Seq[String] = {
+    def idMessages(id: String): List[String] = {
       val msgBuffer = scala.collection.mutable.Buffer.empty[String]
       if (!idLengthValid(id))
         msgBuffer += s"User ID shorter than $MinUserIdLength characters."
       if (!idContentsValid(id))
         msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars(id).mkString("', '") + "'.")
-      msgBuffer.toSeq
+      msgBuffer.toList
     }
 
     /** Validation messages for password validation. */
@@ -168,7 +168,7 @@ case class UserResponse(
 case class UserRequest(id: String, email: String, password: String, confirmPassword: String) {
 
   /** Validation messages. If nonempty, the given data is invalid. */
-  lazy val validationMessages: Seq[String] = User.Validator.idMessages(id) ++
+  lazy val validationMessages: List[String] = User.Validator.idMessages(id) ++
     User.Validator.passwordMessages(password, confirmPassword) ++ User.Validator.emailMessages(email)
 
   /** User representation of the request. */
@@ -199,18 +199,18 @@ case class UserPatch(op: String, path: String, value: Any) {
   private val validPaths = Set("/password", "/email", "/verified")
 
   /** Messages to emit when the patch operation is invalid. */
-  private val opMessages: Seq[String] =
-    if (op == "replace") Seq.empty
-    else Seq(s"Unexpected operation: '$op'.")
+  private val opMessages: List[String] =
+    if (op == "replace") List.empty
+    else List(s"Unexpected operation: '$op'.")
 
   /** Messages to emit when any part of the patch operation is invalid. */
-  lazy val validationMessages: Seq[String] = {
+  lazy val validationMessages: List[String] = {
     val msgs = (path, value) match {
-      case ("/verified", v: Boolean)        => Seq.empty
+      case ("/verified", v: Boolean)        => List.empty
       case ("/password", p: String)         => User.Validator.passwordMessages(p, p)
       case ("/email", e: String)            => User.Validator.emailMessages(e)
-      case (x, y) if validPaths.contains(x) => Seq(s"Invalid value for path '$x': '$y'.")
-      case (p, _)                           => Seq(s"Invalid path: '$p'.")
+      case (x, y) if validPaths.contains(x) => List(s"Invalid value for path '$x': '$y'.")
+      case (p, _)                           => List(s"Invalid path: '$p'.")
     }
     opMessages ++ msgs
   }
@@ -222,14 +222,14 @@ case class UserPatch(op: String, path: String, value: Any) {
    * @return Either a sequence of error strings or a patched user object.
    */
   // NOTE: does not have anything to do with `apply` method of this case class' object.
-  def apply(user: User): \/[Seq[String], User] = {
+  def apply(user: User): List[String] \/ User = {
     if (validationMessages.nonEmpty) validationMessages.left
     else
       (path, value) match {
         case ("/verified", v: Boolean) => user.copy(verified = v).right
         case ("/email", e: String)     => user.copy(email = e).right
         case ("/password", p: String)  => user.copy(hashedPassword = User.hashPassword(p)).right
-        case (other, wise)             => Seq("Unexpected '" + other + "' value: '" + wise + "'.").left
+        case (other, wise)             => List("Unexpected '" + other + "' value: '" + wise + "'.").left
       }
   }
 }

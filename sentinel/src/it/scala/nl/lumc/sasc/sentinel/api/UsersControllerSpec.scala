@@ -65,8 +65,8 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "New user created.")
-          priorResponse.body must /("hint") /("uri" -> ("/users/" + userRequest.id))
-          priorResponse.body must /("hint") /("apiKey" -> """\S+""".r)
+          priorResponse.body must /("hints") /# 0 / s"uri: /users/${userRequest.id}"
+          priorResponse.body must /("hints") /# 1 / """apiKey: \S+""".r
         }
       }
     }
@@ -122,7 +122,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") / "Different passwords given."
+          priorResponse.body must /("hints") / "Different passwords given."
         }
       }
     }
@@ -142,7 +142,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         "return a JSON object containing the expected message" in {
           priorResponse.contentType mustEqual "application/json"
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") / "User ID shorter than 3 characters."
+          priorResponse.body must /("hints") / "User ID shorter than 3 characters."
         }
       }
     }
@@ -164,7 +164,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "return a JSON object containing the expected message" in {
               priorResponse.body must /("message" -> "Invalid user request.")
-              priorResponse.body must /("hint") / "User ID contains disallowed characters: .+".r
+              priorResponse.body must /("hints") / "User ID contains disallowed characters: .+".r
             }
           }
         }
@@ -184,7 +184,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") / "Password shorter than 6 characters."
+          priorResponse.body must /("hints") / "Password shorter than 6 characters."
         }
       }
     }
@@ -202,7 +202,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") /
+          priorResponse.body must /("hints") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -221,7 +221,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") /
+          priorResponse.body must /("hints") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -240,7 +240,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponse.body must /("message" -> "Invalid user request.")
-          priorResponse.body must /("hint") /
+          priorResponse.body must /("hints") /
             "Password does not contain a mixture of lower case(s), upper case(s), and number(s)."
         }
       }
@@ -574,7 +574,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                   "return a JSON object containing the expected message" in {
                     priorResponse.contentType mustEqual "application/json"
                     priorResponse.body must /("message" -> "Invalid patch operation(s).")
-                    priorResponse.body must /("hint") /# 0 / "File is not JSON."
+                    priorResponse.body must /("hints") /# 0 / "File is not JSON."
                   }
                 }
               }
@@ -637,7 +637,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                       "return a JSON object containing the expected message" in {
                         priorResponse.contentType mustEqual "application/json"
                         priorResponse.body must /("message" -> "Invalid patch operation(s).")
-                        priorResponse.body must /("hint") /# 0 / s"Unexpected operation: '$op'."
+                        priorResponse.body must /("hints") /# 0 / s"Unexpected operation: '$op'."
                       }
                     }
                   }

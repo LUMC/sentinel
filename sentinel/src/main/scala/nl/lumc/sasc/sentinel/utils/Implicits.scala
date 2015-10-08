@@ -17,6 +17,9 @@
 package nl.lumc.sasc.sentinel.utils
 
 import org.scalatra.servlet.FileItem
+import scalaz._, Scalaz._
+
+import nl.lumc.sasc.sentinel.models.ApiPayload
 
 object Implicits {
 
@@ -29,6 +32,28 @@ object Implicits {
 
     /** Reads the contents of the file upload as is. */
     def readBytes(): Array[Byte] = org.scalatra.util.io.readBytes(fi.getInputStream)
+  }
+
+  /**
+   * Implicit method for making [[nl.lumc.sasc.sentinel.models.ApiPayload]] a monoid instance.
+   *
+   * This is required so that for-comprehensions using `ApiMessage` as the left disjunction type
+   * works. Scalaz requires that type to be a monoid instance so that when we do `filter`, a zero
+   * value can be returned.
+   */
+  implicit def messageMonoid = new Monoid[ApiPayload] {
+
+    def zero = ApiPayload("")
+
+    def append(f1: ApiPayload, f2: => ApiPayload) = {
+      val f2c = f2 // force computation
+      (f1, f2c) match {
+        case (m1, m2) if m1.message.isEmpty && m2.message.isEmpty => m1
+        case (m1 @ _, m2) if m2.message.isEmpty => m1
+        case (m1, m2 @ _) if m1.message.isEmpty => m2
+        case otherwise => ApiPayload(s"${f1.message} | ${f2c.message}", f1.hints |+| f2.hints)
+      }
+    }
   }
 }
 

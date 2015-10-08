@@ -56,7 +56,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   error {
     case iexc: ExistingUserIdException =>
       contentType = formats("json")
-      Conflict(ApiMessage("User ID already taken."))
+      Conflict(ApiPayload("User ID already taken."))
 
     case exc =>
       contentType = formats("json")
@@ -87,7 +87,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     parameters (
       pathParam[String]("userRecordId").description("User ID to update."),
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[Seq[UserPatch]]("body").description("Patch operations to apply."))
+      bodyParam[List[UserPatch]]("body").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),
@@ -104,7 +104,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     logger.info(requestLog)
 
     val userRecordId = params.getAs[String]("userRecordId")
-      .getOrElse(halt(400, ApiMessage("User Record ID not specified.")))
+      .getOrElse(halt(400, ApiPayload("User Record ID not specified.")))
     val user = basicAuth()
 
     new AsyncResult {
@@ -114,19 +114,19 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
           val operations = for {
             json <- patchValidator.parseAndValidate(request.body.getBytes)
-            patches <- json.extract[Seq[UserPatch]].right
+            patches <- json.extract[List[UserPatch]].right
             validPatches <- users.validatePatches(patches, user)
           } yield validPatches
 
           operations match {
-            case -\/(errs) => sf(BadRequest(ApiMessage("Invalid patch operation(s).", hint = errs)))
+            case -\/(errs) => sf(BadRequest(ApiPayload("Invalid patch operation(s).", hints = errs)))
 
             case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
               sf(Forbidden(CommonMessages.Unauthorized))
 
             case \/-(ops) =>
               users.patchAndUpdateUser(userRecordId, ops).map {
-                case -\/(errs)                   => BadRequest(ApiMessage("Error encountered when patching.", hint = errs))
+                case -\/(errs)                   => BadRequest(ApiPayload("Error encountered when patching.", hints = errs))
                 case \/-(wres) if wres.getN == 1 => NoContent()
                 case otherwise                   => InternalServerError(CommonMessages.Unexpected)
               }
@@ -136,7 +136,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // Helper endpoint to capture PATCH request with unspecified user ID
-  patch("/?") { halt(400, ApiMessage("User record ID not specified.")) }
+  patch("/?") { halt(400, ApiPayload("User record ID not specified.")) }
 
   // format: OFF
   val userRecordIdGetOp = (apiOperation[UserResponse]("userRecordIdGet")
@@ -169,10 +169,10 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   }
 
   // Helper endpoint to capture GET request with unspecified user ID
-  get("/?") { halt(400, ApiMessage("User record ID not specified.")) }
+  get("/?") { halt(400, ApiPayload("User record ID not specified.")) }
 
   // format: OFF
-  val postOp = (apiOperation[ApiMessage]("post")
+  val postOp = (apiOperation[ApiPayload]("post")
     summary "Creates a user account."
     notes
       """This endpoint is used for creating new user accounts. The user data must be supplied in the body of the request
@@ -190,16 +190,16 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   post("/", operation(postOp)) {
     logger.info(requestLog)
-    val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiMessage("Malformed user request.")))
+    val userRequest = parsedBody.extractOrElse[UserRequest](halt(400, ApiPayload("Malformed user request.")))
 
     if (userRequest.validationMessages.nonEmpty)
-      BadRequest(ApiMessage("Invalid user request.", hint = userRequest.validationMessages))
+      BadRequest(ApiPayload("Invalid user request.", hints = userRequest.validationMessages))
     else {
       new AsyncResult {
         val is = users.addUser(userRequest.user)
           .map { u =>
-            Created(ApiMessage("New user created.",
-              Map("uri" -> ("/users/" + userRequest.user.id), "apiKey" -> userRequest.user.activeKey)))
+            Created(ApiPayload("New user created.",
+              List(s"uri: /users/${userRequest.user.id}", s"apiKey: ${userRequest.user.activeKey}")))
           }
       }
     }
