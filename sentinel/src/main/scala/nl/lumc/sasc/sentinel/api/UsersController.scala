@@ -27,7 +27,6 @@ import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /**
@@ -54,10 +53,6 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
   /** General error handler for any type of exception. */
   error {
-    case iexc: ExistingUserIdException =>
-      contentType = formats("json")
-      Conflict(ApiPayload("User ID already taken."))
-
     case exc =>
       contentType = formats("json")
       InternalServerError(CommonMessages.Unexpected)
@@ -193,11 +188,16 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       BadRequest(ApiPayload("Invalid user request.", hints = userRequest.validationMessages))
     else {
       new AsyncResult {
-        val is = users.addUser(userRequest.user)
-          .map { u =>
+        val is = users.addUser(userRequest.user).map {
+          case -\/(err) if err.message == CommonMessages.DuplicateUserIdError.message =>
+            Conflict(CommonMessages.DuplicateUserIdError(userRequest.user.id))
+
+          case -\/(err) => BadRequest(err)
+
+          case \/-(wr) =>
             Created(ApiPayload("New user created.",
               List(s"uri: /users/${userRequest.user.id}", s"apiKey: ${userRequest.user.activeKey}")))
-          }
+        }
       }
     }
   }

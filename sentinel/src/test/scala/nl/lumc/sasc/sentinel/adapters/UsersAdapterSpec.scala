@@ -27,7 +27,6 @@ import org.specs2.scalaz.DisjunctionMatchers
 
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, User, UserPatch }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
-import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
 
 class UsersAdapterSpec extends Specification
     with DisjunctionMatchers
@@ -102,8 +101,9 @@ class UsersAdapterSpec extends Specification
 
     "succeed when supplied with a non-existing user" in {
       val adapter = testAdapter
-      adapter.addUser(testUserObj) must beEqualTo(()).await
-      adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
+      adapter.addUser(testUserObj).map { ret =>
+        ret must beRightDisjunction.like { case res => res.getN mustEqual 1 }
+      }.await
     }
 
     "fail when supplied with an existing user" in {
@@ -111,7 +111,12 @@ class UsersAdapterSpec extends Specification
         coll.insert(testUserDbo)
       }
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
-      adapter.addUser(testUserObj) must throwAn[ExistingUserIdException].await
+      adapter.addUser(testUserObj).map { ret =>
+        ret must beLeftDisjunction.like {
+          case err =>
+            err mustEqual CommonMessages.DuplicateUserIdError(testUserObj.id)
+        }
+      }.await
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
     }
   }

@@ -37,6 +37,11 @@ object CommonMessages {
     def apply(existingId: String) = ApiPayload(message, hints = List(s"Existing ID: $existingId."))
   }
 
+  object DuplicateUserIdError {
+    def message = "User ID already taken."
+    def apply(existingId: String) = ApiPayload(message, hints = List(s"Existing ID: $existingId."))
+  }
+
   object UnexpectedDatabaseError {
     def message = "Unexpected database error."
     def apply(hint: String) = ApiPayload(message, hints = List(hint))

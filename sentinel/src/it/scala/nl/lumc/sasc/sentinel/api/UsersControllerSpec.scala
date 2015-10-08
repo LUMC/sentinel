@@ -259,6 +259,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
         "return a JSON object containing the expected message" in {
           priorResponses.last.body must /("message" -> "User ID already taken.")
+          priorResponses.last.body must /("hints") /# 0 / startWith("Existing ID: yeah.")
         }
       }
     }

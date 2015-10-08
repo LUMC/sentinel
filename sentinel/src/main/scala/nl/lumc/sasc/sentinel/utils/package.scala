@@ -143,12 +143,6 @@ package object utils {
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer
 
-  object exceptions {
-
-    /** Exception that is thrown when trying to add a user with an existing ID. */
-    class ExistingUserIdException(msg: String) extends RuntimeException(msg)
-  }
-
   object reflect {
 
     import ru._

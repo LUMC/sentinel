@@ -24,8 +24,7 @@ import com.novus.salat.global._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, User, UserPatch }
-import nl.lumc.sasc.sentinel.models.CommonMessages.{ MissingUserId, PatchValidationError }
-import nl.lumc.sasc.sentinel.utils.exceptions.ExistingUserIdException
+import nl.lumc.sasc.sentinel.models.CommonMessages.{ DuplicateUserIdError, MissingUserId, PatchValidationError }
 
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends MongodbAdapter with FutureAdapter {
@@ -45,10 +44,10 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
   }
 
   /** Adds a new user record. */
-  def addUser(user: User): Future[Unit] = userExist(user.id)
+  def addUser(user: User): Future[Perhaps[WriteResult]] = userExist(user.id)
     .map { exists =>
-      if (exists) throw new ExistingUserIdException("User ID '" + user.id + "' already exists.")
-      else coll.insert(grater[User].asDBObject(user))
+      if (exists) DuplicateUserIdError(user.id).left
+      else coll.insert(grater[User].asDBObject(user)).right
     }
 
   /** Deletes a user record. */
