@@ -39,7 +39,7 @@ trait JsonAdapter {
    * @param contents Raw bytes to parse.
    * @return JValue object.
    */
-  def parseJson(contents: Array[Byte]): ApiPayload \/ JValue =
+  def extractJson(contents: Array[Byte]): ApiPayload \/ JValue =
     Try(parse(new ByteArrayInputStream(contents))) match {
       case scala.util.Failure(_)  => JsonValidationError("File is not JSON.").left
       case scala.util.Success(jv) => jv.right
@@ -81,8 +81,8 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @param contents raw byte contents to parse.
    * @return JSON object representation.
    */
-  def parseAndValidate(contents: Array[Byte]): ApiPayload \/ JValue = for {
-    json <- parseJson(contents)
+  override def extractJson(contents: Array[Byte]): ApiPayload \/ JValue = for {
+    json <- super.extractJson(contents)
     validJson <- isValid(jsonValidator)(json)
   } yield validJson
 }

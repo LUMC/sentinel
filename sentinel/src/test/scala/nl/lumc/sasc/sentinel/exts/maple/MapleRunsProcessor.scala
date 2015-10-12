@@ -111,7 +111,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
     val stack = for {
       // Make sure it is JSON
-      runJson <- ? <~ parseAndValidate(contents)
+      runJson <- ? <~ extractJson(contents)
       // Store the raw file in our database
       fileId <- ? <~ storeFile(contents, uploader, uploadName)
       // Extract samples and read groups
