@@ -24,7 +24,8 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods.parse
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, CommonMessages }, CommonMessages._
+import nl.lumc.sasc.sentinel.Perhaps
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, SinglePathPatch }, CommonMessages._
 import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator, SentinelJsonFormats }
 
 /** Trait for parsing JSON. */
@@ -39,7 +40,7 @@ trait JsonAdapter {
    * @param contents Raw bytes to parse.
    * @return JValue object.
    */
-  def extractJson(contents: Array[Byte]): ApiPayload \/ JValue =
+  def extractJson(contents: Array[Byte]): Perhaps[JValue] =
     Try(parse(new ByteArrayInputStream(contents))) match {
       case scala.util.Failure(_)  => JsonValidationError("File is not JSON.").left
       case scala.util.Success(jv) => jv.right
@@ -58,7 +59,7 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @param contents raw byte contents to parse.
    * @return JSON object representation.
    */
-  override def extractJson(contents: Array[Byte]): ApiPayload \/ JValue = for {
+  override def extractJson(contents: Array[Byte]): Perhaps[JValue] = for {
     json <- super.extractJson(contents)
     validJson <- isValid(jsonValidators)(json)
   } yield validJson
@@ -69,7 +70,7 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @param json Input JSON value.
    * @return Validation result.
    */
-  def isValid(validators: Seq[JsonValidator])(json: JValue): ApiPayload \/ JValue = {
+  def isValid(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
     val errMsgs = validators.par
       .flatMap { vl =>
         vl.validate(json).iterator().map(_.toString).toList
