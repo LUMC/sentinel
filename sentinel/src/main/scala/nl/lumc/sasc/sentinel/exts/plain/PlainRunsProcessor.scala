@@ -42,7 +42,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
 
   def pipelineName = "plain"
 
-  def jsonSchemaUrl = "/schemas/plain.json"
+  def jsonSchemaUrls = Seq("/schemas/plain.json")
 
   def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User) = {
     val result = for {

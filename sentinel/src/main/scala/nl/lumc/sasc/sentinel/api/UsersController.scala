@@ -49,7 +49,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   private[api] val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Validator for patch payloads */
-  val patchValidator = new JsonValidationAdapter { def jsonSchemaUrl = "/schemas/json_patch.json" }
+  val patchValidator = new JsonValidationAdapter { def jsonSchemaUrls = Seq("/schemas/json_patch.json") }
 
   /** General error handler for any type of exception. */
   error {

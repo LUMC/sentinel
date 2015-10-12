@@ -52,7 +52,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   def pipelineName = "maple"
 
   /** JSON schema for incoming summaries. */
-  def jsonSchemaUrl = "/schema_examples/maple.json"
+  def jsonSchemaUrls = Seq("/schema_examples/maple.json")
 
   /**
    * Extracts the raw summary JSON into samples and read groups containers.

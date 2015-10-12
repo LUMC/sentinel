@@ -49,31 +49,8 @@ trait JsonAdapter {
 /** Trait for validating input JSON with a schema. */
 trait JsonValidationAdapter extends JsonAdapter {
 
-  /** Resource URL for JSON schema file. */
-  def jsonSchemaUrl: String
-
-  /** JSON validator. */
-  lazy val jsonValidator: JsonValidator = createJsonValidator(jsonSchemaUrl)
-
-  /**
-   * Creates a JSON validator from a JSON schema stored as a resource.
-   *
-   * @param schemaResourceUrl URL of the JSON schema.
-   * @return a JSON validator.
-   */
-  protected def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
-
-  /**
-   * Checks whether a parsed JSON value fulfills the given schema or not.
-   *
-   * @param json Input JSON value.
-   * @return Validation result.
-   */
-  def isValid(validator: JsonValidator)(json: JValue): ApiPayload \/ JValue = {
-    val errMsgs = validator.validate(json).iterator().map(_.toString).toList
-    if (errMsgs.isEmpty) json.right
-    else JsonValidationError(errMsgs).left
-  }
+  /** Resource URLs for JSON schema file. */
+  def jsonSchemaUrls: Seq[String]
 
   /**
    * Parses the given byte array into as a JSON file.
@@ -83,6 +60,33 @@ trait JsonValidationAdapter extends JsonAdapter {
    */
   override def extractJson(contents: Array[Byte]): ApiPayload \/ JValue = for {
     json <- super.extractJson(contents)
-    validJson <- isValid(jsonValidator)(json)
+    validJson <- isValid(jsonValidators)(json)
   } yield validJson
+
+  /**
+   * Checks whether a parsed JSON value fulfills the given schemas or not.
+   *
+   * @param json Input JSON value.
+   * @return Validation result.
+   */
+  def isValid(validators: Seq[JsonValidator])(json: JValue): ApiPayload \/ JValue = {
+    val errMsgs = validators.par
+      .flatMap { vl =>
+        vl.validate(json).iterator().map(_.toString).toList
+      }.seq
+    if (errMsgs.isEmpty) json.right
+    else JsonValidationError(errMsgs).left
+  }
+
+  /** JSON validators. */
+  implicit final lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
+    .map { jsu => JsonValidator(getResourceStream(jsu)) }
+
+  /**
+   * Creates a JSON validator from a JSON schema stored as a resource.
+   *
+   * @param schemaResourceUrl URL of the JSON schema.
+   * @return a JSON validator.
+   */
+  protected def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
 }
