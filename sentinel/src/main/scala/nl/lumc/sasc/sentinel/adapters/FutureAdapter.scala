@@ -103,7 +103,7 @@ trait FutureAdapter {
 
     def <~[T](v: Perhaps[T]): Stacked[T] = EitherT(Future.successful(v))
 
-    def <~[T](v: Future[T])(implicit context: ExecutionContext): Stacked[T] = EitherT(v.map(_.right[ApiPayload]))
+    def <~[T](v: Future[T])(implicit context: ExecutionContext): Stacked[T] = EitherT.right(v)
 
     def <~[T](v: T)(implicit context: ExecutionContext): Stacked[T] = v.point[Stacked]
   }
