@@ -14,6 +14,19 @@ Version 0.2.0
 Releases 0.1
 ------------
 
+Version 0.1.3
+^^^^^^^^^^^^^
+
+`release date: October 13 2015`
+
+Bug fix (upstream) release:
+
+    * Update CollectInsertSizeMetrics summary object. In some cases, it is
+      possible to have a single end alignment still output a
+      CollectInsertSizeMetrics object in the summary file wit null values,
+      as opposed to not having the object at all.
+
+
 Version 0.1.2
 ^^^^^^^^^^^^^
 
