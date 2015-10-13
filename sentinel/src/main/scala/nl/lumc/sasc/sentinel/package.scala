@@ -21,6 +21,10 @@
  */
 package nl.lumc.sasc
 
+import scalaz._
+
+import nl.lumc.sasc.sentinel.models.ApiPayload
+
 /** General package-level information */
 package object sentinel {
 
