@@ -54,6 +54,7 @@ object CommonMessages {
     def message: String
     final def apply(validationMessages: Seq[String]) = ApiPayload(message, validationMessages.toList)
     final def apply(validationMessage: String) = ApiPayload(message, List(validationMessage))
+    final def apply() = ApiPayload(message)
   }
 
   object JsonValidationError extends ValidationErrorLike {
