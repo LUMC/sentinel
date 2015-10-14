@@ -21,6 +21,7 @@ import scala.concurrent.duration._
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization.write
 import org.scalatra.swagger._
 import org.scalatra.test.specs2.MutableScalatraSpec
 import org.scalatra.test.{ BytesPart, ClientResponse, Uploadable }
@@ -31,7 +32,7 @@ import org.specs2.specification.{ Fragments, Step }
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.adapters.UsersAdapter
 import nl.lumc.sasc.sentinel.models.User
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, readResourceBytes }
+import nl.lumc.sasc.sentinel.utils.readResourceBytes
 
 /** Base trait for Sentinel servlet testing. */
 trait SentinelServletSpec extends MutableScalatraSpec
@@ -70,9 +71,6 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   implicit val swagger: Swagger = new TestSwagger
 
-  /** Default JSON formats. */
-  implicit protected val jsonFormats = SentinelJsonFormats
-
   /** Convenience method for testing content type. */
   def contentType = response.contentType
 
@@ -101,6 +99,8 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
     /** Clean database test context with pre-added users. */
     trait CleanDatabaseWithUser extends CleanDatabase with UsersAdapter {
+
+      protected def toJsonByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
 
       lazy val mongo = dao
 

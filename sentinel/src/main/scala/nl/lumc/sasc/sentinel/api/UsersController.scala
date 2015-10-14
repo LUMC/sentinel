@@ -82,7 +82,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     parameters (
       pathParam[String]("userRecordId").description("User ID to update."),
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[List[UserPatch]]("body").description("Patch operations to apply."))
+      bodyParam[List[SinglePathPatch]]("body").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),
@@ -105,19 +105,12 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       val is =
         if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(CommonMessages.Unauthorized))
         else {
-
-          val operations = for {
-            json <- patchValidator.extractJson(request.body.getBytes)
-            patches <- json.extract[List[UserPatch]].right
-            validPatches <- users.validatePatches(patches, user)
-          } yield validPatches
-
-          operations match {
+          users.extractPatches(request.body.getBytes) match {
             case -\/(err) => sf(BadRequest(err))
             case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
               sf(Forbidden(CommonMessages.Unauthorized))
             case \/-(ops) =>
-              users.patchAndUpdateUser(userRecordId, ops).map {
+              users.patchAndUpdateUser(userRecordId, ops.toList).map {
                 case -\/(err)                    => BadRequest(err)
                 case \/-(wres) if wres.getN == 1 => NoContent()
                 case otherwise                   => InternalServerError(CommonMessages.Unexpected)

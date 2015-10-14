@@ -25,7 +25,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.scalaz.DisjunctionMatchers
 
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, User, UserPatch }
+import nl.lumc.sasc.sentinel.models.{ CommonMessages, User, SinglePathPatch }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class UsersAdapterSpec extends Specification
@@ -161,38 +161,10 @@ class UsersAdapterSpec extends Specification
       }
     }
 
-    "return a user with updated email when patchOps has one email patch operation" in {
-      val newEmail = "new@email.com"
-      val patches = List(UserPatch("replace", "/email", newEmail))
-      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
-        case user =>
-          user mustEqual testUserObj.copy(email = newEmail)
-      }
-    }
-
-    "return a user with updated password when patchOps has one password patch operation" in {
-      val newPw = "myNewPass123"
-      val patches = List(UserPatch("replace", "/password", newPw))
-      testUserObj.passwordMatches(newPw) must beFalse
-      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
-        case user =>
-          user.passwordMatches(newPw) must beTrue
-      }
-    }
-
-    "return a user with updated verification status when patchOps has one verification status patch operation" in {
-      val newStatus = !testUserObj.verified
-      val patches = List(UserPatch("replace", "/verified", newStatus))
-      testAdapter.patchUser(testUserObj, patches) must beRightDisjunction.like {
-        case user =>
-          user mustEqual testUserObj.copy(verified = newStatus)
-      }
-    }
-
     "return an updated user as expected when patchOps has multiple valid patches" in {
-      val patch1 = UserPatch("replace", "/verified", false)
-      val patch2 = UserPatch("replace", "/email", "my@email.com")
-      val patch3 = UserPatch("replace", "/password", "SuperSecret126")
+      val patch1 = SinglePathPatch("replace", "/verified", false)
+      val patch2 = SinglePathPatch("replace", "/email", "my@email.com")
+      val patch3 = SinglePathPatch("replace", "/password", "SuperSecret126")
       testAdapter.patchUser(testUserObj, List(patch1, patch2, patch3)) must beRightDisjunction.like {
         case user =>
           user.email mustEqual "my@email.com"
@@ -201,23 +173,7 @@ class UsersAdapterSpec extends Specification
       }
     }
 
-    "return the correct error message when op is invalid" in {
-      val patches = List(UserPatch("add", "/email", "t@t.com"))
-      testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
-        case errs =>
-          errs mustEqual CommonMessages.PatchValidationError(List("Unexpected operation: 'add'."))
-      }
-    }
-
-    "return the correct error message when path is invalid" in {
-      val patches = List(UserPatch("replace", "/invalid", 100))
-      testAdapter.patchUser(testUserObj, patches) must beLeftDisjunction.like {
-        case errs =>
-          errs mustEqual CommonMessages.PatchValidationError(List("Invalid path: '/invalid'."))
-      }
-    }
-
-    "return the correct error message when the value for a valid path is invalid" in {
+    "return the correct error message when the value for a valid path is unexpected" in {
       val invalidCombinations = List(
         ("/verified", 1),
         ("/verified", "yes"),
@@ -225,9 +181,9 @@ class UsersAdapterSpec extends Specification
         ("/email", true))
       foreach(invalidCombinations) {
         case (path, value) =>
-          testAdapter.patchUser(testUserObj, List(UserPatch("replace", path, value))) must beLeftDisjunction.like {
+          testAdapter.patchUser(testUserObj, List(SinglePathPatch("replace", path, value))) must beLeftDisjunction.like {
             case errs =>
-              errs mustEqual CommonMessages.PatchValidationError(List(s"Invalid value for path '$path': '$value'."))
+              errs mustEqual CommonMessages.PatchValidationError(List(s"Unexpected '$path' value: '$value'."))
           }
       }
     }
@@ -276,8 +232,8 @@ class UsersAdapterSpec extends Specification
       }
       val newEmail = "new@email.com"
       val newStatus = !testUserObj.verified
-      val patch1 = UserPatch("replace", "/verified", newStatus)
-      val patch2 = UserPatch("replace", "/email", newEmail)
+      val patch1 = SinglePathPatch("replace", "/verified", newStatus)
+      val patch2 = SinglePathPatch("replace", "/email", newEmail)
       val patches = List(patch1, patch2)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 0

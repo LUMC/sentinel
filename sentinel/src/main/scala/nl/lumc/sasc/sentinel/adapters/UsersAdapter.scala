@@ -23,11 +23,13 @@ import com.novus.salat._
 import com.novus.salat.global._
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, User, UserPatch }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
 import nl.lumc.sasc.sentinel.models.CommonMessages.{ DuplicateUserIdError, MissingUserId, PatchValidationError }
 
 /** Trait for performing operations on user records. */
-trait UsersAdapter extends MongodbAdapter with FutureAdapter {
+trait UsersAdapter extends MongodbAdapter
+    with FutureAdapter
+    with SinglePathPatchJsonAdapter {
 
   /** Overridable execution context for this adapter. */
   protected def usersAdapterContext = ExecutionContext.global
@@ -63,38 +65,6 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
       .collect { case dbo => grater[User].asObject(dbo) }
   }
 
-  /**
-   * Patches an existing user record without saving the patched user to the database.
-   *
-   * @param user User object to apply the patches to.
-   * @param patchOps Patch operations.
-   * @return Either a sequence of error messages or the patched user object.
-   */
-  def patchUser(user: User, patchOps: List[UserPatch]): Perhaps[User] =
-    patchOps.foldLeft(user.right[ApiPayload]) {
-      case (usr, p) =>
-        for {
-          u <- usr
-          patchedUsr <- p(u).leftMap { msgs => PatchValidationError(msgs) }
-        } yield patchedUsr
-    }
-
-  /**
-   * Checks whether the given user patch operations are valid.
-   *
-   * The methods adds additional validation steps that only applies to user patch operations, on top of the base
-   * patch operations.
-   *
-   * @param patchOps Patch operations to validate.
-   * @param requester User requesting to apply the patch operations.
-   * @return Either the validation messages or the user patches.
-   */
-  def validatePatches(patchOps: List[UserPatch], requester: User): Perhaps[List[UserPatch]] =
-    patchOps.foldLeft(List.empty[String]) { (acc, p) => acc ++ p.validationMessages } match {
-      case vms if vms.nonEmpty => PatchValidationError(vms).left
-      case otherwise           => patchOps.right
-    }
-
   /** Updates an existing user record in the database. */
   def updateUser(user: User): Future[WriteResult] = Future {
     coll
@@ -102,13 +72,34 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
   }
 
   /**
+   * Patches an existing user record without saving the patched user to the database.
+   *
+   * @param user User object to apply the patches to.
+   * @param patchOps Patch operations.
+   * @return Either a sequence of error messages or the patched user object.
+   */
+  def patchUser(user: User, patchOps: List[SinglePathPatch]): Perhaps[User] =
+    patchOps.foldLeft(user.right[ApiPayload]) {
+      case (usr, patch) =>
+        for {
+          u <- usr
+          patchedUsr <- (patch.path, patch.value) match {
+            case ("/verified", v: Boolean) => u.copy(verified = v).right
+            case ("/email", e: String)     => u.copy(email = e).right
+            case ("/password", p: String)  => u.copy(hashedPassword = User.hashPassword(p)).right
+            case (other, wise)             => PatchValidationError(s"Unexpected '$other' value: '$wise'.").left
+          }
+        } yield patchedUsr
+    }
+
+  /**
    * Applies the given patch operations to an existing user in the database.
    *
    * @param userId ID of the user to patch.
-   * @param patchOps Patch operations to apply.
+   * @param patchOps Patch operations to apply
    * @return Either error messages or write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: List[UserPatch]): Future[Perhaps[WriteResult]] = {
+  def patchAndUpdateUser(userId: String, patchOps: List[SinglePathPatch]): Future[Perhaps[WriteResult]] = {
     val result = for {
       currentUser <- ? <~ getUser(userId).map {
         case Some(u) => u.right
@@ -120,4 +111,30 @@ trait UsersAdapter extends MongodbAdapter with FutureAdapter {
 
     result.run
   }
+
+  override def patchValidationFuncs = super.patchValidationFuncs :+ mustHaveValidPathAndValue
+
+  override protected val validOps: Set[String] = Set("replace")
+
+  /** Valid paths for the patch operation. */
+  protected val validPatchPaths = Set("/password", "/email", "/verified")
+
+  /** Validation function that ensures the patch operation have the valid paths and values. */
+  protected final val mustHaveValidPathAndValue: ValidationFunc =
+    (ops: Seq[SinglePathPatch]) => {
+      val vms = ops.flatMap { p =>
+        (p.path, p.value) match {
+          case ("/verified", v: Boolean)             => List.empty
+          case ("/password", p: String)              => User.Validator.passwordMessages(p, p).toList
+          case ("/email", e: String)                 => User.Validator.emailMessages(e).toList
+          case (x, y) if validPatchPaths.contains(x) => List(s"Invalid value for path '$x': '$y'.")
+          case (ip, _)                               => List(s"Invalid path: '$ip'.")
+        }
+      }
+      vms.toList.toNel match {
+        case Some(nel) => nel.fail
+        case None      => ops.successNel
+      }
+    }
+
 }

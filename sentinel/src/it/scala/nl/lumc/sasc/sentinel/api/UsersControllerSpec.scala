@@ -21,15 +21,13 @@ import scala.concurrent.duration._
 
 import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
-import org.json4s.jackson.Serialization.write
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.testing.{ SentinelServletSpec, UserExamples }
-import nl.lumc.sasc.sentinel.models.{UserPatch, UserRequest}
+import nl.lumc.sasc.sentinel.models.{SinglePathPatch, UserRequest}
 
 class UsersControllerSpec extends SentinelServletSpec {
 
-  private def toByteArray[T <: AnyRef](obj: T) = write(obj).getBytes
   private def makeBasicAuthHeader(userId: String, password: String): String =
     "Basic " + BaseEncoding.base64().encode(s"$userId:$password".getBytes(Charsets.UTF_8))
   implicit val mongo = dao
@@ -54,7 +52,7 @@ class UsersControllerSpec extends SentinelServletSpec {
       new Context.PriorRequestsClean {
 
         val userRequest = UserRequest("yeah", "mail@mail.com", "Mypass123", "Mypass123")
-        val payload = toByteArray(userRequest)
+        val payload = toJsonByteArray(userRequest)
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -111,7 +109,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "Mypass456"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "Mypass456"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -131,7 +129,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        val payload = toByteArray(UserRequest("hm", "mail@mail.com", "MyPass123", "Mypass123"))
+        val payload = toJsonByteArray(UserRequest("hm", "mail@mail.com", "MyPass123", "Mypass123"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -154,7 +152,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         s"be '$nonchar' should" >> inline {
           
           new Context.PriorRequestsClean {
-            val payload = toByteArray(UserRequest("yeah" + nonchar, "mail@mail.com", "Mypass123", "Mypass123"))
+            val payload = toJsonByteArray(UserRequest("yeah" + nonchar, "mail@mail.com", "Mypass123", "Mypass123"))
             def request = () => post(endpoint, payload) { response }
             def priorRequests = Seq(request)
 
@@ -174,7 +172,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password is less than 6 characters should" >> inline {
 
       new Context.PriorRequestsClean {
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "My1aB", "My1aB"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "My1aB", "My1aB"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -192,7 +190,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain any uppercase characters should" >> inline {
 
       new Context.PriorRequestsClean {
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "mypass123", "mypass123"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "mypass123", "mypass123"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -211,7 +209,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain any lowercase characters should" >> inline {
 
       new Context.PriorRequestsClean {
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MYPASS123", "MYPASS123"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "MYPASS123", "MYPASS123"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -230,7 +228,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the password does not contain any numeric characters should" >> inline {
 
       new Context.PriorRequestsClean {
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MyPass", "MyPass"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "MyPass", "MyPass"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request)
 
@@ -249,7 +247,7 @@ class UsersControllerSpec extends SentinelServletSpec {
     "when the requested user ID already exists should" >> inline {
 
       new Context.PriorRequestsClean {
-        val payload = toByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "MyPass123"))
+        val payload = toJsonByteArray(UserRequest("yeah", "mail@mail.com", "MyPass123", "MyPass123"))
         def request = () => post(endpoint, payload) { response }
         def priorRequests = Seq(request, request)
 
@@ -497,7 +495,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
       new Context.PriorRequestsClean {
 
-        def payload = toByteArray(Seq(UserPatch("replace", "/password", "newPass123")))
+        def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/password", "newPass123")))
         def request = () => patch(endpoint(UserExamples.avg.id), payload) { response }
         def priorRequests = Seq(request)
 
@@ -533,7 +531,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               new Context.PriorRequestsClean {
 
-                def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+                def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/verified", true)))
                 def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
                 def priorRequests = Seq(request)
 
@@ -584,7 +582,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq())
+                  def payload = toJsonByteArray(Seq())
                   def request = () => patch(endpoint(uobj.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -604,7 +602,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq("yalala", UserPatch("replace", "/password", "newPass123")))
+                  def payload = toJsonByteArray(Seq("yalala", SinglePathPatch("replace", "/password", "newPass123")))
                   def request = () => patch(endpoint(uobj.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -628,8 +626,8 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                     new Context.PriorRequestsClean {
 
-                      def payload = toByteArray(
-                        Seq(UserPatch("replace", "/password", "newPass123"), UserPatch(op, "/password", "newPass123")))
+                      def payload = toJsonByteArray(
+                        Seq(SinglePathPatch("replace", "/password", "newPass123"), SinglePathPatch(op, "/password", "newPass123")))
                       def request = () => patch(endpoint(uobj.id), payload, headers) { response }
                       def priorRequests = Seq(request)
 
@@ -640,7 +638,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                       "return a JSON object containing the expected message" in {
                         priorResponse.contentType mustEqual "application/json"
                         priorResponse.body must /("message" -> "Invalid patch operation(s).")
-                        priorResponse.body must /("hints") /# 0 / s"Unexpected operation: '$op'."
+                        priorResponse.body must /("hints") /# 0 / s"Unsupported operation: '$op'."
                       }
                     }
                   }
@@ -651,7 +649,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+                  def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/verified", true)))
                   def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -682,7 +680,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq(UserPatch("replace", "/verified", false)))
+                  def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/verified", false)))
                   def request = () => patch(endpoint(uobj.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -715,7 +713,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+                  def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/password", newPass)))
                   def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -745,7 +743,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+                  def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/email", newEmail)))
                   def request = () => patch(endpoint(UserExamples.avg.id), payload, headers) { response }
                   def priorRequests = Seq(request)
 
@@ -783,7 +781,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           new Context.PriorRequestsClean {
 
-            def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+            def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/verified", true)))
             def request = () => patch(endpoint(UserExamples.unverified.id), payload, headers) { response }
             def priorRequests = Seq(request)
 
@@ -815,7 +813,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             new Context.PriorRequestsClean {
 
-              def payload = toByteArray(Seq(UserPatch("replace", "/verified", true)))
+              def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/verified", true)))
               def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
@@ -842,7 +840,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             new Context.PriorRequestsClean {
 
-              def payload = toByteArray(Seq(UserPatch("replace", "/password", newPass)))
+              def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/password", newPass)))
               def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
               def priorRequests = Seq(request)
 
@@ -872,7 +870,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             new Context.PriorRequestsClean {
 
-              def payload = toByteArray(Seq(UserPatch("replace", "/email", newEmail)))
+              def payload = toJsonByteArray(Seq(SinglePathPatch("replace", "/email", newEmail)))
               def request = () => patch(endpoint(userRecord.id), payload, headers) { response }
               def priorRequests = Seq(request)
 

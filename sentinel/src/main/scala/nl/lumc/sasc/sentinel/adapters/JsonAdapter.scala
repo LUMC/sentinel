@@ -100,7 +100,7 @@ trait JsonValidationAdapter extends JsonAdapter {
  *
  * See http://jsonpatch.com/ for the JSON patch specification.
  */
-trait SinglePathJsonPatchAdapter extends JsonValidationAdapter {
+trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
 
   /** Type alias for the patch validation function, which is a function that takes patches and return its ValidationNEL. */
   type ValidationFunc = Seq[SinglePathPatch] => ValidationNel[String, Seq[SinglePathPatch]]
@@ -147,7 +147,7 @@ trait SinglePathJsonPatchAdapter extends JsonValidationAdapter {
   }
 
   /** Valid paths for the patch operation. */
-  protected final val validOps: Set[String] = Set("add", "remove", "replace")
+  protected val validOps: Set[String] = Set("add", "remove", "replace")
 
   /** Validation function that ensures there is at least one patch operation. */
   protected final val mustBeNonEmpty: ValidationFunc =
@@ -159,7 +159,10 @@ trait SinglePathJsonPatchAdapter extends JsonValidationAdapter {
   /** Validation function that ensures all the operations from the given patches are supported. */
   protected final val mustBeSupportedOp: ValidationFunc =
     (ops: Seq[SinglePathPatch]) =>
-      if (ops.exists { !validOps.contains(_) }) "Patch contains unsupported operations.".failNel
-      else ops.successNel
-
+      ops
+        .flatMap { op => if (!validOps(op.op)) Seq(s"Unsupported operation: '${op.op}'.") else Seq.empty[String] }
+        .toList.toNel match {
+          case Some(nel) => nel.fail
+          case None      => ops.successNel
+        }
 }

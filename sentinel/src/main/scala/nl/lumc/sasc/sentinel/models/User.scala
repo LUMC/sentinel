@@ -22,7 +22,6 @@ import javax.crypto.KeyGenerator
 import org.apache.commons.codec.binary.Base64
 import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.utils.utcTimeNow
@@ -182,54 +181,4 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
       isAdmin = false,
       creationTimeUtc = utcTimeNow,
       _id = new ObjectId)
-}
-
-/**
- * Patch operation on a [[User]] object.
- *
- * Patch operations sent to Sentinel are expected to follow [[https://tools.ietf.org/html/rfc6902 RFC6902]].
- *
- * @param op Patch operation to apply. Currently only `replace` is supported.
- * @param path JSON path pointing to patch operation target. Only `/password`, `/path`, and `/verified`.
- * @param value Value of the patch operation.
- */
-case class UserPatch(op: String, path: String, value: Any) {
-
-  /** Valid paths for the patch operation. */
-  private val validPaths = Set("/password", "/email", "/verified")
-
-  /** Messages to emit when the patch operation is invalid. */
-  private val opMessages: List[String] =
-    if (op == "replace") List.empty
-    else List(s"Unexpected operation: '$op'.")
-
-  /** Messages to emit when any part of the patch operation is invalid. */
-  lazy val validationMessages: List[String] = {
-    val msgs = (path, value) match {
-      case ("/verified", v: Boolean)        => List.empty
-      case ("/password", p: String)         => User.Validator.passwordMessages(p, p)
-      case ("/email", e: String)            => User.Validator.emailMessages(e)
-      case (x, y) if validPaths.contains(x) => List(s"Invalid value for path '$x': '$y'.")
-      case (p, _)                           => List(s"Invalid path: '$p'.")
-    }
-    opMessages ++ msgs
-  }
-
-  /**
-   * Applies the patch operation to the given [[User]] object.
-   *
-   * @param user [[User]] object to patch.
-   * @return Either a sequence of error strings or a patched user object.
-   */
-  // NOTE: does not have anything to do with `apply` method of this case class' object.
-  def apply(user: User): List[String] \/ User = {
-    if (validationMessages.nonEmpty) validationMessages.left
-    else
-      (path, value) match {
-        case ("/verified", v: Boolean) => user.copy(verified = v).right
-        case ("/email", e: String)     => user.copy(email = e).right
-        case ("/password", p: String)  => user.copy(hashedPassword = User.hashPassword(p)).right
-        case (other, wise)             => List("Unexpected '" + other + "' value: '" + wise + "'.").left
-      }
-  }
 }
