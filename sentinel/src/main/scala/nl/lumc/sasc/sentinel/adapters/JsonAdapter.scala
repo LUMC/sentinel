@@ -27,6 +27,7 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.Perhaps
 import nl.lumc.sasc.sentinel.models.{ CommonMessages, SinglePathPatch }, CommonMessages._
 import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator, SentinelJsonFormats }
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /** Trait for parsing JSON. */
 trait JsonAdapter {
@@ -90,4 +91,75 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @return a JSON validator.
    */
   protected def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
+}
+
+/**
+ * Trait for parsing and validating JSON patch inputs
+ *
+ * At the moment, we only support patches with single paths (`add`, `replace`, and `remove`).
+ *
+ * See http://jsonpatch.com/ for the JSON patch specification.
+ */
+trait SinglePathJsonPatchAdapter extends JsonValidationAdapter {
+
+  /** Type alias for the patch validation function, which is a function that takes patches and return its ValidationNEL. */
+  type ValidationFunc = Seq[SinglePathPatch] => ValidationNel[String, Seq[SinglePathPatch]]
+
+  /** Patch schema URL. */
+  final val jsonSchemaUrls = Seq("/schemas/json_patch.json")
+
+  /**
+   * Extracts the given byte array into patch objects, while performing validation on the extracted object.
+   *
+   * @param contents Raw byte contents to extract.
+   * @return Patch operations or an error message-containing payload for user display.
+   */
+  def extractPatches(contents: Array[Byte]): Perhaps[Seq[SinglePathPatch]] =
+    for {
+      // Make sure incoming data is JArray ~ so we wrap single item in a list
+      json <- extractJson(contents).map {
+        case single @ JObject(_) => JArray(List(single))
+        case otherwise           => otherwise
+      }
+      patchOps <- json.extract[Seq[SinglePathPatch]].right
+      validOps <- validatePatches(patchValidationFuncs)(patchOps)
+    } yield validOps
+
+  /** Validation functions to apply to incoming patches. */
+  def patchValidationFuncs: Seq[ValidationFunc] = Seq(mustBeNonEmpty, mustBeSupportedOp)
+
+  /**
+   * Using the given validation function(s), validate the given patch operations.
+   *
+   * @param fs Sequence of functions to validate the patches.
+   * @param ops Patch operations to validate.
+   * @return Patch operations or an error message-containing payload for user display.
+   */
+  def validatePatches(fs: Seq[ValidationFunc])(ops: Seq[SinglePathPatch]): Perhaps[Seq[SinglePathPatch]] = {
+    // Perform validation in parallel for each validation function and aggregate any errors
+    val vRes = fs.par
+      .map { vfunc => vfunc(ops) }
+      .reduceLeft { _ <@> _ }
+    vRes match {
+      case Failure(f) => PatchValidationError(f.toList).left
+      case Success(s) => s.right
+    }
+  }
+
+  /** Valid paths for the patch operation. */
+  protected final val validOps: Set[String] = Set("add", "remove", "replace")
+
+  /** Validation function that ensures there is at least one patch operation. */
+  protected final val mustBeNonEmpty: ValidationFunc =
+    (ops: Seq[SinglePathPatch]) => {
+      if (ops.isEmpty) "Patch operations can not be empty.".failNel
+      else ops.successNel
+    }
+
+  /** Validation function that ensures all the operations from the given patches are supported. */
+  protected final val mustBeSupportedOp: ValidationFunc =
+    (ops: Seq[SinglePathPatch]) =>
+      if (ops.exists { !validOps.contains(_) }) "Patch contains unsupported operations.".failNel
+      else ops.successNel
+
 }
