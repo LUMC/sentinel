@@ -29,7 +29,7 @@ import nl.lumc.sasc.sentinel.models.ApiPayload
 trait FutureAdapter {
 
   /** Type alias for operations that returns a user-visible payloads when failing. */
-  type Perhaps[+A] = ApiPayload \/ A
+  type Perhaps[+A] = nl.lumc.sasc.sentinel.Perhaps[A]
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds
