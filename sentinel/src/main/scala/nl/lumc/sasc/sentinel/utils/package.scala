@@ -27,12 +27,11 @@ import scala.reflect.{ ClassTag, ManifestFactory }
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
 
-import com.github.fge.jsonschema.core.report.ProcessingReport
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.util.io.readBytes
 
-import nl.lumc.sasc.sentinel.models.BaseRunRecord
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /** General utilities */
@@ -140,8 +139,13 @@ package object utils {
     FieldSerializer[BaseRunRecord]({ case (attr, _) if BaseRunRecord.hiddenAttributes.contains(attr) => None },
       { case field => field })
 
+  /** Serializer for outgoing `ApiPayload` objects. */
+  val ApiPayloadSerializer =
+    FieldSerializer[ApiPayload]({ case (attr, _) if ApiPayload.hiddenAttributes.contains(attr) => None },
+      { case field => field })
+
   /** JSON format used across the entire package. */
-  val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer
+  val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer + ApiPayloadSerializer
 
   object reflect {
 

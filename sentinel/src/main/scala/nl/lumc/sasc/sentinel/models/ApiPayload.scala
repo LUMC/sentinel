@@ -22,12 +22,38 @@ import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
 
 /**
- * Message sent to users interacting with any HTTP endpoint.
+ * Message sent to users interacting with any HTTP endpoint. This is implemented as a custom case class, where the
+ * equality is only defined for the `message` and `hints` attribute.
  *
  * @param message Main message to send.
  * @param hints Additional information.
+ * @param httpFunc Function that transforms this payload into a Scalatra HTTP ActionResult object. This enables a given
+ *                 ApiPayload to always be associated with a HTTP action.
  */
-sealed case class ApiPayload(message: String, hints: List[String] = List.empty[String])
+sealed case class ApiPayload(
+    message: String,
+    hints: List[String] = List.empty[String],
+    httpFunc: ApiPayload => ActionResult = ap => InternalServerError(ap)) {
+
+  // Need to be overridden to ensure hashCode generation is only affected by the first two attributes.
+  override def productArity = 2
+
+  // Similar to productArity, we want to ensure this ignores the `httpFunc` attribute.
+  override def productIterator = super.productIterator.take(productArity)
+
+  // Custom equality method that ignores the `httpFunc` attribute.
+  override def equals(that: Any) = that match {
+    case ApiPayload(msg: String, hnts: List[_], _) => msg == message && hnts == hints
+    case _                                         => false
+  }
+
+  /** Creates an HTTP ActionResult with this payload. */
+  def toActionResult: ActionResult = httpFunc(this)
+}
+
+object ApiPayload {
+  val hiddenAttributes = Set("httpFunc")
+}
 
 /** Common API messages. */
 object Payloads {
