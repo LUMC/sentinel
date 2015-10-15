@@ -24,7 +24,7 @@ import com.novus.salat.global._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
-import nl.lumc.sasc.sentinel.models.Payloads.{ DuplicateUserIdError, UserIdNotFoundError, PatchValidationError }
+import nl.lumc.sasc.sentinel.models.Payloads._
 
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends MongodbAdapter
@@ -95,12 +95,17 @@ trait UsersAdapter extends MongodbAdapter
   /**
    * Applies the given patch operations to an existing user in the database.
    *
+   * @param user The user performing the patch operation.
    * @param userId ID of the user to patch.
    * @param patchOps Patch operations to apply
    * @return Either error messages or write result.
    */
-  def patchAndUpdateUser(userId: String, patchOps: List[SinglePathPatch]): Future[Perhaps[WriteResult]] = {
+  def patchAndUpdateUser(user: User, userId: String, patchOps: List[SinglePathPatch]): Future[Perhaps[WriteResult]] = {
     val result = for {
+      // Make sure the user is authorized to perform the operations
+      reqByAdmin <- ? <~ (if (!(user.id == userId || user.isAdmin)) AuthorizationError.left else user.isAdmin.right)
+      // Make sure only admins perform verifications
+      _ <- ? <~ (if (patchOps.exists(_.path == "/verified") && !reqByAdmin) AuthorizationError.left else ().right)
       currentUser <- ? <~ getUser(userId).map(_.toRightDisjunction(UserIdNotFoundError(userId)))
       patchedUser <- ? <~ patchUser(currentUser, patchOps)
       writeResult <- ? <~ updateUser(patchedUser)

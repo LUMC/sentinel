@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import scala.concurrent.Future.{ successful => sf }
+import scala.concurrent.Future
 
 import org.scalatra._
 import org.scalatra.swagger._
@@ -103,19 +103,14 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     new AsyncResult {
       val is =
-        if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(Payloads.AuthorizationError))
-        else {
-          users.extractAndValidatePatches(request.body.getBytes) match {
-            case -\/(err) => sf(err.toActionResult)
-            case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
-              sf(Forbidden(Payloads.AuthorizationError))
-            case \/-(ops) =>
-              users.patchAndUpdateUser(userRecordId, ops.toList).map {
-                case -\/(err)                    => err.toActionResult
-                case \/-(wres) if wres.getN == 1 => NoContent()
-                case otherwise                   => InternalServerError(Payloads.UnexpectedError)
-              }
-          }
+        users.extractAndValidatePatches(request.body.getBytes) match {
+          case -\/(err) => Future.successful(err.toActionResult)
+          case \/-(ops) =>
+            users.patchAndUpdateUser(user, userRecordId, ops.toList).map {
+              case -\/(err)                    => err.toActionResult
+              case \/-(wres) if wres.getN == 1 => NoContent()
+              case otherwise                   => InternalServerError(Payloads.UnexpectedError)
+            }
         }
     }
   }

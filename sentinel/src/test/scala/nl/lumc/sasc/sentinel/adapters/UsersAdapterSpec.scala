@@ -218,7 +218,7 @@ class UsersAdapterSpec extends Specification
   "patchAndUpdateUser" should {
 
     "return the expected error message when user does not exist" in {
-      testAdapter.patchAndUpdateUser("nonexistent", List.empty).map { ret =>
+      testAdapter.patchAndUpdateUser(testUserObj.copy(isAdmin = true), "nonexistent", List.empty).map { ret =>
         ret must beLeftDisjunction.like {
           case errs => errs mustEqual Payloads.UserIdNotFoundError("nonexistent")
         }
@@ -237,7 +237,7 @@ class UsersAdapterSpec extends Specification
       val patches = List(patch1, patch2)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 0
-      adapter.patchAndUpdateUser(testUserObj.id, patches).map { ret =>
+      adapter.patchAndUpdateUser(testUserObj.copy(isAdmin = true), testUserObj.id, patches).map { ret =>
         ret must beRightDisjunction.like {
           case res => res.getN mustEqual 1
         }
