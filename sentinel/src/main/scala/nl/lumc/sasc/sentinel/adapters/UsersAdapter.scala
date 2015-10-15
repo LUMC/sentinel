@@ -101,10 +101,7 @@ trait UsersAdapter extends MongodbAdapter
    */
   def patchAndUpdateUser(userId: String, patchOps: List[SinglePathPatch]): Future[Perhaps[WriteResult]] = {
     val result = for {
-      currentUser <- ? <~ getUser(userId).map {
-        case Some(u) => u.right
-        case None    => MissingUserId(userId).left
-      }
+      currentUser <- ? <~ getUser(userId).map(_.toRightDisjunction(MissingUserId(userId)))
       patchedUser <- ? <~ patchUser(currentUser, patchOps)
       writeResult <- ? <~ updateUser(patchedUser)
     } yield writeResult
