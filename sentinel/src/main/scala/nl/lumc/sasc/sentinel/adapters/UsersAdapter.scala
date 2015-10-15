@@ -24,7 +24,7 @@ import com.novus.salat.global._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
-import nl.lumc.sasc.sentinel.models.CommonMessages.{ DuplicateUserIdError, MissingUserId, PatchValidationError }
+import nl.lumc.sasc.sentinel.models.Payloads.{ DuplicateUserIdError, MissingUserId, PatchValidationError }
 
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends MongodbAdapter

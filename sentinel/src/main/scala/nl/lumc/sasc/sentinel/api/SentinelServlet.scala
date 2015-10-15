@@ -30,7 +30,7 @@ import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
 import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CommonMessages }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, Payloads }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Base servlet for all Sentinel controllers. */
@@ -128,7 +128,7 @@ abstract class SentinelServlet extends ScalatraServlet
           case Success(s) => Option(s)
           // Halt when the supplied string parameter is not convertible to enum. This allows us to return a useful
           // error message instead of just silently failing.
-          case Failure(_) => halt(400, CommonMessages.InvalidAccLevelError)
+          case Failure(_) => halt(400, Payloads.InvalidAccLevelError)
         }
     }
 
@@ -138,7 +138,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[LibType.Value] =
         Try(LibType.withName(str)) match {
           case Success(s) => Option(s)
-          case Failure(_) => halt(400, CommonMessages.InvalidLibError)
+          case Failure(_) => halt(400, Payloads.InvalidLibError)
         }
     }
 
@@ -148,7 +148,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[SeqQcPhase.Value] =
         Try(SeqQcPhase.withName(str)) match {
           case Success(s) => Option(s)
-          case Failure(_) => halt(400, CommonMessages.InvalidSeqQcPhaseError)
+          case Failure(_) => halt(400, Payloads.InvalidSeqQcPhaseError)
         }
     }
 
@@ -165,7 +165,7 @@ abstract class SentinelServlet extends ScalatraServlet
       def apply(str: String): Option[Seq[DbId]] = {
         val (validIds, invalidIds) = separateObjectIds(str.split(multiParamDelimiter).toSeq)
         if (invalidIds.nonEmpty)
-          halt(400, CommonMessages.InvalidDbError(invalidIds.toList))
+          halt(400, Payloads.InvalidDbError(invalidIds.toList))
         else Option(validIds)
       }
     }

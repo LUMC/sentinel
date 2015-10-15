@@ -25,7 +25,7 @@ import org.json4s.jackson.JsonMethods.parse
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.Perhaps
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, SinglePathPatch }, CommonMessages._
+import nl.lumc.sasc.sentinel.models.{ Payloads, SinglePathPatch }, Payloads._
 import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator, SentinelJsonFormats }
 import nl.lumc.sasc.sentinel.utils.Implicits._
 

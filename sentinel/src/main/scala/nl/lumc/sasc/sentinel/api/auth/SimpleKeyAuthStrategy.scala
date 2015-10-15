@@ -27,7 +27,7 @@ import org.scalatra.auth.{ ScentryStrategy, ScentrySupport }
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.SentinelServlet
 import nl.lumc.sasc.sentinel.adapters.UsersAdapter
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, User }
+import nl.lumc.sasc.sentinel.models.{ Payloads, User }
 
 /**
  * API key authentication strategy.
@@ -64,11 +64,11 @@ class SimpleKeyAuthStrategy(protected val app: SentinelServlet { def users: User
 
   /** Action to be performed after authentication succeeds. */
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
-    if (!user.verified) app halt Forbidden(CommonMessages.Unauthorized)
+    if (!user.verified) app halt Forbidden(Payloads.Unauthorized)
 
   /** Action to be performed if the authentication fails. */
   override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) =
-    app halt Unauthorized(CommonMessages.Unauthenticated, Map("WWW-Authenticate" -> challenge))
+    app halt Unauthorized(Payloads.Unauthenticated, Map("WWW-Authenticate" -> challenge))
 }
 
 /** Static values for the API key authentication strategy */
@@ -101,9 +101,9 @@ trait SimpleKeyAuthSupport[UserType <: AnyRef] { this: (ScalatraBase with Scentr
     /** Helper function for sending the HTTP response saying authentication is required */
     def askAuth() = {
       response.setHeader("WWW-Authenticate", SimpleKeyAuthStrategy.challenge)
-      halt(401, CommonMessages.Unauthenticated)
+      halt(401, Payloads.Unauthenticated)
     }
-    if (f(params).isEmpty) { halt(400, CommonMessages.UnspecifiedUserId) }
+    if (f(params).isEmpty) { halt(400, Payloads.UnspecifiedUserId) }
     if (Option(request.getHeader(HeaderApiKey)).isEmpty) { askAuth() }
     scentry.authenticate(SimpleKeyAuthStrategy.name).getOrElse { askAuth() }
   }

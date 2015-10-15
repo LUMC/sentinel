@@ -29,7 +29,7 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.adapters.FutureAdapter
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ Payloads, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
 /**
@@ -91,13 +91,13 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
           case dexc: com.mongodb.DuplicateKeyException =>
             mongo.gridfs.find((gfs: GridFSDBFile) => gfs.md5 == calcMd5(contents)) match {
               case Some(gfs) => gfs._id match {
-                case Some(oid) => CommonMessages.DuplicateSummaryError(oid.toString).left
-                case None      => CommonMessages.UnexpectedDatabaseError("File has no ID.").left
+                case Some(oid) => Payloads.DuplicateSummaryError(oid.toString).left
+                case None      => Payloads.UnexpectedDatabaseError("File has no ID.").left
               }
-              case None => CommonMessages.UnexpectedDatabaseError("Conflicting duplicate detection.").left
+              case None => Payloads.UnexpectedDatabaseError("Conflicting duplicate detection.").left
             }
 
-          case otherwise => CommonMessages.UnexpectedDatabaseError().left
+          case otherwise => Payloads.UnexpectedDatabaseError().left
         }
 
         case scala.util.Success(s) => s match {
@@ -106,9 +106,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
             case oid: ObjectId => oid.right
             case otherwise =>
               val hint = s"Expected ObjectId from storing file, got '${otherwise.toString}' instead."
-              CommonMessages.UnexpectedDatabaseError(hint).left
+              Payloads.UnexpectedDatabaseError(hint).left
           }
-          case None => CommonMessages.UnexpectedDatabaseError().left
+          case None => Payloads.UnexpectedDatabaseError().left
         }
       }
     }
@@ -261,27 +261,27 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
         .map { dbo => recordGrater.asObject(dbo) }
       maybeDoc match {
         case Some(doc) => doc.deletionTimeUtc match {
-          case Some(_) => CommonMessages.ResourceGoneError.left
+          case Some(_) => Payloads.ResourceGoneError.left
           case None    => doc.right
         }
-        case None => CommonMessages.MissingRunId.left
+        case None => Payloads.MissingRunId.left
       }
     }
 
     /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
     def deleteGridFS(record: RunRecord): Future[Perhaps[Unit]] = deleteRunGridFSEntry(record)
       .map(_.right)
-      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
+      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
     /** Helper method that marks all sample deletion errors as incomplete deletion. */
     def deleteSamples(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunSamples(record)
       .map(_.right)
-      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
+      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
     /** Helper method that marks all read groups deletion errors as incomplete deletion. */
     def deleteReadGroups(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunReadGroups(record)
       .map(_.right)
-      .recover { case e: Exception => CommonMessages.IncompleteDeletionError.left }
+      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
     /** Helper method to mark run document as deleted. */
     def markRecord(): Future[Perhaps[RunRecord]] = Future {
@@ -295,7 +295,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
         .map { dbo => recordGrater.asObject(dbo) }
       doc match {
         case Some(obj) => obj.right
-        case None      => CommonMessages.IncompleteDeletionError.left
+        case None      => Payloads.IncompleteDeletionError.left
       }
     }
 

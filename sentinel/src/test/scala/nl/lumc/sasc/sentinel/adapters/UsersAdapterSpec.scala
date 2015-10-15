@@ -25,7 +25,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.scalaz.DisjunctionMatchers
 
-import nl.lumc.sasc.sentinel.models.{ CommonMessages, User, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ Payloads, User, SinglePathPatch }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class UsersAdapterSpec extends Specification
@@ -114,7 +114,7 @@ class UsersAdapterSpec extends Specification
       adapter.addUser(testUserObj).map { ret =>
         ret must beLeftDisjunction.like {
           case err =>
-            err mustEqual CommonMessages.DuplicateUserIdError(testUserObj.id)
+            err mustEqual Payloads.DuplicateUserIdError(testUserObj.id)
         }
       }.await
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
@@ -183,7 +183,7 @@ class UsersAdapterSpec extends Specification
         case (path, value) =>
           testAdapter.patchUser(testUserObj, List(SinglePathPatch("replace", path, value))) must beLeftDisjunction.like {
             case errs =>
-              errs mustEqual CommonMessages.PatchValidationError(List(s"Unexpected '$path' value: '$value'."))
+              errs mustEqual Payloads.PatchValidationError(List(s"Unexpected '$path' value: '$value'."))
           }
       }
     }
@@ -220,7 +220,7 @@ class UsersAdapterSpec extends Specification
     "return the expected error message when user does not exist" in {
       testAdapter.patchAndUpdateUser("nonexistent", List.empty).map { ret =>
         ret must beLeftDisjunction.like {
-          case errs => errs mustEqual CommonMessages.MissingUserId("nonexistent")
+          case errs => errs mustEqual Payloads.MissingUserId("nonexistent")
         }
       }.await
     }

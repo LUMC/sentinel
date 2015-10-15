@@ -135,7 +135,7 @@ package object utils {
   /** Gets the current UTC time. */
   def utcTimeNow: Date = Date.from(Clock.systemUTC().instant)
 
-  /** Serializer for outgoing JSON payloads. */
+  /** Serializer for outgoing JSON representing run documents. */
   val RunDocumentSerializer =
     FieldSerializer[BaseRunRecord]({ case (attr, _) if BaseRunRecord.hiddenAttributes.contains(attr) => None },
       { case field => field })

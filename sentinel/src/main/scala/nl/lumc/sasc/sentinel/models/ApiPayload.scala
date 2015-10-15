@@ -30,7 +30,7 @@ import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
 sealed case class ApiPayload(message: String, hints: List[String] = List.empty[String])
 
 /** Common API messages. */
-object CommonMessages {
+object Payloads {
 
   object DuplicateSummaryError {
     def message = "Run summary already uploaded."
@@ -47,8 +47,6 @@ object CommonMessages {
     def apply(hint: String) = ApiPayload(message, hints = List(hint))
     def apply() = ApiPayload(message)
   }
-
-  val AlreadyUploaded = ApiPayload("Run summary already uploaded.")
 
   trait ValidationErrorLike {
     def message: String
