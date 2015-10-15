@@ -105,11 +105,14 @@ trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
   /** Type alias for the patch validation function, which is a function that takes patches and return its ValidationNEL. */
   type ValidationFunc = Seq[SinglePathPatch] => ValidationNel[String, Seq[SinglePathPatch]]
 
+  /** Type alias for patches. */
+  private type Patches = Seq[SinglePathPatch]
+
   /** Patch schema URL. */
   final val jsonSchemaUrls = Seq("/schemas/json_patch.json")
 
   /**
-   * Extracts the given byte array into patch objects, while performing validation on the extracted object.
+   * Extracts the given byte array into patch objects.
    *
    * @param contents Raw byte contents to extract.
    * @return Patch operations or an error message-containing payload for user display.
@@ -122,22 +125,20 @@ trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
         case otherwise           => otherwise
       }
       patchOps <- json.extract[Seq[SinglePathPatch]].right
-      validOps <- validatePatches(patchValidationFuncs)(patchOps)
-    } yield validOps
+    } yield patchOps
 
   /** Validation functions to apply to incoming patches. */
   def patchValidationFuncs: Seq[ValidationFunc] = Seq(mustBeNonEmpty, mustBeSupportedOp)
 
   /**
-   * Using the given validation function(s), validate the given patch operations.
+   * Using the validation function(s), validate the given patch operations.
    *
-   * @param fs Sequence of functions to validate the patches.
    * @param ops Patch operations to validate.
    * @return Patch operations or an error message-containing payload for user display.
    */
-  def validatePatches(fs: Seq[ValidationFunc])(ops: Seq[SinglePathPatch]): Perhaps[Seq[SinglePathPatch]] = {
+  def validatePatches(ops: Seq[SinglePathPatch]): Perhaps[Seq[SinglePathPatch]] = {
     // Perform validation in parallel for each validation function and aggregate any errors
-    val vRes = fs.par
+    val vRes = patchValidationFuncs.par
       .map { vfunc => vfunc(ops) }
       .reduceLeft { _ <@> _ }
     vRes match {
@@ -145,6 +146,12 @@ trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
       case Success(s) => s.right
     }
   }
+
+  /** Function for extracting then validating patches. */
+  val extractAndValidatePatches =
+    // The compiler actually doesn't need these type annotations, but some IDE does.
+    Kleisli[Perhaps, Array[Byte], Patches] { extractPatches } >=>
+      Kleisli[Perhaps, Patches, Patches] { validatePatches }
 
   /** Valid paths for the patch operation. */
   protected val validOps: Set[String] = Set("add", "remove", "replace")

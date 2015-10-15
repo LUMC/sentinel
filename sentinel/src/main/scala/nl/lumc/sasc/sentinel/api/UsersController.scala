@@ -105,7 +105,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       val is =
         if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(CommonMessages.Unauthorized))
         else {
-          users.extractPatches(request.body.getBytes) match {
+          users.extractAndValidatePatches(request.body.getBytes) match {
             case -\/(err) => sf(BadRequest(err))
             case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
               sf(Forbidden(CommonMessages.Unauthorized))
