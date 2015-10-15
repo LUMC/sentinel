@@ -55,7 +55,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   error {
     case exc =>
       contentType = formats("json")
-      InternalServerError(Payloads.Unexpected)
+      InternalServerError(Payloads.UnexpectedError)
   }
 
   options("/?") {
@@ -87,9 +87,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),
       StringResponseMessage(400, "Patch document is invalid or malformed."),
-      StringResponseMessage(401, Payloads.Unauthenticated.message),
-      StringResponseMessage(403, Payloads.Unauthorized.message),
-      StringResponseMessage(404, Payloads.MissingUserId.message)))
+      StringResponseMessage(401, Payloads.AuthenticationError.message),
+      StringResponseMessage(403, Payloads.AuthorizationError.message),
+      StringResponseMessage(404, Payloads.UserIdNotFoundError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -103,17 +103,17 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     new AsyncResult {
       val is =
-        if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(Payloads.Unauthorized))
+        if (!(userRecordId == user.id || user.isAdmin)) sf(Forbidden(Payloads.AuthorizationError))
         else {
           users.extractAndValidatePatches(request.body.getBytes) match {
-            case -\/(err) => sf(BadRequest(err))
+            case -\/(err) => sf(err.toActionResult)
             case \/-(ops) if ops.exists(_.path == "/verified") && !user.isAdmin =>
-              sf(Forbidden(Payloads.Unauthorized))
+              sf(Forbidden(Payloads.AuthorizationError))
             case \/-(ops) =>
               users.patchAndUpdateUser(userRecordId, ops.toList).map {
-                case -\/(err)                    => BadRequest(err)
+                case -\/(err)                    => err.toActionResult
                 case \/-(wres) if wres.getN == 1 => NoContent()
-                case otherwise                   => InternalServerError(Payloads.Unexpected)
+                case otherwise                   => InternalServerError(Payloads.UnexpectedError)
               }
           }
         }
@@ -133,9 +133,9 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       pathParam[String]("userRecordId").description("User record ID to return."))
     responseMessages (
       StringResponseMessage(400, "User record ID not specified."),
-      StringResponseMessage(400, Payloads.UnspecifiedUserId.message),
-      StringResponseMessage(401, Payloads.Unauthenticated.message),
-      StringResponseMessage(404, Payloads.MissingUserId.message)))
+      StringResponseMessage(400, Payloads.UnspecifiedUserIdError.message),
+      StringResponseMessage(401, Payloads.AuthenticationError.message),
+      StringResponseMessage(404, Payloads.UserIdNotFoundError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -147,10 +147,10 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
       val is =
         users.getUser(userRecordId).map {
           case Some(u) => Ok(u.toResponse)
-          case None    => NotFound(Payloads.MissingUserId)
+          case None    => NotFound(Payloads.UserIdNotFoundError)
         }
     }
-    else halt(403, Payloads.Unauthorized)
+    else halt(403, Payloads.AuthorizationError)
   }
 
   // Helper endpoint to capture GET request with unspecified user ID
@@ -182,11 +182,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     else {
       new AsyncResult {
         val is = users.addUser(userRequest.user).map {
-          case -\/(err) if err.message == Payloads.DuplicateUserIdError.message =>
-            Conflict(Payloads.DuplicateUserIdError(userRequest.user.id))
-
-          case -\/(err) => BadRequest(err)
-
+          case -\/(err) => err.toActionResult
           case \/-(wr) =>
             Created(ApiPayload("New user created.",
               List(s"uri: /users/${userRequest.user.id}", s"apiKey: ${userRequest.user.activeKey}")))

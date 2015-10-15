@@ -220,7 +220,7 @@ class UsersAdapterSpec extends Specification
     "return the expected error message when user does not exist" in {
       testAdapter.patchAndUpdateUser("nonexistent", List.empty).map { ret =>
         ret must beLeftDisjunction.like {
-          case errs => errs mustEqual Payloads.MissingUserId("nonexistent")
+          case errs => errs mustEqual Payloads.UserIdNotFoundError("nonexistent")
         }
       }.await
     }

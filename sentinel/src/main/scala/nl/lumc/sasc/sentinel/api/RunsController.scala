@@ -74,11 +74,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   error {
     case sexc: SizeConstraintExceededException =>
       contentType = formats("json")
-      RequestEntityTooLarge(Payloads.RunSummaryTooLarge)
+      RequestEntityTooLarge(Payloads.RunSummaryTooLargeError)
 
     case otherwise =>
       contentType = formats("json")
-      InternalServerError(Payloads.Unexpected)
+      InternalServerError(Payloads.UnexpectedError)
   }
 
   options("/?") {
@@ -107,35 +107,30 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       pathParam[String]("runId").description("Run summary ID."))
     responseMessages (
       StringResponseMessage(200, "Run summary deleted successfully."),
-      StringResponseMessage(400, Payloads.UnspecifiedRunId.message),
-      StringResponseMessage(401, Payloads.Unauthenticated.message),
-      StringResponseMessage(403, Payloads.Unauthorized.message),
-      StringResponseMessage(404, Payloads.MissingRunId.message),
+      StringResponseMessage(400, Payloads.UnspecifiedRunIdError.message),
+      StringResponseMessage(401, Payloads.AuthenticationError.message),
+      StringResponseMessage(403, Payloads.AuthorizationError.message),
+      StringResponseMessage(404, Payloads.RunIdNotFoundError.message),
       StringResponseMessage(410, Payloads.ResourceGoneError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   delete("/:runId", operation(runIdDeleteOp)) {
     logger.info(requestLog)
-    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.MissingRunId))
+    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.RunIdNotFoundError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
     new AsyncResult {
       val is = runs.deleteRun(runId, user).map {
         case \/-(doc) => Ok(doc)
-        case -\/(err) => err match {
-          case Payloads.IncompleteDeletionError => InternalServerError(err)
-          case Payloads.ResourceGoneError       => Gone(err)
-          case Payloads.MissingRunId            => NotFound(err)
-          case otherwise                        => InternalServerError(Payloads.Unexpected)
-        }
+        case -\/(err) => err.toActionResult
       }
     }
 
   }
 
   // Helper matcher for "DELETE /:runId" so that we return the correct error message
-  delete("/?") { halt(400, Payloads.UnspecifiedRunId) }
+  delete("/?") { halt(400, Payloads.UnspecifiedRunIdError) }
 
   // format: OFF
   val runIdPatchOp = (apiOperation[Unit]("runIdPatch")
@@ -159,10 +154,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     responseMessages (
     StringResponseMessage(204, "Record(s) patched successfully."),
     StringResponseMessage(400, "Patch document is invalid or malformed."),
-    StringResponseMessage(400, Payloads.UnspecifiedRunId.message),
-    StringResponseMessage(401, Payloads.Unauthenticated.message),
-    StringResponseMessage(403, Payloads.Unauthorized.message),
-    StringResponseMessage(404, Payloads.MissingRunId.message)))
+    StringResponseMessage(400, Payloads.UnspecifiedRunIdError.message),
+    StringResponseMessage(401, Payloads.AuthenticationError.message),
+    StringResponseMessage(403, Payloads.AuthorizationError.message),
+    StringResponseMessage(404, Payloads.RunIdNotFoundError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
@@ -170,7 +165,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
     logger.info(requestLog)
 
-    val runId = params.getAs[String]("runId").getOrElse(halt(400, Payloads.UnspecifiedRunId))
+    val runId = params.getAs[String]("runId").getOrElse(halt(400, Payloads.UnspecifiedRunIdError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
     new AsyncResult {
@@ -179,7 +174,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   }
 
   // Helper endpoint to capture PATCH request with unspecified user ID
-  patch("/?") { halt(400, Payloads.UnspecifiedRunId) }
+  patch("/?") { halt(400, Payloads.UnspecifiedRunIdError) }
 
   // format: OFF
   val runIdGetOp = (apiOperation[PlainRunRecord]("runIdGet")
@@ -196,9 +191,9 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional)
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
-      StringResponseMessage(401, Payloads.Unauthenticated.message),
-      StringResponseMessage(403, Payloads.Unauthorized.message),
-      StringResponseMessage(404, Payloads.MissingRunId.message),
+      StringResponseMessage(401, Payloads.AuthenticationError.message),
+      StringResponseMessage(403, Payloads.AuthorizationError.message),
+      StringResponseMessage(404, Payloads.RunIdNotFoundError.message),
       StringResponseMessage(410, "Run summary not available anymore."))
     // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
     produces (
@@ -209,13 +204,13 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
   get("/:runId", operation(runIdGetOp)) {
     logger.info(requestLog)
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
-    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.MissingRunId))
+    val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.RunIdNotFoundError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
     new AsyncResult {
       val is =
         if (doDownload) runs.getRunFile(runId, user).map {
-          case None => NotFound(Payloads.MissingRunId)
+          case None => NotFound(Payloads.RunIdNotFoundError)
           case Some(runFile) =>
             contentType = "application/octet-stream"
             response.setHeader("Content-Disposition",
@@ -223,7 +218,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
             Ok(runFile.inputStream)
         }
         else runs.getRunRecord(runId, user).map {
-          case None         => NotFound(Payloads.MissingRunId)
+          case None         => NotFound(Payloads.RunIdNotFoundError)
           case Some(runDoc) => Ok(runDoc)
         }
     }
@@ -241,20 +236,20 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
       formParam[File]("run").description("Run summary file."))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
-      StringResponseMessage(400, Payloads.UnspecifiedUserId.message),
-      StringResponseMessage(400, Payloads.UnspecifiedPipeline.message),
+      StringResponseMessage(400, Payloads.UnspecifiedUserIdError.message),
+      StringResponseMessage(400, Payloads.UnspecifiedPipelineError.message),
       StringResponseMessage(400, "Pipeline parameter is invalid."),
       StringResponseMessage(400, "Run summary is unspecified or invalid."),
-      StringResponseMessage(401, Payloads.Unauthenticated.message),
-      StringResponseMessage(403, Payloads.Unauthorized.message),
+      StringResponseMessage(401, Payloads.AuthenticationError.message),
+      StringResponseMessage(403, Payloads.AuthorizationError.message),
       StringResponseMessage(409, "Run summary already uploaded by the user."),
-      StringResponseMessage(413, Payloads.RunSummaryTooLarge.message)))
+      StringResponseMessage(413, Payloads.RunSummaryTooLargeError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
   post("/", operation(postOp)) {
     logger.info(requestLog)
-    val pipeline = params.getOrElse("pipeline", halt(400, Payloads.UnspecifiedPipeline))
+    val pipeline = params.getOrElse("pipeline", halt(400, Payloads.UnspecifiedPipelineError))
     val upload = fileParams.getOrElse("run", halt(400, ApiPayload("Run summary file not specified.")))
 
     supportedPipelines.get(pipeline) match {
@@ -265,14 +260,11 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
           val is = {
-
-            p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user).map {
-
-              case -\/(err) if err.message == Payloads.DuplicateSummaryError.message => Conflict(err)
-              case -\/(err) if err.message == Payloads.JsonValidationError.message => BadRequest(err)
-              case \/-(run) => Created(run)
-              case otherwise => InternalServerError(Payloads.Unexpected)
-            }
+            p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user)
+              .map {
+                case -\/(err) => err.toActionResult
+                case \/-(run) => Created(run)
+              }
           }
         }
     }
@@ -296,10 +288,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
         .allowableValues(supportedPipelines.keys)
         .optional)
       responseMessages (
-        StringResponseMessage(400, Payloads.UnspecifiedUserId.message),
+        StringResponseMessage(400, Payloads.UnspecifiedUserIdError.message),
         StringResponseMessage(400, "One or more pipeline is invalid."),
-        StringResponseMessage(401, Payloads.Unauthenticated.message),
-        StringResponseMessage(403, Payloads.Unauthorized.message)))
+        StringResponseMessage(401, Payloads.AuthenticationError.message),
+        StringResponseMessage(403, Payloads.AuthorizationError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 

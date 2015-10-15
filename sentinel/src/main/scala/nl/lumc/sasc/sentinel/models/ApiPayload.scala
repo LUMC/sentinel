@@ -60,12 +60,14 @@ object Payloads {
 
   object DuplicateSummaryError {
     def message = "Run summary already uploaded."
-    def apply(existingId: String) = ApiPayload(message, hints = List(s"Existing ID: $existingId."))
+    def apply(existingId: String) =
+      ApiPayload(message, List(s"Existing ID: $existingId."), (ap: ApiPayload) => Conflict(ap))
   }
 
   object DuplicateUserIdError {
     def message = "User ID already taken."
-    def apply(existingId: String) = ApiPayload(message, hints = List(s"Existing ID: $existingId."))
+    def apply(existingId: String) =
+      ApiPayload(message, List(s"Existing ID: $existingId."), (ap: ApiPayload) => Conflict(ap))
   }
 
   object UnexpectedDatabaseError {
@@ -74,11 +76,14 @@ object Payloads {
     def apply() = ApiPayload(message)
   }
 
+  val IncompleteDeletionError = UnexpectedDatabaseError("Deletion incomplete.")
+
   trait ValidationErrorLike {
     def message: String
-    final def apply(validationMessages: Seq[String]) = ApiPayload(message, validationMessages.toList)
-    final def apply(validationMessage: String) = ApiPayload(message, List(validationMessage))
-    final def apply() = ApiPayload(message)
+    protected val func = (ap: ApiPayload) => BadRequest(ap)
+    final def apply(validationMessages: Seq[String]) = ApiPayload(message, validationMessages.toList, func)
+    final def apply(validationMessage: String) = ApiPayload(message, List(validationMessage), func)
+    final def apply() = ApiPayload(message, httpFunc = func)
   }
 
   object JsonValidationError extends ValidationErrorLike {
@@ -91,53 +96,58 @@ object Payloads {
 
   object InvalidDbError {
     def message = "Invalid ID(s) provided."
-    def apply(invalidIds: List[String]) = ApiPayload(message, invalidIds)
+    def apply(invalidIds: List[String]) = ApiPayload(message, invalidIds, (ap: ApiPayload) => BadRequest(ap))
   }
 
   object InvalidPipelineError {
     def message = "Pipeline parameter is invalid."
     def apply(validList: Seq[String]) = ApiPayload(message,
-      List("Valid values are " + validList.sorted.mkString(", ") + "."))
+      List("Valid values are " + validList.sorted.mkString(", ") + "."),
+      (ap: ApiPayload) => BadRequest(ap))
   }
 
   val InvalidLibError = ApiPayload("Library type parameter is invalid.",
-    List("Valid values are '" + LibType.values.toList.map(_.toString).sorted.mkString("', '") + "'."))
+    List("Valid values are '" + LibType.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
+    (ap: ApiPayload) => BadRequest(ap))
 
   val InvalidAccLevelError = ApiPayload("Accumulation level parameter is invalid.",
-    List("Valid values are '" + AccLevel.values.toList.map(_.toString).sorted.mkString("', '") + "'."))
+    List("Valid values are '" + AccLevel.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
+    (ap: ApiPayload) => BadRequest(ap))
 
   val InvalidSeqQcPhaseError = ApiPayload("Sequencing QC phase parameter is invalid.",
-    List("Valid values are '" + SeqQcPhase.values.toList.map(_.toString).sorted.mkString("', '") + "'."))
+    List("Valid values are '" + SeqQcPhase.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
+    (ap: ApiPayload) => BadRequest(ap))
 
-  val ResourceGoneError = ApiPayload("Resource already deleted.")
+  val ResourceGoneError = ApiPayload("Resource already deleted.", httpFunc = (ap: ApiPayload) => Gone(ap))
 
-  val IncompleteDeletionError = ApiPayload("Unexpected database error: deletion incomplete.")
+  val UnspecifiedUserIdError = ApiPayload("User ID not specified.", httpFunc = (ap: ApiPayload) => BadRequest(ap))
 
-  val UnspecifiedUserId = ApiPayload("User ID not specified.")
+  val UnspecifiedRunIdError = ApiPayload("Run summary ID not specified.", httpFunc = (ap: ApiPayload) => BadRequest(ap))
 
-  val UnspecifiedRunId = ApiPayload("Run summary ID not specified.")
+  val UnspecifiedPipelineError = ApiPayload("Pipeline not specified.", httpFunc = (ap: ApiPayload) => BadRequest(ap))
 
-  val UnspecifiedPipeline = ApiPayload("Pipeline not specified.")
-
-  object MissingUserId {
+  object UserIdNotFoundError {
+    protected def func = (ap: ApiPayload) => NotFound(ap)
     def message = "User ID can not be found."
-    def apply(missingId: String) = ApiPayload(message, hints = List(s"ID '$missingId' does not exist."))
-    def apply() = ApiPayload(message)
+    def apply(missingId: String) = ApiPayload(message, List(s"ID '$missingId' does not exist."), func)
+    def apply() = ApiPayload(message, httpFunc = func)
   }
 
-  val MissingRunId = ApiPayload("Run summary ID can not be found.")
+  val RunIdNotFoundError = ApiPayload("Run summary ID can not be found.", httpFunc = (ap: ApiPayload) => NotFound(ap))
 
-  val MissingDataPoints = ApiPayload("No data points for aggregation found.")
+  val DataPointsNotFoundError = ApiPayload("No data points for aggregation found.", httpFunc = (ap: ApiPayload) => NotFound(ap))
 
-  val Unauthenticated = ApiPayload("Authentication required to access resource.")
+  val AuthenticationError = ApiPayload("Authentication required to access resource.",
+    httpFunc = (ap: ApiPayload) => Unauthorized(ap))
 
-  val UnauthenticatedOptional = ApiPayload("User ID and/or API key is provided but authentication failed.")
+  val OptionalAuthenticationError = ApiPayload("User ID and/or API key is provided but authentication failed.",
+    httpFunc = (ap: ApiPayload) => Unauthorized(ap))
 
-  val Unauthorized = ApiPayload("Unauthorized to access resource.")
+  val AuthorizationError = ApiPayload("Unauthorized to access resource.", httpFunc = (ap: ApiPayload) => Forbidden(ap))
 
-  val IncorrectAuthMode = ApiPayload("Incorrect authentication mode.")
+  val RunSummaryTooLargeError =
+    ApiPayload(s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.",
+      httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap))
 
-  val RunSummaryTooLarge = ApiPayload(s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
-
-  val Unexpected = ApiPayload("Unexpected error.", hints = List("Please contact the site administrators."))
+  val UnexpectedError = ApiPayload("Unexpected error.", hints = List("Please contact the site administrators."))
 }

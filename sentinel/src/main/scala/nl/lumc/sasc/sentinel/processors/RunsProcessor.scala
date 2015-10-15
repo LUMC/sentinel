@@ -264,7 +264,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
           case Some(_) => Payloads.ResourceGoneError.left
           case None    => doc.right
         }
-        case None => Payloads.MissingRunId.left
+        case None => Payloads.RunIdNotFoundError.left
       }
     }
 

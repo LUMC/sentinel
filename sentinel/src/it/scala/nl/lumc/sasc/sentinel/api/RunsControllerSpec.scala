@@ -584,7 +584,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserId.message)
+              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
             }
           }
         }
@@ -607,7 +607,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthenticated.message)
+              body must /("message" -> Payloads.AuthenticationError.message)
             }
           }
         }
@@ -624,7 +624,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthorized.message)
+              body must /("message" -> Payloads.AuthorizationError.message)
             }
           }
         }
@@ -646,7 +646,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserId.message)
+              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
             }
           }
         }
@@ -669,7 +669,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthenticated.message)
+              body must /("message" -> Payloads.AuthenticationError.message)
             }
           }
         }
@@ -686,7 +686,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint, params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthorized.message)
+              body must /("message" -> Payloads.AuthorizationError.message)
             }
           }
         }
@@ -778,7 +778,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(uploadedRunId), Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserId.message)
+              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
             }
           }
         }
@@ -801,7 +801,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthenticated.message)
+              body must /("message" -> Payloads.AuthenticationError.message)
             }
           }
         }
@@ -818,7 +818,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             get(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthorized.message)
+              body must /("message" -> Payloads.AuthorizationError.message)
             }
           }
         }
@@ -920,7 +920,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in {
               get(endpoint(uploadedRunId2), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> Payloads.MissingRunId.message)
+                body must /("message" -> Payloads.RunIdNotFoundError.message)
               }
             }
           }
@@ -936,7 +936,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in  {
               get(endpoint(invalidId), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> Payloads.MissingRunId.message)
+                body must /("message" -> Payloads.RunIdNotFoundError.message)
               }
             }
           }
@@ -1037,7 +1037,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             "return a JSON object of the expected message" in  {
               get(endpoint(invalidId), params, headers) {
                 contentType mustEqual "application/json"
-                body must /("message" -> Payloads.MissingRunId.message)
+                body must /("message" -> Payloads.RunIdNotFoundError.message)
               }
             }
           }
@@ -1066,7 +1066,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(uploadedRunId), Seq(), headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserId.message)
+              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
             }
           }
 
@@ -1110,7 +1110,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(""), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedRunId.message)
+              body must /("message" -> Payloads.UnspecifiedRunIdError.message)
             }
           }
 
@@ -1160,7 +1160,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object of the expected message" in {
             delete(endpoint(uploadedRunId), params, headers) {
               contentType mustEqual "application/json"
-              body must /("message" -> Payloads.Unauthenticated.message)
+              body must /("message" -> Payloads.AuthenticationError.message)
             }
           }
 
@@ -1227,7 +1227,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1237,7 +1237,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 status mustEqual 404
                 contentType mustEqual "application/json"
                 body must not /("runId" -> ".+".r)
-                body must /("message" -> Payloads.MissingRunId.message)
+                body must /("message" -> Payloads.RunIdNotFoundError.message)
               }
           }
 
@@ -1296,7 +1296,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1306,7 +1306,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1366,7 +1366,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1376,7 +1376,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1434,7 +1434,7 @@ class RunsControllerSpec extends SentinelServletSpec {
             get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
               status mustEqual 404
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 
@@ -1444,7 +1444,7 @@ class RunsControllerSpec extends SentinelServletSpec {
               status mustEqual 404
               contentType mustEqual "application/json"
               body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.MissingRunId.message)
+              body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
 

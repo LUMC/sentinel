@@ -60,11 +60,11 @@ class BasicAuthStrategy(protected override val app: SentinelServlet { def users:
 
   /** Action to be performed after authentication succeeds. */
   override def afterAuthenticate(winningStrategy: String, user: User)(implicit request: HttpServletRequest, response: HttpServletResponse) =
-    if (!user.verified) app halt Forbidden(Payloads.Unauthorized)
+    if (!user.verified) app halt Forbidden(Payloads.AuthorizationError)
 
   /** Action to be performed if the authentication fails. */
   override def unauthenticated()(implicit request: HttpServletRequest, response: HttpServletResponse) {
-    app halt (401, Payloads.Unauthenticated, headers = Map("WWW-Authenticate" -> challenge))
+    app halt (401, Payloads.AuthenticationError, headers = Map("WWW-Authenticate" -> challenge))
   }
 
   /** Retrieves the user ID, given a [[nl.lumc.sasc.sentinel.models.User]] instance */
@@ -96,7 +96,7 @@ trait BasicAuthSupport[UserType <: AnyRef] { this: (ScalatraBase with ScentrySup
     /** Helper function for sending the HTTP response saying authentication is required */
     def askAuth() = {
       response.setHeader("WWW-Authenticate", BasicAuthStrategy.challenge)
-      halt(401, Payloads.Unauthenticated)
+      halt(401, Payloads.AuthenticationError)
     }
     // Reuse Scalatra's Basic HTTP request wrapper ~ still fits our uses
     val baReq = new org.scalatra.auth.strategy.BasicAuthStrategy.BasicAuthRequest(request)

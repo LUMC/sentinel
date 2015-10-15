@@ -24,7 +24,7 @@ import com.novus.salat.global._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
-import nl.lumc.sasc.sentinel.models.Payloads.{ DuplicateUserIdError, MissingUserId, PatchValidationError }
+import nl.lumc.sasc.sentinel.models.Payloads.{ DuplicateUserIdError, UserIdNotFoundError, PatchValidationError }
 
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends MongodbAdapter
@@ -101,7 +101,7 @@ trait UsersAdapter extends MongodbAdapter
    */
   def patchAndUpdateUser(userId: String, patchOps: List[SinglePathPatch]): Future[Perhaps[WriteResult]] = {
     val result = for {
-      currentUser <- ? <~ getUser(userId).map(_.toRightDisjunction(MissingUserId(userId)))
+      currentUser <- ? <~ getUser(userId).map(_.toRightDisjunction(UserIdNotFoundError(userId)))
       patchedUser <- ? <~ patchUser(currentUser, patchOps)
       writeResult <- ? <~ updateUser(patchedUser)
     } yield writeResult
