@@ -210,7 +210,9 @@ class UsersAdapterSpec extends Specification
       }
       val newEmail = "new@email.com"
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
-      adapter.updateUser(testUserObj.copy(email = newEmail)).map { res => res.getN mustEqual 1 }.await
+      adapter.updateUser(testUserObj.copy(email = newEmail)).map { res =>
+        res must beRightDisjunction.like { case wr => wr.getN mustEqual 1 }
+      }.await
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
     }
   }

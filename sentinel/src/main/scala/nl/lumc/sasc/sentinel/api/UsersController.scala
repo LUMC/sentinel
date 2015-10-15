@@ -107,9 +107,8 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
           case -\/(err) => Future.successful(err.toActionResult)
           case \/-(ops) =>
             users.patchAndUpdateUser(user, userRecordId, ops.toList).map {
-              case -\/(err)                    => err.toActionResult
-              case \/-(wres) if wres.getN == 1 => NoContent()
-              case otherwise                   => InternalServerError(Payloads.UnexpectedError)
+              case -\/(err) => err.toActionResult
+              case \/-(_)   => NoContent()
             }
         }
     }

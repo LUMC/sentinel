@@ -66,9 +66,11 @@ trait UsersAdapter extends MongodbAdapter
   }
 
   /** Updates an existing user record in the database. */
-  def updateUser(user: User): Future[WriteResult] = Future {
-    coll
+  def updateUser(user: User): Future[Perhaps[WriteResult]] = Future {
+    val wr = coll
       .update(MongoDBObject("id" -> user.id), grater[User].asDBObject(user), upsert = false)
+    if (wr.getN == 1) wr.right
+    else UnexpectedDatabaseError("Update failed.").left
   }
 
   /**
