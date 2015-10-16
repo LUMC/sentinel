@@ -54,16 +54,11 @@ trait JsonValidationAdapter extends JsonAdapter {
   /** Resource URLs for JSON schema file. */
   def jsonSchemaUrls: Seq[String]
 
-  /**
-   * Parses the given byte array into as a JSON file.
-   *
-   * @param contents raw byte contents to parse.
-   * @return JSON object representation.
-   */
-  override def extractJson(contents: Array[Byte]): Perhaps[JValue] = for {
-    json <- super.extractJson(contents)
-    validJson <- isValid(jsonValidators)(json)
-  } yield validJson
+  /** Parses the given byte array into as a JSON file and validates it. */
+  val extractAndValidateJson =
+    // The compiler actually doesn't need these type annotations, but some IDE does.
+    Kleisli[Perhaps, Array[Byte], JValue] { extractJson } >=>
+      Kleisli[Perhaps, JValue, JValue] { validateJson(jsonValidators) }
 
   /**
    * Checks whether a parsed JSON value fulfills the given schemas or not.
@@ -71,8 +66,8 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @param json Input JSON value.
    * @return Validation result.
    */
-  def isValid(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
-    val errMsgs = validators.par
+  def validateJson(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
+    val errMsgs = jsonValidators.par
       .flatMap { vl =>
         vl.validate(json).iterator().map(_.toString).toList
       }.seq
@@ -81,16 +76,8 @@ trait JsonValidationAdapter extends JsonAdapter {
   }
 
   /** JSON validators. */
-  implicit final lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
+  final lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
     .map { jsu => JsonValidator(getResourceStream(jsu)) }
-
-  /**
-   * Creates a JSON validator from a JSON schema stored as a resource.
-   *
-   * @param schemaResourceUrl URL of the JSON schema.
-   * @return a JSON validator.
-   */
-  protected def createJsonValidator(schemaResourceUrl: String) = JsonValidator(getResourceStream(schemaResourceUrl))
 }
 
 /**
@@ -120,7 +107,7 @@ trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
   def extractPatches(contents: Array[Byte]): Perhaps[Seq[SinglePathPatch]] =
     for {
       // Make sure incoming data is JArray ~ so we wrap single item in a list
-      json <- extractJson(contents).map {
+      json <- extractAndValidateJson(contents).map {
         case single @ JObject(_) => JArray(List(single))
         case otherwise           => otherwise
       }
