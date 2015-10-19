@@ -16,14 +16,17 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import java.io.File
 import javax.servlet.http.HttpServletRequest
 import scala.concurrent.ExecutionContext
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
+import xml.NodeSeq
 
 import org.bson.types.ObjectId
 import org.json4s._
-import org.scalatra.{ CorsSupport, FutureSupport, NotFound, ScalatraServlet }
+import org.json4s.prefs.EmptyValueStrategy
+import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
@@ -33,11 +36,64 @@ import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, Payloads }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
+/** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
+trait SentinelJsonSupport extends JacksonJsonSupport {
+
+  protected implicit val jsonFormats = SentinelJsonFormats
+
+  private val jsonFormatsWithNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.preserve)
+
+  private val jsonFormatsWithoutNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.skip)
+
+  override protected def renderPipeline: RenderPipeline = renderToCustomJson orElse super.renderPipeline
+
+  private[this] def isJValueResponse = format == "json" || format == "xml"
+
+  private[this] def customSerializer = jsonFormats.customSerializer
+
+  private[this] def renderToCustomJson: RenderPipeline = {
+    case JNull | JNothing =>
+    case a: JValue        => super.renderPipeline(a)
+    case a: Any if isJValueResponse && customSerializer.isDefinedAt(a) =>
+      customSerializer.lift(a) match {
+        case Some(jv: JValue) => jv
+        case None             => super.renderPipeline(a)
+      }
+    case status: Int             => super.renderPipeline(status)
+    case bytes: Array[Byte]      => super.renderPipeline(bytes)
+    case is: java.io.InputStream => super.renderPipeline(is)
+    case file: File              => super.renderPipeline(file)
+    case a: ActionResult         => super.renderPipeline(a)
+    case _: Unit | Unit | null   =>
+    case s: String               => super.renderPipeline(s)
+    case x: scala.xml.Node if format == "xml" ⇒
+      contentType = formats("xml")
+      response.writer.write(scala.xml.Utility.trim(x).toString())
+    case x: NodeSeq if format == "xml" ⇒
+      contentType = formats("xml")
+      response.writer.write(x.toString())
+    case x: NodeSeq ⇒
+      response.writer.write(x.toString())
+    case p: Product if isJValueResponse =>
+      val displayNull = params.getAs[Boolean]("displayNull").getOrElse(false)
+      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      else Extraction.decompose(p)(jsonFormatsWithoutNull)
+
+    case p: TraversableOnce[_] if isJValueResponse =>
+      val displayNull = params.getAs[Boolean]("displayNull").getOrElse(false)
+      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      else Extraction.decompose(p)(jsonFormatsWithoutNull)
+  }
+
+  override def render(value: JValue)(implicit formats: Formats): JValue =
+    formats.emptyValueStrategy.replaceEmpty(value)
+}
+
 /** Base servlet for all Sentinel controllers. */
 abstract class SentinelServlet extends ScalatraServlet
     with CorsSupport
     with FutureSupport
-    with JacksonJsonSupport
+    with SentinelJsonSupport
     with SwaggerSupport {
 
   /** Type of database ID. */
@@ -57,9 +113,6 @@ abstract class SentinelServlet extends ScalatraServlet
 
   /** Delimiter for multi-valued URL parameter. */
   protected val multiParamDelimiter: String = ","
-
-  override def render(value: JValue)(implicit formats: Formats = DefaultFormats): JValue =
-    formats.emptyValueStrategy.replaceEmpty(value)
 
   /** Mirror for reflection. */
   private val mirror = ru.runtimeMirror(getClass.getClassLoader)
@@ -116,9 +169,6 @@ abstract class SentinelServlet extends ScalatraServlet
       super.registerModel(newModel)
     }
   }
-
-  /** JSON format for Sentinel responses */
-  protected implicit val jsonFormats: Formats = SentinelJsonFormats
 
   /** Implicit conversion from URL parameter to accumulation level enum. */
   protected implicit val stringToAccLevel: TypeConverter[String, AccLevel.Value] =
