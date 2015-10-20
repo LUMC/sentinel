@@ -30,9 +30,9 @@ case class MapleRunRecord(
   pipeline: String,
   sampleIds: Seq[ObjectId],
   readGroupIds: Seq[ObjectId],
-  creationTimeUtc: Date = utcTimeNow,
   runName: Option[String] = None,
-  deletionTimeUtc: Option[Date] = None) extends BaseRunRecord
+  deletionTimeUtc: Option[Date] = None,
+  creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord
 
 /** Container for a single Maple sample. */
 case class MapleSampleRecord(
@@ -40,9 +40,7 @@ case class MapleSampleRecord(
   uploaderId: String,
   runId: ObjectId,
   sampleName: Option[String] = None,
-  runName: Option[String] = None,
-  creationTimeUtc: Date = utcTimeNow,
-  dbId: ObjectId = new ObjectId) extends BaseSampleRecord
+  runName: Option[String] = None) extends BaseSampleRecord
 
 /** Container for a single Maple sample statistics. */
 case class MapleSampleStats(nSnps: Long)
@@ -58,9 +56,7 @@ case class MapleReadGroupRecord(
   isPaired: Boolean = true,
   readGroupName: Option[String] = None,
   sampleName: Option[String] = None,
-  runName: Option[String] = None,
-  creationTimeUtc: Date = utcTimeNow,
-  dbId: ObjectId = new ObjectId) extends BaseReadGroupRecord
+  runName: Option[String] = None) extends BaseReadGroupRecord
 
 /** Container for a single Maple read group statistics. */
 case class MapleReadGroupStats(

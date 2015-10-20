@@ -22,18 +22,29 @@ import com.novus.salat.annotations.{ Key, Persist, Salat }
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.CaseClass
+import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
-/** Representation of an uploaded run summary file. */
-@Salat abstract class BaseRunRecord { this: CaseClass =>
+/** Representation of a stored unit. */
+@Salat abstract class BaseUnitRecord { this: CaseClass =>
+
+  /** Run ID. */
+  @Persist def runId: ObjectId
 
   /** Run name. */
   @Persist def runName: Option[String]
 
-  /** Database run ID. */
-  @Key("_id") def runId: ObjectId
-
   /** Run uploader ID. */
   @Persist def uploaderId: String
+
+  /** UTC time when the record was created. */
+  @Persist def creationTimeUtc: Date
+}
+
+/** Representation of an uploaded run summary file. */
+@Salat abstract class BaseRunRecord extends BaseUnitRecord { this: CaseClass =>
+
+  /** Database run ID. */
+  @Key("_id") def runId: ObjectId
 
   /** Name of the pipeline that produced the run. */
   @Persist def pipeline: String
@@ -43,9 +54,6 @@ import nl.lumc.sasc.sentinel.CaseClass
 
   /** Library IDs linked to this run. */
   @Persist def readGroupIds: Seq[ObjectId]
-
-  /** UTC time when the run record was created. */
-  @Persist def creationTimeUtc: Date
 
   /** UTC time when the run record was deleted. */
   @Persist def deletionTimeUtc: Option[Date]
@@ -62,37 +70,20 @@ object BaseRunRecord {
   val hiddenAttributes = Set("sampleIds", "readGroupIds")
 }
 
-/** Representation of a sequencing accumulation level unit. */
-@Salat sealed abstract class BaseUnitRecord { this: CaseClass =>
-
-  /** Internal database ID for the document. */
-  @Key("_id") def dbId: ObjectId
-
-  /** Name of the uploader of the run summary which contains this unit. */
-  @Persist def uploaderId: String
-
-  /** Database sample ID. */
-  @Persist def runId: ObjectId
-
-  /** Name of the run that produced this unit. */
-  @Persist def runName: Option[String]
-
-  /** UTC time when the sample document was created. */
-  @Persist def creationTimeUtc: Date
-}
-
 /** Representation of a sample within a run. */
 @Salat abstract class BaseSampleRecord extends BaseUnitRecord { this: CaseClass =>
 
+  /** Internal database ID for the document. */
+  @Key("_id") val dbId: ObjectId = new ObjectId
+
   /** Sample name. */
   @Persist def sampleName: Option[String]
+
+  @Persist val creationTimeUtc: Date = utcTimeNow
 }
 
 /** Representation of a read group metrics. */
-@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord { this: CaseClass =>
-
-  /** Name of the sample which this read group belongs to. */
-  @Persist def sampleName: Option[String]
+@Salat abstract class BaseReadGroupRecord extends BaseSampleRecord { this: CaseClass =>
 
   /** Library name. */
   @Persist def readGroupName: Option[String]

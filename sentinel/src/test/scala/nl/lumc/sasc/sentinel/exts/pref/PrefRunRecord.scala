@@ -30,9 +30,9 @@ case class PrefRunRecord(
     pipeline: String,
     sampleIds: Seq[ObjectId],
     refId: ObjectId,
-    creationTimeUtc: Date = utcTimeNow,
     runName: Option[String] = None,
-    deletionTimeUtc: Option[Date] = None) extends BaseRunRecord {
+    deletionTimeUtc: Option[Date] = None,
+    creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 
   lazy val readGroupIds = Seq.empty[ObjectId]
 
@@ -45,9 +45,7 @@ case class PrefSampleRecord(
   runId: ObjectId,
   refId: ObjectId,
   sampleName: Option[String] = None,
-  runName: Option[String] = None,
-  creationTimeUtc: Date = utcTimeNow,
-  dbId: ObjectId = new ObjectId) extends BaseSampleRecord
+  runName: Option[String] = None) extends BaseSampleRecord
 
 /** Container for a single Pref sample statistics. */
 case class PrefSampleStats(num: Long)

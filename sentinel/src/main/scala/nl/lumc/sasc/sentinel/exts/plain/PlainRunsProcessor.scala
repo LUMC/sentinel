@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext
 import nl.lumc.sasc.sentinel.adapters.JsonValidationAdapter
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ utcTimeNow, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /**
  * Input processor for generic run summary files.
@@ -48,7 +48,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
     val result = for {
       _ <- ? <~ extractAndValidateJson(contents)
       fileId <- ? <~ storeFile(contents, uploader, uploadName)
-      run = PlainRunRecord(fileId, uploader.id, pipelineName, utcTimeNow)
+      run = PlainRunRecord(fileId, uploader.id, pipelineName)
       _ <- ? <~ storeRun(run)
     } yield run
 
