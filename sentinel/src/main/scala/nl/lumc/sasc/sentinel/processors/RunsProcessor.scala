@@ -28,7 +28,6 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.CaseClass
-import nl.lumc.sasc.sentinel.adapters.FutureAdapter
 import nl.lumc.sasc.sentinel.models.{ Payloads, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
@@ -37,7 +36,7 @@ import nl.lumc.sasc.sentinel.utils._
  */
 abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     extends Processor
-    with FutureAdapter {
+    with FutureMixin {
 
   /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass

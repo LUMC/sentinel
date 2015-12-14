@@ -24,12 +24,13 @@ import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.models.BaseSampleRecord
+import nl.lumc.sasc.sentinel.utils.FutureMixin
 
 /**
  * Trait for storing samples from run summaries.
  */
 trait SamplesAdapter extends MongodbAdapter
-    with FutureAdapter {
+    with FutureMixin {
 
   /** Sample-level metrics container. */
   type SampleRecord <: BaseSampleRecord with CaseClass

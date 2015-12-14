@@ -14,19 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.adapters
+package nl.lumc.sasc.sentinel.utils
+
+import nl.lumc.sasc.sentinel.models.ApiPayload
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-
-import scalaz._, Scalaz._
-
-import nl.lumc.sasc.sentinel.models.ApiPayload
+import scalaz.Scalaz._
+import scalaz._
 
 /**
  * Base adapter that uses Scala's Futures.
  */
-trait FutureAdapter {
+trait FutureMixin {
 
   /** Type alias for operations that returns a user-visible payloads when failing. */
   type Perhaps[+A] = nl.lumc.sasc.sentinel.Perhaps[A]
