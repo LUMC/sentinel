@@ -77,7 +77,7 @@ trait JsonValidationExtractor extends JsonExtractor {
   }
 
   /** JSON validators. */
-  final lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
+  private[sasc] lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
     .map { jsu => JsonValidator(getResourceStream(jsu)) }
 }
 
