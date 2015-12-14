@@ -14,23 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.adapters
+package nl.lumc.sasc.sentinel.utils
 
 import java.io.ByteArrayInputStream
-import scala.util.Try
-import scala.collection.JavaConversions._
-
-import org.json4s._
-import org.json4s.jackson.JsonMethods.parse
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.Perhaps
-import nl.lumc.sasc.sentinel.models.{ Payloads, SinglePathPatch }, Payloads._
-import nl.lumc.sasc.sentinel.utils.{ getResourceStream, JsonValidator, SentinelJsonFormats }
+import nl.lumc.sasc.sentinel.models.Payloads._
+import nl.lumc.sasc.sentinel.models.SinglePathPatch
 import nl.lumc.sasc.sentinel.utils.Implicits._
+import org.json4s._
+import org.json4s.jackson.JsonMethods.parse
+
+import scala.collection.JavaConversions._
+import scala.util.Try
+import scalaz.Scalaz._
+import scalaz._
 
 /** Trait for parsing JSON. */
-trait JsonAdapter {
+trait JsonExtractor {
 
   /** JSON format for Sentinel. */
   implicit val formats = SentinelJsonFormats
@@ -49,7 +50,7 @@ trait JsonAdapter {
 }
 
 /** Trait for validating input JSON with a schema. */
-trait JsonValidationAdapter extends JsonAdapter {
+trait JsonValidationExtractor extends JsonExtractor {
 
   /** Resource URLs for JSON schema file. */
   def jsonSchemaUrls: Seq[String]
@@ -87,7 +88,7 @@ trait JsonValidationAdapter extends JsonAdapter {
  *
  * See http://jsonpatch.com/ for the JSON patch specification.
  */
-trait SinglePathPatchJsonAdapter extends JsonValidationAdapter {
+trait SinglePathPatchJsonExtractor extends JsonValidationExtractor {
 
   /** Type alias for the patch validation function, which is a function that takes patches and return its ValidationNEL. */
   type ValidationFunc = Seq[SinglePathPatch] => ValidationNel[String, Seq[SinglePathPatch]]

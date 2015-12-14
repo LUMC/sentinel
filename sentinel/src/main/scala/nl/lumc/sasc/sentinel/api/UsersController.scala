@@ -27,7 +27,7 @@ import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.{ JsonValidationExtractor, MongodbAccessObject }
 
 /**
  * Controller for the `/users` endpoint.
@@ -49,7 +49,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
   private[api] val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Validator for patch payloads */
-  val patchValidator = new JsonValidationAdapter { def jsonSchemaUrls = Seq("/schemas/json_patch.json") }
+  val patchValidator = new JsonValidationExtractor { def jsonSchemaUrls = Seq("/schemas/json_patch.json") }
 
   /** General error handler for any type of exception. */
   error {

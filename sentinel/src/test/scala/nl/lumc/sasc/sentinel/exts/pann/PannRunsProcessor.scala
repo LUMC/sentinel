@@ -22,7 +22,7 @@ import org.json4s.JValue
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.{ JsonExtractor, MongodbAccessObject }
 
 import scala.concurrent._
 
@@ -32,7 +32,7 @@ import scala.concurrent._
  * @param mongo MongoDB access object.
  */
 class PannRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
-    with JsonAdapter
+    with JsonExtractor
     with AnnotationsAdapter
     with SamplesAdapter {
 

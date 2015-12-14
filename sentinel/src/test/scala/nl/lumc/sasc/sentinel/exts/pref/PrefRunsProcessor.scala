@@ -24,7 +24,7 @@ import org.json4s.JValue
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ calcMd5, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{ JsonExtractor, MongodbAccessObject, calcMd5 }
 
 /**
  * Example of a simple pipeline runs processor.
@@ -32,7 +32,7 @@ import nl.lumc.sasc.sentinel.utils.{ calcMd5, MongodbAccessObject }
  * @param mongo MongoDB access object.
  */
 class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
-    with JsonAdapter
+    with JsonExtractor
     with ReferencesAdapter
     with SamplesAdapter {
 
