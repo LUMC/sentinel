@@ -23,7 +23,7 @@ import com.novus.salat.global._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
-import nl.lumc.sasc.sentinel.exts.maple.{ MapleReadGroupRecord, MapleReadGroupStats }
+import nl.lumc.sasc.sentinel.exts.maple.{ MapleSampleRecord, MapleReadGroupRecord, MapleReadGroupStats }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReadGroupsAdapterSpec extends Specification
@@ -40,6 +40,8 @@ class ReadGroupsAdapterSpec extends Specification
   class TestReadGroupsAdapter(mockDb: Fongo) extends ReadGroupsAdapter {
 
     type ReadGroupRecord = MapleReadGroupRecord
+
+    type SampleRecord = MapleSampleRecord
 
     def pipelineName = self.pipelineName
 

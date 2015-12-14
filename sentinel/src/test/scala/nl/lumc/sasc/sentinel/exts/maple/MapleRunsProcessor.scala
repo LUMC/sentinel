@@ -32,7 +32,6 @@ import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
  * @param mongo MongoDB access object.
  */
 class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
-    with SamplesAdapter
     with ReadGroupsAdapter
     with JsonValidationAdapter {
 

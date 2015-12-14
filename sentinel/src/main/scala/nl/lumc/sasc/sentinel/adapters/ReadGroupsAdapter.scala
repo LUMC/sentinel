@@ -27,9 +27,10 @@ import nl.lumc.sasc.sentinel.models.BaseReadGroupRecord
 
 /**
  * Trait for storing read groups from run summaries.
+ *
+ * The trait extends SamplesAdapter because for all read group-level information must have a sample information.
  */
-trait ReadGroupsAdapter extends MongodbAdapter
-    with FutureAdapter {
+trait ReadGroupsAdapter extends SamplesAdapter {
 
   /** Read group-level metrics container. */
   type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
