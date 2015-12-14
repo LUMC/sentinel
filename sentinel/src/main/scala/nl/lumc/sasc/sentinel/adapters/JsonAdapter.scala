@@ -67,7 +67,7 @@ trait JsonValidationAdapter extends JsonAdapter {
    * @return Validation result.
    */
   def validateJson(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
-    val errMsgs = jsonValidators.par
+    val errMsgs = validators.par
       .flatMap { vl =>
         vl.validate(json).iterator().map(_.toString).toList
       }.seq
