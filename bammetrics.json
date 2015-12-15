@@ -1,0 +1,715 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "BamMetrics Pipeline Summary",
+  "description": "Schema for full BamMetrics pipeline runs",
+  "type": "object",
+  "required": [ "samples" ],
+
+  "properties": {
+
+    "meta": {
+      "description": "Pipeline run metadata",
+      "type": "object",
+      "required": [ "pipeline_version", "last_commit_hash", "pipeline_name" ],
+
+      "properties": {
+
+        "pipeline_version": {
+          "description": "Pipeline release version",
+          "type": "string"
+        },
+
+        "last_commit_hash": {
+          "description": "Commit hash of the source code repository at the time the pipeline was compiled",
+          "type": "string",
+          "minLength": 7
+        },
+
+        "pipeline_name": {
+          "description": "Name of the pipeline that created the summary file",
+          "type": "string"
+        },
+
+        "run_name": {
+          "description": "User-supplied name of the pipeline run",
+          "type": "string"
+        }
+      }
+    },
+
+    "samples": {
+      "description": "All samples analyzed in the BamMetrics run",
+      "type": "object",
+      "minItems": 1,
+      "additionalProperties": { "$ref": "#/definitions/sample" }
+    }
+  },
+
+  "definitions": {
+
+    "sample": {
+      "description": "A single BamMetrics sample",
+      "type": "object",
+      "required": [ "libraries" ],
+
+      "properties": {
+
+        "libraries": {
+          "description": "All libraries belonging to the sample",
+          "type": "object",
+          "minItems": 1,
+          "additionalProperties": { "$ref": "#/definitions/library" }
+        },
+
+        "bammetrics": {
+          "description": "Sample-level mapping metrics",
+          "type": "object",
+          "required": [ "files", "executables", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by BamMetrics",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Mapping",
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in BamMetrics",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
+            },
+
+            "stats": { "$ref": "#/definitions/bamMetricsStats" }
+          }
+        }
+      }
+    },
+
+    "library": {
+      "description": "A single BamMetrics library",
+      "type": "object",
+      "required": [ "bammetrics" ],
+
+      "properties": {
+
+        "bammetrics": {
+          "description": "Library-level mapping metrics",
+          "type": "object",
+          "required": [ "files", "executables", "stats" ],
+
+          "properties": {
+
+            "files": {
+              "description": "File groups tracked by BamMetrics",
+              "type": "object",
+              "required": [ "pipeline" ],
+
+              "properties": {
+
+                "pipeline": {
+                  "description": "Initial input files and final output files in Mapping",
+                  "type": "object",
+                  "additionalProperties": { "$ref": "#/definitions/file" }
+                }
+              },
+              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+            },
+
+            "executables": {
+              "description": "Executables used in BamMetrics",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  { "$ref": "#/definitions/executable" },
+                  { "$ref": "#/definitions/jar" }
+                ]
+              }
+            },
+
+            "stats": { "$ref": "#/definitions/bamMetricsStats" }
+          }
+        }
+      }
+    },
+
+    "bamMetricsStats": {
+      "description": "Stats summary entry for bamMetrics output",
+      "type": "object",
+
+      "properties": {
+
+        "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
+
+        "gc_bias": { "$ref": "#/definitions/statsGcBias" },
+
+        "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+
+        "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" },
+
+        "CollectBaseDistributionByCycle": { "$ref": "#/definitions/statsBaseDistributionCycle" },
+
+        "hs_metrics": { "$ref": "#/definitions/statsHsMetrics" },
+
+        "MeanQualityByCycle": { "$ref": "#/definitions/statsQualByCycle" },
+
+        "QualityScoreDistribution": { "$ref": "#/definitions/statsQualityScoreDistribution" },
+
+        "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
+
+        "wgs": { "$ref": "#/definitions/statsWgs" }
+      },
+
+      "patternProperties": {
+        ".+_biopet_flagstat_loose$": { "$ref": "#/definitions/statsBiopetFlagstat" },
+        ".+_biopet_flagstat_strict$": { "$ref": "#/definitions/statsBiopetFlagstat" },
+        ".+_cov_stats$": {
+          "type": "object",
+          "properties": {
+            "coverage": { "$ref": "#/definitions/statsCoverage" }
+          }
+        }
+      }
+    },
+
+    "statsAlignmentSummary": {
+      "description": "Metrics gathered by Picard CollectAlignmentSummaryMetrics",
+      "type": "object",
+      "additionalProperties": false,
+
+      "properties": {
+
+        "FIRST_OF_PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "SECOND_OF_PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "PAIR": { "$ref": "#/definitions/statsAlignmentSummaryPair" },
+        "UNPAIRED": { "$ref": "#/definitions/statsAlignmentSummaryPair" }
+      }
+    },
+
+    "statsAlignmentSummaryPair": {
+      "description": "Alignment statistics gathered by Picard CollectAlignmentSummaryMetrics, per pair",
+      "type": "object",
+      "required": [ "PCT_CHIMERAS", "PF_HQ_ALIGNED_READS", "PF_HQ_ERROR_RATE", "PF_INDEL_RATE", "PF_MISMATCH_RATE",
+        "PF_READS", "TOTAL_READS" ],
+
+      "properties": {
+
+        "BAD_CYCLES": { "type": "integer" },
+        "MEAN_READ_LENGTH": { "type": "number" },
+        "PCT_ADAPTER": { "type": "number" },
+        "PCT_CHIMERAS": { "type": "number" },
+        "PCT_PF_READS": { "type": "number" },
+        "PCT_PF_READS_ALIGNED": { "type": "number" },
+        "PCT_READS_ALIGNED_IN_PAIRS": { "type": "number" },
+        "PF_ALIGNED_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_Q20_BASES": { "type": "integer" },
+        "PF_HQ_ALIGNED_READS": { "type": "integer" },
+        "PF_HQ_ERROR_RATE": { "type": "number" },
+        "PF_HQ_MEDIAN_MISMATCHES": { "type": "number" },
+        "PF_INDEL_RATE": { "type": "number" },
+        "PF_MISMATCH_RATE": { "type": "number" },
+        "PF_NOISE_READS": { "type": "integer" },
+        "PF_READS": { "type": "integer" },
+        "PF_READS_ALIGNED": { "type": "integer" },
+        "READS_ALIGNED_IN_PAIRS": { "type": "integer" },
+        "STRAND_BALANCE": { "type": "number" },
+        "TOTAL_READS": { "type": "integer" }
+      }
+    },
+
+    "statsBaseDistributionCycle" : {
+      "description": "Statistics gathered by Picard CollectBaseDistributionByCycle tool",
+      "type": "object",
+
+      "properties": {
+
+        "CYCLE": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "READ_END": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "PCT_A": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "PCT_T": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "PCT_G": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "PCT_C": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "PCT_N": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      }
+    },
+
+    "statsBiopetFlagstat": {
+      "description": "Alignment statistics gathered by the BiopetFlagstat tool",
+      "type": "object",
+      "required": [ "All", "Mapped", "ReadPaired", "ProperPair" ],
+
+      "properties": {
+
+        "All": { "type": "integer" },
+        "Duplicates": { "type": "integer" },
+        "First inverted, second read inverted": { "type": "integer" },
+        "First inverted, second read normal": { "type": "integer" },
+        "First normal, second read inverted (paired end orientation)": { "type": "integer" },
+        "First normal, second read normal": { "type": "integer" },
+        "FirstOfPair": { "type": "integer" },
+        "MAPQ>0": { "type": "integer" },
+        "MAPQ>10": { "type": "integer" },
+        "MAPQ>20": { "type": "integer" },
+        "MAPQ>30": { "type": "integer" },
+        "MAPQ>40": { "type": "integer" },
+        "MAPQ>50": { "type": "integer" },
+        "MAPQ>60": { "type": "integer" },
+        "Mapped": { "type": "integer" },
+        "Mate in same strand": { "type": "integer" },
+        "Mate on other chr": { "type": "integer" },
+        "MateNegativeStrand": { "type": "integer" },
+        "MateUnmapped": { "type": "integer" },
+        "NotPrimaryAlignment": { "type": "integer" },
+        "ProperPair": { "type": "integer" },
+        "ReadFailsVendorQualityCheck": { "type": "integer" },
+        "ReadNegativeStrand": { "type": "integer" },
+        "ReadPaired": { "type": "integer" },
+        "SecondOfPair": { "type": "integer" },
+        "SecondaryOrSupplementary": { "type": "integer" },
+        "SupplementaryAlignment": { "type": "integer" }
+      }
+    },
+
+    "statsCoverage": {
+      "description": "Coverage statistics",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^.+$": { "$ref": "#/definitions/perContigCoverage" }
+      }
+    },
+
+    "statsHsMetrics": {
+      "description": "Statistics gathered by the Picard CollectHsMetrics tool",
+      "type": "object",
+
+      "properties": {
+        "AT_DROPOUT": { "type": "number" },
+        "BAIT_DESIGN_EFFICIENCY": { "type": "integer" },
+        "BAIT_SET": { "type": "string" },
+        "BAIT_TERRITORY": { "type": "integer" },
+        "FOLD_80_BASE_PENALTY": { "type": "number" },
+        "FOLD_ENRICHMENT": { "type": "number" },
+        "GC_DROPOUT": { "type": "number" },
+        "GENOME_SIZE": { "type": "integer" },
+        "HS_LIBRARY_SIZE": { "type": "integer" },
+        "HS_PENALTY_100X": { "type": "number" },
+        "HS_PENALTY_10X": { "type": "number" },
+        "HS_PENALTY_20X": { "type": "number" },
+        "HS_PENALTY_30X": { "type": "number" },
+        "HS_PENALTY_40X": { "type": "number" },
+        "HS_PENALTY_50X": { "type": "number" },
+        "MEAN_BAIT_COVERAGE": { "type": "number" },
+        "MEAN_TARGET_COVERAGE": { "type": "number" },
+        "NEAR_BAIT_BASES": { "type": "integer" },
+        "OFF_BAIT_BASES": { "type": "integer" },
+        "ON_BAIT_BASES": { "type": "integer" },
+        "ON_BAIT_VS_SELECTED": { "type": "number" },
+        "ON_TARGET_BASES": { "type": "integer"},
+        "PCT_OFF_BAIT": { "type": "number" },
+        "PCT_PF_READS": { "type": "number" },
+        "PCT_PF_UQ_READS": { "type": "number" },
+        "PCT_PF_UQ_READS_ALIGNED": { "type": "number" },
+        "PCT_SELECTED_BASES": { "type": "number" },
+        "PCT_TARGET_BASES_100X": { "type": "number" },
+        "PCT_TARGET_BASES_10X": { "type": "number" },
+        "PCT_TARGET_BASES_20X": { "type": "number" },
+        "PCT_TARGET_BASES_2X": { "type": "number" },
+        "PCT_TARGET_BASES_30X": { "type": "number" },
+        "PCT_TARGET_BASES_40X": { "type": "number" },
+        "PCT_TARGET_BASES_50X": { "type": "number" },
+        "PCT_USABLE_BASES_ON_BAIT": { "type": "number" },
+        "PCT_USABLE_BASES_ON_TARGET": { "type": "number" },
+        "PF_READS": { "type": "integer" },
+        "PF_UNIQUE_READS": { "type": "integer" },
+        "PF_UQ_BASES_ALIGNED": { "type": "integer" },
+        "PF_UQ_READS_ALIGNED": { "type": "integer" },
+        "TARGET_TERRITORY": { "type": "integer" },
+        "TOTAL_READS": { "type": "integer" },
+        "ZERO_CVG_TARGETS_PCT": { "type": "number" }
+      }
+    },
+
+    "statsGcBias": {
+      "description": "GC bias statistics gather by the Picard CollectGcBiasMetrics tool",
+      "type": "object",
+
+      "properties": {
+
+        "WINDOWS": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "GC": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "MEAN_BASE_QUALITY": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "ERROR_BAR_WIDTH": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "NORMALIZED_COVERAGE": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "READ_STARTS": {
+          "type": "array",
+          "items": { "type": "integer" }
+        }
+      }
+    },
+
+    "statsInsertSizeMetrics": {
+      "description": "Alignment statistics gathered by Picard CollectInsertSizeMetrics tool",
+      "type": "object",
+      "required": [ "metrics" ],
+
+      "properties": {
+
+        "metrics": {
+          "oneOf":
+          [
+            {
+              "description": "Metrics values",
+              "type": "object",
+              "required": [ "MAX_INSERT_SIZE", "MEAN_INSERT_SIZE", "MEDIAN_INSERT_SIZE", "MIN_INSERT_SIZE",
+                "PAIR_ORIENTATION", "READ_PAIRS", "STANDARD_DEVIATION" ],
+
+              "properties": {
+                "MAX_INSERT_SIZE": { "type": "integer" },
+                "MEAN_INSERT_SIZE": { "type": "number" },
+                "MEDIAN_ABSOLUTE_DEVIATION": { "type": "number" },
+                "MEDIAN_INSERT_SIZE": { "type": "number" },
+                "MIN_INSERT_SIZE": { "type": "integer" },
+                "PAIR_ORIENTATION": { "type": "string" },
+                "READ_PAIRS": { "type": "integer" },
+                "STANDARD_DEVIATION": { "type": "number" },
+                "WIDTH_OF_10_PERCENT": { "type": "integer" },
+                "WIDTH_OF_20_PERCENT": { "type": "integer" },
+                "WIDTH_OF_30_PERCENT": { "type": "integer" },
+                "WIDTH_OF_40_PERCENT": { "type": "integer" },
+                "WIDTH_OF_50_PERCENT": { "type": "integer" },
+                "WIDTH_OF_60_PERCENT": { "type": "integer" },
+                "WIDTH_OF_70_PERCENT": { "type": "integer" },
+                "WIDTH_OF_80_PERCENT": { "type": "integer" },
+                "WIDTH_OF_90_PERCENT": { "type": "integer" },
+                "WIDTH_OF_99_PERCENT": { "type": "integer" }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+
+    "statsQualityScoreDistribution": {
+      "description": "Statistics gathered by the Picard QualityScoreDistribution tool",
+      "type": "object",
+
+      "properties": {
+
+        "QUALITY": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "COUNT_OF_Q": {
+          "type": "array",
+          "items": { "type": "integer" }
+        }
+      }
+    },
+
+    "statsRnaSeqMetrics": {
+      "description": "RNA-seq statistics gathered by Picard CollectRnaSeqMetrics tool",
+      "type": "object",
+      "required": [ "metrics" ],
+
+      "properties": {
+
+        "metrics": {
+          "description": "Metrics values",
+          "type": "object",
+
+          "required": [ "CODING_BASES", "CORRECT_STRAND_READS", "IGNORED_READS", "INCORRECT_STRAND_READS",
+            "INTERGENIC_BASES", "INTRONIC_BASES", "MEDIAN_3PRIME_BIAS", "MEDIAN_5PRIME_BIAS",
+            "MEDIAN_5PRIME_TO_3PRIME_BIAS", "PF_ALIGNED_BASES", "PF_BASES", "UTR_BASES" ],
+
+          "properties": {
+            "CODING_BASES": { "type": "integer" },
+            "CORRECT_STRAND_READS": { "type": "integer" },
+            "IGNORED_READS": { "type": "integer" },
+            "INCORRECT_STRAND_READS": { "type": "integer" },
+            "INTERGENIC_BASES": { "type": "integer" },
+            "INTRONIC_BASES": { "type": "integer" },
+            "MEDIAN_3PRIME_BIAS": { "type": "number" },
+            "MEDIAN_5PRIME_BIAS": { "type": "number" },
+            "MEDIAN_5PRIME_TO_3PRIME_BIAS": { "type": ["number", "string"] },
+            "MEDIAN_CV_COVERAGE": { "type": "number" },
+            "PCT_CODING_BASES": { "type": "number" },
+            "PCT_CORRECT_STRAND_READS": { "type": "number" },
+            "PCT_INTERGENIC_BASES": { "type": "number" },
+            "PCT_INTRONIC_BASES": { "type": "number" },
+            "PCT_MRNA_BASES": { "type": "number" },
+            "PCT_RIBOSOMAL_BASES": { "type": ["number", "string"] },
+            "PCT_USABLE_BASES": { "type": "number" },
+            "PCT_UTR_BASES": { "type": "number" },
+            "PF_ALIGNED_BASES": { "type": "integer" },
+            "PF_BASES": { "type": "integer" },
+            "RIBOSOMAL_BASES": { "type": ["integer", "string"] },
+            "UTR_BASES": { "type": "integer" }
+          }
+        },
+
+        "histogram": {
+
+          "description": "Histogram values (used for plotting).",
+          "type": "object",
+
+          "properties": {
+
+            "normalized_position": {
+              "type": "array",
+              "items": { "type": "number" }
+            },
+
+            "All_Reads.normalized_coverage": {
+              "type": "array",
+              "items": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+
+    "statsQualByCycle": {
+      "description": "Statistics gathered by Picard MeanQualityByCycle tool",
+      "type": "object",
+
+      "properties": {
+
+        "CYCLE": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "MEAN_QUALITY": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      }
+    },
+
+    "statsWgs": {
+      "description": "Statistics gathered by Picard CollectWgsMetrics tool",
+      "type": "object",
+
+      "properties": {
+
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "GENOME_TERRITORY": { "type": "integer" },
+            "MAD_COVERAGE": { "type": "integer" },
+            "MEAN_COVERAGE": { "type": "number" },
+            "MEDIAN_COVERAGE": { "type": "number" },
+            "PCT_5X": { "type": "number" },
+            "PCT_10X": { "type": "number" },
+            "PCT_15X": { "type": "number" },
+            "PCT_20X": { "type": "number" },
+            "PCT_25X": { "type": "number" },
+            "PCT_30X": { "type": "number" },
+            "PCT_40X": { "type": "number" },
+            "PCT_50X": { "type": "number" },
+            "PCT_60X": { "type": "number" },
+            "PCT_70X": { "type": "number" },
+            "PCT_80X": { "type": "number" },
+            "PCT_90X": { "type": "number" },
+            "PCT_100X": { "type": "number" },
+            "PCT_EXC_BASEQ": { "type": "number" },
+            "PCT_EXC_CAPPED": { "type": "number" },
+            "PCT_EXC_DUPE": { "type": "number" },
+            "PCT_EXC_MAPQ": { "type": "number" },
+            "PCT_EXC_OVERLAP": { "type": "number" },
+            "PCT_EXC_TOTAL": { "type": "number" },
+            "PCT_EXC_UNPAIRED": { "type": "number" },
+            "SD_COVERAGE": { "type": "number" }
+          }
+        },
+
+        "histogram": {
+          "type": "object",
+          "properties": {
+            "coverage": {
+              "type": "array",
+              "items": { "type": "integer" }
+            },
+            "count": {
+              "type": "array",
+              "items": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+
+    "perContigCoverage": {
+      "description": "Coverage information per contig",
+      "type": "object",
+
+      "properties": {
+        "frac_min_10x": { "type": "number" },
+        "frac_min_20x": { "type": "number" },
+        "frac_min_30x": { "type": "number" },
+        "frac_min_40x": { "type": "number" },
+        "frac_min_50x": { "type": "number" },
+        "horizontal": { "type": "number" },
+        "max": { "type": "integer" },
+        "mean": { "type": "number" },
+        "median": { "type": "integer" },
+        "total": { "type": "integer" },
+        "width": { "type": "integer" },
+        "width_nonzero": { "type": "integer" }
+      }
+    },
+
+    "fileGroup": {
+      "description": "File entries grouped as properties of an object",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/file" }
+    },
+
+    "file": {
+      "description": "A single file entry",
+      "type": "object",
+      "required": [ "path", "md5" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "md5":    { "type": "string" },
+        "sha1":   { "type": "string" },
+        "sha256": { "type": "string" },
+
+        "path":   {
+          "description": "Absolute file system path of the file",
+          "type": "string"
+        }
+      }
+    },
+
+    "executable": {
+      "description": "Entry for storing executable information",
+      "type": "object",
+      "required": [ "version" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "version":  {
+          "description": "Version of the executable, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "md5": {
+          "description": "MD5 checksum of the executable, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "path": {
+          "description": "Path to executable",
+          "type": ["string", "null"]
+        },
+
+        "jar_md5": {
+          "description": "MD5 checksum of the JAR (only for JAR-packaged tools)",
+          "type": ["string", "null"]
+        },
+
+        "java_md5": {
+          "description": "MD5 checksum of the java executable (only for JAR-packaged tools)",
+          "type": ["string", "null"]
+        },
+
+        "java_version": {
+          "description": "Version of the java executable used to execute the JAR",
+          "type": ["string", "null"]
+        },
+
+        "jar_path": {
+          "description": "Path to the JAR file (null if not available)",
+          "type": ["string", "null"]
+        }
+      }
+    },
+
+    "jar": {
+      "description": "Entry for storing tools packaged as JAR files",
+      "type": "object",
+      "required": [ "version", "java_md5", "java_version", "jar_path" ],
+      "additionalProperties": false,
+
+      "properties": {
+
+        "version":  {
+          "description": "Version of the JAR package, null if not available",
+          "type": ["string", "null"]
+        },
+
+        "java_version": {
+          "description": "Version of the java executable used to execute the JAR",
+          "type": "string"
+        },
+
+        "java_md5": {
+          "description": "MD5 checksum of the java executable",
+          "type": ["string", "null"]
+        },
+
+        "jar_path": {
+          "description": "Path to the JAR file (null if not available)",
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

@@ -216,22 +216,7 @@
               }
             },
 
-            "stats": {
-              "description": "Statistics gathered by BamMetrics",
-              "type": "object",
-              "required": [ "CollectAlignmentSummaryMetrics", "biopet_flagstat", "rna" ],
-
-              "properties": {
-
-                "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
-
-                "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
-
-                "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
-
-                "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
-              }
-            }
+            "stats": { "$ref": "#/definitions/bamMetricsStats" }
           }
         }
       }
@@ -295,7 +280,7 @@
 
                 "numberChunks": {
                   "description": "If chungking is enabled, the number of FASTQ chunks",
-                  "type": "integer"
+                  "type": [ "null", "integer" ]
                 },
 
                 "skip_flexipep": {
@@ -351,22 +336,7 @@
               }
             },
 
-            "stats": {
-              "description": "Statistics gathered by BamMetrics",
-              "type": "object",
-              "required": [ "CollectAlignmentSummaryMetrics", "biopet_flagstat", "rna" ],
-
-              "properties": {
-
-                "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
-
-                "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
-
-                "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
-
-                "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
-              }
-            }
+            "stats": { "$ref": "#/definitions/bamMetricsStats" }
           }
         },
 
@@ -514,6 +484,22 @@
           "description": "Path to the JAR file (null if not available)",
           "type": ["string", "null"]
         }
+      }
+    },
+
+    "bamMetricsStats": {
+      "description": "Stats summary entry for bamMetrics output",
+      "type": "object",
+      "required": [ "CollectAlignmentSummaryMetrics", "biopet_flagstat", "rna" ],
+
+      "properties": {
+        "CollectAlignmentSummaryMetrics": { "$ref": "#/definitions/statsAlignmentSummary" },
+
+        "biopet_flagstat": { "$ref": "#/definitions/statsBiopetFlagstat" },
+
+        "rna": { "$ref": "#/definitions/statsRnaSeqMetrics" },
+
+        "CollectInsertSizeMetrics": { "$ref": "#/definitions/statsInsertSizeMetrics" }
       }
     },
 
