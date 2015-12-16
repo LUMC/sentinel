@@ -97,14 +97,14 @@ trait FutureMixin {
   object ? {
 
     /** Type alias for our stacked monads. */
-    type Stacked[T] = EitherT[Future, ApiPayload, T]
+    type AsyncPerhaps[T] = EitherT[Future, ApiPayload, T]
 
-    def <~[T](v: Future[Perhaps[T]]): Stacked[T] = EitherT(v)
+    def <~[T](v: Future[Perhaps[T]]): AsyncPerhaps[T] = EitherT(v)
 
-    def <~[T](v: Perhaps[T]): Stacked[T] = EitherT(Future.successful(v))
+    def <~[T](v: Perhaps[T]): AsyncPerhaps[T] = EitherT(Future.successful(v))
 
-    def <~[T](v: Future[T])(implicit context: ExecutionContext): Stacked[T] = EitherT.right(v)
+    def <~[T](v: Future[T])(implicit context: ExecutionContext): AsyncPerhaps[T] = EitherT.right(v)
 
-    def <~[T](v: T)(implicit context: ExecutionContext): Stacked[T] = v.point[Stacked]
+    def <~[T](v: T)(implicit context: ExecutionContext): AsyncPerhaps[T] = v.point[AsyncPerhaps]
   }
 }
