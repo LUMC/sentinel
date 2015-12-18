@@ -31,8 +31,9 @@ contains summary of a pipeline run). The uploaded JSON is then parsed and stored
 
 The structure of the JSON file is very loosely defined. In principle it can be of any form, though Sentinel does require
 that it conforms to a certain structure (see :doc:`devs_tutorial_schema` for the full requirements). Most
-important is that Sentinel knows how to parse and store the particular JSON file. At the moment, this means hard-coding
-the parsing code inside Sentinel but we are working to make the setup more modular.
+important is that Sentinel knows how to parse and store the particular JSON file. This entails extending the core
+Sentinel methods with user-defined parsing code. Sentinel enforces the parsed objects through various interfaces, which
+in turn makes a wide range of data format compatible for querying.
 
 All uploaded JSON files are only accessible to the uploader and site administrators. The data points contained in the
 JSON file however, are available to anybody with access to the HTTP endpoints. These data points are anonymized by

@@ -31,9 +31,16 @@ import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject
  *
  * @param mongo MongoDB access object.
  */
-class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
+class MapleRunsProcessor(mongo: MongodbAccessObject)
+    extends RunsProcessor(mongo)
     with ReadGroupsAdapter
     with ValidatedJsonExtractor {
+
+  /** Exposed pipeline name. */
+  def pipelineName = "maple"
+
+  /** JSON schema for incoming summaries. */
+  def jsonSchemaUrls = Seq("/schema_examples/maple.json")
 
   /** Run records container. */
   type RunRecord = MapleRunRecord
@@ -47,11 +54,10 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
   /** Execution context. */
   implicit private def context: ExecutionContext = ExecutionContext.global
 
-  /** Exposed pipeline name. */
-  def pipelineName = "maple"
-
-  /** JSON schema for incoming summaries. */
-  def jsonSchemaUrls = Seq("/schema_examples/maple.json")
+  /** Helper case class for storing records. */
+  case class MapleUnits(
+    samples: Seq[MapleSampleRecord],
+    readGroups: Seq[MapleReadGroupRecord])
 
   /**
    * Extracts the raw summary JSON into samples and read groups containers.
@@ -62,7 +68,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
    * @return Two sequences: one for sample data and the other for read group data.
    */
   def extractUnits(runJson: JValue, uploaderId: String,
-                   runId: ObjectId): (Seq[MapleSampleRecord], Seq[MapleReadGroupRecord]) = {
+                   runId: ObjectId): MapleUnits = {
 
     /** Name of the current run. */
     val runName = (runJson \ "run_name").extractOpt[String]
@@ -96,7 +102,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
           (sample, readGroups)
       }.toSeq
 
-    (parsed.map(_._1), parsed.flatMap(_._2))
+    MapleUnits(parsed.map(_._1), parsed.flatMap(_._2))
   }
 
   /**
@@ -114,15 +120,17 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       // Store the raw file in our database
       fileId <- ? <~ storeFile(contents, uploader, uploadName)
       // Extract samples and read groups
-      (samples, readGroups) <- ? <~ extractUnits(runJson, uploader.id, fileId)
+      units <- ? <~ extractUnits(runJson, uploader.id, fileId)
       // Invoke store methods asynchronously
-      storeSamplesResult = storeSamples(samples)
-      storeReadGroupsResult = storeReadGroups(readGroups)
+      storeSamplesResult = storeSamples(units.samples)
+      storeReadGroupsResult = storeReadGroups(units.readGroups)
       // Check that all store methods are successful
       _ <- ? <~ storeReadGroupsResult
       _ <- ? <~ storeSamplesResult
       // Create run record
-      run = MapleRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
+      sampleIds = units.samples.map(_.dbId)
+      readGroupIds = units.readGroups.map(_.dbId)
+      run = MapleRunRecord(fileId, uploader.id, pipelineName, sampleIds, readGroupIds)
       // Store run record into database
       _ <- ? <~ storeRun(run)
     } yield run

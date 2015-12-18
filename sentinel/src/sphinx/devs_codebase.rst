@@ -1,7 +1,7 @@
 The Codebase
 ============
 
-Before delving deeper into the code, it is useful to see how the source code is organized.
+Before diving deeper into the code, it is useful to see how the source code is organized.
 
 Starting from the root, we see three directories:
 
@@ -9,12 +9,14 @@ Starting from the root, we see three directories:
 
     * ``scripts``, where helper scripts are located.
 
-    * ``src``, where the actual source code files are located.
+    * ``sentinel`` and ``sentinel-lumc``, where the actual source code files are located. ``sentinel`` is meant to
+      contain the sentinel core code, while ``sentinel-lumc`` contains code specific to LUMC pipelines. Each of these
+      directories contain a directory called ``src`` that points to the actual source code.
 
-Inside ``src``, we see four more directories. This may look unusual if you come from a Java background, less-so if
+Inside each ``src``, we see four more directories. This may look unusual if you come from a Java background, less-so if
 you are already used to Scala. They are:
 
-    * ``main``, where the main Sentinel source files are located.
+    * ``main``, where the main source files are located.
 
     * ``test``, where unit tests are defined.
 
@@ -31,6 +33,6 @@ for reasons of clarity:
     * ``main/resources`` contains run-time resource files that are loaded into the deployment JAR. In most cases, these
       are pipeline schema files.
 
-    * ``main/webapp/api-docs`` contains a disttribution copy of the `swagger-ui <https://github.com/swagger-api/swagger-ui>`_
+    * ``main/webapp/api-docs`` contains a distribution copy of the `swagger-ui <https://github.com/swagger-api/swagger-ui>`_
       package. The package is also bundled into the deployment JAR, to help users explore the Sentinel APIs
       interactively.

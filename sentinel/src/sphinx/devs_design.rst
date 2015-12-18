@@ -14,20 +14,13 @@ JSON files are essentially free-form, yet it still enforces a useful structure a
 sequencing metrics. Communicating via HTTP also means that we are not constrained to a specific language. A huge number
 of tools and programming languages that can communicate via HTTP exist today.
 
-The current implementation still has a noticeable drawback, however. At the moment, if one wishes to add support to
-his / her own data analysis pipeline, he/she must clone the entire source code and implement the JSON file parsing
-functions and also the pipeline's HTTP endpoints there. More ideal is to have a single core module (e.g.
-a ``sentinel-core`` package) and other modules which implements specific pipeline support separately. This is not yet
-implemented since in order to do so, we need to be able to combine not only parsing logic, but also the HTTP endpoints
-that exposes the pipeline's metrics. While this seems possible, we have not found a way to do so cleanly yet.
 
 Framework
 ---------
 
 Sentinel is written in `Scala <http://www.scala-lang.org/>`_ using the `Scalatra <http://www.scalatra.org/>`_ web
-framework. Scalatra was chosen since it is has a minimal core allowing us to add / remove parts as we see fit. Other
-frameworks, such as the Play Framework, may come with features that we probably will never use (e.g. a full-blown
-templating engine).
+framework. Scalatra was chosen since it is has a minimal core allowing us to add / remove parts as we see fit. This does
+mean that to extend Sentinel, you must be familiar with Scalatra as well.
 
 The API specification is written based on the `Swagger specification <http://swagger.io>`_. It is not the only API
 specification available out there nor is it an official specification endorsed by the W3C. It seems, however,
@@ -44,9 +37,10 @@ For the underlying database, Sentinel uses `MongoDB <https://www.mongodb.org/>`_
 trying to achieve: to be as general as possible. MongoDB helps by not imposing any schema on its own. However, we would
 like to stress that this does not mean there is no underlying schema of any sort. While MongoDB allows JSON
 document of any structure, Sentinel does expect a certain structure from all incoming JSON summary files. They must
-represent a single pipeline run, which contain at least one sample, which contain at least one library. Internally,
-Sentinel also breaks down an uploaded run summary file into single samples. It is these single samples that are stored
-and queried in the database. One can consider that MongoDB allows us to define the 'schema' on our own, in our own code.
+represent a single pipeline run, which contain at least one sample, which contain at least one read group. Internally,
+Sentinel also breaks down an uploaded run summary file into single samples and potentially single read groups. It is
+these single units that are stored and queried in the database. One can consider that MongoDB allows us to define the
+'schema' on our own, in our own code.
 
 Considering this, we strongly recommend that JSON summary files be validated against a schema. Sentinel uses 
 `JSON schema <http://json-schema.org/>`_, which itself is JSON, for the pipeline schemas.
@@ -72,13 +66,22 @@ Processors
 Pipeline support is achieved using ``Processor`` objects, implemented now in the ``nl.lumc.sasc.sentinel.processors``
 package. For a given pipeline, two processors must be implemented: a runs processor, responsible for processing
 incoming run summary files, and a stats processor, responsible for querying and aggregating metrics of the pipeline.
+They are the objects that ``Controllers`` use when talking to the database.
 
 Adapters
 ^^^^^^^^
 
-Adapters are traits that are mixed into processors to add processing capabilities. For example, the
-``ReferencesAdapter`` can be mixed in to a processor so it also processes reference sequence information. Most of the
-adapters involve connection to the MongoDB database, although not all do so.
+Adapters are traits that provide additional database-related functions. For example, the ``SamplesAdapter`` trait
+defined in the ``nl.lumc.sasc.sentinel.adapters.SamplesAdapter`` provides functions required for writing sample-level
+data to the database. They are meant to extend processors, but in some cases may be instantiated directly.
+
+Extractors
+^^^^^^^^^^
+
+Extractors are traits that read the uploaded JSON files to extract the metrics data contained within. They are also
+meant to extend processors, specifically run processors, to provide JSON reading functions. The core ``sentinel``
+package provides two base extractors: ``JsonExtractor`` and ``JsonValidationExtractor``. The latter is an extension
+of ``JsonExtractor`` that can take a user-defined JSON schema and perform validation based on it.
 
 Records
 ^^^^^^^

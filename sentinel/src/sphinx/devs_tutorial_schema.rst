@@ -1,66 +1,71 @@
-Defining Run Summaries
-======================
+Describing Run Summaries
+========================
 
 What Sentinel Expects
 ---------------------
 
 In principle, Sentinel accepts any kind of JSON structure. Most important, however, is that a single JSON run summary
-file contains a full run, with at least one sample containing at least one library. Usually this means storing the
-samples as properties of a run object, and libraries as properties of a sample, although you are not limited to this
+file contains a full run, with at least one sample containing at least one read group. Usually this means storing the
+samples as properties of a run object, and read groups as properties of a sample, although you are not limited to this
 structure.
 
 .. note::
 
-    The exact definitions of samples, libraries, and runs that Sentinel uses are listed in
+    The exact definitions of samples, read groups, and runs that Sentinel uses are listed in
     :doc:`users_terminologies`.
 
 What to Store
 -------------
 
-Having decided on the pipeline name, we need to define first what the pipeline will store. The following metrics should
+Having decided on the pipeline name, we need to outline first what the pipeline will store. The following metrics should
 be simple enough for our purposes:
 
     * Total number of `FASTQ <https://en.wikipedia.org/wiki/FASTQ_format>`_ reads.
-    * Total number of reads in the aligned `BAM <http://genome.ucsc.edu/goldenpath/help/bam.html>`_ file.
+    * Total number of reads in the `BAM <http://genome.ucsc.edu/goldenpath/help/bam.html>`_ file (mapped and unmapped).
     * Number of mapped reads in the BAM file.
 
 We'll also store a name of the pipeline run (which will differ per pipeline run) so we can trace back our runs.
 
-The JSON run summary file looks something like this:
+Our hypothetical pipeline can analyze multiple samples and multiple read groups at the same time. It generates a JSON
+run summary file like this:
 
 .. code-block:: javascript
 
     {
-      "run_name": "MySimpleRun",
+      "runName": "MyRun",
       "samples": {
-        "sample_A": {
-          "libraries": {
-            "lib_1": {
-              "nReadPairsFastq": 10000,
-              "nReadsBam": 10000,
+        "sampleA": {
+          "readGroups": {
+            "rg1": {
+              "nReadsInput": 10000,
               "nReadsAligned": 7500
             }
-          }
+          },
+          "nSnps": 200
         },
-        "sample_B": {
-          "libraries": {
-            "lib_1": {
-              "nReadPairsFastq": 20000,
-              "nReadsBam": 20000,
+        "sampleB": {
+          "readGroups": {
+            "rg1": {
+              "nReadsInput": 20000,
               "nReadsAligned": 15000
             }
-          }
+          },
+          "nSnps": 250
         }
       }
     }
 
 Note the nesting structure of the run summary above. We can see that within that single run, there are two samples
-(``sample_A`` and ``sample_B``) and each sample contains a library called ``lib_1``. Within the library, we see the
-actual metrics that we want to store: ``nReadPairsFastq``, ``nReadsBam``, and ``nReadsAligned``.
+(``sampleA`` and ``sampleB``) and each sample contains a read group called ``rg1``. Within the read group, we see the
+actual metrics that we want to store: ``nReadsInput`` and ``nReadsAligned``. On the sample-level, we store the number
+of SNPs called for that sample in `nSnps`.
 
-You can have a different structure (perhaps nesting everything under a ``run`` attribute or having the ``run_name``
-attribute named something else). It is really up to you in the end (everybody has their own way of running these
-pipelines after all).
+You are free to decide on your own structure. Perhaps you don't really care about read-group level statistics, so your
+pipeline omits them. Or perhaps your pipeline only runs a single sample, so you can put all metrics in the top level.
+You could also store the samples and/or read groups in an array instead of a JSON object, if you prefer. It is really
+up to you in the end (everybody has their own way of running these pipelines after all). The important thing is that
+your soon-to-be-written JSON reader understands the structure.
+
 
 Your Pipeline Schema
 --------------------
@@ -71,7 +76,7 @@ makes it easier to check for run time errors and prevent incorrect data from bei
 site to see the full specification.
 
 For our `Maple` pipeline, we'll use the schema already defined below. Save this as a file in the
-``src/main/resources/schemas`` directory with the name ``map.json``.
+``src/main/resources/schemas`` directory with the name ``maple.json``.
 
 .. code-block:: javascript
 
@@ -80,7 +85,7 @@ For our `Maple` pipeline, we'll use the schema already defined below. Save this 
       "title": "Maple pipeline schema",
       "description": "Schema for Maple pipeline runs",
       "type": "object",
-      "required": [ "samples", "run_name" ],
+      "required": [ "samples", "runName" ],
 
       "properties": {
 
@@ -99,27 +104,31 @@ For our `Maple` pipeline, we'll use the schema already defined below. Save this 
         "sample": {
           "description": "A single Maple sample",
           "type": "object",
-          "required": [ "libraries" ],
+          "required": [ "readGroups", "nSnps" ],
 
           "properties": {
 
-            "libraries": {
-              "description": "All libraries belonging to the sample",
+            "readGroups": {
+              "description": "All read groups belonging to the sample",
               "type": "object",
               "minItems": 1,
-              "additionalProperties": { "$ref": "#/definitions/library" }
+              "additionalProperties": { "$ref": "#/definitions/readGroup" }
+            },
+
+            "nSnps": {
+              "description": "Number of SNPs called",
+              "type": "integer"
             }
           }
         },
 
-        "library": {
-          "description": "A single Maple library",
+        "readGroup": {
+          "description": "A single Maple readGroup",
           "type": "object",
-          "required": [ "nReadPairsFastq", "nReadsBam", "nReadsAligned" ],
+          "required": [ "nReadsInput", "nReadsAligned" ],
 
           "properties": {
-            "nReadPairsFastq": { "type": "integer" },
-            "nReadsBam": { "type": "integer" },
+            "nReadsInput": { "type": "integer" },
             "nReadsAligned": { "type": "integer" }
           }
         }

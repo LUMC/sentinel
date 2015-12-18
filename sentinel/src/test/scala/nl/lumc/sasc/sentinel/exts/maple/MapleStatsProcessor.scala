@@ -20,19 +20,24 @@ import nl.lumc.sasc.sentinel.models.AccLevel
 import nl.lumc.sasc.sentinel.processors.StatsProcessor
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
-class MapleStatsProcessor(mongo: MongodbAccessObject) extends StatsProcessor(mongo) {
+class MapleStatsProcessor(mongo: MongodbAccessObject)
+    extends StatsProcessor(mongo) {
 
   def pipelineName = "maple"
 
-  /** Function for retrieving Maple read group data points. */
-  def getMapleReadGroupStats = getStats[MapleReadGroupStats]("stats")(AccLevel.ReadGroup) _
-
-  /* Function for aggregating over Maple read group data points. */
-  def getMapleReadGroupAggrStats = getAggregateStats[MapleReadGroupStatsAggr]("stats")(AccLevel.ReadGroup) _
-
   /* Function for retrieving Maple sample data points. */
-  def getMapleSampleStats = getStats[MapleSampleStats]("stats")(AccLevel.Sample) _
+  def getMapleSampleStats =
+    getStats[MapleSampleStats]("stats")(AccLevel.Sample) _
 
   /* Function for aggregating over Maple read group data points. */
-  def getMapleSampleAggrStats = getAggregateStats[MapleSampleStatsAggr]("stats")(AccLevel.Sample) _
+  def getMapleSampleAggrStats =
+    getAggregateStats[MapleSampleStatsAggr]("stats")(AccLevel.Sample) _
+
+  /** Function for retrieving Maple read group data points. */
+  def getMapleReadGroupStats =
+    getStats[MapleReadGroupStats]("stats")(AccLevel.ReadGroup) _
+
+  /* Function for aggregating over Maple read group data points. */
+  def getMapleReadGroupAggrStats =
+    getAggregateStats[MapleReadGroupStatsAggr]("stats")(AccLevel.ReadGroup) _
 }

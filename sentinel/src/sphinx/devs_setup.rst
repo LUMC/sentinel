@@ -19,11 +19,27 @@ For building documentation, you will also need Python `Python <https://www.pytho
 the `Sphinx <http://sphinx-doc.org/>`_ documentation generator. A complete list of python libraries is listed in the
 ``requirements-dev.txt`` file in the root of the project.
 
-And finally, while the following packages are not required per se, they can make your development much easier:
+While the following packages are not strictly required, they can make your development much easier:
 
 * `IntelliJ <https://www.jetbrains.com/idea/>`_ IDE, with the
   `Scala plugin <https://plugins.jetbrains.com/plugin/?id=1347>`_.
 * `httpie <https://github.com/jkbrzt/httpie>`_, a command-line HTTP client for issuing HTTP requests.
+
+And finally, we should note that the current repository contains two packages: ``sentinel`` for all core methods and
+``sentinel-lumc`` for code specific to our setup in the LUMC. In the future we will most likely separate
+``sentinel-lumc`` out into its own repository.
+
+
+Third party libraries
+---------------------
+
+There are several heavily-used libraries that Sentinel depend on. It is a good idea to get familiar with them if you
+wish to extend Sentinel. These libraries are:
+
+* `Json4s <http://json4s.org/>`_, for processing JSON uploads
+* `Scalaz <https://github.com/scalaz/scalaz>`_ -- particularly the disjunction type (``\/``), to complement the standard
+  library functions.
+* `Casbah <https://mongodb.github.io/casbah/>_`, for working the MongoDB backend
 
 
 Starting Up
@@ -67,8 +83,8 @@ On the Command Line (without an IDE)
    * Password: ``dev``
    * API key: ``dev``
 
-   Remember that these are only meant for development purposes only. It is strongly recommended that these details be
-   changed in when you deploy Sentinel.
+   Remember that these are only meant for development purposes. It is strongly recommended to change these details when
+   you deploy Sentinel.
 
    The bootstrap script can be run as follows:
 
@@ -97,14 +113,11 @@ On the Command Line (without an IDE)
 With IntelliJ
 ^^^^^^^^^^^^^
 
-While we think that IntelliJ can boost your productivity considerably once it is set up, the latest version (14.1)
-unfortunately has a `known bug <https://youtrack.jetbrains.com/issue/SCL-8675>`_ that makes importing SBT projects
-difficult. Despite this, we still believe that using IntelliJ is worth the initial hassle, so we are showing the set up
-steps below.
+Being a Scala-based project, you can use an IDE to develop Sentinel instead of just command line editors. There are
+numerous IDEs to choose from, but one that we have found to work well is is IntelliJ. You can set up
+sentinel in IntelliJ following these steps:
 
-In case you are using an earlier version, you may try the following steps to see if the bug also exists there:
-
-    1. Head over to the command line and clone the repository
+    1. Head over to the command line, go to a directory of your choice, and clone the repository
 
         .. code-block:: bash
 
@@ -122,38 +135,12 @@ In case you are using an earlier version, you may try the following steps to see
 
     6. Click ``OK`` and wait.
 
-If nothing shows up, it is likely that your version has the bug. In that case, you can try the workaround to have your
-project set up. What the workaround does is simply creating a new SBT project manually, then overwriting the project
-with all Sentinel files. The steps are as follows:
-
-    1. Clone the project into a location (the same as step 1 above).
-
-    2. Open IntelliJ, choose ``File`` -> ``New`` -> ``Project...``
-
-    3. In the new dialog window, choose ``Scala`` then ``SBT``
-
-    4. In the the ``New Project`` dialog box, fill out the project details. Make sure that the project SDK is Java 8,
-       SBT version is 0.13.8, and Scala version is at least 2.11.6. Check the ``Use auto-import`` check box as well.
-       Other check boxes may or may not be selected, depending on your preference.
-
-    5. Click ``Finish``.
-
-    6. Remember the location where the project is created, then close the newly created IntelliJ window. You can do this
-       immediately, without waiting for all background tasks to finish.
-
-    7. Move all files from the cloned repository earlier to the newly-created IntelliJ project directory. Make sure all
-       files, including the ones in ``project`` and the hidden git files (``.gitignore`` and the ``.git``) are all
-       moved.
-
-    8. Start IntelliJ again. You should have the project set up correctly this time. If prompted for a VCS being
-       unregistered, you can choose ``Add root`` to have the project set up with git.
-
 
 Using SBT
 ---------
 
 Sentinel uses `SBT <http://www.scala-sbt.org/>`_ to manage its builds. You can use its console to run tasks, or directly
-from the command line via the bundled `sbt` script. All the build definitions are listed in the
+from the command line via the bundled `sbt` script.
 
 It comes with many useful tasks, the most-used ones being:
 
@@ -167,5 +154,14 @@ It comes with many useful tasks, the most-used ones being:
 * ``package-site``: creates the Sphinx and ScalaDoc documentation in the ``target/scala-2.11`` directory.
 * ``assembly``: creates a JAR with embedded Jetty for deployment in the ``target/scala-2.11`` directory.
 * ``assembly-fulltest``: runs all tests (unit and integration) and then creates the deployment JAR.
+
+Note that by default these commands are run for both the ``sentinel`` and ``sentinel-lumc`` packages in parallel. If you
+only want to run it for the ``sentinel`` package, then the commands must be prefixed with ``sentinel/``, for example
+``test`` becomes ``sentinel/test``. Alternatively, you can also set the project scope first using the
+``project sentinel`` command. Subsequent commands can then be run on ``sentinel`` without the prefix.
+
+If you have set up development in IntelliJ, you can also run these commands from inside the IDE. Note however that you
+may need to unmark the ``sentinel/src/test/scala/nl/lumc/sasc/sentinel/exts` directory as test since that may result in
+some compilation problems. It is usually enough to mark the higher-level ``sentinel/src/test/scala`` as the test source.
 
 You can check the `official SBT tutorial <http://www.scala-sbt.org/release/tutorial/>`_ to get more familiar with it.

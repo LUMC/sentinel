@@ -9,7 +9,7 @@ To be able to upload summary files, you will need a verified user account. Pleas
 an automated system so that you can register and verify yourself.
 
 The account comes with an API key which allows you to authenticate against Sentinel. Authentication is done by using the
-HTTP header key ``X-SENTINEL-KEY``, setting its value to your API key. You must keep this key private to yourself.
+HTTP header key ``X-Sentinel-Key``, setting its value to your API key. You must keep this key private to yourself.
 
 
 Your First Upload
@@ -20,18 +20,19 @@ documentation, we will be using  `httpie <https://github.com/jakubroztocil/httpi
 You are free to use other clients such as  `curl <http://curl.haxx.se/>`_ or `wget <http://www.gnu.org/software/wget/>`_
 of course. If you prefer a graphical interface, you can use our :apidoc:`live API documentation < >`.
 
-Now, with httpie ready and assuming these parameters:
+Now, with httpie ready and assuming we have these parameters set:
 
-* Your user ID is ``myID``
-* Your API key is ``MyKey123``
-* The pipeline name is ``gentrap``
-* The summary file name is ``summary.json``
+* Your user ID set to ``myID``
+* Your API key set to ``myKey123``
+* The pipeline name set to ``gentrap``
+* The summary file name set to ``summary.json``
 
-uploading is as simple as issuing a ``POST`` request to the ``/runs`` endpoint.
+uploading is as simple as issuing a ``POST`` request to the ``/runs`` endpoint. As an example we will use a summary file
+from our Gentrap pipeline that we mentioned earlier.
 
 .. parsed-literal::
 
-    $ http -f POST '|sentinel_url|/runs?userId=myID&pipeline=gentrap' run@summary.json X-SENTINEL-KEY:MyKey123
+    $ http -f POST '|sentinel_url|/runs?userId=myID&pipeline=gentrap' run@summary.json X-Sentinel-Key:myKey123
 
 From the live documentation page, you can do the same by filling in the forms in the ``POST /runs``
 :endpoint:`endpoint <runs/runsPost>` and then clicking the ``Try it out!`` button.
@@ -45,7 +46,7 @@ After issuing the command above, you should get a response which looks something
         "uploaderId": "myID",
         "creationTimeUtc": "2015-07-02T13:03:43Z",
         "runId": "559536af60b2adf7844567c4",
-        "nLibs": 10,
+        "nReadGroups": 10,
         "nSamples": 15
     }
 
@@ -53,11 +54,11 @@ Some things are already apparent here:
 
     * We get some of our provided information back: ``pipeline: gentrap`` and ``uploaderId: myID`` denote the pipeline
       name and your user ID, respectively.
-    * We get back the creation time of our run record. Notice that the time zone is UTC.
+    * We get back the creation time of our run record. Notice that the time zone is UTC+0.
     * We get a randomly-assigned ``runID``. This value is the internal ID that Sentinel assigns to your uploaded run.
       It can be used, for example, to filter for specific runs when querying the metrics.
-    * ``nLibs`` and ``nSamples`` both denote the number of sequencing libraries and sequencing samples present in your
-      uploaded run (see :doc:`users_terminologies`).
+    * ``nReadGroups`` and ``nSamples`` both denote the number of sequencing read groups and sequencing samples present
+      in your uploaded run (see :doc:`users_terminologies`).
 
 Depending on the pipeline, you may also see additional attributes such as:
 
@@ -83,14 +84,14 @@ strings, of course). These two JSON objects, for example, are considered semanti
     {
         "samples": {
             "sample 1": {
-                "libSize": 1000
+                "nReads": 1000
             }
         }
     }
 
 .. code-block:: javascript
 
-    {"samples":{"sample 1":{"libSize":1000}}}
+    {"samples":{"sample 1":{"nReads":1000}}}
 
 Also, depending on the client you use for uploading, consider setting the time out limit since Sentinel may take a while
 to process your uploaded run. In httpie, this is done by setting the ``--timeout`` flag.
@@ -105,17 +106,17 @@ the Sentinel-assigned run ID.
 Assuming these parameters:
 
 * Your user ID is ``myID``
-* Your API key is ``MyKey123``
+* Your API key is ``myKey123``
 * The run summary's ID is ``559536af60b2adf7844567c4``
 
 The using httpie, you can download your file as follows:
 
 .. parsed-literal::
 
-    $ http GET '|sentinel_url|/runs?runId=559536af60b2adf7844567c4&userId=myID&download=true' X-SENTINEL-KEY:MyKey123
+    $ http GET '|sentinel_url|/runs?runId=559536af60b2adf7844567c4&userId=myID&download=true' X-Sentinel-Key:myKey123
 
-Notice the ``download=true`` parameter specified in the end. If this is not specified, you will get instead a JSON
-object representing the uploaded run, but not the actual run summary file itself. The JSON record is what you get
+Notice the ``download=true`` parameter specified in the end of the URL. If this is not specified, you will get instead
+a JSON object representing the uploaded run, but not the actual run summary file itself. The JSON record is what you get
 when you first upload the run summary file.
 
 If you have trouble finding out the run ID, you can try listing all of the runs you have uploaded using GET on the
@@ -123,11 +124,11 @@ If you have trouble finding out the run ID, you can try listing all of the runs 
 
 .. parsed-literal::
 
-    $ http GET '|sentinel_url|/runs?userId=myID' X-SENTINEL-KEY:MyKey123
+    $ http GET '|sentinel_url|/runs?userId=myID' X-Sentinel-Key:myKey123
 
 This will return a list of run records of all your uploaded JSON files.
 
-As with uploading, you can try do the above methods by filling in the forms in the ``GET /runs/{runId}``
+As with uploading, you can try to do the above methods by filling in the forms in the ``GET /runs/{runId}``
 :endpoint:`endpoint <runs/runsGet>` and/or the ``GET /runs`` :endpoint:`endpoint <runs/runIdGet>` endpoints and then
 clicking the ``Try it out!`` button.
 
@@ -141,13 +142,13 @@ If for some reason you decided to remove your run summary from Sentinel, you can
 Assuming these parameters:
 
 * Your user ID is ``myID``
-* Your API key is ``MyKey123``
+* Your API key is ``myKey123``
 * The run summary's ID is ``559536af60b2adf7844567c4``
 
 The using httpie, you can perform the deletion as follows:
 
 .. parsed-literal::
 
-    $ http DELETE '|sentinel_url|/runs?runId=559536af60b2adf7844567c4&userId=myID' X-SENTINEL-KEY:MyKey123
+    $ http DELETE '|sentinel_url|/runs?runId=559536af60b2adf7844567c4&userId=myID' X-Sentinel-Key:myKey123
 
 After deletion, all data points from the run summary will be removed from Sentinel.

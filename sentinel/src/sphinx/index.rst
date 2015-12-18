@@ -34,6 +34,9 @@ Please use the navigation bar on the left to explore this site.
    devs_codebase
    devs_tutorial_intro
    devs_tutorial_schema
+   devs_tutorial_data_models
+   devs_tutorial_composition
+   devs_tutorial_async
    devs_tutorial_processors
    devs_tutorial_controllers
 
