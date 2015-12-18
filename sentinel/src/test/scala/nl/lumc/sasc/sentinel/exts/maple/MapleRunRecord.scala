@@ -43,7 +43,9 @@ case class MapleSampleRecord(
   runName: Option[String] = None) extends BaseSampleRecord
 
 /** Container for a single Maple sample statistics. */
-case class MapleSampleStats(nSnps: Long)
+case class MapleSampleStats(
+  nSnps: Long,
+  labels: Option[DataPointLabels] = None) extends LabeledStats
 
 /** Container for aggregated Maple sample statistics. */
 case class MapleSampleStatsAggr(nSnps: DataPointAggr)
@@ -62,7 +64,7 @@ case class MapleReadGroupRecord(
 case class MapleReadGroupStats(
   nReadsInput: Long,
   nReadsAligned: Long,
-  labels: Option[DataPointLabels] = None)
+  labels: Option[DataPointLabels] = None) extends LabeledStats
 
 /** Container for aggregated Maple read group statistics. */
 case class MapleReadGroupStatsAggr(

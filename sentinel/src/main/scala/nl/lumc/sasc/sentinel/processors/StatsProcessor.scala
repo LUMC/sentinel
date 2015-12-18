@@ -154,16 +154,16 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * @param matchers MongoDBObject containing query parameters.
    * @param user If defined, returned data points belonging to the user will show its labels.
    * @param timeSorted Whether to time-sort the returned items or not.
-   * @tparam T Case class representing the metrics object to return.
+   * @tparam T Labeled stats object representing the metrics object to return.
    * @return Sequence of unit statistics objects.
    */
   // format: OFF
-  def getStats[T <: CaseClass](metricName: String)
-                              (accLevel: AccLevel.Value)
-                              (matchers: MongoDBObject,
-                               user: Option[User] = None,
-                               timeSorted: Boolean = false)
-                              (implicit m: Manifest[T]): Seq[T] = {
+  def getStats[T <: LabeledStats](metricName: String)
+                                 (accLevel: AccLevel.Value)
+                                 (matchers: MongoDBObject,
+                                  user: Option[User] = None,
+                                  timeSorted: Boolean = false)
+                                 (implicit m: Manifest[T]): Seq[T] = {
     // format: ON
 
     // Projection for data point label

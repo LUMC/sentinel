@@ -31,3 +31,8 @@ case class DataPointLabels(
   runName: Option[String],
   sampleName: Option[String],
   readGroupName: Option[String])
+
+/** Trait for statistics / metrics container with labels. */
+trait LabeledStats { this: nl.lumc.sasc.sentinel.CaseClass =>
+  def labels: Option[DataPointLabels]
+}

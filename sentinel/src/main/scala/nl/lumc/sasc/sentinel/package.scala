@@ -23,7 +23,7 @@ package nl.lumc.sasc
 
 import scalaz._
 
-import nl.lumc.sasc.sentinel.models.ApiPayload
+import nl.lumc.sasc.sentinel.models.{ DataPointLabels, ApiPayload }
 
 /** General package-level information */
 package object sentinel {
