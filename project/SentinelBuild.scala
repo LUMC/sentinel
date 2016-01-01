@@ -96,8 +96,9 @@ object SentinelBuild extends Build {
     Seq(
     initialize := {
       val _ = initialize.value
-      if (sys.props("java.specification.version") != JavaVersion)
-        sys.error("Sentinel requires Java 8.")
+      val activeJavaVersion = sys.props("java.specification.version")
+      if (activeJavaVersion != JavaVersion)
+        sys.error(s"Sentinel requires Java version '$JavaVersion' -- found version '$activeJavaVersion'.")
     },
     scalaVersion := ScalaVersion,
     scalacOptions ++= Seq(
