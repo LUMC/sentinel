@@ -107,6 +107,7 @@ object SentinelBuild extends Build {
       "-feature",
       "-target:jvm-1.8",
       "-Xmax-classfile-name", "200"),
+    cancelable in Global := true,
     scapegoatConsoleOutput := false,
     // Since we use a lot of MongoDB operators, which look like interpolated strings.
     scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),
