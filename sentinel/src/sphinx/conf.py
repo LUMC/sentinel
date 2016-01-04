@@ -131,6 +131,10 @@ _scaladoc_url = "scaladoc/%s"
 # documentation.
 html_theme_options = {
 
+    'page_width': '970px',
+
+    'sidebar_width': '270px',
+
     'show_related': True,
 
     'github_button': False,
