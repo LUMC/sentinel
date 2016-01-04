@@ -23,10 +23,9 @@ import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.models.SinglePathPatch
 import nl.lumc.sasc.sentinel.utils.Implicits._
 import org.json4s._
-import org.json4s.jackson.JsonMethods.parse
+import org.json4s.jackson.JsonMethods.parseOpt
 
 import scala.collection.JavaConversions._
-import scala.util.Try
 import scalaz.Scalaz._
 import scalaz._
 
@@ -43,9 +42,9 @@ trait JsonExtractor {
    * @return JValue object.
    */
   def extractJson(contents: Array[Byte]): Perhaps[JValue] =
-    Try(parse(new ByteArrayInputStream(contents))) match {
-      case scala.util.Failure(_)  => JsonValidationError("File is not JSON.").left
-      case scala.util.Success(jv) => jv.right
+    parseOpt(new ByteArrayInputStream(contents)) match {
+      case None     => JsonValidationError("File is not JSON.").left
+      case Some(jv) => jv.right
     }
 }
 
