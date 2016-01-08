@@ -39,11 +39,12 @@ trait JsonExtractor {
    * Parses the given byte array into JSON.
    *
    * @param contents Raw bytes to parse.
-   * @return JValue object.
+   * @return JValue object or an ApiPayload with error messages.
    */
   def extractJson(contents: Array[Byte]): Perhaps[JValue] =
-    parseOpt(new ByteArrayInputStream(contents)) match {
-      case None     => JsonValidationError("File is not JSON.").left
+    if (contents.isEmpty) JsonValidationError("Nothing to parse.").left
+    else parseOpt(new ByteArrayInputStream(contents)) match {
+      case None => JsonValidationError("Invalid JSON syntax.").left
       case Some(jv) => jv.right
     }
 }
