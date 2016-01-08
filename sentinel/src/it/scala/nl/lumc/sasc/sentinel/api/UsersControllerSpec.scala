@@ -578,7 +578,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                 }
               }
 
-              "when the patch document is empty should" >> inline {
+              "when the patch document is an empty list should" >> inline {
 
                 new Context.PriorRequestsClean {
 
@@ -593,7 +593,26 @@ class UsersControllerSpec extends SentinelServletSpec {
                   "return a JSON object containing the expected message" in {
                     priorResponse.contentType mustEqual "application/json"
                     priorResponse.body must /("message" -> "JSON is invalid.")
-                    priorResponse.body must /("hints") /# 0 / startWith("Nothing to parse.")
+                    priorResponse.body must /("hints") /# 0 / startWith("error: array is too short")
+                  }
+                }
+              }
+
+              "when the patch document is empty should" >> inline {
+
+                new Context.PriorRequestsClean {
+
+                  def request = () => patch(endpoint(uobj.id), Array(), headers) { response }
+                  def priorRequests = Seq(request)
+
+                  "return status 400" in {
+                    priorResponse.status mustEqual 400
+                  }
+
+                  "return a JSON object containing the expected message" in {
+                    priorResponse.contentType mustEqual "application/json"
+                    priorResponse.body must /("message" -> "JSON is invalid.")
+                    priorResponse.body must /("hints") /# 0 / "Nothing to parse."
                   }
                 }
               }
