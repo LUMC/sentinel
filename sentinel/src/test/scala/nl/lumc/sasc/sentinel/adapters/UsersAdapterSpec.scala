@@ -47,6 +47,9 @@ class UsersAdapterSpec extends Specification
     .getDB(testDbName)
     .getCollection(MongodbAdapter.CollectionNames.Users)
 
+  /** How many times a Future-based method should retry until we mark it as a failure. */
+  private val asyncRetries: Int = 5
+
   class TestUsersAdapter(mockDb: Fongo) extends UsersAdapter {
 
     val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)
@@ -75,7 +78,7 @@ class UsersAdapterSpec extends Specification
   "usersExist" should {
 
     "return false when database is empty" in {
-      testAdapter.userExist("myId") must beFalse.await
+      testAdapter.userExist("myId") must beFalse.await(asyncRetries)
     }
 
     "return false when the user ID does not exist" in {
@@ -84,7 +87,7 @@ class UsersAdapterSpec extends Specification
       }
       val testId = "testIdAnother"
       testUserDbo.get("id") must be_!=(testId)
-      adapter.userExist(testId) must beFalse.await
+      adapter.userExist(testId) must beFalse.await(asyncRetries)
     }
 
     "return true when the user ID exists" in {
@@ -93,7 +96,7 @@ class UsersAdapterSpec extends Specification
       }
       val testId = "testId"
       testUserDbo.get("id") mustEqual testId
-      adapter.userExist(testId) must beTrue.await
+      adapter.userExist(testId) must beTrue.await(asyncRetries)
     }
   }
 
@@ -103,7 +106,7 @@ class UsersAdapterSpec extends Specification
       val adapter = testAdapter
       adapter.addUser(testUserObj).map { ret =>
         ret must beRightDisjunction.like { case res => res.getN mustEqual 1 }
-      }.await
+      }.await(asyncRetries)
     }
 
     "fail when supplied with an existing user" in {
@@ -116,7 +119,7 @@ class UsersAdapterSpec extends Specification
           case err =>
             err mustEqual Payloads.DuplicateUserIdError(testUserObj.id)
         }
-      }.await
+      }.await(asyncRetries)
       adapter.find(MongoDBObject("id" -> testUserObj.id)).count mustEqual 1
     }
   }
@@ -129,18 +132,18 @@ class UsersAdapterSpec extends Specification
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.Users) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
-      adapter.getUser(testUserObj.id) must throwA[RuntimeException].await
+      adapter.getUser(testUserObj.id) must throwA[RuntimeException].await(asyncRetries)
     }
 
     "succeed returning none when the database is empty" in {
-      testAdapter.getUser(testUserObj.id) must beEqualTo(None).await
+      testAdapter.getUser(testUserObj.id) must beEqualTo(None).await(asyncRetries)
     }
 
     "succeed returning the user when supplied with an existing user" in {
       val adapter = usingAdapter(makeFongo) { coll =>
         coll.insert(testUserDbo)
       }
-      adapter.getUser(testUserObj.id) must beEqualTo(Some(testUserObj)).await
+      adapter.getUser(testUserObj.id) must beEqualTo(Some(testUserObj)).await(asyncRetries)
     }
 
     "succeed returning none when supplied with a non-existing user" in {
@@ -148,7 +151,7 @@ class UsersAdapterSpec extends Specification
         val dbo = grater[User].asDBObject(testUserObj.copy(id = "newId"))
         coll.insert(dbo)
       }
-      adapter.getUser(testUserObj.id) must beEqualTo(None).await
+      adapter.getUser(testUserObj.id) must beEqualTo(None).await(asyncRetries)
     }
   }
 
@@ -192,7 +195,7 @@ class UsersAdapterSpec extends Specification
   "updateUser" should {
 
     "fail when the database is empty" in {
-      testAdapter.updateUser(testUserObj) must throwAn[Exception].await
+      testAdapter.updateUser(testUserObj) must throwAn[Exception].await(asyncRetries)
     }
 
     "fail when the database does not contain the specified user" in {
@@ -200,7 +203,7 @@ class UsersAdapterSpec extends Specification
         val dbo = grater[User].asDBObject(testUserObj.copy(id = "newId"))
         coll.insert(dbo)
       }
-      adapter.updateUser(testUserObj) must throwAn[Exception].await
+      adapter.updateUser(testUserObj) must throwAn[Exception].await(asyncRetries)
     }
 
     "succeed when the database contain the specified user" in {
@@ -212,7 +215,7 @@ class UsersAdapterSpec extends Specification
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.updateUser(testUserObj.copy(email = newEmail)).map { res =>
         res must beRightDisjunction.like { case wr => wr.getN mustEqual 1 }
-      }.await
+      }.await(asyncRetries)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
     }
   }
@@ -224,7 +227,7 @@ class UsersAdapterSpec extends Specification
         ret must beLeftDisjunction.like {
           case errs => errs mustEqual Payloads.UserIdNotFoundError("nonexistent")
         }
-      }.await
+      }.await(asyncRetries)
     }
 
     "return the expected result when patch is successful" in {
@@ -243,7 +246,7 @@ class UsersAdapterSpec extends Specification
         ret must beRightDisjunction.like {
           case res => res.getN mustEqual 1
         }
-      }.await
+      }.await(asyncRetries)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 1
       adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 1
     }

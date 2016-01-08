@@ -37,6 +37,9 @@ class SamplesAdapterSpec extends Specification
 
   private def pipelineName = "maple"
 
+  /** How many times a Future-based method should retry until we mark it as a failure. */
+  private val asyncRetries: Int = 5
+
   class TestSamplesAdapter(mockDb: Fongo) extends SamplesAdapter {
 
     type SampleRecord = MapleSampleRecord
@@ -75,14 +78,14 @@ class SamplesAdapterSpec extends Specification
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.pipelineSamples(pipelineName)) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
-      adapter.storeSamples(testSampleObjs) must throwA[RuntimeException].await
+      adapter.storeSamples(testSampleObjs) must throwA[RuntimeException].await(asyncRetries)
     }
 
     "succeed storing sample records" in {
       val adapter = makeAdapter(makeFongo)
       val samplesSize = testSampleObjs.length
       testSampleDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(samplesSize)(0)
-      adapter.storeSamples(testSampleObjs).map { bw => bw.insertedCount mustEqual samplesSize }.await
+      adapter.storeSamples(testSampleObjs).map { bw => bw.insertedCount mustEqual samplesSize }.await(asyncRetries)
       testSampleDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(samplesSize)(1)
     }
   }

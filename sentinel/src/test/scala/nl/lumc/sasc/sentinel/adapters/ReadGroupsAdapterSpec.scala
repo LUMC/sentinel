@@ -37,6 +37,9 @@ class ReadGroupsAdapterSpec extends Specification
 
   private def pipelineName = "maple"
 
+  /** How many times a Future-based method should retry until we mark it as a failure. */
+  private val asyncRetries: Int = 5
+
   class TestReadGroupsAdapter(mockDb: Fongo) extends ReadGroupsAdapter {
 
     type ReadGroupRecord = MapleReadGroupRecord
@@ -78,14 +81,15 @@ class ReadGroupsAdapterSpec extends Specification
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.pipelineReadGroups(pipelineName)) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
-      adapter.storeReadGroups(testReadGroupObjs) must throwA[RuntimeException].await
+      adapter.storeReadGroups(testReadGroupObjs) must throwA[RuntimeException].await(asyncRetries)
     }
 
     "succeed storing sample records" in {
       val adapter = makeAdapter(makeFongo)
       val readGroupsSize = testReadGroupObjs.length
       testReadGroupDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(readGroupsSize)(0)
-      adapter.storeReadGroups(testReadGroupObjs).map { bw => bw.insertedCount mustEqual readGroupsSize }.await
+      adapter.storeReadGroups(testReadGroupObjs)
+        .map { bw => bw.insertedCount mustEqual readGroupsSize }.await(asyncRetries)
       testReadGroupDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(readGroupsSize)(1)
     }
   }
