@@ -55,10 +55,13 @@ trait JsonValidationExtractor extends JsonExtractor {
   def jsonSchemaUrls: Seq[String]
 
   /** Parses the given byte array into as a JSON file and validates it. */
-  val extractAndValidateJson =
-    // The compiler actually doesn't need these type annotations, but some IDE does.
-    Kleisli[Perhaps, Array[Byte], JValue] { extractJson } >=>
-      Kleisli[Perhaps, JValue, JValue] { validateJson(jsonValidators) }
+  def extractAndValidateJson(contents: Array[Byte]): Perhaps[JValue] = for {
+    json <- extractJson(contents)
+    validatedJson <- validateJson(json)
+  } yield validatedJson
+
+  /** Validates the given `JValue`. */
+  val validateJson: JValue => Perhaps[JValue] = partialValidateJson(jsonValidators)
 
   /**
    * Checks whether a parsed JSON value fulfills the given schemas or not.
@@ -66,7 +69,7 @@ trait JsonValidationExtractor extends JsonExtractor {
    * @param json Input JSON value.
    * @return Validation result.
    */
-  def validateJson(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
+  private[sasc] def partialValidateJson(validators: Seq[JsonValidator])(json: JValue): Perhaps[JValue] = {
     val errMsgs = validators.par
       .flatMap { vl =>
         vl.validate(json).iterator().map(_.toString).toList
