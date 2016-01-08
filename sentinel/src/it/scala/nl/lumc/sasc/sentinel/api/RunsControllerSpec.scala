@@ -292,7 +292,7 @@ class RunsControllerSpec extends SentinelServletSpec {
           "return a JSON object containing the expected message" in {
             priorResponse.contentType mustEqual "application/json"
             priorResponse.body must /("message" -> "JSON is invalid.")
-            priorResponse.body must /("hints") /# 0 / "File is not JSON."
+            priorResponse.body must /("hints") /# 0 / "Invalid syntax."
           }
         }
       }
