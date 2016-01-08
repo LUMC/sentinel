@@ -602,7 +602,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 new Context.PriorRequestsClean {
 
-                  def request = () => patch(endpoint(uobj.id), Array(), headers) { response }
+                  def request = () => patch(endpoint(uobj.id), Array.empty[Byte], headers) { response }
                   def priorRequests = Seq(request)
 
                   "return status 400" in {
