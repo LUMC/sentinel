@@ -3,6 +3,7 @@ import Keys._
 import org.scalatra.sbt._
 import com.earldouglas.xwp.XwpPlugin._
 import com.sksamuel.scapegoat.sbt.ScapegoatSbtPlugin.autoImport._
+import com.typesafe.sbt.SbtGit.GitCommand
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
@@ -108,6 +109,7 @@ object SentinelBuild extends Build {
       "-target:jvm-1.8",
       "-Xmax-classfile-name", "200"),
     cancelable in Global := true,
+    shellPrompt := { state => s"$Version | ${GitCommand.prompt(state)}" },
     scapegoatConsoleOutput := false,
     // Since we use a lot of MongoDB operators, which look like interpolated strings.
     scapegoatDisabledInspections := Seq("LooksLikeInterpolatedString"),
