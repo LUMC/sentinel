@@ -115,10 +115,12 @@ class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo
       fileId <- ? <~ storeFile(contents, uploader, uploadName)
       // Extract samples and read groups
       (samples, readGroups) <- ? <~ extractUnits(runJson, uploader.id, fileId)
-      // Store samples
-      _ <- ? <~ storeSamples(samples)
-      // Store read groups
-      _ <- ? <~ storeReadGroups(readGroups)
+      // Invoke store methods asynchronously
+      storeSamplesResult = storeSamples(samples)
+      storeReadGroupsResult = storeReadGroups(readGroups)
+      // Check that all store methods are successful
+      _ <- ? <~ storeReadGroupsResult
+      _ <- ? <~ storeSamplesResult
       // Create run record
       run = MapleRunRecord(fileId, uploader.id, pipelineName, samples.map(_.dbId), readGroups.map(_.dbId))
       // Store run record into database
