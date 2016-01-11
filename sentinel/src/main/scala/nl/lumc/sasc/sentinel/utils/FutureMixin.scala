@@ -43,24 +43,11 @@ trait FutureMixin {
   /**
    * Implicit method for making [[nl.lumc.sasc.sentinel.models.ApiPayload]] a monoid instance.
    *
-   * This is required so that for-comprehensions using `ApiMessage` as the left disjunction type
-   * works. Scalaz requires that type to be a monoid instance so that when we do `filter`, a zero
-   * value can be returned.
+   * This is an alternative way of using it inside objects mixing in `FutureMixin` so the
+   * [[nl.lumc.sasc.sentinel.utils.Implicits]] does not need to be imported each time.
    *
-   * More at: https://groups.google.com/forum/#!topic/scalaz/9SJbGlpS7Kw
    */
-  protected final implicit def apiPayloadMonoid = new Monoid[ApiPayload] {
-    def zero = ApiPayload("")
-    def append(f1: ApiPayload, f2: => ApiPayload) = {
-      val f2c = f2 // force computation
-      (f1, f2c) match {
-        case (m1, m2) if m1.message.isEmpty && m2.message.isEmpty => m1
-        case (m1 @ _, m2) if m2.message.isEmpty => m1
-        case (m1, m2 @ _) if m1.message.isEmpty => m2
-        case otherwise => ApiPayload(s"${f1.message} | ${f2c.message}", f1.hints ++ f2.hints)
-      }
-    }
-  }
+  protected final implicit def apiPayloadMonoid = nl.lumc.sasc.sentinel.utils.Implicits.apiPayloadMonoid
 
   /**
    * Helper object for stacking the disjunction (`\/`) and `Future` monads.
