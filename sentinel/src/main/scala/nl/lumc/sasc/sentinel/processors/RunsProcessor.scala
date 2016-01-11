@@ -27,7 +27,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ AsyncPerhaps, CaseClass, Payloads, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ CaseClass, Payloads, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
 /**
@@ -298,11 +298,16 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     }
 
     val result = for {
-      record <- EitherT(getExistingRecord())
-      _ <- EitherT(deleteGridFS(record))
-      _ <- EitherT(deleteSamples(record))
-      _ <- EitherT(deleteReadGroups(record))
-      markedRecord <- EitherT(markRecord())
+      record <- ? <~ getExistingRecord()
+      // Invoke the deletion methods as value declarations so they can be launched asynchronously instead of waiting
+      // for a previous invocation to complete.
+      d1 = deleteGridFS(record)
+      d2 = deleteSamples(record)
+      d3 = deleteReadGroups(record)
+      _ <- ? <~ d1
+      _ <- ? <~ d2
+      _ <- ? <~ d3
+      markedRecord <- ? <~ markRecord()
     } yield markedRecord
 
     result.run
