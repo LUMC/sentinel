@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel
 
+import scala.concurrent.Future
+
 import scalaz._
 
 package object models {
@@ -24,7 +26,10 @@ package object models {
   type CaseClass = AnyRef with Product
 
   /** Type alias for operations that returns a user-visible payload when failing. */
-  type Perhaps[+A] = ApiPayload \/ A
+  type Perhaps[+T] = ApiPayload \/ T
+
+  /** Type alias for stacking `Future` and scalaz's `\/`. */
+  type AsyncPerhaps[+T] = EitherT[Future, ApiPayload, T]
 
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {

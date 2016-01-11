@@ -29,7 +29,10 @@ import scalaz._
 trait FutureMixin {
 
   /** Type alias for operations that returns a user-visible payloads when failing. */
-  type Perhaps[+A] = nl.lumc.sasc.sentinel.models.Perhaps[A]
+  type Perhaps[+T] = nl.lumc.sasc.sentinel.models.Perhaps[T]
+
+  /** Type alias for stacking `Future` and scalaz's `\/`. */
+  type AsyncPerhaps[+T] = nl.lumc.sasc.sentinel.models.AsyncPerhaps[T]
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds
@@ -82,9 +85,6 @@ trait FutureMixin {
    * Adapted from: http://www.47deg.com/blog/fp-for-the-average-joe-part-2-scalaz-monad-transformers
    */
   object ? {
-
-    /** Type alias for our stacked monads. */
-    type AsyncPerhaps[T] = EitherT[Future, ApiPayload, T]
 
     def <~[T](v: Future[Perhaps[T]]): AsyncPerhaps[T] = EitherT(v)
 
