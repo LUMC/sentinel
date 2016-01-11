@@ -52,7 +52,7 @@ trait FutureMixin {
   /**
    * Helper object for stacking the disjunction (`\/`) and `Future` monads.
    *
-   * Without this object, we have to wrap methods returning Future[T], ApiPayload \/ T, or T manually in EitherT:
+   * Without this object, we have to wrap methods returning `Future[T]`, `ApiPayload \/ T`, or `T` manually in `EitherT`:
    *
    * {{{
    *   def f1(): Future[T] = ...
@@ -60,7 +60,7 @@ trait FutureMixin {
    *   def f3(): T = ...
    *
    *   val result = for {
-   *       a <- EitherT(Future { f1() })
+   *       a <- EitherT.right(f1())
    *       b <- EitherT(Future.successful(f2()))
    *       c <- EitherT(Future { f3().right[ApiPayload] })
    *   } yield c
@@ -76,7 +76,7 @@ trait FutureMixin {
    *   } yield c
    * }}}
    *
-   * In both cases, the type of `result` is EitherT[Future, ApiPayload, T], so its `run` method must still be invoked
+   * In both cases, the type of `result` is `EitherT[Future, ApiPayload, T]`, so its `run` method must still be invoked
    * to obtain the final value.
    *
    * Adapted from: http://www.47deg.com/blog/fp-for-the-average-joe-part-2-scalaz-monad-transformers
