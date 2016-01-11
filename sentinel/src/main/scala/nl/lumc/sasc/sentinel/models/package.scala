@@ -16,9 +16,13 @@
  */
 package nl.lumc.sasc.sentinel
 
+import scalaz._
+
 package object models {
 
   /** Type alias for case classes. */
   type CaseClass = AnyRef with Product
 
+  /** Type alias for operations that returns a user-visible payload when failing. */
+  type Perhaps[+A] = ApiPayload \/ A
 }

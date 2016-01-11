@@ -29,7 +29,7 @@ import scalaz._
 trait FutureMixin {
 
   /** Type alias for operations that returns a user-visible payloads when failing. */
-  type Perhaps[+A] = nl.lumc.sasc.sentinel.Perhaps[A]
+  type Perhaps[+A] = nl.lumc.sasc.sentinel.models.Perhaps[A]
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds

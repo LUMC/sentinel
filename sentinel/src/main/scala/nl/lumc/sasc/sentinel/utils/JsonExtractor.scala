@@ -18,9 +18,8 @@ package nl.lumc.sasc.sentinel.utils
 
 import java.io.ByteArrayInputStream
 
-import nl.lumc.sasc.sentinel.Perhaps
 import nl.lumc.sasc.sentinel.models.Payloads._
-import nl.lumc.sasc.sentinel.models.SinglePathPatch
+import nl.lumc.sasc.sentinel.models.{ Perhaps, SinglePathPatch }
 import nl.lumc.sasc.sentinel.utils.Implicits._
 import org.json4s._
 import org.json4s.jackson.JsonMethods.parseOpt

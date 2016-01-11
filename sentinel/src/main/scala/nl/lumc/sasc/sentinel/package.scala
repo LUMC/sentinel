@@ -21,10 +21,6 @@
  */
 package nl.lumc.sasc
 
-import scalaz._
-
-import nl.lumc.sasc.sentinel.models.{ DataPointLabels, ApiPayload }
-
 /** General package-level information */
 package object sentinel {
 
@@ -81,7 +77,4 @@ package object sentinel {
     val Raw = Value("raw")
     val Processed = Value("processed")
   }
-
-  /** Type alias for operations that returns a user-visible payloads when failing. */
-  type Perhaps[+A] = ApiPayload \/ A
 }
