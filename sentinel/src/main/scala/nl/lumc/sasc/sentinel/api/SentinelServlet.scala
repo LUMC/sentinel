@@ -32,8 +32,7 @@ import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 
-import nl.lumc.sasc.sentinel.{ AccLevel, LibType, SeqQcPhase }
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, Payloads }
+import nl.lumc.sasc.sentinel.models.{ AccLevel, ApiPayload, BaseRunRecord, LibType, Payloads, SeqQcPhase }
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */

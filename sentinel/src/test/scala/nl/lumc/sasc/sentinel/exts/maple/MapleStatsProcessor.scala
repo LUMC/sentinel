@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.exts.maple
 
-import nl.lumc.sasc.sentinel.AccLevel
+import nl.lumc.sasc.sentinel.models.AccLevel
 import nl.lumc.sasc.sentinel.processors.StatsProcessor
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 

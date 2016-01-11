@@ -25,4 +25,37 @@ package object models {
 
   /** Type alias for operations that returns a user-visible payload when failing. */
   type Perhaps[+A] = ApiPayload \/ A
+
+  /** Supported statistics accumulation level */
+  object AccLevel extends Enumeration {
+    type AccLevel = Value
+    val ReadGroup = Value("readGroup")
+    val Sample = Value("sample")
+  }
+
+  /** Supported library types */
+  object LibType extends Enumeration {
+    type LibType = Value
+    val Single = Value("single")
+    val Paired = Value("paired")
+  }
+
+  /** Supported QC step for sequences */
+  object SeqQcPhase extends Enumeration {
+    type SeqQcPhase = Value
+    val Raw = Value("raw")
+    val Processed = Value("processed")
+  }
+
+  /** Supported aggregation parameters */
+  object AggrStat extends Enumeration {
+    type AggrStat = Value
+    val Sum = Value("sum")
+    val Min = Value("min")
+    val Max = Value("max")
+    val Mean = Value("mean")
+    val Median = Value("median")
+    val Variance = Value("variance")
+    val Stdev = Value("stdev")
+  }
 }
