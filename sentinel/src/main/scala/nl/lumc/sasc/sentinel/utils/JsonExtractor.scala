@@ -139,10 +139,10 @@ trait SinglePathPatchJsonExtractor extends JsonValidationExtractor {
   }
 
   /** Function for extracting then validating patches. */
-  val extractAndValidatePatches =
-    // The compiler actually doesn't need these type annotations, but some IDE does.
-    Kleisli[Perhaps, Array[Byte], Patches] { extractPatches } >=>
-      Kleisli[Perhaps, Patches, Patches] { validatePatches }
+  def extractAndValidatePatches(contents: Array[Byte]) = for {
+    patches <- extractPatches(contents)
+    validatedPatches <- validatePatches(patches)
+  } yield validatedPatches
 
   /** Valid paths for the patch operation. */
   protected val validOps: Set[String] = Set("add", "remove", "replace")
