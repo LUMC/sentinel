@@ -140,7 +140,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     Future {
       coll
         .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-        .collect { case dbo => grater[BaseRunRecord].asObject(dbo) }
+        .map { dbo => grater[BaseRunRecord].asObject(dbo) }
     }
   }
 
@@ -179,7 +179,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
       coll
         .find($and(query :: ("deletionTimeUtc" $exists false)))
         .sort(MongoDBObject("creationTimeUtc" -> -1))
-        .map { case dbo => recordGrater.asObject(dbo) }
+        .map { dbo => recordGrater.asObject(dbo) }
         .toSeq
     }
   }
@@ -335,7 +335,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
             "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
         MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
         AggregationOptions(AggregationOptions.CURSOR))
-      .map { case pstat => statsGrater.asObject(pstat) }
+      .map { pstat => statsGrater.asObject(pstat) }
       .toSeq
   }
 }
