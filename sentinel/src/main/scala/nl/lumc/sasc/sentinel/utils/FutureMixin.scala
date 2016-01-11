@@ -16,8 +16,6 @@
  */
 package nl.lumc.sasc.sentinel.utils
 
-import nl.lumc.sasc.sentinel.models.ApiPayload
-
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Scalaz._
