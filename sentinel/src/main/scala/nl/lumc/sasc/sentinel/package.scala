@@ -82,9 +82,6 @@ package object sentinel {
     val Processed = Value("processed")
   }
 
-  /** Type alias for case classes. */
-  type CaseClass = AnyRef with Product
-
   /** Type alias for operations that returns a user-visible payloads when failing. */
   type Perhaps[+A] = ApiPayload \/ A
 }

@@ -22,8 +22,7 @@ import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global._
 
-import nl.lumc.sasc.sentinel.CaseClass
-import nl.lumc.sasc.sentinel.models.BaseSampleRecord
+import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass }
 import nl.lumc.sasc.sentinel.utils.FutureMixin
 
 /**

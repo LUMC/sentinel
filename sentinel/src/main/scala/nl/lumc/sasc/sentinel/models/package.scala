@@ -14,25 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package nl.lumc.sasc.sentinel.models
+package nl.lumc.sasc.sentinel
 
-import org.bson.types.ObjectId
+package object models {
 
-/**
- * Data point label.
- *
- * @param runId Database ID of the run in which this data point is contained.
- * @param runName Name of the run in which this data point is contained.
- * @param sampleName Name of the sample in which this data point is contained.
- * @param readGroupName Name of the read group in which this data points is contained.
- */
-case class DataPointLabels(
-  runId: ObjectId,
-  runName: Option[String],
-  sampleName: Option[String],
-  readGroupName: Option[String])
+  /** Type alias for case classes. */
+  type CaseClass = AnyRef with Product
 
-/** Trait for statistics / metrics container with labels. */
-trait LabeledStats { this: CaseClass =>
-  def labels: Option[DataPointLabels]
 }

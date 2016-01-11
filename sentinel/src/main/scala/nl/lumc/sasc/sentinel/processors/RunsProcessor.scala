@@ -27,8 +27,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.CaseClass
-import nl.lumc.sasc.sentinel.models.{ Payloads, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models.{ CaseClass, Payloads, PipelineStats, BaseRunRecord, User }
 import nl.lumc.sasc.sentinel.utils._
 
 /**

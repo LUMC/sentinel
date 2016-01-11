@@ -18,8 +18,6 @@ package nl.lumc.sasc.sentinel.models
 
 import com.novus.salat.annotations.Salat
 
-import nl.lumc.sasc.sentinel.CaseClass
-
 /**
  * Trait for sequence fragment statistics container.
  *

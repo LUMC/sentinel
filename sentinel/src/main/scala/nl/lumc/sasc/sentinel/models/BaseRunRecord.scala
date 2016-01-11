@@ -21,7 +21,6 @@ import java.util.Date
 import com.novus.salat.annotations.{ Key, Persist, Salat }
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.CaseClass
 import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /** Representation of a stored unit. */

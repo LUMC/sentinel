@@ -31,7 +31,7 @@ import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.util.io.readBytes
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CaseClass }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /** General utilities */

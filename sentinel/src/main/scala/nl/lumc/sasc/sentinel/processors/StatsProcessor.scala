@@ -26,7 +26,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import com.mongodb.casbah.Imports._
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.{ AccLevel, CaseClass, LibType }
+import nl.lumc.sasc.sentinel.{ AccLevel, LibType }
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, MongodbAccessObject }
 import nl.lumc.sasc.sentinel.utils.reflect.getReadStatsManifest

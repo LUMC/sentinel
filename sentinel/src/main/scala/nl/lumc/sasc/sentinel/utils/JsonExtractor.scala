@@ -44,7 +44,7 @@ trait JsonExtractor {
   def extractJson(contents: Array[Byte]): Perhaps[JValue] =
     if (contents.isEmpty) JsonValidationError("Nothing to parse.").left
     else parseOpt(new ByteArrayInputStream(contents)) match {
-      case None => JsonValidationError("Invalid syntax.").left
+      case None     => JsonValidationError("Invalid syntax.").left
       case Some(jv) => jv.right
     }
 }
