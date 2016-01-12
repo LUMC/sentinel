@@ -34,7 +34,7 @@ package object models {
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
     type AccLevel = Value
-    val ReadGroup = Value("readGroup")
+    val ReadGroup = Value("readgroup")
     val Sample = Value("sample")
   }
 

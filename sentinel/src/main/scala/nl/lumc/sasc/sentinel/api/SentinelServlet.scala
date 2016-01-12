@@ -173,7 +173,7 @@ abstract class SentinelServlet extends ScalatraServlet
   protected implicit val stringToAccLevel: TypeConverter[String, AccLevel.Value] =
     new TypeConverter[String, AccLevel.Value] {
       def apply(str: String): Option[AccLevel.Value] =
-        Try(AccLevel.withName(str)) match {
+        Try(AccLevel.withName(str.toLowerCase)) match {
           case Success(s) => Option(s)
           // Halt when the supplied string parameter is not convertible to enum. This allows us to return a useful
           // error message instead of just silently failing.
@@ -185,7 +185,7 @@ abstract class SentinelServlet extends ScalatraServlet
   protected implicit val stringToLibType: TypeConverter[String, LibType.Value] =
     new TypeConverter[String, LibType.Value] {
       def apply(str: String): Option[LibType.Value] =
-        Try(LibType.withName(str)) match {
+        Try(LibType.withName(str.toLowerCase)) match {
           case Success(s) => Option(s)
           case Failure(_) => halt(400, Payloads.InvalidLibError)
         }
@@ -195,7 +195,7 @@ abstract class SentinelServlet extends ScalatraServlet
   protected implicit val stringToSeqQcPhase: TypeConverter[String, SeqQcPhase.Value] =
     new TypeConverter[String, SeqQcPhase.Value] {
       def apply(str: String): Option[SeqQcPhase.Value] =
-        Try(SeqQcPhase.withName(str)) match {
+        Try(SeqQcPhase.withName(str.toLowerCase)) match {
           case Success(s) => Option(s)
           case Failure(_) => halt(400, Payloads.InvalidSeqQcPhaseError)
         }
