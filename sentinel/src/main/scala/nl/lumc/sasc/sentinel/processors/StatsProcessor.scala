@@ -16,6 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
+import scala.concurrent._
 import scala.language.higherKinds
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.Random.shuffle
@@ -27,13 +28,21 @@ import com.mongodb.casbah.Imports._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, FutureMixin, MongodbAccessObject }
 import nl.lumc.sasc.sentinel.utils.reflect.getReadStatsManifest
 
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.
  */
-abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
+abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject)
+    extends Processor
+    with FutureMixin {
+
+  /** Overridable execution context for this processor. */
+  protected def statsProcessorContext = ExecutionContext.global
+
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = statsProcessorContext
 
   /** MongoDB samples collection name of the pipeline. */
   protected[processors] lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
@@ -162,7 +171,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                  (matchers: MongoDBObject,
                                   user: Option[User] = None,
                                   timeSorted: Boolean = false)
-                                 (implicit m: Manifest[T]): Seq[T] = {
+                                 (implicit m: Manifest[T]): Future[Perhaps[Seq[T]]] = {
     // format: ON
 
     // Projection for data point label
@@ -199,33 +208,44 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     }
 
     // Collection to query on
-    val coll = accLevel match {
-      case AccLevel.Sample    => samplesColl
-      case AccLevel.ReadGroup => readGroupsColl
-      case otherwise          => throw new NotImplementedError
+    val perhapsColl = accLevel match {
+      case AccLevel.Sample    => samplesColl.right
+      case AccLevel.ReadGroup => readGroupsColl.right
+      // Safeguard for cases when we forgot to extend the case here after defining a new enum for AccLevel.
+      // This is because Scala's enum case check is done at runtime and not compile time.
+      case otherwise => Payloads.UnexpectedError
+        .copy(hints = List(s"Unexpected accLevel parameter ${otherwise.toString}"))
+        .left
     }
 
     val statsGrater = grater[T]
 
-    lazy val results = coll
-      .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
-      .map { aggres =>
-        val uploaderId = aggres.getAs[String]("uploaderId")
-        val labels = aggres.getAs[DBObject]("labels")
-        val astat = aggres.getAs[DBObject](metricName)
-        val dbo = (user, uploaderId, astat, labels) match {
-          case (Some(u), Some(uid), Some(s), Some(n)) =>
-            if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
-            else Option(s)
-          case (None, _, Some(s), _) => Option(s)
-          case otherwise             => None
-        }
-        dbo.map { obj => statsGrater.asObject(obj) }
-      }.toSeq.flatten
+    // Helper method for running the query
+    def runQuery(coll: MongoCollection) = Future {
+      coll
+        .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
+        .map { aggres =>
+          val uploaderId = aggres.getAs[String]("uploaderId")
+          val labels = aggres.getAs[DBObject]("labels")
+          val astat = aggres.getAs[DBObject](metricName)
+          val dbo = (user, uploaderId, astat, labels) match {
+            case (Some(u), Some(uid), Some(s), Some(n)) =>
+              if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
+              else Option(s)
+            case (None, _, Some(s), _) => Option(s)
+            case otherwise             => None
+          }
+          dbo.map { obj => statsGrater.asObject(obj) }
+        }.toSeq.flatten
+    }
 
-    // TODO: switch to database-level randomization when SERVER-533 is resolved
-    if (timeSorted) results
-    else shuffle(results)
+    val results = for {
+      coll <- ? <~ perhapsColl
+      queryResults <- ? <~ runQuery(coll)
+      // TODO: switch to database-level randomization when SERVER-533 is resolved
+    } yield if (timeSorted) queryResults else shuffle(queryResults)
+
+    results.run
   }
 
   /**
