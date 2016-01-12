@@ -263,59 +263,75 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                        (accLevel: AccLevel.Value)
                                        (libType: Option[LibType.Value])
                                        (matchers: MongoDBObject)
-                                       (implicit m: Manifest[T], tt: ru.TypeTag[T]): Option[T] = {
+                                       (implicit m: Manifest[T], tt: ru.TypeTag[T]): Future[Perhaps[T]] = {
     // format: ON
 
-    val coll = accLevel match {
-      case AccLevel.Sample    => samplesColl
-      case AccLevel.ReadGroup => readGroupsColl
-      case otherwise          => throw new NotImplementedError
+    val perhapsColl = accLevel match {
+      case AccLevel.Sample    => samplesColl.right
+      case AccLevel.ReadGroup => readGroupsColl.right
+      // Safeguard for cases when we forgot to extend the case here after defining a new enum for AccLevel.
+      // This is because Scala's enum case check is done at runtime and not compile time.
+      case otherwise => Payloads.UnexpectedError
+        .copy(hints = List(s"Unexpected accLevel parameter ${otherwise.toString}"))
+        .left
     }
 
-    val mapReduceFunc = runMapReduce(coll)(Option(matchers)) _
+    // Helper method to run the query
+    def runQuery(coll: MongoCollection) = Future {
+      val mapReduceFunc = runMapReduce(coll)(Option(matchers)) _
 
-    if (!(tt.tpe <:< ru.weakTypeTag[FragmentStatsAggrLike[_]].tpe)) {
+      if (!(tt.tpe <:< ru.weakTypeTag[FragmentStatsAggrLike[_]].tpe)) {
 
-      val aggrStats = extractFieldNames[T].par
-        .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
-        .foldLeft(MongoDBObject.empty)(_ ++ _)
+        val aggrStats = extractFieldNames[T].par
+          .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
+          .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-      aggrStats.nonEmpty
-        .option { grater[T].asObject(aggrStats) }
+        aggrStats.nonEmpty
+          .option { grater[T].asObject(aggrStats) }
+          .toRightDisjunction(Payloads.DataPointsNotFoundError)
 
-    } else {
+      } else {
 
-      // Manifest of the inner type of FragmentStatsLike
-      val readStatsManif = getReadStatsManifest[T]
-      val seqGrater = grater(SalatContext, readStatsManif)
-      val metricAttrNames = extractFieldNames(readStatsManif).toSeq
-      val readNames = libType match {
-        case Some(LibType.Single) => Seq(FragmentStatsLike.singleReadAttr)
-        case otherwise            => FragmentStatsLike.readAttrs
-      }
-
-      // Process inner read statistics first
-      val innerStats = readNames.par
-        .flatMap { rn =>
-          val res = metricAttrNames.par
-            .flatMap { an => mapReduceFunc(Seq(metricName, rn, an)) }
-            .foldLeft(MongoDBObject.empty)(_ ++ _)
-          res.nonEmpty
-            .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
+        // Manifest of the inner type of FragmentStatsLike
+        val readStatsManif = getReadStatsManifest[T]
+        val seqGrater = grater(SalatContext, readStatsManif)
+        val metricAttrNames = extractFieldNames(readStatsManif).toSeq
+        val readNames = libType match {
+          case Some(LibType.Single) => Seq(FragmentStatsLike.singleReadAttr)
+          case otherwise            => FragmentStatsLike.readAttrs
         }
-        .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-      // Then process outer fragment statistics
-      val outerStats = extractFieldNames(m).par
-        .filterNot { FragmentStatsLike.readAttrs.contains }
-        .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
-        .foldLeft(MongoDBObject.empty)(_ ++ _)
+        // Process inner read statistics first
+        val innerStats = readNames.par
+          .flatMap { rn =>
+            val res = metricAttrNames.par
+              .flatMap { an => mapReduceFunc(Seq(metricName, rn, an)) }
+              .foldLeft(MongoDBObject.empty)(_ ++ _)
+            res.nonEmpty
+              .option { MongoDBObject(rn -> seqGrater.asObject(res)) }
+          }
+          .foldLeft(MongoDBObject.empty)(_ ++ _)
 
-      val aggrStats = innerStats ++ outerStats
-      aggrStats
-        .contains(FragmentStatsLike.singleReadAttr)
-        .option { grater[T].asObject(aggrStats) }
+        // Then process outer fragment statistics
+        val outerStats = extractFieldNames(m).par
+          .filterNot { FragmentStatsLike.readAttrs.contains }
+          .flatMap { n => mapReduceFunc(Seq(metricName, n)) }
+          .foldLeft(MongoDBObject.empty)(_ ++ _)
+
+        val aggrStats = innerStats ++ outerStats
+        aggrStats
+          .contains(FragmentStatsLike.singleReadAttr)
+          .option { grater[T].asObject(aggrStats) }
+          .toRightDisjunction(Payloads.DataPointsNotFoundError)
+      }
     }
+
+    val results = for {
+      coll <- ? <~ perhapsColl
+      queryResults <- ? <~ runQuery(coll)
+    } yield queryResults
+
+    results.run
   }
 
   // NOTE: Java's MongoDB driver parses all MapReduce number results to Double, so we have to resort to this.
