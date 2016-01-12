@@ -79,8 +79,25 @@ trait JsonValidationExtractor extends JsonExtractor {
   }
 
   /** JSON validators. */
-  private[sasc] lazy val jsonValidators: Seq[JsonValidator] = jsonSchemaUrls
-    .map { jsu => JsonValidator(getResourceStream(jsu)) }
+  private[sasc] lazy val jsonValidators: Seq[JsonValidator] = {
+    val perhapsValidators = jsonSchemaUrls
+      .map { jsu =>
+        getResourceStream(jsu) match {
+          case Some(s) => JsonValidator(s).right
+          case None    => jsu.left
+        }
+      }
+    // extract created validators and possible missing urls
+    val (validators, missingUrls) = perhapsValidators.partition(_.isRight) match {
+      case (vs, us) => (vs.collect { case \/-(v) => v }, us.collect { case -\/(u) => u })
+    }
+    if (missingUrls.nonEmpty) {
+      val errMsg = s"Required schema URLs not found: '${missingUrls.mkString("', '")}'."
+      // Here we really want to throw an exception since any missing URLs should trigger a failure during instantiation
+      throw new IllegalStateException(errMsg)
+    }
+    validators
+  }
 }
 
 /**

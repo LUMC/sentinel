@@ -53,13 +53,10 @@ package object utils {
    * @param url URL of the resource.
    * @return An input stream.
    */
-  def getResourceStream(url: String): InputStream = Option(getClass.getResourceAsStream(url)) match {
-    case Some(s) => s
-    case None    => throw new RuntimeException(s"Resource '$url' can not be found.")
-  }
+  def getResourceStream(url: String): Option[InputStream] = Option(getClass.getResourceAsStream(url))
 
   /** Retrieves a resource as a byte array. */
-  def readResourceBytes = getResourceStream _ andThen readBytes
+  def readResourceBytes(url: String) = getResourceStream(url).map(readBytes)
 
   /**
    * Given a case class type, return the names of its fields.

@@ -23,21 +23,29 @@ class UtilsSpec extends Specification {
   "getByteArray" should {
 
     "be able to parse a nonzipped input stream and return the right flag" in {
-      val (arr, unzipped) = readUncompressedBytes(getResourceStream("/test.txt"))
-      arr must not be empty
-      unzipped must beFalse
+      getResourceStream("/test.txt") must beSome.like {
+        case stream =>
+          val (arr, unzipped) = readUncompressedBytes(stream)
+          arr must not be empty
+          unzipped must beFalse
+      }
     }
 
     "be able to parse a zipped input stream and return the right flag" in {
-      val (arr, unzipped) = readUncompressedBytes(getResourceStream("/test.txt.gz"))
-      arr must not be empty
-      unzipped must beTrue
+      getResourceStream("/test.txt.gz") must beSome.like {
+        case stream =>
+          val (arr, unzipped) = readUncompressedBytes(stream)
+          arr must not be empty
+          unzipped must beTrue
+      }
     }
 
     "return the same array from zipped and unzipped stream with the same unzipped content" in {
-      val (arr1, _) = readUncompressedBytes(getResourceStream("/test.txt"))
-      val (arr2, _) = readUncompressedBytes(getResourceStream("/test.txt.gz"))
-      arr1 mustEqual arr2
+      val arr1 = getResourceStream("/test.txt").map(readUncompressedBytes).map(_._1)
+      val arr2 = getResourceStream("/test.txt.gz").map(readUncompressedBytes).map(_._1)
+      arr1 must beSome
+      arr2 must beSome
+      arr1.get mustEqual arr2.get
     }
   }
 

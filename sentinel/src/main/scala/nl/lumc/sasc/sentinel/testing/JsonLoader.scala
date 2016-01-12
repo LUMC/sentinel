@@ -23,5 +23,9 @@ import nl.lumc.sasc.sentinel.utils.getResourceStream
 
 trait JsonLoader {
   /** Given a schema URL, parses the file as JSON and returns its contents as a JValue object. */
-  def loadJson(url: String): JValue = parse(getResourceStream(url))
+  def loadJson(url: String): JValue = getResourceStream(url) match {
+    // fail immediately since we are in testing and we need the resource anyway
+    case None         => throw new IllegalStateException(s"Required test resource '$url' can not be loaded.")
+    case Some(stream) => parse(stream)
+  }
 }

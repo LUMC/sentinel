@@ -36,7 +36,7 @@ class ApiDocsController extends ScalatraServlet {
   /** Endpoint for live Swagger documentation. */
   get("/*") {
     val resourcePath = getResourcePath
-    Option(getResourceStream(resourcePath)) match {
+    getResourceStream(resourcePath) match {
 
       case Some(inputStream) =>
         contentType = ApiDocsController.resolveContentType(resourcePath)
@@ -54,7 +54,9 @@ object ApiDocsController {
 
   /** MIME properties for setting mime type in HTTP responses. */
   private val properties: Properties = new Properties()
-  properties.load(getResourceStream("/mime.properties"))
+  private val mimeProps = getResourceStream("/mime.properties")
+  require(mimeProps.isDefined)
+  mimeProps.foreach(properties.load)
 
   /** Helper method for getting file extension. */
   private def suffix(path: String): String = path.reverse.takeWhile(_ != '.').reverse

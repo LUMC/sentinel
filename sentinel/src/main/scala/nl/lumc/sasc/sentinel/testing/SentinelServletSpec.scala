@@ -213,5 +213,11 @@ object SentinelServletSpec {
    */
   def makeUploadable(resourceUrl: String): Uploadable = BytesPart(
     fileName = resourceUrl.split("/").last,
-    content = readResourceBytes(resourceUrl))
+    content = readResourceBytes(resourceUrl) match {
+      case Some(bytes) => bytes
+      // Fail fast since we are in testing and we need the resource URL to be present
+      case None        => throw new IllegalStateException(s"Required test resource '$resourceUrl' can not be loaded.")
+    }
+
+  )
 }
