@@ -44,6 +44,17 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
   /** Execution context for Future operations. */
   implicit private def context: ExecutionContext = statsProcessorContext
 
+  /** Helper method to get the collection to query on based on a given accLevel parameter. */
+  private def getColl(accLevel: AccLevel.Value): Perhaps[MongoCollection] = accLevel match {
+    case AccLevel.Sample    => samplesColl.right
+    case AccLevel.ReadGroup => readGroupsColl.right
+    // Safeguard for cases when we forgot to extend the case here after defining a new enum for AccLevel.
+    // This is because Scala's enum case check is done at runtime and not compile time.
+    case otherwise => Payloads.UnexpectedError
+      .copy(hints = List(s"Unexpected accumulation level parameter ${otherwise.toString}"))
+      .left
+  }
+
   /** MongoDB samples collection name of the pipeline. */
   protected[processors] lazy val samplesColl = mongo.db(collectionNames.pipelineSamples(pipelineName))
 
@@ -207,17 +218,6 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       }
     }
 
-    // Collection to query on
-    val perhapsColl = accLevel match {
-      case AccLevel.Sample    => samplesColl.right
-      case AccLevel.ReadGroup => readGroupsColl.right
-      // Safeguard for cases when we forgot to extend the case here after defining a new enum for AccLevel.
-      // This is because Scala's enum case check is done at runtime and not compile time.
-      case otherwise => Payloads.UnexpectedError
-        .copy(hints = List(s"Unexpected accLevel parameter ${otherwise.toString}"))
-        .left
-    }
-
     val statsGrater = grater[T]
 
     // Helper method for running the query
@@ -240,7 +240,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     }
 
     val results = for {
-      coll <- ? <~ perhapsColl
+      coll <- ? <~ getColl(accLevel)
       queryResults <- ? <~ runQuery(coll)
       // TODO: switch to database-level randomization when SERVER-533 is resolved
     } yield if (timeSorted) queryResults else shuffle(queryResults)
@@ -265,16 +265,6 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                        (matchers: MongoDBObject)
                                        (implicit m: Manifest[T], tt: ru.TypeTag[T]): Future[Perhaps[T]] = {
     // format: ON
-
-    val perhapsColl = accLevel match {
-      case AccLevel.Sample    => samplesColl.right
-      case AccLevel.ReadGroup => readGroupsColl.right
-      // Safeguard for cases when we forgot to extend the case here after defining a new enum for AccLevel.
-      // This is because Scala's enum case check is done at runtime and not compile time.
-      case otherwise => Payloads.UnexpectedError
-        .copy(hints = List(s"Unexpected accLevel parameter ${otherwise.toString}"))
-        .left
-    }
 
     // Helper method to run the query
     def runQuery(coll: MongoCollection) = Future {
@@ -327,7 +317,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     }
 
     val results = for {
-      coll <- ? <~ perhapsColl
+      coll <- ? <~ getColl(accLevel)
       queryResults <- ? <~ runQuery(coll)
     } yield queryResults
 
