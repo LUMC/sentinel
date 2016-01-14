@@ -49,7 +49,7 @@ trait JsonExtractor {
 }
 
 /** Trait for validating input JSON with a schema. */
-trait JsonValidationExtractor extends JsonExtractor {
+trait ValidatedJsonExtractor extends JsonExtractor {
 
   /** Resource URLs for JSON schema file. */
   def jsonSchemaUrls: Seq[String]
@@ -107,7 +107,7 @@ trait JsonValidationExtractor extends JsonExtractor {
  *
  * See http://jsonpatch.com/ for the JSON patch specification.
  */
-trait SinglePathPatchJsonExtractor extends JsonValidationExtractor {
+trait SinglePathPatchJsonExtractor extends ValidatedJsonExtractor {
 
   /** Type alias for the patch validation function, which is a function that takes patches and return its ValidationNEL. */
   type ValidationFunc = Seq[SinglePathPatch] => ValidationNel[String, Seq[SinglePathPatch]]

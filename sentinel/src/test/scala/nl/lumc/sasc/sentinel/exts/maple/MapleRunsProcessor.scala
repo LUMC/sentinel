@@ -24,7 +24,7 @@ import org.json4s.JValue
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ JsonValidationExtractor, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject }
 
 /**
  * Example of a simple pipeline runs processor.
@@ -33,7 +33,7 @@ import nl.lumc.sasc.sentinel.utils.{ JsonValidationExtractor, MongodbAccessObjec
  */
 class MapleRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
     with ReadGroupsAdapter
-    with JsonValidationExtractor {
+    with ValidatedJsonExtractor {
 
   /** Run records container. */
   type RunRecord = MapleRunRecord
