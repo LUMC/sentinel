@@ -14,27 +14,33 @@ RESTful HTTP API which is specified based on [Swagger](http://swagger.io).
 
 ## Quick Start
 
+Prerequisites:
+
+- A running local MongoDB server
+- An active Python virtual environment
+
 ```sh
 $ git clone {this-repository}
 $ cd sentinel
+
+# for first-time runs, install Sphinx dependencies
+$ pip install -r requirements-dev.txt
+
+# create a test database for development
 $ ./scripts/bootstrap_dev.sh
+
+# go into the SBT shell
 $ ./sbt
+
+# select the sentinel-lumc project
+> project sentinel-lumc
+
+# start the development server
 > container:start
 > browse
 ```
 
 If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
-
-### Docker
-
-You can also run a development server using [Docker](https://www.docker.com/). To do so you, must have Docker and the
-python [docker-compose](http://pypi.python.org/pypi/docker-compose) installed. After that, it's as easy as:
-
-```sh
-$ docker-compose up
-```
-
-This will start the development server in a Docker container, linked to a running MongoDB instance in another container.
 
 ## Support
 
