@@ -23,6 +23,8 @@ object SentinelBuild extends Build {
   val Json4sVersion = "3.2.11"
   val JettyVersion = "9.2.10.v20150310"
 
+  val scalaSeries = SettingKey[String]("scala-series", "The series of Scala used for building.")
+
   lazy val dependencies = Seq(
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
     "com.github.fakemongo"    %  "fongo"                      % "1.6.2"               % "it;test",
@@ -103,6 +105,7 @@ object SentinelBuild extends Build {
       if (activeJavaVersion != JavaVersion)
         sys.error(s"Sentinel requires Java version '$JavaVersion' -- found version '$activeJavaVersion'.")
     },
+    scalaSeries := ScalaSeries,
     scalaVersion := ScalaVersion,
     scalacOptions ++= Seq(
       "-unchecked",
