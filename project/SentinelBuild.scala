@@ -13,9 +13,11 @@ import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
 object SentinelBuild extends Build {
 
+  val Released = false
   val Organization = "nl.lumc.sasc"
-  val Version = "0.2.0-SNAPSHOT"
-  val ScalaVersion = "2.11.6"
+  val Version = "0.2.0" + { if (Released) "" else "-SNAPSHOT" }
+  val ScalaSeries = "2.11"
+  val ScalaVersion = s"$ScalaSeries.6"
   val JavaVersion = "1.8"
   val ScalatraVersion = "2.3.1"
   val Json4sVersion = "3.2.11"
