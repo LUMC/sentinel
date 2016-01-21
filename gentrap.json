@@ -173,8 +173,16 @@
                 "pipeline": {
                   "description": "Sample-level Gentrap files",
                   "type": "object",
-                  "required": [ "alignment" ],
-                  "additionalProperties": { "$ref": "#/definitions/file" }
+                  "anyOf": [
+                    {
+                      "required": [ "alignment" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    },
+                    {
+                      "required": [ "output_bam" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    }
+                  ]
                 }
               },
               "additionalProperties": { "$ref": "#/definitions/fileGroup" }
@@ -357,8 +365,16 @@
                 "pipeline": {
                   "description": "Library-level Gentrap files",
                   "type": "object",
-                  "required": [ "alignment" ],
-                  "additionalProperties": { "$ref": "#/definitions/file" }
+                  "anyOf": [
+                    {
+                      "required": [ "alignment" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    },
+                    {
+                      "required": [ "output_bam" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    }
+                  ]
                 }
               },
               "additionalProperties": { "$ref": "#/definitions/fileGroup" }
