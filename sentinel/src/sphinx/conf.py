@@ -124,7 +124,7 @@ apidoc_url = "../api-docs"
 # a list of builtin themes.
 html_theme = 'alabaster'
 
-_scaladoc_url = "scaladoc/%s"
+_scaladoc_url = "../scaladoc"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -142,7 +142,7 @@ html_theme_options = {
     'extra_nav_links': {
         "API Documentation": apidoc_url,
         "Source Code": "https://git.lumc.nl/sasc/sentinel",
-        "Scala Documentation": _scaladoc_url % release,
+        "Scala Documentation": _scaladoc_url,
     }
 }
 
