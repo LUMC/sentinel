@@ -124,7 +124,7 @@ apidoc_url = "../api-docs"
 # a list of builtin themes.
 html_theme = 'alabaster'
 
-_scaladoc_url = "../scaladoc/index.html"
+_scaladoc_url = "../scaladoc/index.html#nl.lumc.sasc.sentinel.package"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
