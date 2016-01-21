@@ -17,7 +17,7 @@ You can set up Sentinel in your local machine or using the provided Vagrantfile 
 
   * Choose local machine set up if you want to hack inside the actual Sentinel code. It requires some initial set up (a database server must be running with a specific user account), but it allows you to do faster iterations with your code.
 
-  * Choose the Vagrant set up if you just want to see how a running Sentinel looks like, along with the user documentation and the Scaladoc documentation. The initial setup is much quicker, but you can only run Sentinel which has beenpushed to a remote git location (this is the master branch in the official repositories by default). We use Ansible to deploy Sentinel and you can change some of the variables in the Sentinel ansible role inside the ``deployments`` directory.
+  * Choose the Vagrant set up if you just want to see how a running Sentinel looks like, along with the user documentation and the Scaladoc documentation. The initial setup could be much quicker if you already have a VM provider installed, but you can only run Sentinel which has beenpushed to a remote git location (this is the master branch in the official repositories by default). We use Ansible to deploy Sentinel and you can change some of the variables in the Sentinel ansible role inside the ``deployments`` directory.
 
 ### Local Machine
 
@@ -52,7 +52,7 @@ Sentinel should now be running at [http://localhost:8080/](http://localhost:8080
 
 Prerequisites:
 
-- Vagrant version 1.8.1 or later.
+- Vagrant version 1.8.1 or later (along with a VM provider such as VirtualBox).
 - An active Python virtual environment using the ``requirements-deploy.txt`` file.
 
 ```sh
@@ -65,7 +65,7 @@ $ pip install -r requirements-deploy.txt
 # go to the Vagrant directory
 $ cd deployments/vagrant
 
-# go into the SBT shell
+# start and provision the VM
 $ vagrant up
 ```
 
