@@ -69,7 +69,7 @@ $ cd sentinel
 $ pip install -r requirements-deploy.txt
 
 # go to the Vagrant directory
-$ cd deployments/vagrant
+$ cd deployment/vagrant
 
 # start and provision the VM
 $ vagrant up
