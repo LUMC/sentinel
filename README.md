@@ -6,10 +6,12 @@ Sentinel is a JSON-based database for next-generation sequencing statistics. Que
 
 ## Requirements
 
-- Java 8 (must be set as the default `java`)
-- Scala 2.11.6
-- MongoDB 3.0 (running on localhost port 27017 for live development server)
-- Python 2.7 and Sphinx (only when building the documentation)
+  * Java 8 (must be set as the default `java`)
+  * Scala 2.11.6
+  * MongoDB 3.0 (running on localhost port 27017 for live development server)
+  * Python 2.7 and Sphinx (only when building the documentation)
+
+If MongoDB 3.0 is not available in your official package repository, you can install it from the vendor's repository following the instructions [here](https://docs.mongodb.org/v3.0/administration/install-on-linux/).
 
 ## Set Up
 
@@ -19,12 +21,16 @@ You can set up Sentinel in your local machine or using the provided Vagrantfile 
 
   * Choose the Vagrant set up if you just want to see how a running Sentinel looks like, along with the user documentation and the Scaladoc documentation. The initial setup could be much quicker if you already have a VM provider installed, but you can only run Sentinel which has beenpushed to a remote git location (this is the master branch in the official repositories by default). We use Ansible to deploy Sentinel and you can change some of the variables in the Sentinel ansible role inside the ``deployments`` directory.
 
+Either way, Sentinel connects to MongoDB on the same host it is running in by default: [localhost](http://127.0.0.1) port 27017. If your MongoDB instance is running with authentication, you will need to edit the source code to supply the required credentials. This is applies only for the development environment. In a production run, you can supply the credentials in a configuration file and leave the source code unchanged.
+
+The provided bootstrap script also adds an admin user for the API (this is not the user Sentinel uses for connecting to the database). By default, this user is called ``dev``, has the password ``dev`` and the API key ``dev``. In the local machine install, this is done via the bootstrap script. In the Vagrant setup, this is done via one of the tasks in the MongoDB Ansible role.
+
 ### Local Machine
 
 Prerequisites:
 
-- A running local MongoDB server.
-- An active Python virtual environment using the ``requirements-dev.txt`` file.
+  * A running local MongoDB server.
+  * Python 2.7 with the packages listed in the ``requirements-dev.txt`` file installed. We recommend that this be done inside a virtual environment. [Here](http://docs.python-guide.org/en/latest/dev/virtualenvs/) is a useful guide for setting up your virtual environment, if you are not yet familiar with it.
 
 ```sh
 $ git clone {this-repository}
@@ -33,7 +39,7 @@ $ cd sentinel
 # for first-time runs, install Sphinx dependencies
 $ pip install -r requirements-dev.txt
 
-# create a test database for development
+# create a test database for development and set up user accounts
 $ ./scripts/bootstrap_dev.sh
 
 # go into the SBT shell
