@@ -8,10 +8,10 @@ Sentinel is a JSON-based database for next-generation sequencing statistics. Que
 
   * Java 8 (must be set as the default `java`)
   * Scala 2.11.6
-  * MongoDB 3.0 (running on localhost port 27017 for live development server)
+  * MongoDB 3.2 (running on localhost port 27017 for live development server)
   * Python 2.7 and Sphinx (only when building the documentation)
 
-If MongoDB 3.0 is not available in your official package repository, you can install it from the vendor's repository following the instructions [here](https://docs.mongodb.org/v3.0/administration/install-on-linux/).
+If MongoDB 3.2 is not available in your official package repository, you can install it from the vendor's repository following the instructions [here](https://docs.mongodb.org/v3.2/administration/install-on-linux/).
 
 ## Set Up
 

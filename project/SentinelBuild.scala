@@ -34,7 +34,7 @@ object SentinelBuild extends Build {
     "com.typesafe.akka"       %% "akka-actor"                 % "2.3.6",
     "commons-codec"           %  "commons-codec"              % "1.7",
     "commons-io"              %  "commons-io"                 % "2.4",
-    "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"  % "1.47.3",
+    "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"  % "1.50.2",
     "javax.servlet"           %  "javax.servlet-api"          % "3.1.0"               % "container;compile;provided;test;it",
     "net.databinder.dispatch" %% "dispatch-core"              % "0.11.2",
     "net.databinder.dispatch" %% "dispatch-json4s-jackson"    % "0.11.2",

@@ -9,7 +9,7 @@ The minimum requirements for a local development environment are:
 
 * `git <https://git-scm.com/>`_ (version >= 1.9)
 * `Java <https://www.java.com/en/>`_ (version >= 1.8)
-* `MongoDB <https://www.mongodb.org/>`_ (version >= 3.0)
+* `MongoDB <https://www.mongodb.org/>`_ (version >= 3.2)
 
 Note that for testing, Sentinel relies on an embedded MongoDB server which it downloads and runs automatically. If you
 are only interested in running tests or are confident enough not to use any development servers, you can skip MongoDB

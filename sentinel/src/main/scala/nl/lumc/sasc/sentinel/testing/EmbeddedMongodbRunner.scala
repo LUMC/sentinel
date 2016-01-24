@@ -31,7 +31,7 @@ import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 trait EmbeddedMongodbRunner {
 
-  protected val mongodVersion = Version.Main.V3_0
+  protected val mongodVersion = Version.Main.V3_2
 
   protected val dbName = "sentinel_testing"
 
