@@ -25,7 +25,7 @@ package nl.lumc.sasc
 package object sentinel {
 
   /** Current API version */
-  val CurrentApiVersion = "0.1.0"
+  val CurrentApiVersion = "0.2"
 
   /** Header API key */
   val HeaderApiKey = "X-Sentinel-Key"
