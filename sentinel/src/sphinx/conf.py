@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Sentinel'
-copyright = u'2015 LUMC Sequencing Analysis Support Core'
+copyright = u'2015-2016 LUMC Sequencing Analysis Support Core'
 author = u'Wibowo Arindrarto'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015 Leiden University Medical Center and contributors
- *                    (see AUTHORS.md file for details).
+ * Copyright (c) 2015-2016 Leiden University Medical Center and contributors
+ *                         (see AUTHORS.md file for details).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,4 +90,3 @@ class SamplesAdapterSpec extends Specification
     }
   }
 }
-

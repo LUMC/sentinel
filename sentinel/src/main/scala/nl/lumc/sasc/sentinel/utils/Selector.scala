@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015 Leiden University Medical Center and contributors
- *                    (see AUTHORS.md file for details).
+ * Copyright (c) 2015-2016 Leiden University Medical Center and contributors
+ *                         (see AUTHORS.md file for details).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,4 +86,3 @@ case class ManyIntersectMany[T](attrName: String, queryValues: Seq[T]) extends S
     if (queryValues.isEmpty) MongoDBObject.empty
     else MongoDBObject(attrName -> MongoDBObject("$elemMatch" -> MongoDBObject("$in" -> queryValues)))
 }
-
