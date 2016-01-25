@@ -11,10 +11,10 @@ Version 0.2.0
 `release date: TBD`
 
 
-Releases 0.1
+Version 0.1
 ------------
 
-Version 0.1.3
+Release 0.1.3
 ^^^^^^^^^^^^^
 
 `release date: October 13 2015`
@@ -27,7 +27,7 @@ Bug fix (upstream) release:
       as opposed to not having the object at all.
 
 
-Version 0.1.2
+Release 0.1.2
 ^^^^^^^^^^^^^
 
 `release date: July 14 2015`
@@ -39,7 +39,7 @@ Bug fix (upstream) release:
       may be 0. In that case, we use the BiopetFlagstat value instead.
 
 
-Version 0.1.1
+Release 0.1.1
 ^^^^^^^^^^^^^
 
 `release date: July 11 2015`
@@ -51,11 +51,11 @@ Bug fix release:
 
     * Documentation improvements (typos, etc.).
 
-Version 0.1.0
+Release 0.1.0
 ^^^^^^^^^^^^^
 
 `release date: July 6 2015`
 
-New release line:
+New version:
 
     * First release of Sentinel, with support of the Gentrap pipeline.
