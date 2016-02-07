@@ -166,7 +166,7 @@ trait SinglePathPatchJsonExtractor extends ValidatedJsonExtractor {
   /** Validation function that ensures there is at least one patch operation. */
   protected final val mustBeNonEmpty: ValidationFunc =
     (ops: Seq[SinglePathPatch]) => {
-      if (ops.isEmpty) "Patch operations can not be empty.".failNel
+      if (ops.isEmpty) "Patch operations can not be empty.".failureNel
       else ops.successNel
     }
 
@@ -176,7 +176,7 @@ trait SinglePathPatchJsonExtractor extends ValidatedJsonExtractor {
       ops
         .flatMap { op => if (!validOps(op.op)) Seq(s"Unsupported operation: '${op.op}'.") else Seq.empty[String] }
         .toList.toNel match {
-          case Some(nel) => nel.fail
+          case Some(nel) => nel.failure
           case None      => ops.successNel
         }
 }

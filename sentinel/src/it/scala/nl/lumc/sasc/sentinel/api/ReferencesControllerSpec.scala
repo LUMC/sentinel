@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2015 Leiden University Medical Center and contributors
- *                    (see AUTHORS.md file for details).
+ * Copyright (c) 2015-2016 Leiden University Medical Center and contributors
+ *                         (see AUTHORS.md file for details).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,234 +18,182 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.specs2.specification.core.Fragment
+import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.models.ReferenceRecord
-import nl.lumc.sasc.sentinel.testing.SentinelServletSpec
+import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, SentinelServletSpec }
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
-  implicit val mongo = dao
-  implicit val runsProcessorMakers = Set(
+  val runsProcessorMakers = Set(
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor],
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
+
+  val refsServlet = new ReferencesController()(swagger, dao)
+  val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
+
   val baseEndpoint = "/references"
-  val refsServlet = new ReferencesController
-  val runsServlet = new RunsController
   addServlet(refsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
 
   s"OPTIONS '$baseEndpoint'" >> {
-    br
-    "when using the default parameters should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(baseEndpoint, "GET,HEAD")
+  }; br
 
   s"GET '$baseEndpoint'" >> {
-    br
+  br
 
-    val endpoint = baseEndpoint
+    val ctx1 = HttpContext(() => get(baseEndpoint) { response })
+    "when the database is empty" should ctx.priorReqsOnCleanDb(ctx1) { http =>
 
-    "when the database is empty should" >> inline {
+      "return status 200" in {
+        http.rep.status mustEqual 200
+      }
 
-      new Context.PriorRequests {
-
-        def request = () => get(endpoint) { response }
-        def priorRequests = Seq(request)
-
-        "return status 200" in {
-          priorResponse.status mustEqual 200
-        }
-
-        "return an empty JSON list" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.jsonBody must haveSize(0)
-        }
+      "return an empty JSON list" in {
+        http.rep.contentType mustEqual MimeType.Json
+        http.rep.jsonBody must haveSize(0)
       }
     }
 
-    "using a summary file that contain a reference entry" >> inline {
-
-      new Context.PriorRunUploadClean {
-
-        def uploadSet = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
-        def priorRequests = Seq(uploadSet.request)
+    val ctx2 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1))
+    "using a summary file that contain a reference entry" >>
+      ctx.priorReqsOnCleanDb(ctx2, populate = true) { http =>
 
         "after the run summary file is uploaded" in {
-          priorResponses.head.status mustEqual 201
+          http.rep.status mustEqual 201
         }
 
-        "when using the default parameters should" >> inline {
+        val ictx1 = HttpContext(() => get(baseEndpoint) {
+          response
+        })
+        br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
 
-            def request = () => get(endpoint) { response }
-            def priorRequests = Seq(request)
+          "return a JSON list containing 1 object" in {
+            ihttp.rep.contentType mustEqual "application/json"
+            ihttp.rep.jsonBody must haveSize(1)
+          }
 
-            "return status 200" in {
-              priorResponse.status mustEqual 200
+          "which" should {
+            s"have the expected attributes" in {
+              ihttp.rep.body must /#(0) / ("refId" -> """\S+""".r)
+              ihttp.rep.body must /#(0) / ("combinedMd5" -> """\S+""".r)
+              ihttp.rep.jsonBody must beSome.like { case json =>
+                (json(0) \ "contigs" \\ "md5").children
+                  .map(_.extract[String]).size must beGreaterThan(0)
+              }
             }
+          }
+        }
+    }; br
 
-            "return a JSON list containing 1 object" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(1)
-            }
+    val ctx3 = UploadContext(NonEmptyList(
+      UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1),
+      UploadSet(UserExamples.admin, SummaryExamples.Pref.Ref2),
+      UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref3)))
+    "using multiple summary files that contain ovelapping reference entries" >>
+      ctx.priorReqsOnCleanDb(ctx3, populate = true) { http =>
 
-            "which" should {
-              s"have the expected attributes" in {
-                priorResponse.body must /#(0) /("refId" -> """\S+""".r)
-                priorResponse.body must /#(0) /("combinedMd5" -> """\S+""".r)
-                priorResponse.jsonBody must beSome.like { case json =>
-                  (json(0) \ "contigs" \\ "md5").children
-                    .map(_.extract[String]).size must beGreaterThan(0)
+        "after all the files have been uploaded" in {
+          http.reps.list.map(_.status) mustEqual List.fill(http.reps.list.length)(201)
+        }
+
+        val ictx1 = HttpContext(() => get(baseEndpoint) { response })
+        br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
+
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
+
+          "return a JSON list containing 2 object" in {
+            ihttp.rep.contentType mustEqual "application/json"
+            ihttp.rep.jsonBody must haveSize(2)
+          }
+
+          "each of which" should {
+            Fragment.foreach(0 to 1) { idx =>
+              s"have the expected attributes (object #${idx + 1})" in {
+                ihttp.rep.body must /#(idx) /("refId" -> """\S+""".r)
+                ihttp.rep.body must /#(idx) /("combinedMd5" -> """\S+""".r)
+                ihttp.rep.jsonBody must beSome.like { case json =>
+                  json(idx).extract[ReferenceRecord].contigs.size must beGreaterThan(0)
                 }
               }
             }
           }
         }
       }
-    }
-
-    "using multiple summary files that contain overlapping reference entries should" >> inline {
-
-      new Context.PriorRunUploadClean {
-
-        def uploadSet1 = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
-        def uploadSet2 = UploadSet(users.admin, SummaryExamples.Pref.Ref2, "pref")
-        def uploadSet3 = UploadSet(users.avg, SummaryExamples.Pref.Ref3, "pref")
-        def priorRequests = Seq(uploadSet1, uploadSet2, uploadSet3).map(_.request)
-
-        "after the first file is uploaded" in {
-          priorResponses.head.status mustEqual 201
-        }
-
-        "after the second file is uploaded" in {
-          priorResponses(1).status mustEqual 201
-        }
-
-        "after the third file is uploaded" in {
-          priorResponses(2).status mustEqual 201
-        }
-
-        "when using the default parameters should" >> inline {
-
-          new Context.PriorRequests {
-
-            def request = () => get(endpoint) { response }
-            def priorRequests = Seq(request)
-
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
-
-            "return a JSON list containing 2 object" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(2)
-            }
-
-            "each of which" should {
-              Range(0, 2) foreach { idx =>
-                val item = idx + 1
-                s"have the expected attributes (object #$item)" in {
-                  priorResponse.body must /#(idx) /("refId" -> """\S+""".r)
-                  priorResponse.body must /#(idx) /("combinedMd5" -> """\S+""".r)
-                  priorResponse.jsonBody must beSome.like { case json =>
-                    json(idx).extract[ReferenceRecord].contigs.size must beGreaterThan(0)
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  }; br
 
   s"OPTIONS '$baseEndpoint/:refId'" >> {
-    br
-    "when using the default parameters should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint/refId", "GET,HEAD")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(s"$baseEndpoint/refId", "GET,HEAD")
+  }; br
 
   s"GET '$baseEndpoint/:refId'" >> {
   br
 
     def endpoint(refId: String) = s"$baseEndpoint/$refId"
 
-    "using a run summary file that contains a reference entry" >> inline {
-
-      new Context.PriorRunUploadClean {
-
-        def uploadSet = UploadSet(users.avg, SummaryExamples.Pref.Ref1, "pref")
-        def priorRequests = Seq(uploadSet.request)
-        def refId = (parse(priorResponse.body) \ "refId").extract[String]
-        def runId = (parse(priorResponse.body) \ "runId").extract[String]
+    val ctx1 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Pref.Ref1))
+    "using a run summary file that contains a reference entry" >>
+      ctx.priorReqsOnCleanDb(ctx1, populate = true) { http =>
 
         "after the run summary file is uploaded" in {
-          priorResponse.status mustEqual 201
+          http.rep.status mustEqual 201
         }
 
-        "when a reference entry with invalid ID is queried should" >> inline {
+        val ictx1 = HttpContext(() => get(endpoint("yalala")) { response })
+        br; "when a reference entry with an invalid ID is queried" should ctx.priorReqs(ictx1) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 404" in {
+            ihttp.rep.status mustEqual 404
+          }
 
-            def request = () => get(endpoint("yalala")) { response }
-            def priorRequests = Seq(request)
-
-            "return status 404" in {
-              priorResponse.status mustEqual 404
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Reference ID can not be found.")
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Reference ID can not be found.")
           }
         }
 
-        "when a nonexistent reference entry is queried should" >> inline {
+        val ictx2 = HttpContext(() => get(endpoint((parse(http.rep.body) \ "runId").extract[String])) { response })
+        "when a nonexistent reference entry is queried" should ctx.priorReqs(ictx2) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 404" in {
+            ihttp.rep.status mustEqual 404
+          }
 
-            def request = () => get(endpoint(runId)) { response }
-            def priorRequests = Seq(request)
-
-            "return status 404" in {
-              priorResponse.status mustEqual 404
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Reference ID can not be found.")
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Reference ID can not be found.")
           }
         }
 
-        "when an existing reference entry is queried should" >> inline {
+        val refId = (parse(http.rep.body) \ "refId").extract[String]
+        val ictx3 = HttpContext(() => get(endpoint(refId)) { response })
+        "when an existing reference entry is queried" should ctx.priorReqs(ictx3) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
 
-            def request = () => get(endpoint(refId)) { response }
-            def priorRequests = Seq(request)
-
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
-
-            "return a JSON object containing the expected attributes" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("refId" -> """\S+""".r)
-              priorResponse.body must /("combinedMd5" -> """\S+""".r)
-              priorResponse.jsonBody must beSome.like { case json =>
-                (json \ "contigs" \\ "md5").children
-                  .map(_.extract[String]).size must beGreaterThan(0)
-              }
+          "return a JSON object containing the expected attributes" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("refId" -> """\S+""".r)
+            ihttp.rep.body must /("combinedMd5" -> """\S+""".r)
+            ihttp.rep.jsonBody must beSome.like { case json =>
+              (json \ "contigs" \\ "md5").children
+                .map(_.extract[String]).size must beGreaterThan(0)
             }
           }
         }
       }
-    }
   }
 }

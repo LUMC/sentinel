@@ -30,7 +30,7 @@ trait FutureMixin {
   type Perhaps[+T] = nl.lumc.sasc.sentinel.models.Perhaps[T]
 
   /** Type alias for stacking `Future` and scalaz's `\/`. */
-  type AsyncPerhaps[+T] = nl.lumc.sasc.sentinel.models.AsyncPerhaps[T]
+  type AsyncPerhaps[T] = nl.lumc.sasc.sentinel.models.AsyncPerhaps[T]
 
   /** Default timeout. */
   implicit protected def timeout: Duration = 10.seconds

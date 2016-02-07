@@ -20,15 +20,15 @@ object SentinelBuild extends Build {
   val ScalaSeries = "2.11"
   val ScalaVersion = s"$ScalaSeries.6"
   val JavaVersion = "1.8"
-  val ScalatraVersion = "2.3.1"
-  val Json4sVersion = "3.2.11"
-  val JettyVersion = "9.2.10.v20150310"
+  val ScalatraVersion = "2.4.0"
+  val Json4sVersion = "3.3.0"
+  val JettyVersion = "9.2.14.v20151106"
 
   val scalaSeries = SettingKey[String]("scala-series", "The series of Scala used for building.")
 
   lazy val dependencies = Seq(
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
-    "com.github.fakemongo"    %  "fongo"                      % "1.6.2"               % "it;test",
+    "com.github.fakemongo"    %  "fongo"                      % "2.0.5",//               % "it;test",
     "com.github.fge"          %  "json-schema-validator"      % "2.2.6",
     "com.novus"               %% "salat"                      % "1.9.9",
     "com.typesafe"            %  "config"                     % "1.3.0",
@@ -37,14 +37,12 @@ object SentinelBuild extends Build {
     "commons-io"              %  "commons-io"                 % "2.4",
     "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"  % "1.50.2",
     "javax.servlet"           %  "javax.servlet-api"          % "3.1.0"               % "container;compile;provided;test;it",
-    "net.databinder.dispatch" %% "dispatch-core"              % "0.11.2",
-    "net.databinder.dispatch" %% "dispatch-json4s-jackson"    % "0.11.2",
     "org.eclipse.jetty"       %  "jetty-plus"                 % JettyVersion          % "container",
     "org.eclipse.jetty"       %  "jetty-webapp"               % JettyVersion          % "container;compile",
     "org.json4s"              %% "json4s-jackson"             % Json4sVersion,
     "org.json4s"              %% "json4s-mongo"               % Json4sVersion,
     "org.json4s"              %% "json4s-ext"                 % Json4sVersion,
-    "org.mongodb"             %% "casbah"                     % "2.8.0",
+    "org.mongodb"             %% "casbah"                     % "3.1.0",
     "de.svenkubiak"           %  "jBCrypt"                    % "0.4.1",
     "org.scalatra"            %% "scalatra"                   % ScalatraVersion,
     "org.scalatra"            %% "scalatra-specs2"            % ScalatraVersion,
@@ -52,7 +50,7 @@ object SentinelBuild extends Build {
     "org.scalatra"            %% "scalatra-swagger"           % ScalatraVersion,
     "org.scalatra"            %% "scalatra-swagger-ext"       % ScalatraVersion,
     "org.scalatra"            %% "scalatra-slf4j"             % ScalatraVersion,
-    "org.typelevel"           %% "scalaz-specs2"              % "0.2")
+    "org.specs2"              %% "specs2-junit"               % "3.6.6")
 
   lazy val formattingPreferences = {
     import scalariform.formatter.preferences._

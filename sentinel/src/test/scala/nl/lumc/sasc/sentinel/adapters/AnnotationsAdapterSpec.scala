@@ -21,16 +21,17 @@ import com.mongodb.DBCollection
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import org.specs2.scalaz.DisjunctionMatchers
 
 import nl.lumc.sasc.sentinel.models.AnnotationRecord
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class AnnotationsAdapterSpec extends Specification
-    with DisjunctionMatchers
     with Mockito {
+
+  sequential
 
   /** AnnotationRecord object for testing. */
   private val testAnnotObj = AnnotationRecord(
@@ -81,20 +82,20 @@ class AnnotationsAdapterSpec extends Specification
     val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
     val annots = Seq(annot1, annot3, annot2)
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.Annotations) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getAnnotations() must throwA[RuntimeException].await
     }
 
-    "succeed returning an empty seq when the database is empty" in {
+    "succeed returning an empty seq when the database is empty" in { implicit ee: ExecutionEnv =>
       testAdapter.getAnnotations() must beEqualTo(Seq.empty).await
     }
 
-    "succeed returning all annotations (most recent first) when the database is not empty" in {
+    "succeed returning all annotations (most recent first) when the database is not empty" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll =>
         annots.foreach { obj =>
           val dbo = grater[AnnotationRecord].asDBObject(obj)
@@ -104,7 +105,7 @@ class AnnotationsAdapterSpec extends Specification
       adapter.getAnnotations() must beEqualTo(Seq(annot3, annot2, annot1)).await
     }
 
-    "succeed returning N annotations (most recent first) when the database is not empty and maxReturn is set" in {
+    "succeed returning N annotations (most recent first) when the database is not empty and maxReturn is set" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll =>
         annots.foreach { obj =>
           val dbo = grater[AnnotationRecord].asDBObject(obj)
@@ -115,51 +116,53 @@ class AnnotationsAdapterSpec extends Specification
     }
   }
 
+  br
   "getAnnotation" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.Annotations) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getAnnotation(testAnnotObj.annotId) must throwA[RuntimeException].await
     }
 
-    "succeed returning None when the database is empty" in {
+    "succeed returning None when the database is empty" in { implicit ee: ExecutionEnv =>
       testAdapter.getAnnotation(testAnnotObj.annotId) must beNone.await
     }
 
-    "succeed returning None when no records match" in {
+    "succeed returning None when no records match" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
       adapter.getAnnotation(new ObjectId) must beNone.await
     }
 
-    "succeed returning the expected object when a matching record exists" in {
+    "succeed returning the expected object when a matching record exists" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
       adapter.getAnnotation(testAnnotObj.annotId) must beEqualTo(Some(testAnnotObj)).await
     }
   }
 
+  br
   "getOrCreateAnnotation" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.Annotations) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getOrCreateAnnotation(testAnnotObj) must throwA[RuntimeException].await
     }
 
-    "succeed storing the annotation record when it does not exist in the database" in {
+    "succeed storing the annotation record when it does not exist in the database" in { implicit ee: ExecutionEnv =>
       val adapter = testAdapter
       adapter.find(MongoDBObject.empty).count() mustEqual 0
       adapter.getOrCreateAnnotation(testAnnotObj) must beEqualTo(testAnnotObj).await
       adapter.find(testAnnotDbo).count() mustEqual 1
     }
 
-    "succeed retrieving the annotation record without storing anything when it exists in the database" in {
+    "succeed retrieving the annotation record without storing anything when it exists in the database" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testAnnotDbo) }
       val newAnnot = testAnnotObj.copy(annotId = new ObjectId)
       adapter.find(MongoDBObject.empty).count() mustEqual 1
@@ -169,22 +172,23 @@ class AnnotationsAdapterSpec extends Specification
     }
   }
 
+  br
   "getOrCreateAnnotations" should {
 
     val annot1 = testAnnotObj
     val annot2 = AnnotationRecord("1c7041c7986dd97127df35e481ff4c36")
     val annot3 = AnnotationRecord("3c7041c7986dd97127df35e481ff4c36")
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.Annotations) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getOrCreateAnnotations(Seq(annot1)) must throwA[RuntimeException].await
     }
 
-    "succeed storing the annotation records that do not exist yet and getting the ones that exist" in {
+    "succeed storing the annotation records that do not exist yet and getting the ones that exist" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll =>
         coll.insert(testAnnotDbo) // annot1
       }

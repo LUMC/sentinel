@@ -16,1029 +16,823 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import java.io.{ File, RandomAccessFile }
-
-import com.google.common.io.Files
-import org.apache.commons.io.FileUtils.{ deleteDirectory, deleteQuietly }
 import org.json4s._
+import org.specs2.specification.core.Fragments
+import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.models.{ Payloads, User }
-import nl.lumc.sasc.sentinel.settings._
-import nl.lumc.sasc.sentinel.testing.{ SentinelServletSpec, UserExamples }
+import nl.lumc.sasc.sentinel.models.Payloads
+import nl.lumc.sasc.sentinel.testing.{ MimeType, SentinelServletSpec, UserExamples, VariableSizedPart }
+import nl.lumc.sasc.sentinel.settings.{ MaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class RunsControllerSpec extends SentinelServletSpec {
 
-  /** Overridden stop method that deletes any created temporary directory. */
-  override def stop(): Unit = {
-    deleteDirectory(tempDir)
-    super.stop()
-  }
-
-  /** Helper method for creating temporary directories. */
-  protected lazy val tempDir = Files.createTempDir()
-
-  /** Helper method for creating named temporary files. */
-  protected def createTempFile(name: String): File = new File(tempDir, name)
-
-  /** Helper method to create file with arbitrary size. */
-  protected def fillFile(file: File, size: Long): File = {
-    val raf = new RandomAccessFile(file, "rw")
-    raf.setLength(size)
-    raf.close()
-    file
-  }
-
-  /** Upload context for plain summary files. */
-  class PlainUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet = UploadSet(users.avg, SummaryExamples.Plain, "plain")
-    def priorRequests = Seq(uploadSet.request)
-  }
-
-  /** Upload context for plain summary files. */
-  class MapleUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet = UploadSet(users.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
-    def priorRequests = Seq(uploadSet.request)
-  }
-
-  /** Uploads plain first, then maple. */
-  class PlainThenMapleUploadContext extends Context.PriorRunUploadClean {
-    def uploadSet1 = UploadSet(users.avg, SummaryExamples.Plain, "plain")
-    def uploadSet2 = UploadSet(users.avg2, SummaryExamples.Maple.MSampleMRG, "maple")
-    def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
-  }
-
-  implicit val mongo = dao
-  implicit val runsProcessorMakers = Set(
+  val runsProcessorMakers = Set(
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor],
     makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
-  val servlet = new RunsController
+  val servlet = new RunsController()(swagger, dao, runsProcessorMakers)
   val baseEndpoint = "/runs"
   addServlet(servlet, s"$baseEndpoint/*")
 
+  /** Helper function to create commonly used upload context in this test spec. */
+  def plainContext = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Plain))
+  def mapleContext = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG))
+  def plainThenMapleContext = UploadContext(NonEmptyList(
+    UploadSet(UserExamples.avg, SummaryExamples.Plain),
+    UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG)))
+
   s"OPTIONS '$baseEndpoint'" >> {
-    br
-    "when using the default parameter should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD,POST")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(baseEndpoint, "GET,HEAD,POST")
+  }; br
 
   s"POST '$baseEndpoint'" >> {
-    br
+  br
 
-    val endpoint = baseEndpoint
+    val ctx1 = HttpContext(() => post(baseEndpoint, Seq(("userId", UserExamples.avg.id))) { response })
+    "when the pipeline is not not specified" should ctx.priorReqs(ctx1) { http =>
 
-    "when the pipeline is not specified should" >> inline {
+      "return status 400" in {
+        http.rep.status mustEqual 400
+      }
 
-      new Context.PriorRequests {
-        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id))) { response }
-        def priorRequests = Seq(request)
-
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Pipeline not specified.")
-        }
+      "return a JSON object containing the expected message" in {
+        http.rep.contentType mustEqual MimeType.Json
+        http.rep.body must /("message" -> "Pipeline not specified.")
       }
     }
 
-    "when the request body is empty" >> inline {
+    val ctx2 = HttpContext(
+      () => post(baseEndpoint, Seq(("userId", UserExamples.avg.id), ("pipeline", "plain"))) { response })
+    "when the request body is empty" should ctx.priorReqs(ctx2) { http =>
 
-      new Context.PriorRequests {
-        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id), ("pipeline", "plain"))) { response }
-        def priorRequests = Seq(request)
+      "return status 400" in {
+        http.rep.status mustEqual 400
+      }
 
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Run summary file not specified.")
-        }
+      "return a JSON object containing the expected message" in {
+        http.rep.contentType mustEqual MimeType.Json
+        http.rep.body must /("message" -> "Run summary file not specified.")
       }
     }
 
-    "when an invalid pipeline is specified should" >> inline {
+    val ctx3 = HttpContext(() => post(baseEndpoint,
+      Seq(("userId", UserExamples.avg.id), ("pipeline", "devtest")), Map("run" -> SummaryExamples.Plain)) { response })
+    "when an invalid pipeline is specified" should ctx.priorReqs(ctx3) { http =>
 
-      val fileMap = Map("run" -> SummaryExamples.Plain)
+      "return status 400" in {
+        http.rep.status mustEqual 400
+      }
 
-      new Context.PriorRequests {
-
-        def request = () => post(endpoint, Seq(("userId", UserExamples.avg.id), ("pipeline", "devtest")), fileMap) { response }
-        def priorRequests = Seq(request)
-
-        "return status 400" in {
-          priorResponse.status mustEqual 400
-        }
-
-        "return a JSON object containing the expected message" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.body must /("message" -> "Pipeline parameter is invalid.")
-          priorResponse.body must /("hints") /# 0 / "Valid values are .+".r
-        }
+      "return a JSON object containing the expected message" in {
+        http.rep.contentType mustEqual MimeType.Json
+        http.rep.body must /("message" -> "Pipeline parameter is invalid.")
+        http.rep.body must /("hints") /# 0 / "Valid values are .+".r
       }
     }
 
     "using the 'plain' pipeline summary file" >> {
-      br
 
-      val pipeline = "plain"
-      def fileMap = Map("run" -> SummaryExamples.Plain)
-
-      "when a run summary that passes all validation is uploaded should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
-            fileMap, Map(HeaderApiKey -> user.activeKey)) { response }
-          def priorRequests = Seq(request)
+      val ictx1 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Plain))
+      br; "when a valid run summary is uploaded" should
+        ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
 
           "return status 201" in {
-            priorResponse.status mustEqual 201
+            ihttp.rep.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("creationTimeUtc" -> ".+".r)
-            priorResponse.body must /("nReadGroups" -> 0)
-            priorResponse.body must /("nSamples" -> 0)
-            priorResponse.body must /("pipeline" -> "plain")
-            priorResponse.body must /("runId" -> """\S+""".r)
-            priorResponse.body must /("uploaderId" -> user.id)
-            priorResponse.body must not /("annotIds" -> ".+".r)
-            priorResponse.body must not /("refId" -> ".+".r)
-            priorResponse.body must not /("sampleIds" -> ".+".r)
-            priorResponse.body must not /("libIds" -> ".+".r)
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.rep.body must /("nReadGroups" -> 0)
+            ihttp.rep.body must /("nSamples" -> 0)
+            ihttp.rep.body must /("pipeline" -> "plain")
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must /("uploaderId" -> ictx1.uploader.id)
+            ihttp.rep.body must not /("annotIds" -> ".+".r)
+            ihttp.rep.body must not /("refId" -> ".+".r)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
           }
-        }
       }
 
-      "when a compressed run summary that passes all validation is uploaded should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def fileMap = Map("run" -> SummaryExamples.PlainCompressed)
-          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)),
-            fileMap, Map(HeaderApiKey -> user.activeKey)) { response }
-          def priorRequests = Seq(request)
+      val ictx2 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.PlainCompressed))
+      "when a compressed valid run summary is uploaded" should
+        ctx.priorReqsOnCleanDb(ictx2, populate = true) { ihttp =>
 
           "return status 201" in {
-            priorResponse.status mustEqual 201
+            ihttp.rep.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("creationTimeUtc" -> ".+".r)
-            priorResponse.body must /("nReadGroups" -> 0)
-            priorResponse.body must /("nSamples" -> 0)
-            priorResponse.body must /("pipeline" -> "plain")
-            priorResponse.body must /("runId" -> """\S+""".r)
-            priorResponse.body must /("uploaderId" -> user.id)
-            priorResponse.body must not /("annotIds" -> ".+".r)
-            priorResponse.body must not /("refId" -> ".+".r)
-            priorResponse.body must not /("sampleIds" -> ".+".r)
-            priorResponse.body must not /("libIds" -> ".+".r)
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.rep.body must /("nReadGroups" -> 0)
+            ihttp.rep.body must /("nSamples" -> 0)
+            ihttp.rep.body must /("pipeline" -> "plain")
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must /("uploaderId" -> ictx2.uploader.id)
+            ihttp.rep.body must not /("annotIds" -> ".+".r)
+            ihttp.rep.body must not /("refId" -> ".+".r)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
           }
         }
-      }
 
-      "when the same run summary is uploaded more than once by different users should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def request1 = () =>
-            post(endpoint, Seq(("userId", users.avg2.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> users.avg2.activeKey)) { response }
-          def request2 = () =>
-            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> user.activeKey)) { response }
-          def priorRequests = Seq(request1, request2)
-
+      val ictx3 = UploadContext(NonEmptyList(
+        UploadSet(UserExamples.avg2, SummaryExamples.Plain),
+        UploadSet(UserExamples.avg, SummaryExamples.Plain)))
+      "when the same run summary is uploaded more than once by different users" should
+        ctx.priorReqsOnCleanDb(ictx3, populate = true) { ihttp =>
           "return status 201 for the first upload" in {
-            priorResponses.head.status mustEqual 201
+            ihttp.reps.head.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run for the first upload" in {
-            priorResponses.head.contentType mustEqual  "application/json"
-            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nReadGroups" -> 0)
-            priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "plain")
-            priorResponses.head.body must /("runId" -> """\S+""".r)
-            priorResponses.head.body must /("uploaderId" -> users.avg2.id)
-            priorResponses.head.body must not /("annotIds" -> ".+".r)
-            priorResponses.head.body must not /("refId" -> ".+".r)
-            priorResponses.head.body must not /("sampleIds" -> ".+".r)
-            priorResponses.head.body must not /("libIds" -> ".+".r)
+            ihttp.reps.head.contentType mustEqual MimeType.Json
+            ihttp.reps.head.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.reps.head.body must /("nReadGroups" -> 0)
+            ihttp.reps.head.body must /("nSamples" -> 0)
+            ihttp.reps.head.body must /("pipeline" -> "plain")
+            ihttp.reps.head.body must /("runId" -> """\S+""".r)
+            ihttp.reps.head.body must /("uploaderId" -> ictx3.uploaders.head.id)
+            ihttp.reps.head.body must not /("annotIds" -> ".+".r)
+            ihttp.reps.head.body must not /("refId" -> ".+".r)
+            ihttp.reps.head.body must not /("sampleIds" -> ".+".r)
+            ihttp.reps.head.body must not /("libIds" -> ".+".r)
           }
 
           "return status 201 for the second upload" in {
-            priorResponses.last.status mustEqual 201
+            ihttp.reps.last.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run for the second upload" in {
-            priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.last.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.last.body must /("nReadGroups" -> 0)
-            priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("pipeline" -> "plain")
-            priorResponses.last.body must /("runId" -> """\S+""".r)
-            priorResponses.last.body must /("uploaderId" -> user.id)
-            priorResponses.last.body must not /("annotIds" -> ".+".r)
-            priorResponses.last.body must not /("refId" -> ".+".r)
-            priorResponses.last.body must not /("sampleIds" -> ".+".r)
-            priorResponses.last.body must not /("libIds" -> ".+".r)
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.reps.last.body must /("nReadGroups" -> 0)
+            ihttp.reps.last.body must /("nSamples" -> 0)
+            ihttp.reps.last.body must /("pipeline" -> "plain")
+            ihttp.reps.last.body must /("runId" -> """\S+""".r)
+            ihttp.reps.last.body must /("uploaderId" -> ictx3.uploaders.last.id)
+            ihttp.reps.last.body must not /("annotIds" -> ".+".r)
+            ihttp.reps.last.body must not /("refId" -> ".+".r)
+            ihttp.reps.last.body must not /("sampleIds" -> ".+".r)
+            ihttp.reps.last.body must not /("libIds" -> ".+".r)
           }
+        }
+
+      val ictx4 = HttpContext(() =>
+        post(baseEndpoint, Seq(("pipeline", "plain")), Map("run" -> SummaryExamples.Plain)) { response })
+      "when the user ID is not specified" should ctx.priorReqs(ictx4) { ihttp =>
+
+        "return status 400" in {
+          ihttp.rep.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          ihttp.rep.contentType mustEqual MimeType.Json
+          ihttp.rep.body must /("message" -> "User ID not specified.")
         }
       }
 
-      "when the user ID is not specified should" >> inline {
+      val ictx5 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Not))
+      "when a non-JSON file is uploaded" should ctx.priorReqsOnCleanDb(ictx5, populate = true) { ihttp =>
 
-        new Context.PriorRequestsClean {
+        "return status 400" in {
+          ihttp.rep.status mustEqual 400
+        }
 
-          def request = () => post(endpoint, Seq(("pipeline", pipeline)), fileMap) { response }
-          def priorRequests = Seq(request)
-
-          "return status 400" in {
-            priorResponse.status mustEqual 400
-          }
-
-          "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "User ID not specified.")
-          }
+        "return a JSON object containing the expected message" in {
+          ihttp.rep.contentType mustEqual MimeType.Json
+          ihttp.rep.body must /("message" -> "JSON is invalid.")
+          ihttp.rep.body must /("hints") /# 0 / "Invalid syntax."
         }
       }
 
-      "when a non-JSON file is uploaded should" >> inline {
+      val ictx6 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Invalid))
+      "when an invalid run summary file is uploaded" should ctx.priorReqsOnCleanDb(ictx6, populate = true) { ihttp =>
 
-        new Context.PriorRequestsClean {
+        "return status 400" in {
+          ihttp.rep.status mustEqual 400
+        }
 
-          def fileMap = Map("run" -> SummaryExamples.Not)
-          def request = () =>
-            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> user.activeKey)) { response }
-          def priorRequests = Seq(request)
-
-          "return status 400" in {
-            priorResponse.status mustEqual 400
-          }
-
-          "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "JSON is invalid.")
-            priorResponse.body must /("hints") /# 0 / "Invalid syntax."
-          }
+        "return a JSON object containing the expected message" in {
+          ihttp.rep.contentType mustEqual MimeType.Json
+          ihttp.rep.body must /("message" -> "JSON is invalid.")
+          ihttp.rep.body must /("hints") /# 0 / startWith("error: instance failed to match")
         }
       }
 
-      "when an invalid JSON run summary is uploaded should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def fileMap = Map("run" -> SummaryExamples.Invalid)
-          def request = () =>
-            post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap,
-              Map(HeaderApiKey -> user.activeKey)) { response }
-          def priorRequests = Seq(request)
-
-          "return status 400" in {
-            priorResponse.status mustEqual 400
-          }
-
-          "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "JSON is invalid.")
-            priorResponse.body must /("hints") /# 0 / startWith("error: instance failed to match")
-          }
-        }
-      }
-
-      "when the same run summary is uploaded more than once by the same users should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def params = Seq(("userId", user.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> user.activeKey)
-
-          def request1 = () => post(endpoint, params, fileMap, headers) { response }
-          def request2 = () => post(endpoint, params, fileMap, headers) { response }
-          def priorRequests = Seq(request1, request2)
+      val ictx7 = UploadContext(NonEmptyList(
+        UploadSet(UserExamples.avg, SummaryExamples.Plain),
+        UploadSet(UserExamples.avg, SummaryExamples.Plain)))
+      "when the same run summary is uploaded more than once by the same user" should
+        ctx.priorReqsOnCleanDb(ictx7, populate = true) { ihttp =>
 
           "return status 201 for the first upload" in {
-            priorResponses.head.status mustEqual 201
+            ihttp.reps.head.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run for the first upload" in {
-            priorResponses.head.contentType mustEqual  "application/json"
-            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nReadGroups" -> 0)
-            priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "plain")
-            priorResponses.head.body must /("runId" -> """\S+""".r)
-            priorResponses.head.body must /("uploaderId" -> user.id)
-            priorResponses.head.body must not /("annotIds" -> ".+".r)
-            priorResponses.head.body must not /("refId" -> ".+".r)
-            priorResponses.head.body must not /("sampleIds" -> ".+".r)
-            priorResponses.head.body must not /("libIds" -> ".+".r)
+            ihttp.reps.head.contentType mustEqual MimeType.Json
+            ihttp.reps.head.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.reps.head.body must /("nReadGroups" -> 0)
+            ihttp.reps.head.body must /("nSamples" -> 0)
+            ihttp.reps.head.body must /("pipeline" -> "plain")
+            ihttp.reps.head.body must /("runId" -> """\S+""".r)
+            ihttp.reps.head.body must /("uploaderId" -> ictx7.uploaders.head.id)
+            ihttp.reps.head.body must not /("annotIds" -> ".+".r)
+            ihttp.reps.head.body must not /("refId" -> ".+".r)
+            ihttp.reps.head.body must not /("sampleIds" -> ".+".r)
+            ihttp.reps.head.body must not /("libIds" -> ".+".r)
           }
 
-          "return status 409 for the second upload" in {
-            priorResponses.last.status mustEqual 409
+          "return status 409 for second upload" in {
+            ihttp.reps.last.status mustEqual 409
           }
 
           "return a JSON object containing the expected message for the second upload" in {
-            priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.head.jsonBody must beSome.like { case json =>
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            // capture the first uploaded runId
+            ihttp.reps.head.jsonBody must beSome.like { case json =>
               val id = (json \ "runId").extract[String]
-              priorResponses.last.body must /("message" -> "Run summary already uploaded.")
-              priorResponses.last.body must /("hints") /# 0 / s"Existing ID: $id."
+              ihttp.reps.last.body must /("message" -> "Run summary already uploaded.")
+              ihttp.reps.last.body must /("hints") /# 0 / s"Existing ID: $id."
             }
           }
-
         }
-      }
 
-      "when a run summary is uploaded more than once (uncompressed then compressed) by the same users should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def params = Seq(("userId", user.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> user.activeKey)
-
-          def request1 = () => post(endpoint, params, fileMap, headers) { response }
-          def request2 = () => post(endpoint, params,
-            Map("run" -> SummaryExamples.PlainCompressed), headers) { response }
-          def priorRequests = Seq(request1, request2)
+      val ictx8 = UploadContext(NonEmptyList(
+        UploadSet(UserExamples.avg, SummaryExamples.Plain),
+        UploadSet(UserExamples.avg, SummaryExamples.PlainCompressed)))
+      "when a run summary is uploaded more than once (uncompressed then compressed) by the same user" should
+        ctx.priorReqsOnCleanDb(ictx8, populate = true) { ihttp =>
 
           "return status 201 for the first upload" in {
-            priorResponses.head.status mustEqual 201
+            ihttp.reps.head.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run for the first upload" in {
-            priorResponses.head.contentType mustEqual  "application/json"
-            priorResponses.head.body must /("creationTimeUtc" -> ".+".r)
-            priorResponses.head.body must /("nReadGroups" -> 0)
-            priorResponses.head.body must /("nSamples" -> 0)
-            priorResponses.head.body must /("pipeline" -> "plain")
-            priorResponses.head.body must /("runId" -> """\S+""".r)
-            priorResponses.head.body must /("uploaderId" -> user.id)
-            priorResponses.head.body must not /("annotIds" -> ".+".r)
-            priorResponses.head.body must not /("refId" -> ".+".r)
-            priorResponses.head.body must not /("sampleIds" -> ".+".r)
-            priorResponses.head.body must not /("libIds" -> ".+".r)
+            ihttp.reps.head.contentType mustEqual MimeType.Json
+            ihttp.reps.head.body must /("creationTimeUtc" -> ".+".r)
+            ihttp.reps.head.body must /("nReadGroups" -> 0)
+            ihttp.reps.head.body must /("nSamples" -> 0)
+            ihttp.reps.head.body must /("pipeline" -> "plain")
+            ihttp.reps.head.body must /("runId" -> """\S+""".r)
+            ihttp.reps.head.body must /("uploaderId" -> ictx8.uploaders.head.id)
+            ihttp.reps.head.body must not /("annotIds" -> ".+".r)
+            ihttp.reps.head.body must not /("refId" -> ".+".r)
+            ihttp.reps.head.body must not /("sampleIds" -> ".+".r)
+            ihttp.reps.head.body must not /("libIds" -> ".+".r)
           }
 
           "return status 409 for the second upload" in {
-            priorResponses.last.status mustEqual 409
+            ihttp.reps.last.status mustEqual 409
           }
 
           "return a JSON object containing the expected message for the second upload" in {
-            priorResponses.last.contentType mustEqual  "application/json"
-            priorResponses.head.jsonBody must beSome.like { case json =>
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            // capture the first uploaded runId
+            ihttp.reps.head.jsonBody must beSome.like { case json =>
               val id = (json \ "runId").extract[String]
-              priorResponses.last.body must /("message" -> "Run summary already uploaded.")
-              priorResponses.last.body must /("hints") /# 0 / s"Existing ID: $id."
+              ihttp.reps.last.body must /("message" -> "Run summary already uploaded.")
+              ihttp.reps.last.body must /("hints") /# 0 / s"Existing ID: $id."
             }
           }
-
         }
-      }
 
-      s"when the user does not provide the $HeaderApiKey header should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def request = () => post(endpoint, Seq(("userId", user.id), ("pipeline", pipeline)), fileMap) { response }
-          def priorRequests = Seq(request)
+      val ictx9 = HttpContext(() => post(baseEndpoint,
+        Seq(("userId", UserExamples.avg.id), ("pipeline", "plain")), Map("run" -> SummaryExamples.Plain)) { response })
+      s"when the user does not provide the '$HeaderApiKey' header" should
+        ctx.priorReqsOnCleanDb(ictx9, populate = true) { ihttp =>
 
           "return status 401" in {
-            priorResponse.status mustEqual 401
+            ihttp.rep.status mustEqual 401
           }
 
           "return the challenge response header key" in {
-            priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            ihttp.rep.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
           }
-
 
           "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "Authentication required to access resource.")
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Authentication required to access resource.")
           }
         }
-      }
 
-      s"when the provided $HeaderApiKey does not match the one owned by the user should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def params = Seq(("userId", user.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> (user.activeKey + "nono"))
-          def request = () => post(endpoint, params, fileMap, headers) { response }
-          def priorRequests = Seq(request)
+      val ictx10 = HttpContext(() => post(baseEndpoint,
+        Seq(("userId", UserExamples.avg.id), ("pipeline", "plain")),
+        Map("run" -> SummaryExamples.Plain), Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+      s"when the provided '$HeaderApiKey' does not match the one owned by the user" should
+        ctx.priorReqsOnCleanDb(ictx10, populate = true) { ihttp =>
 
           "return status 401" in {
-            priorResponse.status mustEqual 401
+            ihttp.rep.status mustEqual 401
           }
 
           "return the challenge response header key" in {
-            priorResponse.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+            ihttp.rep.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
           }
-
 
           "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "Authentication required to access resource.")
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Authentication required to access resource.")
           }
         }
-      }
 
-      s"when an unverified user uploads a run summary" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def params = Seq(("userId", users.unverified.id), ("pipeline", pipeline))
-          def headers = Map(HeaderApiKey -> users.unverified.activeKey)
-          def request = () => post(endpoint, params, fileMap, headers) { response }
-          def priorRequests = Seq(request)
+      val ictx11 = UploadContext(UploadSet(UserExamples.unverified, SummaryExamples.Plain))
+      "when an unverified user uploads a run summary file" should
+        ctx.priorReqsOnCleanDb(ictx11, populate = true ) { ihttp =>
 
           "return status 403" in {
-            priorResponse.status mustEqual 403
+            ihttp.rep.status mustEqual 403
           }
 
           "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> "Unauthorized to access resource.")
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Unauthorized to access resource.")
           }
         }
-      }
 
-      s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          lazy val bigFile = createTempFile("bigFile.json")
-
-          override def beforeAll() = {
-            fillFile(bigFile, MaxRunSummarySize + 100)
-            super.beforeAll()
-          }
-
-          override def afterAll() = {
-            super.afterAll()
-            deleteQuietly(bigFile)
-          }
-
-          def params = Seq(("userId", user.id), ("pipeline", pipeline))
-          def fileMap = Map("run" -> bigFile)
-          def headers = Map(HeaderApiKey -> user.activeKey)
-          def request = () => post(endpoint, params, fileMap, headers) { response }
-          def priorRequests = Seq(request)
+      val ictx12 = UploadContext(UploadSet(UserExamples.avg, VariableSizedPart(MaxRunSummarySize + 100, "plain")))
+      s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should
+        ctx.priorReqsOnCleanDb(ictx12, populate = true) { ihttp =>
 
           "return status 413" in {
-            priorResponse.status mustEqual 413
+            ihttp.rep.status mustEqual 413
           }
 
           "return a JSON object containing the expected message" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("message" -> s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
           }
         }
-      }
     }
 
     "using a pipeline summary file with samples and read groups ('maple')" >> {
-      br
+    br
 
-      def params(implicit user: User) = Seq(("userId", user.id), ("pipeline", "maple"))
-      def headers(implicit user: User) = Map(HeaderApiKey -> user.activeKey)
-
-      "when a multi sample, multi read group summary is uploaded to an empty database should" >> inline {
-
-        new Context.PriorRequestsClean {
-
-          def request = () =>
-            post(endpoint, params, Map("run" -> SummaryExamples.Maple.MSampleMRG), headers) { response }
-          def priorRequests = Seq(request)
+      val ictx1 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleMRG))
+      "when a multi sample, multi read group summary is uploaded to an empty database" should
+        ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
 
           "return status 201" in {
-            priorResponse.status mustEqual 201
+            ihttp.rep.status mustEqual 201
           }
 
           "return a JSON object of the uploaded run" in {
-            priorResponse.contentType mustEqual "application/json"
-            priorResponse.body must /("runId" -> """\S+""".r)
-            priorResponse.body must /("uploaderId" -> user.id)
-            priorResponse.body must /("pipeline" -> "maple")
-            priorResponse.body must /("nSamples" -> 2)
-            priorResponse.body must /("nReadGroups" -> 3)
-            priorResponse.body must /("runId" -> """\S+""".r)
-            priorResponse.body must not /("sampleIds" -> ".+".r)
-            priorResponse.body must not /("libIds" -> ".+".r)
+            ihttp.rep.contentType mustEqual "application/json"
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must /("uploaderId" -> ictx1.uploader.id)
+            ihttp.rep.body must /("pipeline" -> "maple")
+            ihttp.rep.body must /("nSamples" -> 2)
+            ihttp.rep.body must /("nReadGroups" -> 3)
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("readGroupIds" -> ".+".r)
           }
         }
-      }
-
     }
   }
 
   s"GET '$baseEndpoint'" >> {
+  br
+
+    "when the database is empty" >> {
     br
 
-    val endpoint = baseEndpoint
+      val ctx1 = HttpContext(() =>
+        get(baseEndpoint, Seq(("userId", UserExamples.avg.id)),
+          Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+      "when a verified user authenticates correctly" should ctx.priorReqsOnCleanDb(ctx1, populate = true) { http =>
 
-    "when the database is empty" >> inline {
-
-      new Context.CleanDatabaseWithUser {
-
-        "when the user authenticates correctly" should {
-
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-
-          "return status 200" in {
-            get(endpoint, params, headers) { status mustEqual 200 }
-          }
-
-          "return an empty JSON list" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              jsonBody must haveSize(0)
-            }
-          }
+        "return status 200" in {
+          http.rep.status mustEqual 200
         }
 
-        "when the user ID is not specified" should {
+        "return an empty JSON list" in {
+          http.rep.contentType mustEqual MimeType.Json
+          http.rep.jsonBody must haveSize(0)
+        }
+      }
 
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
+      val ctx2 = HttpContext(() =>
+        get(baseEndpoint, Seq(), Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+      "when the user ID is not specified" should ctx.priorReqsOnCleanDb(ctx2, populate = true) { http =>
 
-          "return status 400" in {
-            get(endpoint, Seq(), headers) { status mustEqual 400 }
-          }
-
-          "return a JSON object of the expected message" in {
-            get(endpoint, Seq(), headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
-            }
-          }
+        "return status 400" in {
+          http.rep.status mustEqual 400
         }
 
-        "when the user does not authenticate correctly" should {
+        "return a JSON object containing the expected message" in {
+          http.rep.contentType mustEqual MimeType.Json
+          http.rep.body must /("message" -> Payloads.UnspecifiedUserIdError.message)
+        }
+      }
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+      val ctx3 = HttpContext(() =>
+        get(baseEndpoint, Seq(("userId", UserExamples.avg.id)),
+          Map(HeaderApiKey -> (UserExamples.avg.activeKey + "diff"))) { response })
+      "when a verified user does not authenticate correctly" should
+        ctx.priorReqsOnCleanDb(ctx3, populate = true) { http =>
 
-          "return status 401" in {
-            get(endpoint, params, headers) { status mustEqual 401 }
-          }
-
-          "return the authentication challenge header" in {
-            get(endpoint, params, headers) {
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            }
-          }
-
-          "return a JSON object of the expected message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthenticationError.message)
-            }
-          }
+        "return status 401" in {
+          http.rep.status mustEqual 401
         }
 
-        "when the authenticated user is not verified" should {
+        "return the authentication challenge header" in {
+          http.rep.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+        }
 
-          val params = Seq(("userId", users.unverified.id))
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
+        "return a JSON object containing the expected message" in {
+          http.rep.contentType mustEqual MimeType.Json
+          http.rep.body must /("message" -> Payloads.AuthenticationError.message)
+        }
+      }
 
-          "return status 403" in {
-            get(endpoint, params, headers) { status mustEqual 403 }
-          }
+      val ctx4 = HttpContext(() =>
+        get(baseEndpoint, Seq(("userId", UserExamples.unverified.id)),
+          Map(HeaderApiKey -> UserExamples.unverified.activeKey)) { response })
+      "when an unverified user authenticates correctly" should ctx.priorReqsOnCleanDb(ctx4, populate = true) { http =>
 
-          "return a JSON object of the expected message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthorizationError.message)
-            }
-          }
+        "return status 403" in {
+          http.rep.status mustEqual 403
+        }
+
+        "return a JSON object containing the expected message" in {
+          http.rep.contentType mustEqual MimeType.Json
+          http.rep.body must /("message" -> Payloads.AuthorizationError.message)
         }
       }
     }
 
-    "using the 'plain' and the 'maple' run summary files" >> inline {
+    "using the 'plain' and the 'maple' run summary files" >>
+      ctx.priorReqsOnCleanDb(plainThenMapleContext, populate = true) { case http: UploadContext =>
 
-      new PlainThenMapleUploadContext {
+        "after both summary files have been uploaded" in {
+          http.reps.map(_.status).list mustEqual List(201, 201)
+        }
 
-        "when the user ID is not specified" should {
-
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
+        val ictx1 = HttpContext(() => get(baseEndpoint,
+          Seq(), Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+        br; "when the user ID is not specified" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 400" in {
-            get(endpoint, Seq(), headers) { status mustEqual 400 }
+            ihttp.reps.last.status mustEqual 400
           }
 
-          "return a JSON object of the expected message" in {
-            get(endpoint, Seq(), headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("message" -> Payloads.UnspecifiedUserIdError.message)
           }
         }
 
-        "when the user does not authenticate correctly" should {
-
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+        val ictx2 = HttpContext(() => get(baseEndpoint, Seq(("userId", UserExamples.avg.id)),
+          Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+        "when a verified user does not authenticate correctly" should ctx.priorReqs(ictx2) { ihttp =>
 
           "return status 401" in {
-            get(endpoint, params, headers) { status mustEqual 401 }
+            ihttp.reps.last.status mustEqual 401
           }
 
           "return the authentication challenge header" in {
-            get(endpoint, params, headers) {
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            }
+            ihttp.reps.last.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
           }
 
-          "return a JSON object of the expected message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthenticationError.message)
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("message" -> Payloads.AuthenticationError.message)
           }
         }
 
-        "when the authenticated user is not verified" should {
-
-          val params = Seq(("userId", users.unverified.id))
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
+        val ictx3 = HttpContext(() => get(baseEndpoint, Seq(("userId", UserExamples.unverified.id)),
+          Map(HeaderApiKey -> UserExamples.unverified.activeKey)) { response })
+        "when an unverified user authenticates correctly" should ctx.priorReqs(ictx3) { ihttp =>
 
           "return status 403" in {
-            get(endpoint, params, headers) { status mustEqual 403 }
+            ihttp.reps.last.status mustEqual 403
           }
 
-          "return a JSON object of the expected message" in {
-            get(endpoint, params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthorizationError.message)
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("message" -> Payloads.AuthorizationError.message)
           }
         }
 
-        "when the user authenticates correctly" >> {
-          br
+        "using a verified, authenticated user" >> {
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-
-          "and queries with the default parameter" should {
+          val iictx1 = HttpContext(() => get(baseEndpoint, Seq(("userId", UserExamples.avg.id)),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          br; "when using the default parameters" should ctx.priorReqs(iictx1) { iihttp =>
 
             "return status 200" in {
-              get(endpoint, params, headers) { status mustEqual 200 }
+              iihttp.reps.last.status mustEqual 200
             }
 
-            "return a JSON list containing a single run object with the expected payload" in {
-              get(endpoint, params, headers) {
-                contentType mustEqual "application/json"
-                jsonBody must haveSize(1)
-                body must /#(0) */("runId" -> """\S+""".r)
-                body must /#(0) */("uploaderId" -> user.id)
-                body must /#(0) */("pipeline" -> "plain")
-                body must /#(0) */("nSamples" -> 0)
-                body must /#(0) */("nReadGroups" -> 0)
-                body must not /("sampleIds" -> ".+".r)
-                body must not /("libIds" -> ".+".r)
-              }
+            "return a JSON object containing the expected message" in {
+              iihttp.reps.last.contentType mustEqual MimeType.Json
+              iihttp.reps.last.jsonBody must haveSize(1)
+              iihttp.reps.last.body must /#(0) */("runId" -> """\S+""".r)
+              iihttp.reps.last.body must /#(0) */("uploaderId" -> UserExamples.avg.id)
+              iihttp.reps.last.body must /#(0) */("pipeline" -> "plain")
+              iihttp.reps.last.body must /#(0) */("nSamples" -> 0)
+              iihttp.reps.last.body must /#(0) */("nReadGroups" -> 0)
+              iihttp.reps.last.body must not /("sampleIds" -> ".+".r)
+              iihttp.reps.last.body must not /("readGroupIds" -> ".+".r)
             }
           }
 
-          "and selects for a pipeline he/she has not uploaded" should {
+          val iictx2 = HttpContext(() => get(baseEndpoint, Seq(("userId", UserExamples.avg.id), ("pipelines", "maple")),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          "when a pipeline he/she did not upload is selected" should ctx.priorReqs(iictx2) { iihttp =>
 
             "return status 200" in {
-              get(endpoint, params :+ ("pipelines", "maple"), headers) { status mustEqual 200 }
+              iihttp.reps.last.status mustEqual 200
             }
 
             "return an empty JSON list" in {
-              get(endpoint, params :+ ("pipelines", "maple"), headers) {
-                contentType mustEqual "application/json"
-                jsonBody must haveSize(0)
-              }
+              iihttp.reps.last.contentType mustEqual MimeType.Json
+              iihttp.reps.last.jsonBody must haveSize(0)
             }
           }
 
-          "and gives an incorrect pipeline parameter" should {
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", UserExamples.avg.id), ("pipelines", "nonexistent")),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          "when an incorrect pipeline parameter is used" should ctx.priorReqs(iictx3) { iihttp =>
 
             "return status 400" in {
-              get(endpoint, params :+ ("pipelines", "nonexistent"), headers) { status mustEqual 400 }
+              iihttp.reps.last.status mustEqual 400
             }
 
-            "return a JSON object of the expected message" in {
-              get(endpoint, params :+ ("pipelines", "nonexistent"), headers) {
-                contentType mustEqual "application/json"
-                body must /("message" -> "One or more pipeline is invalid.")
-                body must /("hints") /# 0 / "invalid pipelines: nonexistent."
-              }
+            "return a JSON object containing the expected message" in {
+              iihttp.reps.last.contentType mustEqual MimeType.Json
+              iihttp.reps.last.body must /("message" -> "One or more pipeline is invalid.")
+              iihttp.reps.last.body must /("hints") /# 0 / "invalid pipelines: nonexistent."
             }
           }
         }
-      }
     }
   }
 
   s"OPTIONS '$baseEndpoint/:runId'" >> {
-    br
-    "when using the default parameter should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint/runId", "DELETE,GET,HEAD,PATCH")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(s"$baseEndpoint/:runId", "DELETE,GET,HEAD,PATCH")
+  }; br
 
   s"GET '$baseEndpoint/:runId'" >> {
-    br
+  br
 
     def endpoint(uploadedRunId: String) = s"$baseEndpoint/$uploadedRunId"
 
-    "using the 'plain' and the 'maple' run summary files" >> inline {
+    "using the 'plain' and the 'maple' run summary files" >> {
+      ctx.priorReqsOnCleanDb(plainThenMapleContext, populate = true) { case http: UploadContext =>
 
-      new PlainThenMapleUploadContext {
-
-        "when the user ID is not specified" should {
-
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
-
-          "return status 400" in {
-            get(endpoint(uploadedRunId), Seq(), headers) { status mustEqual 400 }
-          }
-
-          "return a JSON object of the expected message" in {
-            get(endpoint(uploadedRunId), Seq(), headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
-            }
-          }
+        "after both summary files have been uploaded" in {
+          http.reps.map(_.status).list mustEqual List(201, 201)
         }
 
-        "when the user does not authenticate correctly" should {
+        val ictx1 = HttpContext(() => get(endpoint(http.runId),
+          Seq(), Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+        br; "when the user ID is not specified" should ctx.priorReqs(ictx1) { ihttp =>
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
+        "return status 400" in {
+          ihttp.reps.last.status mustEqual 400
+        }
+
+        "return a JSON object containing the expected message" in {
+          ihttp.reps.last.contentType mustEqual MimeType.Json
+          ihttp.reps.last.body must /("message" -> Payloads.UnspecifiedUserIdError.message)
+        }
+      }
+
+        val ictx2 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", UserExamples.avg.id)),
+          Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+        "when a verified user does not authenticate correctly" should ctx.priorReqs(ictx2) { ihttp =>
 
           "return status 401" in {
-            get(endpoint(uploadedRunId), params, headers) { status mustEqual 401 }
+            ihttp.reps.last.status mustEqual 401
           }
 
           "return the authentication challenge header" in {
-            get(endpoint(uploadedRunId), params, headers) {
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            }
+            ihttp.reps.last.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
           }
 
-          "return a JSON object of the expected message" in {
-            get(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthenticationError.message)
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("message" -> Payloads.AuthenticationError.message)
           }
         }
 
-        "when the authenticated user is not verified" should {
-
-          val params = Seq(("userId", users.unverified.id))
-          val headers = Map(HeaderApiKey -> users.unverified.activeKey)
+        val ictx3 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", UserExamples.unverified.id)),
+          Map(HeaderApiKey -> UserExamples.unverified.activeKey)) { response })
+        "when an unverified user authenticates correctly" should ctx.priorReqs(ictx3) { ihttp =>
 
           "return status 403" in {
-            get(endpoint(uploadedRunId), params, headers) { status mustEqual 403 }
+            ihttp.reps.last.status mustEqual 403
           }
 
-          "return a JSON object of the expected message" in {
-            get(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthorizationError.message)
+          "return a JSON object containing the expected message" in {
+            ihttp.reps.last.contentType mustEqual MimeType.Json
+            ihttp.reps.last.body must /("message" -> Payloads.AuthorizationError.message)
+          }
+        }
+
+        "using a verified, authenticated user" >> {
+
+          val iictx1 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", UserExamples.avg.id)),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          br; "when a run he/she uploaded is queried" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("runId" -> http.runId)
+              iihttp.rep.body must /("uploaderId" -> UserExamples.avg.id)
+              iihttp.rep.body must /("pipeline" -> "plain")
+              iihttp.rep.body must /("nSamples" -> 0)
+              iihttp.rep.body must /("nReadGroups" -> 0)
+              iihttp.rep.body must not /("sampleIds" -> ".+".r)
+              iihttp.rep.body must not /("readGroupIds" -> ".+".r)
+            }
+          }
+
+          "when he/she specifies a 'true' value for the download parameter" >> {
+          br
+
+            Fragments.foreach(Seq("yes", "true", "ok", "1")) { dlParam =>
+
+              val iictx1 = HttpContext(() => get(endpoint(http.runId),
+                Seq(("userId", UserExamples.avg.id), ("download", dlParam)),
+                Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+              s"such as '$dlParam'" should ctx.priorReqs(iictx1) { iihttp =>
+
+                "return status 200" in {
+                  iihttp.rep.status mustEqual 200
+                }
+
+                "return the expected Content-Disposition header" in {
+                  iihttp.rep.header must havePair("Content-Disposition" ->
+                    ("attachment; filename=" + http.sets.head.payload.fileName))
+                }
+
+                "return the uploaded summary file" in {
+                  iihttp.rep.contentType mustEqual MimeType.Binary
+                  iihttp.rep.body mustEqual new String(http.sets.head.payload.content)
+                }
+              }
+            }
+          }
+
+          "when he/she specifies a 'false' value for the download parameter" >> {
+          br
+
+            Fragments.foreach(Seq("no", "false", "none", "null", "nothing", "0")) { dlParam =>
+
+              val iictx1 = HttpContext(() => get(endpoint(http.runId),
+                Seq(("userId", UserExamples.avg.id), ("download", dlParam)),
+                Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+              s"such as '$dlParam'" should ctx.priorReqs(iictx1) { iihttp =>
+
+                "return status 200" in {
+                  iihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object containing the run data" in {
+                  iihttp.rep.contentType mustEqual MimeType.Json
+                  iihttp.rep.body must /("runId" -> http.runId)
+                  iihttp.rep.body must /("uploaderId" -> UserExamples.avg.id)
+                  iihttp.rep.body must not /("sampleIds" -> ".+".r)
+                  iihttp.rep.body must not /("readGroupIds" -> ".+".r)
+                  iihttp.rep.body must /("nSamples" -> 0)
+                  iihttp.rep.body must /("nReadGroups" -> 0)
+                  iihttp.rep.body must /("pipeline" -> "plain")
+                }
+              }
+            }
+          }
+
+          val iictx2 = HttpContext(() => get(endpoint(http.runIds.last), Seq(("userId", UserExamples.avg.id)),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          "when a run he/she did not upload is queried" should ctx.priorReqs(iictx2) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+            }
+          }
+
+          val iictx3 = HttpContext(() => get(endpoint("invalidId"), Seq(("userId", UserExamples.avg.id)),
+            Map(HeaderApiKey -> UserExamples.avg.activeKey)) { response })
+          "when using an invalid run ID" should ctx.priorReqs(iictx3) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
         }
 
-        "when the user authenticates correctly" >> {
-          br
+        "using an authenticated admin user" >> {
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
+          val iictx1 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", UserExamples.admin.id)),
+            Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          br; "when a run he/she did not upload is queried" should ctx.priorReqs(iictx1) { iihttp =>
 
-          "and queries a run he/she uploaded" >> {
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("runId" -> http.runId)
+              iihttp.rep.body must /("uploaderId" -> UserExamples.avg.id)
+              iihttp.rep.body must /("pipeline" -> "plain")
+              iihttp.rep.body must /("nSamples" -> 0)
+              iihttp.rep.body must /("nReadGroups" -> 0)
+              iihttp.rep.body must not /("sampleIds" -> ".+".r)
+              iihttp.rep.body must not /("readGroupIds" -> ".+".r)
+            }
+          }
+
+          "when he/she specifies a 'true' value for the download parameter" >> {
             br
 
-            "with the default parameter" should {
+            Fragments.foreach(Seq("yes", "true", "ok", "1")) { dlParam =>
 
-              "return status 200" in {
-                get(endpoint(uploadedRunId), params, headers) { status mustEqual 200 }
-              }
+              val iictx1 = HttpContext(() => get(endpoint(http.runId),
+                Seq(("userId", UserExamples.admin.id), ("download", dlParam)),
+                Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+              s"such as '$dlParam'" should ctx.priorReqs(iictx1) { iihttp =>
 
-              "return a JSON object of the run data" in {
-                get(endpoint(uploadedRunId), params, headers) {
-                  contentType mustEqual "application/json"
-                  body must /("runId" -> uploadedRunId)
-                  body must /("uploaderId" -> user.id)
-                  body must /("nSamples" -> 0)
-                  body must /("nReadGroups" -> 0)
-                  body must /("pipeline" -> "plain")
-                  body must not /("sampleIds" -> ".+".r)
-                  body must not /("libIds" -> ".+".r)
+                "return status 200" in {
+                  iihttp.rep.status mustEqual 200
                 }
-              }
-            }
 
-            "and sets the download parameter to some true values which" can {
-
-              Seq("1", "yes", "true", "ok") foreach { dlParam =>
-                s"be '$dlParam'" should {
-
-                  val paramsWithDownload = params :+ ("download", dlParam)
-
-                  "return status 200" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
-                  }
-
-                  "return the expected Content-Disposition header" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet1.payload.fileName))
-                    }
-                  }
-
-                  "return the uploaded summary file" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      contentType mustEqual "application/octet-stream"
-                      body mustEqual new String(uploadSet1.payload.content)
-                    }
-                  }
+                "return the expected Content-Disposition header" in {
+                  iihttp.rep.header must havePair("Content-Disposition" ->
+                    ("attachment; filename=" + http.sets.head.payload.fileName))
                 }
-              }
-            }
 
-            "and sets the download parameter to some false values which" can {
-
-              Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
-                s"be '$dlParam'" should {
-
-                  val paramsWithDownload = params :+ ("download", dlParam)
-
-                  "return status 200" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
-                  }
-
-                  "return a JSON object of the run data" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      contentType mustEqual "application/json"
-                      body must /("runId" -> uploadedRunId)
-                      body must /("uploaderId" -> user.id)
-                      body must not /("sampleIds" -> ".+".r)
-                      body must not /("libIds" -> ".+".r)
-                      body must /("nSamples" -> 0)
-                      body must /("nReadGroups" -> 0)
-                      body must /("pipeline" -> "plain")
-                    }
-                  }
+                "return the uploaded summary file" in {
+                  iihttp.rep.contentType mustEqual MimeType.Binary
+                  iihttp.rep.body mustEqual new String(http.sets.head.payload.content)
                 }
-              }
-            }
-
-
-          }
-
-          "and queries a run he/she did not upload" should {
-
-            lazy val uploadedRunId2 = uploadedRunIds.tail.head
-
-            "return status 404" in {
-              get(endpoint(uploadedRunId2), params, headers) { status mustEqual 404 }
-            }
-
-            "return a JSON object of the expected message" in {
-              get(endpoint(uploadedRunId2), params, headers) {
-                contentType mustEqual "application/json"
-                body must /("message" -> Payloads.RunIdNotFoundError.message)
               }
             }
           }
 
-          "and queries a run with an invalid ID" should {
-
-            val invalidId = "nonexistendId"
-
-            "return status 404" in {
-              get(endpoint(invalidId), params, headers) { status mustEqual 404 }
-            }
-
-            "return a JSON object of the expected message" in  {
-              get(endpoint(invalidId), params, headers) {
-                contentType mustEqual "application/json"
-                body must /("message" -> Payloads.RunIdNotFoundError.message)
-              }
-            }
-          }
-        }
-
-        "when an admin authenticates correctly" >> {
-          br
-
-          val params = Seq(("userId", users.admin.id))
-          val headers = Map(HeaderApiKey -> users.admin.activeKey)
-
-          "and queries a run he/she did not upload" >> {
+          "when he/she specifies a 'false' value for the download parameter" >> {
             br
 
-            "with the default parameter" should {
+            Fragments.foreach(Seq("no", "false", "none", "null", "nothing", "0")) { dlParam =>
 
-              "return status 200" in {
-                get(endpoint(uploadedRunId), params, headers) { status mustEqual 200 }
-              }
+              val iictx1 = HttpContext(() => get(endpoint(http.runId),
+                Seq(("userId", UserExamples.admin.id), ("download", dlParam)),
+                Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+              s"such as '$dlParam'" should ctx.priorReqs(iictx1) { iihttp =>
 
-              "return a JSON object of the run data" in {
-                get(endpoint(uploadedRunId), params, headers) {
-                  contentType mustEqual "application/json"
-                  body must /("runId" -> uploadedRunId)
-                  body must /("uploaderId" -> user.id)
-                  body must /("nSamples" -> 0)
-                  body must /("nReadGroups" -> 0)
-                  body must /("pipeline" -> "plain")
-                  body must not /("sampleIds" -> ".+".r)
-                  body must not /("libIds" -> ".+".r)
+                "return status 200" in {
+                  iihttp.rep.status mustEqual 200
                 }
-              }
-            }
 
-            "and sets the download parameter to some true values which" can {
-
-              Seq("1", "yes", "true", "ok") foreach { dlParam =>
-                s"be '$dlParam'" should {
-
-                  val paramsWithDownload = params :+ ("download", dlParam)
-
-                  "return status 200" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
-                  }
-
-                  "return the expected Content-Disposition header" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet1.payload.fileName))
-                    }
-                  }
-
-                  "return the uploaded summary file" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      contentType mustEqual "application/octet-stream"
-                      body mustEqual new String(uploadSet1.payload.content)
-                    }
-                  }
-                }
-              }
-            }
-
-            "and sets the download parameter to some false values which" can {
-
-              Seq("0", "no", "false", "none", "null", "nothing") foreach { dlParam =>
-                s"be '$dlParam'" should {
-
-                  val paramsWithDownload = params :+ ("download", dlParam)
-
-                  "return status 200" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) { status mustEqual 200 }
-                  }
-
-                  "return a JSON object of the run data" in {
-                    get(endpoint(uploadedRunId), paramsWithDownload, headers) {
-                      contentType mustEqual "application/json"
-                      body must /("runId" -> uploadedRunId)
-                      body must /("uploaderId" -> user.id)
-                      body must not /("sampleIds" -> ".+".r)
-                      body must not /("libIds" -> ".+".r)
-                      body must /("nSamples" -> 0)
-                      body must /("nReadGroups" -> 0)
-                      body must /("pipeline" -> "plain")
-                    }
-                  }
+                "return a JSON object containing the run data" in {
+                  iihttp.rep.contentType mustEqual MimeType.Json
+                  iihttp.rep.body must /("runId" -> http.runId)
+                  iihttp.rep.body must /("uploaderId" -> UserExamples.avg.id)
+                  iihttp.rep.body must not /("sampleIds" -> ".+".r)
+                  iihttp.rep.body must not /("readGroupIds" -> ".+".r)
+                  iihttp.rep.body must /("nSamples" -> 0)
+                  iihttp.rep.body must /("nReadGroups" -> 0)
+                  iihttp.rep.body must /("pipeline" -> "plain")
                 }
               }
             }
           }
 
-          "and queries a run with an invalid ID" should {
-
-            val invalidId = "nonexistendId"
+          val iictx2 = HttpContext(() => get(endpoint("invalidId"), Seq(("userId", UserExamples.admin.id)),
+            Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when using an invalid run ID" should ctx.priorReqs(iictx2) { iihttp =>
 
             "return status 404" in {
-              get(endpoint(invalidId), params, headers) { status mustEqual 404 }
+              iihttp.rep.status mustEqual 404
             }
 
-            "return a JSON object of the expected message" in  {
-              get(endpoint(invalidId), params, headers) {
-                contentType mustEqual "application/json"
-                body must /("message" -> Payloads.RunIdNotFoundError.message)
-              }
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
             }
           }
         }
@@ -1047,424 +841,577 @@ class RunsControllerSpec extends SentinelServletSpec {
   }
 
   s"DELETE '$baseEndpoint/:runId'" >> {
-    br
+  br
 
     def endpoint(runId: String) = s"$baseEndpoint/$runId"
 
-    "using the 'plain' run summary file" >> inline {
+    "using the 'plain' run summary file" >>
+      ctx.priorReqsOnCleanDb(plainContext, populate = true) { case http: UploadContext =>
 
-      new PlainUploadContext {
-
-        "when the user ID is not specified" should {
-
-          val headers = Map(HeaderApiKey -> user.activeKey)
+        val ictx1 = HttpContext(() => delete(endpoint(""),
+            Seq(("userId", http.uploader.id)),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        br; "when the run ID is not specified" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 400" in {
-            delete(endpoint(uploadedRunId), Seq(), headers) { status mustEqual 400 }
+            ihttp.rep.status mustEqual 400
           }
 
-          "return a JSON object of the expected message" in {
-            delete(endpoint(uploadedRunId), Seq(), headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedUserIdError.message)
+          "return a JSON object containing the expected message" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> Payloads.UnspecifiedRunIdError.message)
+          }
+
+          val iictx1 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", http.uploader.id)),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          br; "when the uploaded run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return a non-deleted JSON object of the run" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("runId" -> """\S+""".r)
+              iihttp.rep.body must not / ("deletionTimeUtc" -> ".+".r)
             }
           }
 
-          "not remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), headers) {
-              status mustEqual 200
-              body must /("runId" -> """\S+""".r)
-              body must not /("deletionTimeUtc" -> ".+".r)
+          val iictx2 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", http.uploader.id), ("download", "true")),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the uploaded run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return the expected Content-Disposition header" in {
+              iihttp.rep.header must havePair("Content-Disposition" ->
+                ("attachment; filename=" + http.sets.head.payload.fileName))
+            }
+
+            "return the uploaded summary file" in {
+              iihttp.rep.contentType mustEqual MimeType.Binary
+              iihttp.rep.body mustEqual new String(http.sets.head.payload.content)
             }
           }
 
-          "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
-              contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadSet.payload.content)
-            }
-          }
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
 
-          "not remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
-              status mustEqual 200
-              jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> """\S+""".r)
-              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return JSON array containing all the runs" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.jsonBody must haveSize(1)
+              iihttp.rep.body must /#(0) /("runId" -> http.runId)
+              iihttp.rep.body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
         }
 
-        "when the run ID is not specified" should {
+        val ictx2 = HttpContext(() =>
+          delete(endpoint(http.runId), Seq(), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        "when the user ID is not specified" should ctx.priorReqs(ictx2) { ihttp =>
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
+        "return status 400" in {
+          ihttp.rep.status mustEqual 400
+        }
 
-          "return status 400" in {
-            delete(endpoint(""), params, headers) { status mustEqual 400 }
+        "return a JSON object containing the expected message" in {
+          ihttp.rep.contentType mustEqual MimeType.Json
+          ihttp.rep.body must /("message" -> Payloads.UnspecifiedUserIdError.message)
+        }
+
+        val iictx1 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", http.uploader.id)),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        br; "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
           }
 
-          "return a JSON object of the expected message" in {
-            delete(endpoint(""), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.UnspecifiedRunIdError.message)
-            }
-          }
-
-          "not remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), headers) {
-              status mustEqual 200
-              body must /("runId" -> """\S+""".r)
-              body must not /("deletionTimeUtc" -> ".+".r)
-            }
-          }
-
-          "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
-              contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadSet.payload.content)
-            }
-          }
-
-          "not remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), headers) {
-              status mustEqual 200
-              jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> """\S+""".r)
-              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
-            }
+          "return a non-deleted JSON object of the run" in {
+            iihttp.rep.contentType mustEqual MimeType.Json
+            iihttp.rep.body must /("runId" -> """\S+""".r)
+            iihttp.rep.body must not / ("deletionTimeUtc" -> ".+".r)
           }
         }
 
-        "when the user does not authenticate correctly" should {
+        val iictx2 = HttpContext(() => get(endpoint(http.runId),
+          Seq(("userId", http.uploader.id), ("download", "true")),
+          Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> (user.activeKey + "diff"))
-
-          "return status 401" in {
-            delete(endpoint(uploadedRunId), params, headers) { status mustEqual 401 }
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
           }
 
-          "return the authentication challenge header" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
-            }
+          "return the expected Content-Disposition header" in {
+            iihttp.rep.header must havePair("Content-Disposition" ->
+              ("attachment; filename=" + http.sets.head.payload.fileName))
           }
 
-          "return a JSON object of the expected message" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> Payloads.AuthenticationError.message)
-            }
+          "return the uploaded summary file" in {
+            iihttp.rep.contentType mustEqual MimeType.Binary
+            iihttp.rep.body mustEqual new String(http.sets.head.payload.content)
+          }
+        }
+
+        val iictx3 = HttpContext(() => get(baseEndpoint,
+          Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
           }
 
-          "not remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              body must /("runId" -> """\S+""".r)
-              body must not /("deletionTimeUtc" -> ".+".r)
-            }
+          "return JSON array containing the supposedly deleted run" in {
+            iihttp.rep.contentType mustEqual MimeType.Json
+            iihttp.rep.jsonBody must haveSize(1)
+            iihttp.rep.body must /#(0) /("runId" -> http.runId)
+            iihttp.rep.body must not /# 0 /("deletionTimeUtc" -> ".+".r)
+          }
+        }
+      }
+
+      val ictx3 = HttpContext(() => delete(endpoint(http.runId),
+        Seq(("userId", http.uploader.id)),
+        Map(HeaderApiKey -> (http.uploader.activeKey + "wrong"))) { response })
+      "when a verified user authenticates incorrectly" should ctx.priorReqs(ictx3) { ihttp =>
+
+        "return status 401" in {
+          ihttp.rep.status mustEqual 401
+        }
+
+        "return the authentication challenge header" in {
+          ihttp.rep.header must havePair("WWW-Authenticate" -> "SimpleKey realm=\"Sentinel Ops\"")
+        }
+
+        "return a JSON object containing the expected message" in {
+          ihttp.rep.contentType mustEqual MimeType.Json
+          ihttp.rep.body must /("message" -> Payloads.AuthenticationError.message)
+        }
+
+        val iictx1 = HttpContext(() => get(endpoint(http.runId), Seq(("userId", http.uploader.id)),
+          Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        br; "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
           }
 
-          "not remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              header must havePair("Content-Disposition" -> ("attachment; filename=" + uploadSet.payload.fileName))
-              contentType mustEqual "application/octet-stream"
-              body mustEqual new String(uploadSet.payload.content)
-            }
+          "return a non-deleted JSON object of the run" in {
+            iihttp.rep.contentType mustEqual MimeType.Json
+            iihttp.rep.body must /("runId" -> """\S+""".r)
+            iihttp.rep.body must not / ("deletionTimeUtc" -> ".+".r)
+          }
+        }
+
+        val iictx2 = HttpContext(() => get(endpoint(http.runId),
+          Seq(("userId", http.uploader.id), ("download", "true")),
+          Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
+
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
           }
 
-          "not remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              jsonBody must haveSize(1)
-              body must /#(0) /("runId" -> """\S+""".r)
-              body must not /# 0 /("deletionTimeUtc" -> ".+".r)
-            }
+          "return the expected Content-Disposition header" in {
+            iihttp.rep.header must havePair("Content-Disposition" ->
+              ("attachment; filename=" + http.sets.head.payload.fileName))
+          }
+
+          "return the uploaded summary file" in {
+            iihttp.rep.contentType mustEqual MimeType.Binary
+            iihttp.rep.body mustEqual new String(http.sets.head.payload.content)
+          }
+        }
+
+        val iictx3 = HttpContext(() => get(baseEndpoint,
+          Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+          "return status 200" in {
+            iihttp.rep.status mustEqual 200
+          }
+
+          "return JSON array containing the supposedly deleted run" in {
+            iihttp.rep.contentType mustEqual MimeType.Json
+            iihttp.rep.jsonBody must haveSize(1)
+            iihttp.rep.body must /#(0) /("runId" -> http.runId)
+            iihttp.rep.body must not /# 0 /("deletionTimeUtc" -> ".+".r)
           }
         }
       }
     }
 
-    "when the user authenticates correctly" >> {
-      br
+    "using a verified, authenticated user" >> {
+    br
 
-      "with the default parameters for the 'plain' pipeline should" >> inline {
+      "using the 'plain' run summary file" >>
+        ctx.priorReqsOnCleanDb(plainContext, populate = true) { case http: UploadContext =>
 
-        new PlainUploadContext {
+          val ictx1 = HttpContext(() => delete(endpoint(http.runId),
+            Seq(("userId", UserExamples.avg2.id)), Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+          br; "when he/she tries to delete a run he/she did not upload" should ctx.priorReqs(ictx1) { ihttp =>
 
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
-          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
-          override def priorRequests = super.priorRequests.toStream :+ request
+            "return status 404" in {
+              ihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              ihttp.rep.contentType mustEqual MimeType.Json
+              ihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+            }
+          }
+        }
+
+      "using the 'plain' run summary file" >>
+        ctx.priorReqsOnCleanDb(plainContext, populate = true) { case http: UploadContext =>
+
+        def ictx1 = HttpContext(() => delete(endpoint(http.runId),
+          Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+        br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 200" in {
-            priorResponses.last.status mustEqual 200
+            ihttp.rep.status mustEqual 200
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            priorResponses.last.contentType mustEqual "application/json"
-            priorResponses.last.body must /("runId" -> uploadedRunId)
-            priorResponses.last.body must /("uploaderId" -> user.id)
-            priorResponses.last.body must not /("sampleIds" -> ".+".r)
-            priorResponses.last.body must not /("libIds" -> ".+".r)
-            priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("nReadGroups" -> 0)
-            priorResponses.last.body must /("pipeline" -> "plain")
-            priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
-          }
+          "return a JSON object of the run data with the `deletionTimeUtc` attribute" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("runId" -> http.runId)
+            ihttp.rep.body must /("uploaderId" -> http.uploader.id)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
+            ihttp.rep.body must /("nSamples" -> 0)
+            ihttp.rep.body must /("nReadGroups" -> 0)
+            ihttp.rep.body must /("pipeline" -> "plain")
+            ihttp.rep.body must /("deletionTimeUtc" -> ".+".r)
+          }; br
 
-          "remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx1 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-                status mustEqual 404
-                contentType mustEqual "application/json"
-                body must not /("runId" -> ".+".r)
-                body must /("message" -> Payloads.RunIdNotFoundError.message)
-              }
-          }
+          val iictx2 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", http.uploader.id), ("download", "true")),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
 
-          "remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              jsonBody must haveSize(0)
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "return status 410 when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              status mustEqual 410
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return an empty JSON array" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.jsonBody must haveSize(0)
             }
           }
 
-          "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> "Resource already deleted.")
+          "when the DELETE request is repeated" should ctx.priorReqs(ictx1) { iihttp =>
+
+            "return status 410" in {
+              iihttp.rep.status mustEqual 410
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.ResourceGoneError.message)
             }
           }
         }
       }
 
-      "with the default parameters for the 'maple' pipeline (multi sample, multi read group) should" >> inline {
+      def mapleThenPlainContext = UploadContext(NonEmptyList(
+        UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleMRG),
+        UploadSet(UserExamples.avg, SummaryExamples.Plain)))
 
-        new MapleUploadContext {
+      "using the 'maple' and 'plain' run summary files" >>
+        ctx.priorReqsOnCleanDb(mapleThenPlainContext, populate = true) { case http: UploadContext =>
 
-          override def user = uploadSet.uploader
-          val params = Seq(("userId", user.id))
-          val headers = Map(HeaderApiKey -> user.activeKey)
-          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
-          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
-          override def priorRequests = super.priorRequests.toStream :+ request
+          def ictx1 = HttpContext(() => delete(endpoint(http.runId),
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          br; "when using the default parameters on the 'maple' upload" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 200" in {
-            priorResponses.last.status mustEqual 200
+            ihttp.rep.status mustEqual 200
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              priorResponses.last.contentType mustEqual "application/json"
-              priorResponses.last.body must /("runId" -> uploadedRunId)
-              priorResponses.last.body must /("uploaderId" -> user.id)
-              priorResponses.last.body must not /("sampleIds" -> ".+".r)
-              priorResponses.last.body must not /("readGroupIds" -> ".+".r)
-              priorResponses.last.body must /("nSamples" -> 2)
-              priorResponses.last.body must /("nReadGroups" -> 3)
-              priorResponses.last.body must /("pipeline" -> "maple")
-              priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
+          "return a JSON object of the run data with the `deletionTimeUtc` attribute" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("runId" -> http.runId)
+            ihttp.rep.body must /("uploaderId" -> http.uploader.id)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
+            ihttp.rep.body must /("nSamples" -> 2)
+            ihttp.rep.body must /("nReadGroups" -> 3)
+            ihttp.rep.body must /("pipeline" -> "maple")
+            ihttp.rep.body must /("deletionTimeUtc" -> ".+".r)
+          }; br
+
+          val iictx1 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx2 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", http.uploader.id), ("download", "true")),
+            Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              contentType mustEqual "application/json"
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", http.uploader.id)), Map(HeaderApiKey -> http.uploader.activeKey)) { response })
+          "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return a JSON array containing only the remaining pipelines" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.jsonBody must haveSize(1)
+              iihttp.rep.body must /#(0) /("runId" -> http.runIds.last)
+              iihttp.rep.body must /#(0) /("pipeline" -> "plain")
+              iihttp.rep.body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
 
-          "remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              jsonBody must haveSize(0)
-            }
-          }
+          "when the DELETE request is repeated" should ctx.priorReqs(ictx1) { iihttp =>
 
-          "return status 410 again when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              status mustEqual 410
+            "return status 410" in {
+              iihttp.rep.status mustEqual 410
             }
-          }
 
-          "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> "Resource already deleted.")
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.ResourceGoneError.message)
             }
           }
         }
-      }
+        }
     }
 
-    "when an admin authenticates correctly" >> {
+    "using a verified, authenticated admin user" >> {
       br
 
-      "with the default parameters for the 'plain' pipeline should" >> inline {
+      "using the 'plain' run summary file he/she did not upload" >>
+        ctx.priorReqsOnCleanDb(plainContext, populate = true) { case http: UploadContext =>
 
-        new PlainUploadContext {
-
-          val params = Seq(("userId", users.admin.id))
-          val headers = Map(HeaderApiKey -> users.admin.activeKey)
-          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
-          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
-          override def priorRequests = super.priorRequests.toStream :+ request
+          def ictx1 = HttpContext(() => delete(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 200" in {
-            priorResponses.last.status mustEqual 200
+            ihttp.rep.status mustEqual 200
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            priorResponses.last.contentType mustEqual "application/json"
-            priorResponses.last.body must /("runId" -> uploadedRunId)
-            priorResponses.last.body must /("uploaderId" -> user.id)
-            priorResponses.last.body must not /("sampleIds" -> ".+".r)
-            priorResponses.last.body must not /("libIds" -> ".+".r)
-            priorResponses.last.body must /("nSamples" -> 0)
-            priorResponses.last.body must /("nReadGroups" -> 0)
-            priorResponses.last.body must /("pipeline" -> "plain")
-            priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
-          }
+          "return a JSON object of the run data with the `deletionTimeUtc` attribute" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("runId" -> http.runId)
+            ihttp.rep.body must /("uploaderId" -> http.uploader.id)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
+            ihttp.rep.body must /("nSamples" -> 0)
+            ihttp.rep.body must /("nReadGroups" -> 0)
+            ihttp.rep.body must /("pipeline" -> "plain")
+            ihttp.rep.body must /("deletionTimeUtc" -> ".+".r)
+          }; br
 
-          "remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx1 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              contentType mustEqual "application/json"
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx2 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id), ("download", "true")),
+            Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              jsonBody must haveSize(0)
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return an empty JSON array" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.jsonBody must haveSize(0)
             }
           }
 
-          "return status 410 when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              status mustEqual 410
-            }
-          }
+          "when the DELETE request is repeated" should ctx.priorReqs(ictx1) { iihttp =>
 
-          "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> "Resource already deleted.")
+            "return status 410" in {
+              iihttp.rep.status mustEqual 410
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.ResourceGoneError.message)
             }
           }
         }
       }
 
-      "with the default parameters for the 'maple' pipeline (multi sample, multi read group) should" >> inline {
+      def mapleThenPlainContext = UploadContext(NonEmptyList(
+        UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG),
+        UploadSet(UserExamples.avg, SummaryExamples.Plain)))
 
-        new MapleUploadContext {
+      "using the 'maple' and 'plain' run summary files he/she did not upload" >>
+        ctx.priorReqsOnCleanDb(mapleThenPlainContext, populate = true) { case http: UploadContext =>
 
-          val params = Seq(("userId", users.admin.id))
-          val headers = Map(HeaderApiKey -> users.admin.activeKey)
-          def request = () => delete(endpoint(uploadedRunId), params, headers) { response }
-          // make priorRequests a Stream so we can use the runId returned from the first request in the second request
-          override def priorRequests = super.priorRequests.toStream :+ request
+          def ictx1 = HttpContext(() => delete(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          br; "when using the default parameters on the 'maple' upload" should ctx.priorReqs(ictx1) { ihttp =>
 
           "return status 200" in {
-            priorResponses.last.status mustEqual 200
+            ihttp.rep.status mustEqual 200
           }
 
-          "return a JSON object of the run data with the deletionTimeUtc attribute" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              priorResponses.last.contentType mustEqual "application/json"
-              priorResponses.last.body must /("runId" -> uploadedRunId)
-              priorResponses.last.body must /("uploaderId" -> uploadSet.uploader.id)
-              priorResponses.last.body must not /("sampleIds" -> ".+".r)
-              priorResponses.last.body must not /("readGroupIds" -> ".+".r)
-              priorResponses.last.body must /("nSamples" -> 2)
-              priorResponses.last.body must /("nReadGroups" -> 3)
-              priorResponses.last.body must /("pipeline" -> "maple")
-              priorResponses.last.body must /("deletionTimeUtc" -> ".+".r)
+          "return a JSON object of the run data with the `deletionTimeUtc` attribute" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("runId" -> http.runId)
+            ihttp.rep.body must /("uploaderId" -> http.uploader.id)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("libIds" -> ".+".r)
+            ihttp.rep.body must /("nSamples" -> 2)
+            ihttp.rep.body must /("nReadGroups" -> 3)
+            ihttp.rep.body must /("pipeline" -> "maple")
+            ihttp.rep.body must /("deletionTimeUtc" -> ".+".r)
+          }; br
+
+          val iictx1 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the supposedly deleted run is queried afterwards" should ctx.priorReqs(iictx1) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the run record" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx2 = HttpContext(() => get(endpoint(http.runId),
+            Seq(("userId", UserExamples.admin.id), ("download", "true")),
+            Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the supposedly deleted run is downloaded afterwards" should ctx.priorReqs(iictx2) { iihttp =>
+
+            "return status 404" in {
+              iihttp.rep.status mustEqual 404
+            }
+
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.RunIdNotFoundError.message)
+              iihttp.rep.body must not /("runId" -> ".+".r)
             }
           }
 
-          "remove the uploaded run file" in {
-            get(s"$baseEndpoint/$uploadedRunId", Seq(("userId", user.id), ("download", "true")),
-              Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 404
-              contentType mustEqual "application/json"
-              body must not /("runId" -> ".+".r)
-              body must /("message" -> Payloads.RunIdNotFoundError.message)
+          val iictx3 = HttpContext(() => get(baseEndpoint,
+            Seq(("userId", UserExamples.admin.id)), Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
+          "when the run collection listing is queried afterwards" should ctx.priorReqs(iictx3) { iihttp =>
+
+            "return status 200" in {
+              iihttp.rep.status mustEqual 200
+            }
+
+            "return a JSON array containing only the remaining pipelines" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.jsonBody must haveSize(1)
+              iihttp.rep.body must /#(0) /("runId" -> http.runIds.last)
+              iihttp.rep.body must /#(0) /("pipeline" -> "plain")
+              iihttp.rep.body must not /# 0 /("deletionTimeUtc" -> ".+".r)
             }
           }
 
-          "remove the run from collection listings" in {
-            get(s"$baseEndpoint/", Seq(("userId", user.id)), Map(HeaderApiKey -> user.activeKey)) {
-              status mustEqual 200
-              jsonBody must haveSize(0)
-            }
-          }
+          "when the DELETE request is repeated" should ctx.priorReqs(ictx1) { iihttp =>
 
-          "return status 410 again when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              status mustEqual 410
+            "return status 410" in {
+              iihttp.rep.status mustEqual 410
             }
-          }
 
-          "return a JSON object containing the expected message when repeated" in {
-            delete(endpoint(uploadedRunId), params, headers) {
-              contentType mustEqual "application/json"
-              body must /("message" -> "Resource already deleted.")
+            "return a JSON object containing the expected message" in {
+              iihttp.rep.contentType mustEqual MimeType.Json
+              iihttp.rep.body must /("message" -> Payloads.ResourceGoneError.message)
             }
           }
         }

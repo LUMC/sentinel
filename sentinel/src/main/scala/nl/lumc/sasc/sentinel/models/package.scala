@@ -29,7 +29,7 @@ package object models {
   type Perhaps[+T] = ApiPayload \/ T
 
   /** Type alias for stacking `Future` and scalaz's `\/`. */
-  type AsyncPerhaps[+T] = EitherT[Future, ApiPayload, T]
+  type AsyncPerhaps[T] = EitherT[Future, ApiPayload, T]
 
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {

@@ -1,19 +1,8 @@
-/*
- * Copyright (c) 2015 Leiden University Medical Center and contributors
- *                    (see AUTHORS.md file for details).
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+/**
+  * Copyright (c) 2016 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
+  *
+  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
+  */
 package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
@@ -21,219 +10,173 @@ import org.json4s.jackson.JsonMethods._
 
 import nl.lumc.sasc.sentinel.exts.pann.PannRunsProcessor
 import nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor
-import nl.lumc.sasc.sentinel.testing.SentinelServletSpec
+import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, SentinelServletSpec }
 import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
+import org.specs2.specification.core.Fragment
+import scalaz.NonEmptyList
 
+/** Specifications for [[AnnotationsController]]. */
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
-  implicit val mongo = dao
-  implicit val runsProcessorMakers = Set(
+  val runsProcessorMakers = Set(
     makeDelayedProcessor[PannRunsProcessor],
     makeDelayedProcessor[PlainRunsProcessor])
+
+  val annotsServlet = new AnnotationsController()(swagger, dao)
+  val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
+
   val baseEndpoint = "/annotations"
-  val annotsServlet = new AnnotationsController
-  val runsServlet = new RunsController
   addServlet(annotsServlet, s"$baseEndpoint/*")
   addServlet(runsServlet, "/runs/*")
 
   s"OPTIONS '$baseEndpoint'" >> {
-    br
-    "when using the default parameter should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint", "GET,HEAD")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(baseEndpoint, "GET,HEAD")
+  }; br
 
   s"GET '$baseEndpoint'" >> {
-    br
+  br
 
-    val endpoint = baseEndpoint
+    val ctx1 = HttpContext(() => get(baseEndpoint) { response })
+    "when the database is empty" should ctx.priorReqsOnCleanDb(ctx1) { http =>
 
-    "when the database is empty should" >> inline {
+      "return status 200" in {
+        http.rep.status mustEqual 200
+      }
 
-      new Context.PriorRequests {
-
-        def request = () => get(endpoint) { response }
-        def priorRequests = Seq(request)
-
-        "return status 200" in {
-          priorResponse.status mustEqual 200
-        }
-
-        "return an empty JSON list" in {
-          priorResponse.contentType mustEqual "application/json"
-          priorResponse.jsonBody must haveSize(0)
-        }
+      "return an empty JSON list" in {
+        http.rep.contentType mustEqual MimeType.Json
+        http.rep.jsonBody must haveSize(0)
       }
     }
 
-    "using a summary file that contain annotation entries" >> inline {
-
-      new Context.PriorRunUploadClean {
-
-        def uploadSet = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
-        def priorRequests = Seq(uploadSet.request)
+    val ctx2 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1))
+    "using a summary file that contains annotation entries" >>
+      ctx.priorReqsOnCleanDb(ctx2, populate = true) { http =>
 
         "after the run summary file is uploaded" in {
-          priorResponses.head.status mustEqual 201
+          http.rep.status mustEqual 201
         }
 
-        "when using the default parameters should" >> inline {
+        val ictx1 = HttpContext(() => get(baseEndpoint) { response })
+        br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
 
-            def request = () => get(endpoint) { response }
-            def priorRequests = Seq(request)
+          "return a JSON list containing 2 objects" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.jsonBody must haveSize(2)
+          }
 
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
-
-            "return a JSON list containing 2 objects" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(2)
-            }
-
-            "each of which" should {
-              Range(0 ,2) foreach { idx =>
-                val item = idx + 1
-                s"have the expected attributes (object #$item)" in {
-                  priorResponse.body must /#(idx) /("annotId" -> """\S+""".r)
-                  priorResponse.body must /#(idx) /("annotMd5" -> """\S+""".r)
-                }
+          "each of which" should {
+            Fragment.foreach(0 to 1) { idx =>
+              s"have the expected attributes (object #${idx + 1})" in {
+                ihttp.rep.body must /#(idx) /("annotId" -> """\S+""".r)
+                ihttp.rep.body must /#(idx) /("annotMd5" -> """\S+""".r)
               }
             }
           }
         }
-      }
-    }
+    }; br
 
-    "using multiple summary files that contain overlapping annotation entries should" >> inline {
+    val ctx3 = UploadContext(NonEmptyList(
+      UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1),
+      UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann2)))
+    "using multiple summary files that contain overlapping annotation entries" >>
+      ctx.priorReqsOnCleanDb(ctx3, populate = true) { http =>
 
-      new Context.PriorRunUploadClean {
-
-        def uploadSet1 = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
-        def uploadSet2 = UploadSet(users.admin, SummaryExamples.Pann.Ann2, "pann")
-        def priorRequests = Seq(uploadSet1, uploadSet2).map(_.request)
-
-        "after the first file is uploaded" in {
-          priorResponses.head.status mustEqual 201
+        "after the first run summary file is uploaded" in {
+          http.rep.status mustEqual 201
         }
 
-        "after the second file is uploaded" in {
-          priorResponses(1).status mustEqual 201
+        "after the second run summary file is uploaded" in {
+          http.reps.list(1).status mustEqual 201
         }
 
-        "when using the default parameters should" >> inline {
+        val ictx1 = HttpContext(() => get(baseEndpoint) { response })
+        br; "when using the default parameters" should ctx.priorReqs(ictx1) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
 
-            def request = () => get(endpoint) { response }
-            def priorRequests = Seq(request)
+          "return a JSON list containing 3 objects" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.jsonBody must haveSize(3)
+          }
 
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
-
-            "return a JSON list containing 3 objects" in { // we have 3 unique annotations in all the uploaded files
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.jsonBody must haveSize(3)
-            }
-
-            "each of which" should {
-              Range(0 ,3) foreach { idx =>
-                val item = idx + 1
-                s"have the expected attributes (object #$item)" in {
-                  priorResponse.body must /#(idx) /("annotId" -> """\S+""".r)
-                  priorResponse.body must /#(idx) /("annotMd5" -> """\S+""".r)
-                }
+          "each of which" should {
+            Fragment.foreach(0 to 2) { idx =>
+              s"have the expected attributes (object #${idx + 1})" in {
+                ihttp.rep.body must /#(idx) / ("annotId" -> """\S+""".r)
+                ihttp.rep.body must /#(idx) / ("annotMd5" -> """\S+""".r)
               }
             }
           }
         }
-      }
     }
-  }
+  }; br
 
   s"OPTIONS '$baseEndpoint/:annotId'" >> {
-    br
-    "when using the default parameter should" >> inline {
-      new Context.OptionsMethodTest(s"$baseEndpoint/annotId", "GET,HEAD")
-    }
-  }
+  br
+    "when using the default parameters" should ctx.optionsReq(s"$baseEndpoint/annotId", "GET,HEAD")
+  }; br
 
   s"GET '$baseEndpoint/:annotId'" >> {
   br
 
     def endpoint(annotId: String) = s"$baseEndpoint/$annotId"
 
-    "using a run summary file that contain annotation entries" >> inline {
-
-      new Context.PriorRunUploadClean {
-
-        def uploadSet = UploadSet(users.avg, SummaryExamples.Pann.Ann1, "pann")
-        def priorRequests = Seq(uploadSet.request)
-        def annotIds = (parse(priorResponse.body) \ "annotIds").extract[Seq[String]]
-        def runId = (parse(priorResponse.body) \ "runId").extract[String]
+    val ctx1 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Pann.Ann1))
+    "using a run summary file that contains annotation entries" >>
+      ctx.priorReqsOnCleanDb(ctx1, populate = true) { http =>
 
         "after the run summary file is uploaded" in {
-          priorResponse.status mustEqual 201
+          http.rep.status mustEqual 201
         }
 
-        "when an annotation entry with an invalid ID is queried should" >> inline {
+        val ictx1 = HttpContext(() => get(endpoint("yalala")) { response })
+        br; "when an annotation entry with an invalid ID is queried" should ctx.priorReqs(ictx1) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 404" in {
+            ihttp.rep.status mustEqual 404
+          }
 
-            def request = () => get(endpoint("yalala")) { response }
-            def priorRequests = Seq(request)
-
-            "return status 404" in {
-              priorResponse.status mustEqual 404
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Annotation ID can not be found.")
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Annotation ID can not be found.")
           }
         }
 
-        "when a nonexistent annotation entry is queried should" >> inline {
+        val ictx2 = HttpContext(() => get(endpoint((parse(http.rep.body) \ "runId").extract[String])) { response })
+        "when a nonexistent annotation entry is queried" should ctx.priorReqs(ictx2) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 404" in {
+            ihttp.rep.status mustEqual 404
+          }
 
-            def request = () => get(endpoint(runId)) { response }
-            def priorRequests = Seq(request)
-
-            "return status 404" in {
-              priorResponse.status mustEqual 404
-            }
-
-            "return a JSON object containing the expected message" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("message" -> "Annotation ID can not be found.")
-            }
+          "return a JSON object containing the expected message" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("message" -> "Annotation ID can not be found.")
           }
         }
 
-        "when an existing annotation entry is queried should" >> inline {
+        val annotId = (parse(http.rep.body) \ "annotIds").extract[Seq[String]].head
+        val ictx3 = HttpContext(() => get(endpoint(annotId)) { response })
+        "when an existing annotation entry is queried" should ctx.priorReqs(ictx3) { ihttp =>
 
-          new Context.PriorRequests {
+          "return status 200" in {
+            ihttp.rep.status mustEqual 200
+          }
 
-            def request = () => get(endpoint(annotIds.head)) { response }
-            def priorRequests = Seq(request)
-
-            "return status 200" in {
-              priorResponse.status mustEqual 200
-            }
-
-            "return a JSON object containing the expected attributes" in {
-              priorResponse.contentType mustEqual "application/json"
-              priorResponse.body must /("annotId" -> """\S+""".r)
-              priorResponse.body must /("annotMd5" -> """\S+""".r)
-            }
+          "return a JSON object containing the expected attributes" in {
+            ihttp.rep.contentType mustEqual MimeType.Json
+            ihttp.rep.body must /("annotId" -> """\S+""".r)
+            ihttp.rep.body must /("annotMd5" -> """\S+""".r)
           }
         }
-      }
     }
   }
 }

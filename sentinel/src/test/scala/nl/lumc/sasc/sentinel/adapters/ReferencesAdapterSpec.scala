@@ -21,15 +21,14 @@ import com.mongodb.DBCollection
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import org.specs2.scalaz.DisjunctionMatchers
 
 import nl.lumc.sasc.sentinel.models.{ ReferenceRecord, ReferenceContigRecord }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReferencesAdapterSpec extends Specification
-    with DisjunctionMatchers
     with Mockito {
 
   /** ReferenceRecord object for testing. */
@@ -77,49 +76,50 @@ class ReferencesAdapterSpec extends Specification
 
   "getReference" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.References) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getReference(testRefObj.refId) must throwA[RuntimeException].await
     }
 
-    "succeed returning None when the database is empty" in {
+    "succeed returning None when the database is empty" in { implicit ee: ExecutionEnv =>
       testAdapter.getReference(testRefObj.refId) must beNone.await
     }
 
-    "succeed returning None when no records match" in {
+    "succeed returning None when no records match" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testRefDbo) }
       adapter.getReference(new ObjectId) must beNone.await
     }
 
-    "succeed returning the expected object when a matching record exists" in {
+    "succeed returning the expected object when a matching record exists" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testRefDbo) }
       adapter.getReference(testRefObj.refId) must beEqualTo(Some(testRefObj)).await
     }
   }
 
+  br
   "getOrCreateReference" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.References) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
       adapter.getOrCreateReference(testRefObj) must throwA[RuntimeException].await
     }
 
-    "succeed storing the reference record when it does not exist in the database" in {
+    "succeed storing the reference record when it does not exist in the database" in { implicit ee: ExecutionEnv =>
       val adapter = testAdapter
       adapter.find(MongoDBObject.empty).count() mustEqual 0
       adapter.getOrCreateReference(testRefObj) must beEqualTo(testRefObj).await
       adapter.find(testRefDbo).count() mustEqual 1
     }
 
-    "succeed retrieving the reference record without storing anything when it exists in the database" in {
+    "succeed retrieving the reference record without storing anything when it exists in the database" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll => coll.insert(testRefDbo) }
       val newRef = testRefObj.copy(refId = new ObjectId)
       adapter.find(MongoDBObject.empty).count() mustEqual 1

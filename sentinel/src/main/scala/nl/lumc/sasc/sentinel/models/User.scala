@@ -93,7 +93,7 @@ object User {
       if (!idLengthValid(id))
         msgBuffer += s"User ID shorter than $MinUserIdLength characters."
       if (!idContentsValid(id))
-        msgBuffer += ("User ID contains disallowed characters: '" + invalidIdChars(id).mkString("', '") + "'.")
+        msgBuffer += ("User ID contains forbidden characters: '" + invalidIdChars(id).mkString("', '") + "'.")
       msgBuffer.toList
     }
 

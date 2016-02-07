@@ -171,13 +171,22 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    */
   def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Future[Seq[BaseRunRecord]] = {
     val recordGrater = grater[BaseRunRecord]
+    val userQ = "uploaderId" $eq user.id
+    val pipelineQ = $or(pipelineNames.map(pn => "pipeline" $eq pn))
+    val delQ = "deletionTimeUtc" $exists false
+
     val query =
-      if (pipelineNames.isEmpty) $and("uploaderId" $eq user.id)
-      else $and("uploaderId" $eq user.id, $or(pipelineNames.map(pipeline => "pipeline" $eq pipeline)))
+      if (user.isAdmin) {
+        if (pipelineNames.isEmpty) delQ
+        else $and(pipelineQ :: delQ)
+      } else {
+        if (pipelineNames.isEmpty) $and(userQ :: delQ)
+        else $and($and(pipelineQ, userQ) :: delQ)
+      }
 
     Future {
       coll
-        .find($and(query :: ("deletionTimeUtc" $exists false)))
+        .find(query)
         .sort(MongoDBObject("creationTimeUtc" -> -1))
         .map { dbo => recordGrater.asObject(dbo) }
         .toSeq

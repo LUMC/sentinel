@@ -29,7 +29,7 @@ import org.slf4j.helpers.NOPLoggerFactory
 
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
-trait EmbeddedMongodbRunner {
+trait EmbeddedMongodbRunner { this: IntegrationTestImplicits =>
 
   protected val mongodVersion = Version.Main.V3_2
 
@@ -57,28 +57,15 @@ trait EmbeddedMongodbRunner {
 
   private lazy val starter = MongodStarter.getInstance(runtimeConfig)
 
-  private def createIndices(mongo: MongodbAccessObject): Unit = {
-    mongo.db("fs.files").createIndex(MongoDBObject("md5" -> 1, "metadata.uploaderId" -> 1), MongoDBObject("unique" -> true))
-    mongo.db("annotations").createIndex(MongoDBObject("annotMd5" -> 1), MongoDBObject("unique" -> true))
-    mongo.db("references").createIndex(MongoDBObject("combinedMd5" -> 1), MongoDBObject("unique" -> true))
-  }
-
   private lazy val mongodExecutable = starter.prepare(mongodConfig)
 
   protected lazy val mongoClient = MongoClient("localhost", mongodPort)
 
   protected lazy val dao = MongodbAccessObject(mongoClient, dbName)
 
-  protected def resetDatabase(): Unit = {
-    dao.db.getCollectionNames()
-      .filterNot(_.startsWith("system"))
-      .foreach { case collName => dao.db(collName).dropCollection() }
-    createIndices(dao)
-  }
-
   def start(): Unit = {
     mongodExecutable.start()
-    createIndices(dao)
+    dao.createIndices()
   }
 
   def stop(): Unit = mongodExecutable.stop()

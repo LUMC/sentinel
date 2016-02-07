@@ -16,10 +16,13 @@
  */
 package nl.lumc.sasc.sentinel.adapters
 
+import scala.concurrent.duration._
+
 import com.github.fakemongo.Fongo
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
@@ -39,6 +42,9 @@ class SamplesAdapterSpec extends Specification
 
   /** How many times a Future-based method should retry until we mark it as a failure. */
   private val asyncRetries: Int = 5
+
+  /** How many times a Future-based method should wait until we mark it as a failure. */
+  private val asyncWait: FiniteDuration = 1000.millisecond
 
   class TestSamplesAdapter(mockDb: Fongo) extends SamplesAdapter {
 
@@ -72,20 +78,20 @@ class SamplesAdapterSpec extends Specification
 
   "storeSamples" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.pipelineSamples(pipelineName)) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
-      adapter.storeSamples(testSampleObjs) must throwA[RuntimeException].await(asyncRetries)
+      adapter.storeSamples(testSampleObjs) must throwA[RuntimeException].await(asyncRetries, asyncWait)
     }
 
-    "succeed storing sample records" in {
+    "succeed storing sample records" in { implicit ee: ExecutionEnv =>
       val adapter = makeAdapter(makeFongo)
       val samplesSize = testSampleObjs.length
       testSampleDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(samplesSize)(0)
-      adapter.storeSamples(testSampleObjs).map { bw => bw.insertedCount mustEqual samplesSize }.await(asyncRetries)
+      adapter.storeSamples(testSampleObjs).map { bw => bw.insertedCount mustEqual samplesSize }.await(asyncRetries, asyncWait)
       testSampleDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(samplesSize)(1)
     }
   }

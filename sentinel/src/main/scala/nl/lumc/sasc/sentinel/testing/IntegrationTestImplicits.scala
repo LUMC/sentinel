@@ -18,15 +18,22 @@ package nl.lumc.sasc.sentinel.testing
 
 import scala.util.Try
 
-import org.scalatra.test.specs2.BaseScalatraSpec
-import org.specs2.matcher.ThrownExpectations
-
+import com.mongodb.casbah.Imports._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.json4s.jackson.Serialization.write
 import org.scalatra.test.ClientResponse
+import org.scalatra.test.specs2.BaseScalatraSpec
 import org.specs2.data.Sized
+import org.specs2.matcher.ThrownExpectations
+
+import nl.lumc.sasc.sentinel.models.{ SinglePathPatch, UserRequest }
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations =>
+
+  /** Default Sentinel JSON formats. */
+  implicit val formats = nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
   /** Implicit class for testing convenience. */
   implicit class RichClientResponse(httpres: ClientResponse) {
@@ -36,6 +43,39 @@ trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations 
 
     /** Response content type. */
     lazy val contentType = httpres.mediaType.getOrElse(failure("'Content-Type' not found in response header."))
+  }
+
+  /** Implicit class for testing user creation requests. */
+  implicit class TestUserRequest(req: UserRequest) {
+
+    /** Body contents as a byte array. */
+    lazy val toByteArray: Array[Byte] = write(req).getBytes
+  }
+
+  /** Implicit class for testing user patch requests. */
+  implicit class TestUserPatchRequest(patches: Seq[Any]) {
+
+    /** Body contents as a byte array. */
+    lazy val toByteArray: Array[Byte] = write(patches).getBytes
+  }
+
+  implicit class TestMongodbAccessObject(dao: MongodbAccessObject) {
+
+    def createIndices(): Unit = {
+      dao.db("fs.files")
+        .createIndex(MongoDBObject("md5" -> 1, "metadata.uploaderId" -> 1), MongoDBObject("unique" -> true))
+      dao.db("annotations")
+        .createIndex(MongoDBObject("annotMd5" -> 1), MongoDBObject("unique" -> true))
+      dao.db("references")
+        .createIndex(MongoDBObject("combinedMd5" -> 1), MongoDBObject("unique" -> true))
+    }
+
+    def reset(): Unit = {
+      dao.db.getCollectionNames()
+        .filterNot(_.startsWith("system"))
+        .foreach { case collName => dao.db(collName).dropCollection() }
+      dao.createIndices()
+    }
   }
 
   // TODO: Use the specs2 built-in raw JSON matcher when we switch to specs2-3.6

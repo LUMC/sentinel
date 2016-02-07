@@ -16,10 +16,13 @@
  */
 package nl.lumc.sasc.sentinel.adapters
 
+import scala.concurrent.duration._
+
 import com.github.fakemongo.Fongo
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import com.novus.salat.global._
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
@@ -28,6 +31,8 @@ import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReadGroupsAdapterSpec extends Specification
     with Mockito { self =>
+
+  sequential
 
   /** MongoDB testing database name. */
   private val testDbName = "readGroups_test"
@@ -39,6 +44,9 @@ class ReadGroupsAdapterSpec extends Specification
 
   /** How many times a Future-based method should retry until we mark it as a failure. */
   private val asyncRetries: Int = 5
+
+  /** How many times a Future-based method should wait until we mark it as a failure. */
+  private val asyncWait: FiniteDuration = 1000.millisecond
 
   class TestReadGroupsAdapter(mockDb: Fongo) extends ReadGroupsAdapter {
 
@@ -75,21 +83,21 @@ class ReadGroupsAdapterSpec extends Specification
 
   "storeReadGroups" should {
 
-    "fail when the database operation raises any exception" in {
+    "fail when the database operation raises any exception" in { implicit ee: ExecutionEnv =>
       val mockFongo = mock[Fongo]
-      val mockDb = mock[com.mongodb.DB]
+      val mockDb = mock[com.mongodb.FongoDB]
       mockFongo.getDB(testDbName) returns mockDb
       mockDb.getCollection(MongodbAdapter.CollectionNames.pipelineReadGroups(pipelineName)) throws new RuntimeException
       val adapter = makeAdapter(mockFongo)
-      adapter.storeReadGroups(testReadGroupObjs) must throwA[RuntimeException].await(asyncRetries)
+      adapter.storeReadGroups(testReadGroupObjs) must throwA[RuntimeException].await(asyncRetries, asyncWait)
     }
 
-    "succeed storing sample records" in {
+    "succeed storing sample records" in { implicit ee: ExecutionEnv =>
       val adapter = makeAdapter(makeFongo)
       val readGroupsSize = testReadGroupObjs.length
       testReadGroupDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(readGroupsSize)(0)
       adapter.storeReadGroups(testReadGroupObjs)
-        .map { bw => bw.insertedCount mustEqual readGroupsSize }.await(asyncRetries)
+        .map { bw => bw.insertedCount mustEqual readGroupsSize }.await(asyncRetries, asyncWait)
       testReadGroupDbos.map { dbo => adapter.find(dbo).count() } mustEqual Seq.fill(readGroupsSize)(1)
     }
   }

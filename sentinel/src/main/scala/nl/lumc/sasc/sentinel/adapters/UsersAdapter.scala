@@ -137,7 +137,7 @@ trait UsersAdapter extends MongodbAdapter
         }
       }
       vms.toList.toNel match {
-        case Some(nel) => nel.fail
+        case Some(nel) => nel.failure
         case None      => ops.successNel
       }
     }
