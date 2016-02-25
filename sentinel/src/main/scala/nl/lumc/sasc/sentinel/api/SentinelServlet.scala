@@ -38,7 +38,7 @@ import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, try
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
 trait SentinelJsonSupport extends JacksonJsonSupport {
 
-  protected implicit val jsonFormats = SentinelJsonFormats
+  protected implicit def jsonFormats = SentinelJsonFormats
 
   private val jsonFormatsWithNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.preserve)
 
