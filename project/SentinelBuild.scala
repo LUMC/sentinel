@@ -28,7 +28,7 @@ object SentinelBuild extends Build {
 
   lazy val dependencies = Seq(
     "ch.qos.logback"          %  "logback-classic"            % "1.1.2"               % "runtime",
-    "com.github.fakemongo"    %  "fongo"                      % "2.0.5",//               % "it;test",
+    "com.github.fakemongo"    %  "fongo"                      % "2.0.5"               % "it;test",
     "com.github.fge"          %  "json-schema-validator"      % "2.2.6",
     "com.novus"               %% "salat"                      % "1.9.9",
     "com.typesafe"            %  "config"                     % "1.3.0",
