@@ -179,6 +179,7 @@ object SentinelBuild extends Build {
             case PathList("org", "mockito", xs @ _*) => MergeStrategy.first
             case PathList("org", "objenesis", xs @ _*) => MergeStrategy.first
             case PathList("org", "hamcrest", xs @ _*) => MergeStrategy.first
+            case PathList("scalac-plugin.xml") => MergeStrategy.discard
             case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
           },
           assemblyJarName in assembly := "Sentinel-" + Version + ".jar",
