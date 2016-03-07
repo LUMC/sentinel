@@ -18,6 +18,8 @@ package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
 
+import nl.lumc.sasc.sentinel.models.Payloads.{ PatchValidationError, UnexpectedDatabaseError }
+
 import scala.concurrent.{ Future, ExecutionContext }
 import scala.util.Try
 
@@ -27,7 +29,8 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ CaseClass, Payloads, PipelineStats, BaseRunRecord, User }
+import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.Payloads.{ AuthorizationError, RunIdNotFoundError }
 import nl.lumc.sasc.sentinel.utils._
 
 /**
@@ -42,6 +45,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
+
+  /** Helper class for patching runs. */
+  val patcher: RunsPatcher = new RunsPatcher
 
   /** Execution context for Future operations. */
   implicit private def context: ExecutionContext = runsProcessorContext
@@ -58,6 +64,61 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
+
+  /** Updates an existing run record in the database. */
+  def updateRunRecord(run: RunRecord)(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = Future {
+    val wr = coll
+      .update(MongoDBObject("_id" -> run.runId), grater[RunRecord].asDBObject(run), upsert = false)
+    if (wr.getN == 1) wr.right
+    else UnexpectedDatabaseError("Run record update failed.").left
+  }
+
+  /**
+   * Patches an existing run record without saving the patched user to the database.
+   *
+   * @param run Run object to apply the patches to.
+   * @param patches Patch operations.
+   * @return Either a sequence of error messages or the patched run record object.
+   */
+  def patchRunRecord(run: RunRecord, patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Perhaps[RunRecord] =
+    patches.foldLeft(run.right[ApiPayload]) {
+      case (record, patch) =>
+        for {
+          rec <- record
+          patchedRun <- (patch.path, patch.value) match {
+
+            // FIXME: Can we avoid doing the round trip to dbo here?
+            case ("/runName", v: String) =>
+              val dbo = grater[RunRecord].asDBObject(run)
+              dbo.put("runName", v)
+              grater[RunRecord].asObject(dbo).right
+
+            case (other, wise) => PatchValidationError(s"Unexpected '$other' value: '$wise'.").left
+          }
+        } yield patchedRun
+    }
+
+  /**
+   * Applies the given patch operations to an existing run record in the database.
+   *
+   * @param runId ID of the run to patch.
+   * @param user The user performing the patch operation.
+   * @param patches Patch operations to apply
+   * @return Either error messages or write result.
+   */
+  def patchAndUpdateRunRecord(runId: ObjectId, user: User,
+                              patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = {
+    val result = for {
+      run <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
+      reqByAdmin <- ? <~ (
+        if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left
+        else user.isAdmin.right)
+      patchedRun <- ? <~ patchRunRecord(run, patches)(m)
+      writeResult <- ? <~ updateRunRecord(patchedRun)(m)
+    } yield writeResult
+
+    result.run
+  }
 
   /**
    * Stores the given byte array as an entry in GridFS.
@@ -132,7 +193,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[BaseRunRecord]] = {
+  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[RunRecord]] = {
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
@@ -140,7 +201,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
     Future {
       coll
         .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-        .map { dbo => grater[BaseRunRecord].asObject(dbo) }
+        .map { dbo => grater[RunRecord].asObject(dbo) }
     }
   }
 

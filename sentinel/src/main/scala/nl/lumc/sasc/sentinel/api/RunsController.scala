@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.concurrent.Future.{ successful => sf }
+import scala.concurrent.Future
 
 import org.scalatra._
 import org.scalatra.swagger._
@@ -165,11 +165,20 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
 
     logger.info(requestLog)
 
-    val runId = params.getAs[String]("runId").getOrElse(halt(400, Payloads.UnspecifiedRunIdError))
+    val runId = params.getAs[DbId]("runId").getOrElse(halt(400, Payloads.UnspecifiedRunIdError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
+    // FIXME: By using `runs`, our patch is limited to attributes that are available in PlainRunRecord.
     new AsyncResult {
-      val is = ???
+      val is =
+        runs.patcher.extractAndValidatePatches(request.body.getBytes) match {
+          case -\/(err) => Future.successful(err.toActionResult)
+          case \/-(ops) =>
+            runs.patchAndUpdateRunRecord(runId, user, ops.toList).map {
+              case -\/(err) => err.toActionResult
+              case \/-(_)   => NoContent()
+            }
+        }
     }
   }
 
