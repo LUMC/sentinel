@@ -376,29 +376,20 @@ class UsersControllerSpec extends SentinelServletSpec {
 
     def endpoint(userRecordId: String) = s"$baseEndpoint/$userRecordId"
 
-    val ctx1 = HttpContext(() => get(endpoint("")) { response })
-    "when the user record ID is not specified" should ctx.priorReqsOnCleanDb(ctx1, populate = true) { http =>
+    val ctx1 = HttpContext(() => patch(endpoint(UserExamples.avg.id)) { response })
+    "when the user ID is not specified" should ctx.priorReqsOnCleanDb(ctx1, populate = true) { http =>
 
-      "return status 400" in {
-        http.rep.status mustEqual 400
+      "return status 401" in {
+        http.rep.status mustEqual 401
+      }
+
+      "return the challenge response header key" in {
+        http.rep.header must havePair("WWW-Authenticate" -> "Basic realm=\"Sentinel Admins\"")
       }
 
       "return a JSON object containing the expected message" in {
-        http.rep.contentType mustEqual MimeType.Json
-        http.rep.body must /("message" -> "User record ID not specified.")
-      }
-    }
-
-    val ctx2 = HttpContext(() => get(endpoint(UserExamples.avg.id)) { response })
-    "when the user ID is not specified" should ctx.priorReqsOnCleanDb(ctx2, populate = true) { http =>
-
-      "return status 400" in {
-        http.rep.status mustEqual 400
-      }
-
-      "return a JSON object containing the expected message" in {
-        http.rep.contentType mustEqual MimeType.Json
-        http.rep.body must /("message" -> Payloads.UnspecifiedUserIdError.message)
+        http.rep.contentType mustEqual "application/json"
+        http.rep.body must /("message" -> "Authentication required to access resource.")
       }
     }
 
@@ -448,6 +439,20 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             "using the correct authentication" >> {
             br
+
+              val ictx0 = HttpContext(() => patch(endpoint(""),
+                Seq(SinglePathPatch("replace", "/verified", true)).toByteArray, headers) { response })
+              "when the user record ID is not specified" should ctx.priorReqsOnCleanDb(ictx0, populate = true) { ihttp =>
+
+                "return status 400" in {
+                  ihttp.rep.status mustEqual 400
+                }
+
+                "return a JSON object containing the expected message" in {
+                  ihttp.rep.contentType mustEqual MimeType.Json
+                  ihttp.rep.body must /("message" -> "User record ID not specified.")
+                }
+              }
 
               val ictx1 = HttpContext(() => patch(endpoint(uobj.id), Array[Byte](10, 20, 30), headers) { response })
               "when the patch document is non-JSON" should ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
