@@ -1515,7 +1515,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
               val iictx1 = HttpContext(() => patch(endpoint(ihttp.runId), uparams, patches.toByteArray,
                 Map(HeaderApiKey -> "wrongKey")) { response })
-              br; "when the API key is incorrect" should ctx.priorReqsOnCleanDb(iictx1, populate = true) { iihttp =>
+              br; "when the API key is incorrect" should ctx.priorReqs(iictx1) { iihttp =>
 
                 "return status 401" in {
                   iihttp.rep.status mustEqual 401
@@ -1530,12 +1530,13 @@ class RunsControllerSpec extends SentinelServletSpec {
                   iihttp.rep.body must /("message" -> "Authentication required to access resource.")
                 }
 
-                val iictx1 = HttpContext(() => get(endpoint(UserExamples.unverified.id),
+                val iictx1 = HttpContext(() => get(endpoint(ihttp.runId),
                   Seq(("userId", UserExamples.admin.id)),
                   Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
                 "when the supposedly patched run is queried afterwards" should ctx.priorReqs(iictx1) { iiihttp =>
                   "return the run name unchanged" in {
-                    iiihttp.rep.body must not / "labels" /("runName" -> "patchedRunName")
+                    iiihttp.rep.body must /("runName" -> "Maple_04")
+                    iiihttp.rep.body must not /("runName" -> "patchedRunName")
                   }
                 }
               }
@@ -1549,7 +1550,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                 val iiictx1 = HttpContext(() => patch(endpoint(iihttp.runId), Seq(), patches.toByteArray,
                   headers) { response })
-                "when the user record ID is not specified" should ctx.priorReqsOnCleanDb(iiictx1, populate = true) { ihttp =>
+                "when the user record ID is not specified" should ctx.priorReqs(iiictx1) { ihttp =>
 
                   "return status 400" in {
                     ihttp.rep.status mustEqual 400
@@ -1567,7 +1568,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                 val iiictx1 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
                   Array[Byte](10, 20, 30), headers) { response })
-                "when the patch document is non-JSON" should ctx.priorReqsOnCleanDb(iiictx1, populate = true) { ihttp =>
+                "when the patch document is non-JSON" should ctx.priorReqs(iiictx1) { ihttp =>
 
                   "return status 400" in {
                     ihttp.rep.status mustEqual 400
@@ -1586,7 +1587,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                 val iiictx1 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
                   Seq.empty[SinglePathPatch].toByteArray, headers) { response })
-                "when the patch document is an empty list" should ctx.priorReqsOnCleanDb(iiictx1, populate = true) { ihttp =>
+                "when the patch document is an empty list" should ctx.priorReqs(iiictx1) { ihttp =>
 
                   "return status 400" in {
                     ihttp.rep.status mustEqual 400
@@ -1605,7 +1606,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                 val iiictx1 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
                   Array.empty[Byte], headers) { response })
-                "when the patch document is empty" should ctx.priorReqsOnCleanDb(iiictx1, populate = true) { ihttp =>
+                "when the patch document is empty" should ctx.priorReqs(iiictx1) { ihttp =>
 
                   "return status 400" in {
                     ihttp.rep.status mustEqual 400
@@ -1625,8 +1626,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                 val iiictx1 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
                   Seq("yalala", SinglePathPatch("replace", "/password", "newPass123")).toByteArray, headers) { response })
-                "when the patch document contains an invalid entry" should
-                  ctx.priorReqsOnCleanDb(iiictx1, populate = true) { ihttp =>
+                "when the patch document contains an invalid entry" should ctx.priorReqs(iiictx1) { ihttp =>
 
                     "return status 400" in {
                       ihttp.rep.status mustEqual 400
