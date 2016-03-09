@@ -110,9 +110,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
                               patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = {
     val result = for {
       run <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
-      reqByAdmin <- ? <~ (
-        if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left
-        else user.isAdmin.right)
+      _ <- ? <~ (if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
       patchedRun <- ? <~ patchRunRecord(run, patches)(m)
       writeResult <- ? <~ updateRunRecord(patchedRun)(m)
     } yield writeResult

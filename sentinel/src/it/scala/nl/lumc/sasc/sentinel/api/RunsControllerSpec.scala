@@ -1499,7 +1499,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
         val userSets = Seq(
           ("an admin user", UserExamples.admin),
-          ("a non-admin user to his/her own account", UserExamples.avg))
+          ("a non-admin user to his/her own account", UserExamples.avg2))
 
         Fragments.foreach(userSets) { case (utype, uobj) =>
 
@@ -1640,12 +1640,53 @@ class RunsControllerSpec extends SentinelServletSpec {
                   }
               }
 
+              val iictx6 = mapleContext
+              "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx6, populate = true) { case iihttp: UploadContext =>
 
+                def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId), Seq(("userId", UserExamples.avg2.id)),
+                  Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+                "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                  "return status 200" in {
+                    iiihttp.rep.status mustEqual 200
+                  }
+
+                  "return JSON object containing the expected 'runName' attribute" in {
+                    iiihttp.rep.contentType mustEqual MimeType.Json
+                    iiihttp.rep.body must /("runName" -> "Maple_04")
+                  }
+                }
+
+                val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                  Seq(SinglePathPatch("replace", "/runName", "patchedRunName")).toByteArray, headers) { response })
+                "when 'runName' is patched with 'replace'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                    "return status 204" in {
+                      iiihttp.rep.status mustEqual 204
+                    }
+
+                    "return an empty body" in {
+                      iiihttp.rep.body must beEmpty
+                    }
+                  }
+
+                "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                  "return status 200" in {
+                    iiihttp.rep.status mustEqual 200
+                  }
+
+                  "return a JSON object with an updated 'runName' attribute" in {
+                    iiihttp.rep.contentType mustEqual MimeType.Json
+                    iiihttp.rep.body must /("runName" -> "patchedRunName")
+                  }
+                }
+              }
             }
           }
         }
       }
     }
   }
-
 }

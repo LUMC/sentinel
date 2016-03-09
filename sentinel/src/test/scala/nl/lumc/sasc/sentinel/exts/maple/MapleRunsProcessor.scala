@@ -117,6 +117,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
     val stack = for {
       // Make sure it is JSON
       runJson <- ? <~ extractAndValidateJson(contents)
+      runName = (runJson \ "runName").extractOpt[String]
       // Store the raw file in our database
       fileId <- ? <~ storeFile(contents, uploader, uploadName)
       // Extract samples and read groups
@@ -130,7 +131,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
       // Create run record
       sampleIds = units.samples.map(_.dbId)
       readGroupIds = units.readGroups.map(_.dbId)
-      run = MapleRunRecord(fileId, uploader.id, pipelineName, sampleIds, readGroupIds)
+      run = MapleRunRecord(fileId, uploader.id, pipelineName, sampleIds, readGroupIds, runName)
       // Store run record into database
       _ <- ? <~ storeRun(run)
     } yield run
