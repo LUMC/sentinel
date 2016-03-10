@@ -43,6 +43,28 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
 
+  /**
+   * Retrieves a single run record owned by the given user as a raw database object.
+   *
+   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
+   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
+   *
+   * @param runId ID of the run to retrieve.
+   * @param user Run uploader.
+   * @return Run record database object, if it exists.
+   */
+  protected def getRunRecordDbo(runId: ObjectId,
+                                user: User)(implicit m: Manifest[RunRecord]): Future[Option[DBObject]] = {
+    val userCheck =
+      if (user.isAdmin) MongoDBObject.empty
+      else MongoDBObject("uploaderId" -> user.id)
+
+    Future {
+      coll
+        .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
+    }
+  }
+
   /** Helper class for patching runs. */
   val patcher: RunsPatcher = new RunsPatcher
 
@@ -74,9 +96,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
                               patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = {
 
     val runDbo = for {
-      run <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
-      _ <- ? <~ (if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
-    } yield grater[RunRecord].asDBObject(run)
+      dbo <- ? <~ getRunRecordDbo(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
+      _ <- ? <~ (if (!(dbo.get("uploaderId") == user.id || user.isAdmin)) AuthorizationError.left else ().right)
+    } yield dbo
 
     val patchFuncs: PatchFunc = {
       case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
@@ -168,17 +190,11 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[RunRecord]] = {
-    val userCheck =
-      if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("uploaderId" -> user.id)
-
-    Future {
-      coll
-        .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-        .map { dbo => grater[RunRecord].asObject(dbo) }
-    }
-  }
+  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[RunRecord]] =
+    getRunRecordDbo(runId, user)(m)
+      .map { maybeDbo =>
+        maybeDbo.map { dbo => grater[RunRecord].asObject(dbo) }
+      }
 
   /**
    * Retrieves an uploaded run file owned by the given user.
