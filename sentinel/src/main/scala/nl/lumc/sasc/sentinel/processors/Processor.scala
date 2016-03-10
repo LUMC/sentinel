@@ -16,10 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
-import nl.lumc.sasc.sentinel.adapters.MongodbAdapter
+import nl.lumc.sasc.sentinel.adapters.UnitsAdapter
 
 /** Base trait for defining processors. */
-trait Processor extends MongodbAdapter {
+trait Processor extends UnitsAdapter {
 
   /** Run summary pipeline name. */
   def pipelineName: String

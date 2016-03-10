@@ -18,8 +18,6 @@ package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
 
-import nl.lumc.sasc.sentinel.models.Payloads.{ PatchValidationError, UnexpectedDatabaseError }
-
 import scala.concurrent.{ Future, ExecutionContext }
 import scala.util.Try
 
@@ -30,15 +28,14 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.models.Payloads.{ AuthorizationError, RunIdNotFoundError }
+import nl.lumc.sasc.sentinel.models.Payloads._
+
 import nl.lumc.sasc.sentinel.utils._
 
 /**
  * Base class for processing run summary files.
  */
-abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
-    extends Processor
-    with FutureMixin {
+abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends Processor {
 
   /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass
@@ -65,43 +62,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
 
-  /** Updates an existing database object in the database. */
-  def updateDbo(dbo: DBObject)(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = Future {
-    dbo._id match {
-      case None => UnexpectedDatabaseError("Database object missing the required identifier '_id'.").left
-      case Some(dbid) =>
-        val wr = coll
-          .update(MongoDBObject("_id" -> dbid), dbo, upsert = false)
-        if (wr.getN == 1) wr.right
-        else UnexpectedDatabaseError("Run record update failed.").left
-    }
-  }
-
-  /**
-   * Patches an existing database object.
-   *
-   * @param runDbo MongoDB object to apply the patch to.
-   * @param patches Patch operations.
-   * @return Either a sequence of error messages or the patched run record object.
-   */
-  def patchDbo(runDbo: DBObject, patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Perhaps[DBObject] =
-    patches.foldLeft(runDbo.right[ApiPayload]) {
-      case (recordDbo, patch) =>
-        for {
-          dbo <- recordDbo
-          patchedDbo <- (patch.op, patch.path, patch.value) match {
-
-            // FIXME: Can we avoid doing the round trip to dbo here?
-            case ("replace", "/runName", v: String) =>
-              dbo.put("runName", v)
-              dbo.right
-
-            case (op, path, value) =>
-              PatchValidationError(s"Unexpected operation '$op' on '$path' with value '$value'.").left
-          }
-        } yield patchedDbo
-    }
-
   /**
    * Applies the given patch operations to an existing run record in the database.
    *
@@ -118,10 +78,18 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
       _ <- ? <~ (if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
     } yield grater[RunRecord].asDBObject(run)
 
+    val patchFuncs: PatchFunc = {
+      case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+        dbo.put("runName", v)
+        dbo.right
+      case (_, patch: SinglePathPatch) =>
+        PatchValidationError(s"Unexpected operation '${patch.op}' on '${patch.path}' with value '${patch.value}'.").left
+    }
+
     val runRecordPatch = for {
       dbo <- runDbo
-      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(m)
-      writeResult <- ? <~ updateDbo(patchedRunDbo)(m)
+      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(patchFuncs)
+      writeResult <- ? <~ updateDbo(coll, patchedRunDbo)
     } yield writeResult
 
     runRecordPatch.run

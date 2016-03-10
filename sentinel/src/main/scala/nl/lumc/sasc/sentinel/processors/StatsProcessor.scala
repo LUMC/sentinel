@@ -34,9 +34,7 @@ import nl.lumc.sasc.sentinel.utils.reflect.getReadStatsManifest
 /**
  * Base class that provides support for querying and aggregating statistics for a pipeline.
  */
-abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject)
-    extends Processor
-    with FutureMixin {
+abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
 
   /** Overridable execution context for this processor. */
   protected def statsProcessorContext = ExecutionContext.global
