@@ -369,6 +369,12 @@
               "description": "Quality encoding; which can be sanger (ASCII offset 33), solexa, or illumina (both with ASCII offset 64)",
               "type": "string",
               "enum": [ "sanger", "illumina", "solexa" ]
+            },
+
+            "len_histogram": {
+              "description": "Holds the histogram of all read lengths found in the fastq file",
+              "type": "array",
+              "items": { "type": "integer" }
             }
           }
         }

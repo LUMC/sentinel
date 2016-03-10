@@ -565,13 +565,34 @@
             "PCT_80X": { "type": "number" },
             "PCT_90X": { "type": "number" },
             "PCT_100X": { "type": "number" },
-            "PCT_EXC_BASEQ": { "type": "number" },
-            "PCT_EXC_CAPPED": { "type": "number" },
-            "PCT_EXC_DUPE": { "type": "number" },
-            "PCT_EXC_MAPQ": { "type": "number" },
-            "PCT_EXC_OVERLAP": { "type": "number" },
-            "PCT_EXC_TOTAL": { "type": "number" },
-            "PCT_EXC_UNPAIRED": { "type": "number" },
+            "PCT_EXC_BASEQ": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_CAPPED": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_DUPE": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_MAPQ": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_OVERLAP": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_TOTAL": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
+            "PCT_EXC_UNPAIRED": { "oneOf": [
+              { "type": "number" },
+              { "type": "string", "pattern": "^\\?$" }
+            ] },
             "SD_COVERAGE": { "type": "number" }
           }
         },
