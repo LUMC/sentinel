@@ -65,37 +65,41 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
 
-  /** Updates an existing run record in the database. */
-  def updateRunRecord(run: RunRecord)(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = Future {
-    val wr = coll
-      .update(MongoDBObject("_id" -> run.runId), grater[RunRecord].asDBObject(run), upsert = false)
-    if (wr.getN == 1) wr.right
-    else UnexpectedDatabaseError("Run record update failed.").left
+  /** Updates an existing database object in the database. */
+  def updateDbo(dbo: DBObject)(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = Future {
+    dbo._id match {
+      case None => UnexpectedDatabaseError("Database object missing the required identifier '_id'.").left
+      case Some(dbid) =>
+        val wr = coll
+          .update(MongoDBObject("_id" -> dbid), dbo, upsert = false)
+        if (wr.getN == 1) wr.right
+        else UnexpectedDatabaseError("Run record update failed.").left
+    }
   }
 
   /**
-   * Patches an existing run record without saving the patched user to the database.
+   * Patches an existing database object.
    *
-   * @param run Run object to apply the patches to.
+   * @param runDbo MongoDB object to apply the patch to.
    * @param patches Patch operations.
    * @return Either a sequence of error messages or the patched run record object.
    */
-  def patchRunRecord(run: RunRecord, patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Perhaps[RunRecord] =
-    patches.foldLeft(run.right[ApiPayload]) {
-      case (record, patch) =>
+  def patchDbo(runDbo: DBObject, patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Perhaps[DBObject] =
+    patches.foldLeft(runDbo.right[ApiPayload]) {
+      case (recordDbo, patch) =>
         for {
-          rec <- record
-          patchedRun <- (patch.path, patch.value) match {
+          dbo <- recordDbo
+          patchedDbo <- (patch.op, patch.path, patch.value) match {
 
             // FIXME: Can we avoid doing the round trip to dbo here?
-            case ("/runName", v: String) =>
-              val dbo = grater[RunRecord].asDBObject(run)
+            case ("replace", "/runName", v: String) =>
               dbo.put("runName", v)
-              grater[RunRecord].asObject(dbo).right
+              dbo.right
 
-            case (other, wise) => PatchValidationError(s"Unexpected '$other' value: '$wise'.").left
+            case (op, path, value) =>
+              PatchValidationError(s"Unexpected operation '$op' on '$path' with value '$value'.").left
           }
-        } yield patchedRun
+        } yield patchedDbo
     }
 
   /**
@@ -108,14 +112,19 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject)
    */
   def patchAndUpdateRunRecord(runId: ObjectId, user: User,
                               patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = {
-    val result = for {
+
+    val runDbo = for {
       run <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
       _ <- ? <~ (if (!(run.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
-      patchedRun <- ? <~ patchRunRecord(run, patches)(m)
-      writeResult <- ? <~ updateRunRecord(patchedRun)(m)
+    } yield grater[RunRecord].asDBObject(run)
+
+    val runRecordPatch = for {
+      dbo <- runDbo
+      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(m)
+      writeResult <- ? <~ updateDbo(patchedRunDbo)(m)
     } yield writeResult
 
-    result.run
+    runRecordPatch.run
   }
 
   /**
