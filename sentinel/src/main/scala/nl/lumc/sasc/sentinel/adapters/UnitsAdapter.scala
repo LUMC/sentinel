@@ -32,35 +32,80 @@ trait UnitsAdapter extends MongodbAdapter
   /** Type alias for partial functions for performing database object patching. */
   type PatchFunc = PartialFunction[(DBObject, SinglePathPatch), Perhaps[DBObject]]
 
-  /** Updates an existing database object in the database. */
-  def updateDbo(coll: MongoCollection, dbo: DBObject)(implicit ec: ExecutionContext): Future[Perhaps[WriteResult]] = Future {
+  /**
+   * Retrieves the raw database object of the given unit IDs.
+   *
+   * If any of the given unit ID is invalid / not present in the database, an
+   * [[nl.lumc.sasc.sentinel.models.ApiPayload]] object containing the error message is returned instead.
+   *
+   * Note that since the input requires a set of IDs, the order of the returned database objects is undefined.
+   *
+   * @param coll [[MongoCollection]] on which the query will be performed
+   * @param ids IDs of the records to retrieve.
+   * @param extraQuery Additional query for further selection of the raw database objects.
+   * @return Sequence of raw database objects or an API payload containing an error message.
+   */
+  protected[adapters] def getUnitRecordsDbo(coll: MongoCollection)(ids: Set[ObjectId],
+                                                                   extraQuery: DBObject = MongoDBObject.empty): Perhaps[Seq[DBObject]] = {
+    val idQuery = MongoDBObject("_id" -> MongoDBObject("$in" -> ids))
+    val res = coll.find(idQuery ++ extraQuery).toSeq
+    if (ids.size == res.length) res.right
+    else Payloads.UnexpectedDatabaseError("Not all sample IDs can be retrieved.").left
+  }
+
+  /** Updates an existing database object in the given collection. */
+  def updateDbo(coll: MongoCollection)(dbo: DBObject)(implicit ec: ExecutionContext): Future[Perhaps[WriteResult]] = Future {
     dbo._id match {
       case None => UnexpectedDatabaseError("Database object missing the required identifier '_id'.").left
       case Some(dbid) =>
         val wr = coll
           .update(MongoDBObject("_id" -> dbid), dbo, upsert = false)
         if (wr.getN == 1) wr.right
-        else UnexpectedDatabaseError("Run record update failed.").left
+        else UnexpectedDatabaseError("Database object update failed.").left
     }
   }
 
   /**
    * Patches an existing database object.
    *
-   * @param runDbo MongoDB object to apply the patch to.
+   * @param dbo MongoDB object to apply the patch to.
    * @param patches Patch operations.
    * @param patchFunc Partial functions for performing the patch.
-   * @return Either a sequence of error messages or the patched run record object.
+   * @return Either an [[ApiPayload]] or the patched run record object.
    */
   // format: OFF
-  def patchDbo(runDbo: DBObject, patches: List[SinglePathPatch])(patchFunc: PatchFunc): Perhaps[DBObject] =
+  def patchDbo(dbo: DBObject, patches: List[SinglePathPatch])(patchFunc: PatchFunc): Perhaps[DBObject] =
     // format: ON
-    patches.foldLeft(runDbo.right[ApiPayload]) {
+    patches.foldLeft(dbo.right[ApiPayload]) {
       case (recordDbo, patch) =>
         for {
-          dbo <- recordDbo
-          patchedDbo <- patchFunc((dbo, patch))
+          rdbo <- recordDbo
+          patchedDbo <- patchFunc((rdbo, patch))
         } yield patchedDbo
     }
 
+  /**
+   * Patches multiple existing database objects.
+   *
+   * @param dbos Sequence of MongoDB objects to apply to.
+   * @param patches Patch operations.
+   * @param patchFunc Partial functions for performing the patch.
+   * @return Either an [[ApiPayload]] or the patched run record objects.
+   */
+  def patchDbos(dbos: Seq[DBObject], patches: List[SinglePathPatch])(patchFunc: PatchFunc): Perhaps[Seq[DBObject]] = {
+
+    val patchedDbos = dbos
+      .map(dbo => patchDbo(dbo, patches)(patchFunc))
+
+    val oks = patchedDbos
+      .collect { case \/-(s) => s }
+
+    // If the number of successful patches is the same as the number of inputs, that means we're good.
+    if (oks.length == dbos.length) oks.right
+    // Otherwise we accumulate all the errors.
+    else patchedDbos
+      .collect { case -\/(f) => f }
+      .reduceLeft { _ |+| _ }
+      .left
+  }
 }

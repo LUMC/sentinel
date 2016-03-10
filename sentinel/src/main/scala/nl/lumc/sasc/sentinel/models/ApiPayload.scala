@@ -92,6 +92,8 @@ object Payloads {
 
   object PatchValidationError extends ValidationErrorLike {
     def message = "Invalid patch operation(s)."
+    def apply(patch: SinglePathPatch) = ApiPayload(message,
+      List(s"Unexpected operation '${patch.op}' on '${patch.path}' with value '${patch.value}'."))
   }
 
   object InvalidDbError {

@@ -27,6 +27,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
+import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.Payloads._
 
@@ -84,37 +85,74 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
 
+  val updateRunDbo = updateDbo(coll) _
+
   /**
    * Applies the given patch operations to an existing run record in the database.
    *
    * @param runId ID of the run to patch.
    * @param user The user performing the patch operation.
    * @param patches Patch operations to apply
-   * @return Either error messages or write result.
+   * @return Either error messages or the number of (run, samples, read groups) updated.
    */
   def patchAndUpdateRunRecord(runId: ObjectId, user: User,
-                              patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[WriteResult]] = {
+                              patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
 
-    val runDbo = for {
-      dbo <- ? <~ getRunRecordDbo(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
-      _ <- ? <~ (if (!(dbo.get("uploaderId") == user.id || user.isAdmin)) AuthorizationError.left else ().right)
-    } yield dbo
-
-    val patchFuncs: PatchFunc = {
+    val runPatchFunc: PatchFunc = {
       case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
         dbo.put("runName", v)
         dbo.right
-      case (_, patch: SinglePathPatch) =>
-        PatchValidationError(s"Unexpected operation '${patch.op}' on '${patch.path}' with value '${patch.value}'.").left
+      case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
     }
 
-    val runRecordPatch = for {
-      dbo <- runDbo
-      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(patchFuncs)
-      writeResult <- ? <~ updateDbo(coll, patchedRunDbo)
-    } yield writeResult
+    val unitsPatchFunc: PatchFunc = {
+      case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+        dbo.getAs[DBObject]("labels") match {
+          case Some(ok) =>
+            ok.put("runName", v)
+            ok.right
+          case None => UnexpectedDatabaseError("Required 'labels' not found.").left
+        }
+      case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
+    }
 
-    runRecordPatch.run
+    val run = for {
+      obj <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
+      _ <- ? <~ (if (!(obj.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
+    } yield obj
+
+    val runRecordPatch = for {
+      dbo <- run.map(r => grater[RunRecord].asDBObject(r))
+      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(runPatchFunc)
+      writeResult <- ? <~ updateRunDbo(patchedRunDbo)
+    } yield writeResult.getN
+
+    val allUnitsPatch: AsyncPerhaps[(Int, Int, Int)] = this match {
+
+      case rga: ReadGroupsAdapter => for {
+        nRunsUpdated <- runRecordPatch
+        sampleIds <- run.map(_.sampleIds)
+        readGroupIds <- run.map(_.readGroupIds)
+        // Update samples and read groups in parallel
+        sUpdate = rga.patchAndUpdateSampleRecords(sampleIds, patches, unitsPatchFunc)
+        rgUpdate = rga.patchAndUpdateReadGroupRecords(readGroupIds, patches, unitsPatchFunc)
+        nSamplesUpdated <- ? <~ sUpdate
+        nReadGroupsUpdated <- ? <~ rgUpdate
+      } yield (nRunsUpdated, nSamplesUpdated, nReadGroupsUpdated)
+
+      case sa: SamplesAdapter => for {
+        nRunsUpdated <- runRecordPatch
+        sampleIds <- run.map(_.sampleIds)
+        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(sampleIds, patches, unitsPatchFunc)
+      } yield (nRunsUpdated, nSamplesUpdated, 0)
+
+      case otherwise => for {
+        nRunsUpdated <- runRecordPatch
+      } yield (nRunsUpdated, 0, 0)
+
+    }
+
+    allUnitsPatch.run
   }
 
   /**
