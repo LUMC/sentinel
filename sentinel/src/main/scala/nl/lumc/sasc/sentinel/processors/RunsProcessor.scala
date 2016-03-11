@@ -98,14 +98,14 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   def patchAndUpdateRunRecord(runId: ObjectId, user: User,
                               patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
 
-    val runPatchFunc: PatchFunc = {
+    val runPatchFunc: DboPatchFunc = {
       case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
         dbo.put("runName", v)
         dbo.right
       case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
     }
 
-    val unitsPatchFunc: PatchFunc = {
+    val unitsPatchFunc: DboPatchFunc = {
       case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
         dbo.getAs[DBObject]("labels") match {
           case Some(ok) =>

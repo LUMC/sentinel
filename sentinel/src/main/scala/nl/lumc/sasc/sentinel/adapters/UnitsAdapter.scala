@@ -29,9 +29,6 @@ import nl.lumc.sasc.sentinel.utils.FutureMixin
 trait UnitsAdapter extends MongodbAdapter
     with FutureMixin {
 
-  /** Type alias for partial functions for performing database object patching. */
-  type PatchFunc = PartialFunction[(DBObject, SinglePathPatch), Perhaps[DBObject]]
-
   /**
    * Retrieves the raw database object of the given unit IDs.
    *
@@ -74,7 +71,7 @@ trait UnitsAdapter extends MongodbAdapter
    * @return Either an [[ApiPayload]] or the patched run record object.
    */
   // format: OFF
-  def patchDbo(dbo: DBObject, patches: List[SinglePathPatch])(patchFunc: PatchFunc): Perhaps[DBObject] =
+  def patchDbo(dbo: DBObject, patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Perhaps[DBObject] =
     // format: ON
     patches.foldLeft(dbo.right[ApiPayload]) {
       case (recordDbo, patch) =>
@@ -92,7 +89,7 @@ trait UnitsAdapter extends MongodbAdapter
    * @param patchFunc Partial functions for performing the patch.
    * @return Either an [[ApiPayload]] or the patched run record objects.
    */
-  def patchDbos(dbos: Seq[DBObject], patches: List[SinglePathPatch])(patchFunc: PatchFunc): Perhaps[Seq[DBObject]] = {
+  def patchDbos(dbos: Seq[DBObject], patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Perhaps[Seq[DBObject]] = {
 
     val patchedDbos = dbos
       .map(dbo => patchDbo(dbo, patches)(patchFunc))

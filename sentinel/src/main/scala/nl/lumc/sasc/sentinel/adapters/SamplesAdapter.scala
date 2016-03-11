@@ -25,7 +25,7 @@ import com.novus.salat.global._
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, SinglePathPatch }
 
 /**
  * Trait for storing samples from run summaries.
@@ -96,7 +96,7 @@ trait SamplesAdapter extends UnitsAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchAndUpdateSampleRecords(sampleIds: Seq[ObjectId], patches: List[SinglePathPatch],
-                                  patchFunc: PatchFunc): Future[Perhaps[Int]] = {
+                                  patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleRecordsDbo(sampleIds.toSet)
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)

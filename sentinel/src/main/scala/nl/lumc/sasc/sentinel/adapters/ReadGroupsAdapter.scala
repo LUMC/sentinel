@@ -25,7 +25,7 @@ import com.novus.salat.global._
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, SinglePathPatch }
 
 /**
  * Trait for storing read groups from run summaries.
@@ -98,7 +98,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchAndUpdateReadGroupRecords(readGroupIds: Seq[ObjectId], patches: List[SinglePathPatch],
-                                     patchFunc: PatchFunc): Future[Perhaps[Int]] = {
+                                     patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
       sampleDbos <- ? <~ getReadGroupRecordsDbo(readGroupIds.toSet)
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)

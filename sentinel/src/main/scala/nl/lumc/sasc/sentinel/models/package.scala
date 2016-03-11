@@ -18,6 +18,8 @@ package nl.lumc.sasc.sentinel
 
 import scala.concurrent.Future
 
+import com.mongodb.DBObject
+
 import scalaz._
 
 package object models {
@@ -30,6 +32,12 @@ package object models {
 
   /** Type alias for stacking `Future` and scalaz's `\/`. */
   type AsyncPerhaps[T] = EitherT[Future, ApiPayload, T]
+
+  /** General patch function. */
+  type PatchFunc[T] = PartialFunction[(T, SinglePathPatch), Perhaps[T]]
+
+  /** Type alias for partial functions for performing database object patching. */
+  type DboPatchFunc = PatchFunc[DBObject]
 
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
