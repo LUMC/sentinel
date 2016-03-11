@@ -18,7 +18,6 @@ package nl.lumc.sasc.sentinel.models
 
 import org.scalatra._
 
-import nl.lumc.sasc.sentinel._
 import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
 
 /**
