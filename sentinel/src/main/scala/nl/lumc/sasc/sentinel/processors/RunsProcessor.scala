@@ -44,6 +44,51 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
 
+  /** Execution context for Future operations. */
+  implicit private def context: ExecutionContext = runsProcessorContext
+
+  /** Helper class for patching runs. */
+  val patcher: RunsPatcher = new RunsPatcher
+
+  /** Default patch functions for run records. */
+  val runPatchFunc: DboPatchFunc = {
+    case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+      dbo.put("runName", v)
+      dbo.right
+    case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
+  }
+
+  /** Default patch functions for the samples of a given run. */
+  val samplesPatchFunc: DboPatchFunc = {
+    case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+      dbo.getAs[DBObject]("labels") match {
+        case Some(ok) =>
+          ok.put("runName", v)
+          ok.right
+        case None => UnexpectedDatabaseError("Required 'labels' not found.").left
+      }
+    case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
+  }
+
+  /** Default patch functions for the read groups of a given run. */
+  val readGroupsPatchFunc: DboPatchFunc = samplesPatchFunc
+
+  /**
+   * Processes and stores the given uploaded file to the run records collection.
+   *
+   * @param contents Upload contents as a byte array.
+   * @param uploadName File name of the upload.
+   * @param uploader Uploader of the run summary file.
+   * @return A run record of the uploaded run summary file.
+   */
+  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[Perhaps[RunRecord]]
+
+  /** Collection used by this adapter. */
+  private lazy val coll = mongo.db(collectionNames.Runs)
+
+  /** Function for updating run record database objects. */
+  private val updateRunDbo = updateDbo(coll) _
+
   /**
    * Retrieves a single run record owned by the given user as a raw database object.
    *
@@ -66,27 +111,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
     }
   }
 
-  /** Helper class for patching runs. */
-  val patcher: RunsPatcher = new RunsPatcher
-
-  /** Execution context for Future operations. */
-  implicit private def context: ExecutionContext = runsProcessorContext
-
-  /**
-   * Processes and stores the given uploaded file to the run records collection.
-   *
-   * @param contents Upload contents as a byte array.
-   * @param uploadName File name of the upload.
-   * @param uploader Uploader of the run summary file.
-   * @return A run record of the uploaded run summary file.
-   */
-  def processRunUpload(contents: Array[Byte], uploadName: String, uploader: User): Future[Perhaps[RunRecord]]
-
-  /** Collection used by this adapter. */
-  private lazy val coll = mongo.db(collectionNames.Runs)
-
-  val updateRunDbo = updateDbo(coll) _
-
   /**
    * Applies the given patch operations to an existing run record in the database.
    *
@@ -97,24 +121,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    */
   def patchAndUpdateRunRecord(runId: ObjectId, user: User,
                               patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
-
-    val runPatchFunc: DboPatchFunc = {
-      case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
-        dbo.put("runName", v)
-        dbo.right
-      case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
-    }
-
-    val unitsPatchFunc: DboPatchFunc = {
-      case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
-        dbo.getAs[DBObject]("labels") match {
-          case Some(ok) =>
-            ok.put("runName", v)
-            ok.right
-          case None => UnexpectedDatabaseError("Required 'labels' not found.").left
-        }
-      case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
-    }
 
     val run = for {
       obj <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
@@ -134,8 +140,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
         sampleIds <- run.map(_.sampleIds)
         readGroupIds <- run.map(_.readGroupIds)
         // Update samples and read groups in parallel
-        sUpdate = rga.patchAndUpdateSampleRecords(unitsPatchFunc)(sampleIds, patches)
-        rgUpdate = rga.patchAndUpdateReadGroupRecords(unitsPatchFunc)(readGroupIds, patches)
+        sUpdate = rga.patchAndUpdateSampleRecords(samplesPatchFunc)(sampleIds, patches)
+        rgUpdate = rga.patchAndUpdateReadGroupRecords(readGroupsPatchFunc)(readGroupIds, patches)
         nSamplesUpdated <- ? <~ sUpdate
         nReadGroupsUpdated <- ? <~ rgUpdate
       } yield (nRunsUpdated, nSamplesUpdated, nReadGroupsUpdated)
@@ -143,7 +149,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
       case sa: SamplesAdapter => for {
         nRunsUpdated <- runRecordPatch
         sampleIds <- run.map(_.sampleIds)
-        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(unitsPatchFunc)(sampleIds, patches)
+        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(samplesPatchFunc)(sampleIds, patches)
       } yield (nRunsUpdated, nSamplesUpdated, 0)
 
       case otherwise => for {
