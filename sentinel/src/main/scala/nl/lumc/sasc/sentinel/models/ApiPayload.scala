@@ -48,10 +48,13 @@ sealed case class ApiPayload(
 
   /** Creates an HTTP ActionResult with this payload. */
   lazy val actionResult: ActionResult = httpFunc(this)
+
+  /** HTTP status code of the HTTP action. */
+  lazy val actionStatusCode: Int = actionResult.status.code // A workaround since we can't compare ActionResults directly :(.
 }
 
 object ApiPayload {
-  val hiddenAttributes = Set("httpFunc", "actionResult")
+  val hiddenAttributes = Set("httpFunc", "actionResult", "actionStatusCode")
 }
 
 /** Common API messages. */

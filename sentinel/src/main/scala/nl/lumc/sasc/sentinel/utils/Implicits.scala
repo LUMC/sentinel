@@ -73,9 +73,15 @@ object Implicits {
       val f2c = f2 // force computation
       (f1, f2c) match {
         case (m1, m2) if m1.message.isEmpty && m2.message.isEmpty => m1
-        case (m1 @ _, m2) if m2.message.isEmpty => m1
-        case (m1, m2 @ _) if m1.message.isEmpty => m2
-        case otherwise => ApiPayload(s"${f1.message} | ${f2c.message}", f1.hints ++ f2.hints)
+        case (m1 @ _, m2) if m2.message.isEmpty                   => m1
+        case (m1, m2 @ _) if m1.message.isEmpty                   => m2
+        case otherwise =>
+          val catMsgs = s"${f1.message} | ${f2c.message}"
+          val catHnts = f1.hints ++ f2.hints
+          if (f1.actionStatusCode == f2.actionStatusCode)
+            ApiPayload(catMsgs, catHnts, f1.httpFunc)
+          else
+            ApiPayload(catMsgs, catHnts)
       }
     }
   }
