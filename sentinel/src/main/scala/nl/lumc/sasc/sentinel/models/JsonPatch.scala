@@ -23,4 +23,7 @@ sealed trait JsonPatch {
 }
 
 /** JSON patch operations that contain the `value` key. */
-case class SinglePathPatch(op: String, path: String, value: Any) extends JsonPatch
+case class SinglePathPatch(op: String, path: String, value: Any) extends JsonPatch {
+  /** Tokens in the path. */
+  lazy val pathTokens: List[String] = path.split("/").filter(_.nonEmpty).toList
+}
