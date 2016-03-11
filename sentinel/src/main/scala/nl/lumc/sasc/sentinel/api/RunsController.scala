@@ -123,7 +123,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     new AsyncResult {
       val is = runs.deleteRun(runId, user).map {
         case \/-(doc) => Ok(doc)
-        case -\/(err) => err.toActionResult
+        case -\/(err) => err.actionResult
       }
     }
 
@@ -172,10 +172,10 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
     new AsyncResult {
       val is =
         runs.patcher.extractAndValidatePatches(request.body.getBytes) match {
-          case -\/(err) => Future.successful(err.toActionResult)
+          case -\/(err) => Future.successful(err.actionResult)
           case \/-(ops) =>
             runs.patchAndUpdateRunRecord(runId, user, ops.toList).map {
-              case -\/(err) => err.toActionResult
+              case -\/(err) => err.actionResult
               case \/-(_)   => NoContent()
             }
         }
@@ -271,7 +271,7 @@ class RunsController(implicit val swagger: Swagger, mongo: MongodbAccessObject,
           val is = {
             p.processRunUpload(upload.readUncompressedBytes(), upload.getName, user)
               .map {
-                case -\/(err) => err.toActionResult
+                case -\/(err) => err.actionResult
                 case \/-(run) => Created(run)
               }
           }

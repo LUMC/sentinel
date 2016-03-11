@@ -48,11 +48,11 @@ sealed case class ApiPayload(
   }
 
   /** Creates an HTTP ActionResult with this payload. */
-  def toActionResult: ActionResult = httpFunc(this)
+  lazy val actionResult: ActionResult = httpFunc(this)
 }
 
 object ApiPayload {
-  val hiddenAttributes = Set("httpFunc")
+  val hiddenAttributes = Set("httpFunc", "actionResult")
 }
 
 /** Common API messages. */

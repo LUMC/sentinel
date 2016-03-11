@@ -104,10 +104,10 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     new AsyncResult {
       val is =
         users.extractAndValidatePatches(request.body.getBytes) match {
-          case -\/(err) => Future.successful(err.toActionResult)
+          case -\/(err) => Future.successful(err.actionResult)
           case \/-(ops) =>
             users.patchAndUpdateUser(user, userRecordId, ops.toList).map {
-              case -\/(err) => err.toActionResult
+              case -\/(err) => err.actionResult
               case \/-(_)   => NoContent()
             }
         }
@@ -176,7 +176,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     else {
       new AsyncResult {
         val is = users.addUser(userRequest.user).map {
-          case -\/(err) => err.toActionResult
+          case -\/(err) => err.actionResult
           case \/-(wr) =>
             Created(ApiPayload("New user created.",
               List(s"uri: /users/${userRequest.user.id}", s"apiKey: ${userRequest.user.activeKey}")))
