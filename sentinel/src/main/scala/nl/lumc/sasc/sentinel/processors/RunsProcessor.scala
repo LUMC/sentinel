@@ -28,7 +28,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
-import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
 import nl.lumc.sasc.sentinel.models.Payloads._
 
 import nl.lumc.sasc.sentinel.utils._
@@ -52,22 +52,22 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
 
   /** Default patch functions for run records. */
   val runPatchFunc: DboPatchFunc = {
-    case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+    case (dbo, SPPatch("replace", "/runName", v: String)) =>
       dbo.put("runName", v)
       dbo.right
-    case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
+    case (_, patch: SPPatch) => PatchValidationError(patch).left
   }
 
   /** Default patch functions for the samples of a given run. */
   val samplesPatchFunc: DboPatchFunc = {
-    case (dbo, SinglePathPatch("replace", "/runName", v: String)) =>
+    case (dbo, SPPatch("replace", "/runName", v: String)) =>
       dbo.getAs[DBObject]("labels") match {
         case Some(ok) =>
           ok.put("runName", v)
           ok.right
         case None => UnexpectedDatabaseError("Required 'labels' not found.").left
       }
-    case (_, patch: SinglePathPatch) => PatchValidationError(patch).left
+    case (_, patch: SPPatch) => PatchValidationError(patch).left
   }
 
   /** Default patch functions for the read groups of a given run. */
@@ -120,7 +120,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @return Either error messages or the number of (run, samples, read groups) updated.
    */
   def patchAndUpdateRunRecord(runId: ObjectId, user: User,
-                              patches: List[SinglePathPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
+                              patches: List[SPPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
 
     val run = for {
       obj <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
