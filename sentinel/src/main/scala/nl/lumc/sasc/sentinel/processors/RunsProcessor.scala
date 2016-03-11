@@ -123,7 +123,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
 
     val runRecordPatch = for {
       dbo <- run.map(r => grater[RunRecord].asDBObject(r))
-      patchedRunDbo <- ? <~ patchDbo(dbo, patches)(runPatchFunc)
+      patchedRunDbo <- ? <~ patchDbo(runPatchFunc)(dbo, patches)
       writeResult <- ? <~ updateRunDbo(patchedRunDbo)
     } yield writeResult.getN
 
@@ -134,8 +134,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
         sampleIds <- run.map(_.sampleIds)
         readGroupIds <- run.map(_.readGroupIds)
         // Update samples and read groups in parallel
-        sUpdate = rga.patchAndUpdateSampleRecords(sampleIds, patches, unitsPatchFunc)
-        rgUpdate = rga.patchAndUpdateReadGroupRecords(readGroupIds, patches, unitsPatchFunc)
+        sUpdate = rga.patchAndUpdateSampleRecords(unitsPatchFunc)(sampleIds, patches)
+        rgUpdate = rga.patchAndUpdateReadGroupRecords(unitsPatchFunc)(readGroupIds, patches)
         nSamplesUpdated <- ? <~ sUpdate
         nReadGroupsUpdated <- ? <~ rgUpdate
       } yield (nRunsUpdated, nSamplesUpdated, nReadGroupsUpdated)
@@ -143,7 +143,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
       case sa: SamplesAdapter => for {
         nRunsUpdated <- runRecordPatch
         sampleIds <- run.map(_.sampleIds)
-        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(sampleIds, patches, unitsPatchFunc)
+        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(unitsPatchFunc)(sampleIds, patches)
       } yield (nRunsUpdated, nSamplesUpdated, 0)
 
       case otherwise => for {
