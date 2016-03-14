@@ -27,16 +27,16 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
 @Salat abstract class BaseUnitRecord { this: CaseClass =>
 
   /** Run ID. */
-  @Persist def runId: ObjectId
+  def runId: ObjectId
 
   /** Run name. */
-  @Persist def runName: Option[String]
+  def runName: Option[String]
 
   /** Run uploader ID. */
-  @Persist def uploaderId: String
+  def uploaderId: String
 
   /** UTC time when the record was created. */
-  @Persist def creationTimeUtc: Date
+  def creationTimeUtc: Date
 }
 
 /** Representation of an uploaded run summary file. */
@@ -46,16 +46,16 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
   @Key("_id") def runId: ObjectId
 
   /** Name of the pipeline that produced the run. */
-  @Persist def pipeline: String
+  def pipeline: String
 
   /** Sample IDs linked to this run. */
-  @Persist def sampleIds: Seq[ObjectId]
+  def sampleIds: Seq[ObjectId]
 
   /** Library IDs linked to this run. */
-  @Persist def readGroupIds: Seq[ObjectId]
+  def readGroupIds: Seq[ObjectId]
 
   /** UTC time when the run record was deleted. */
-  @Persist def deletionTimeUtc: Option[Date]
+  def deletionTimeUtc: Option[Date]
 
   /** Number of samples in the run summary file used for statistics. */
   @Persist val nSamples: Int = sampleIds.size
@@ -76,7 +76,7 @@ object BaseRunRecord {
   @Key("_id") val dbId: ObjectId = new ObjectId
 
   /** Sample name. */
-  @Persist def sampleName: Option[String]
+  def sampleName: Option[String]
 
   @Persist val creationTimeUtc: Date = utcTimeNow
 }
@@ -85,8 +85,8 @@ object BaseRunRecord {
 @Salat abstract class BaseReadGroupRecord extends BaseSampleRecord { this: CaseClass =>
 
   /** Library name. */
-  @Persist def readGroupName: Option[String]
+  def readGroupName: Option[String]
 
   /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
-  @Persist def isPaired: Boolean
+  def isPaired: Boolean
 }
