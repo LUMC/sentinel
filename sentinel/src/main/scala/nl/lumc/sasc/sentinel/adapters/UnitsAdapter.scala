@@ -77,7 +77,7 @@ trait UnitsAdapter extends MongodbAdapter
       case (recordDbo, patch) =>
         for {
           rdbo <- recordDbo
-          patchedDbo <- patchFunc((rdbo, patch))
+          patchedDbo <- patchFunc.applyOrElse((rdbo, patch), UnitsAdapter.dboPatchFuncBaseCase)
         } yield patchedDbo
     }
 
@@ -105,4 +105,9 @@ trait UnitsAdapter extends MongodbAdapter
       .reduceLeft { _ |+| _ }
       .left
   }
+}
+
+object UnitsAdapter {
+  /** Catch-all partial function that is meant to be called when the patch does not match any existing case block. */
+  val dboPatchFuncBaseCase: DboPatchFunc = { case (_, p) => PatchValidationError(p).left }
 }

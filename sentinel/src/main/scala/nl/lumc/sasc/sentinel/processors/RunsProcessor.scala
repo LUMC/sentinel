@@ -27,7 +27,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
+import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter, UnitsAdapter }
 import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
 import nl.lumc.sasc.sentinel.models.Payloads._
 
@@ -55,7 +55,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
     case (dbo, SPPatch("replace", "/runName", v: String)) =>
       dbo.put("runName", v)
       dbo.right
-    case (_, patch: SPPatch) => PatchValidationError(patch).left
   }
 
   /** Default patch functions for the samples of a given run. */
@@ -67,7 +66,6 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
           ok.right
         case None => UnexpectedDatabaseError("Required 'labels' not found.").left
       }
-    case (_, patch: SPPatch) => PatchValidationError(patch).left
   }
 
   /** Default patch functions for the read groups of a given run. */
