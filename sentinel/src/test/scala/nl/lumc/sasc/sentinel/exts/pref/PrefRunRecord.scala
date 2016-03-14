@@ -42,6 +42,7 @@ case class PrefRunRecord(
 case class PrefSampleRecord(
   stats: PrefSampleStats,
   uploaderId: String,
+  dbId: ObjectId,
   runId: ObjectId,
   refId: ObjectId,
   sampleName: Option[String] = None,

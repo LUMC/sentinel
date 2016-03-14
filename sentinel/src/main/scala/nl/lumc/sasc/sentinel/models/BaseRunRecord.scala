@@ -73,7 +73,7 @@ object BaseRunRecord {
 @Salat abstract class BaseSampleRecord extends BaseUnitRecord { this: CaseClass =>
 
   /** Internal database ID for the document. */
-  @Key("_id") val dbId: ObjectId = new ObjectId
+  @Key("_id") def dbId: ObjectId
 
   /** Sample name. */
   def sampleName: Option[String]
@@ -83,6 +83,9 @@ object BaseRunRecord {
 
 /** Representation of a read group metrics. */
 @Salat abstract class BaseReadGroupRecord extends BaseSampleRecord { this: CaseClass =>
+
+  /** Database ID of the sample record linked to this read group. */
+  def sampleId: ObjectId
 
   /** Library name. */
   def readGroupName: Option[String]

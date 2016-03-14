@@ -68,7 +68,7 @@ class SamplesAdapterSpec extends Specification
 
   /** Helper method for creating sample records. */
   private def makeSample(nSnps: Long, uploaderId: String = "tester", runId: ObjectId = runId) =
-    MapleSampleRecord(MapleSampleStats(nSnps), uploaderId, runId)
+    MapleSampleRecord(MapleSampleStats(nSnps), uploaderId, new ObjectId, runId)
 
   /** Sample records to test. */
   private val testSampleObjs = Seq(makeSample(101), makeSample(202), makeSample(303))

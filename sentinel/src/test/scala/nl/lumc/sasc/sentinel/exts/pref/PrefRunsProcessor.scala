@@ -68,7 +68,7 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
         case (sampleName, sampleJson) =>
           PrefSampleRecord(
             stats = PrefSampleStats(num = (sampleJson \ "num").extract[Long]),
-            uploaderId, runId, refId, Option(sampleName), (runJson \ "runName").extractOpt[String])
+            uploaderId, new ObjectId, runId, refId, Option(sampleName), (runJson \ "runName").extractOpt[String])
       }.toSeq
 
   /** Uploaded file processor. */

@@ -38,6 +38,7 @@ case class MapleRunRecord(
 case class MapleSampleRecord(
   stats: MapleSampleStats,
   uploaderId: String,
+  dbId: ObjectId,
   runId: ObjectId,
   sampleName: Option[String] = None,
   runName: Option[String] = None) extends BaseSampleRecord
@@ -54,6 +55,8 @@ case class MapleSampleStatsAggr(nSnps: DataPointAggr)
 case class MapleReadGroupRecord(
   stats: MapleReadGroupStats,
   uploaderId: String,
+  dbId: ObjectId,
+  sampleId: ObjectId,
   runId: ObjectId,
   isPaired: Boolean = true,
   readGroupName: Option[String] = None,

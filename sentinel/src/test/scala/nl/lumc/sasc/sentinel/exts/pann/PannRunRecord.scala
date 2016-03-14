@@ -42,6 +42,7 @@ case class PannRunRecord(
 case class PannSampleRecord(
   stats: PannSampleStats,
   uploaderId: String,
+  dbId: ObjectId,
   runId: ObjectId,
   annotIds: Seq[ObjectId],
   sampleName: Option[String] = None,

@@ -74,8 +74,10 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
     val runName = (runJson \ "run_name").extractOpt[String]
 
     /** Given the sample name, read group name, and JSON section of the read group, create a read group container. */
-    def makeReadGroup(sampleName: String, readGroupName: String, readGroupJson: JValue) =
+    def makeReadGroup(sampleId: ObjectId, sampleName: String, readGroupName: String, readGroupJson: JValue) =
       MapleReadGroupRecord(
+        dbId = new ObjectId,
+        sampleId = sampleId,
         stats = MapleReadGroupStats(
           nReadsInput = (readGroupJson \ "nReadsInput").extract[Long],
           nReadsAligned = (readGroupJson \ "nReadsAligned").extract[Long]),
@@ -88,8 +90,12 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
     /** Given the sample name and JSON section of the sample, create a sample container. */
     def makeSample(sampleName: String, sampleJson: JValue) =
       MapleSampleRecord(
-        stats = MapleSampleStats(nSnps = (sampleJson \ "nSnps").extract[Long]),
-        uploaderId, runId, Option(sampleName), runName)
+        uploaderId = uploaderId,
+        runId = runId,
+        dbId = new ObjectId,
+        sampleName = Option(sampleName),
+        runName = runName,
+        stats = MapleSampleStats(nSnps = (sampleJson \ "nSnps").extract[Long]))
 
     /** Raw sample and read group containers. */
     val parsed = (runJson \ "samples").extract[Map[String, JValue]].view
@@ -97,7 +103,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
         case (sampleName, sampleJson) =>
           val sample = makeSample(sampleName, sampleJson)
           val readGroups = (sampleJson \ "readGroups").extract[Map[String, JValue]]
-            .map { case (readGroupName, readGroupJson) => makeReadGroup(sampleName, readGroupName, readGroupJson) }
+            .map { case (readGroupName, readGroupJson) => makeReadGroup(sample.dbId, sampleName, readGroupName, readGroupJson) }
             .toSeq
           (sample, readGroups)
       }.toSeq
