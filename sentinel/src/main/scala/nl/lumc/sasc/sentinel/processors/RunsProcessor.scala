@@ -27,7 +27,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter, UnitsAdapter }
+import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
 import nl.lumc.sasc.sentinel.models.Payloads._
 
@@ -51,25 +51,13 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   val patcher: RunsPatcher = new RunsPatcher
 
   /** Default patch functions for run records. */
-  val runPatchFunc: DboPatchFunc = {
-    case (dbo, SPPatch("replace", "/runName", v: String)) =>
-      dbo.put("runName", v)
-      dbo.right
-  }
+  def runPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(RunsProcessor.RunPatch.replaceRunNamePF)
 
   /** Default patch functions for the samples of a given run. */
-  val samplesPatchFunc: DboPatchFunc = {
-    case (dbo, SPPatch("replace", "/runName", v: String)) =>
-      dbo.getAs[DBObject]("labels") match {
-        case Some(ok) =>
-          ok.put("runName", v)
-          ok.right
-        case None => UnexpectedDatabaseError("Required 'labels' not found.").left
-      }
-  }
+  def samplesPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(RunsProcessor.SamplesPatch.replaceRunNamePF)
 
   /** Default patch functions for the read groups of a given run. */
-  val readGroupsPatchFunc: DboPatchFunc = samplesPatchFunc
+  def readGroupsPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(RunsProcessor.ReadGroupsPatch.replaceRunNamePF)
 
   /**
    * Processes and stores the given uploaded file to the run records collection.
@@ -127,7 +115,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
 
     val runRecordPatch = for {
       dbo <- run.map(r => grater[RunRecord].asDBObject(r))
-      patchedRunDbo <- ? <~ patchDbo(runPatchFunc)(dbo, patches)
+      patchedRunDbo <- ? <~ patchDbo(dbo, patches) { runPatchFuncs.list.reduceLeft { _ orElse _ } }
       writeResult <- ? <~ updateRunDbo(patchedRunDbo)
     } yield writeResult.getN
 
@@ -138,8 +126,12 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
         sampleIds <- run.map(_.sampleIds)
         readGroupIds <- run.map(_.readGroupIds)
         // Update samples and read groups in parallel
-        sUpdate = rga.patchAndUpdateSampleRecords(samplesPatchFunc)(sampleIds, patches)
-        rgUpdate = rga.patchAndUpdateReadGroupRecords(readGroupsPatchFunc)(readGroupIds, patches)
+        sUpdate = rga.patchAndUpdateSampleRecords(sampleIds, patches) {
+          samplesPatchFuncs.list.reduceLeft { _ orElse _ }
+        }
+        rgUpdate = rga.patchAndUpdateReadGroupRecords(readGroupIds, patches) {
+          readGroupsPatchFuncs.list.reduceLeft { _ orElse _ }
+        }
         nSamplesUpdated <- ? <~ sUpdate
         nReadGroupsUpdated <- ? <~ rgUpdate
       } yield (nRunsUpdated, nSamplesUpdated, nReadGroupsUpdated)
@@ -147,7 +139,9 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
       case sa: SamplesAdapter => for {
         nRunsUpdated <- runRecordPatch
         sampleIds <- run.map(_.sampleIds)
-        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(samplesPatchFunc)(sampleIds, patches)
+        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(sampleIds, patches) {
+          samplesPatchFuncs.list.reduceLeft { _ orElse _ }
+        }
       } yield (nRunsUpdated, nSamplesUpdated, 0)
 
       case otherwise => for {
@@ -440,5 +434,35 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
         AggregationOptions(AggregationOptions.CURSOR))
       .map { pstat => statsGrater.asObject(pstat) }
       .toSeq
+  }
+}
+
+object RunsProcessor {
+
+  object RunPatch {
+    /** 'replace' patch for 'runName' in a single run */
+    val replaceRunNamePF: DboPatchFunc = {
+      case (dbo, SPPatch("replace", "/runName", v: String)) =>
+        dbo.put("runName", v)
+        dbo.right
+    }
+  }
+
+  object SamplesPatch {
+    /** 'replace' patch for 'runName' in samples */
+    val replaceRunNamePF: DboPatchFunc = {
+      case (dbo, SPPatch("replace", "/runName", v: String)) =>
+        dbo.getAs[DBObject]("labels") match {
+          case Some(ok) =>
+            ok.put("runName", v)
+            ok.right
+          case None => UnexpectedDatabaseError("Required 'labels' not found.").left
+        }
+    }
+  }
+
+  object ReadGroupsPatch {
+    /** 'replace' patch for 'runName' in samples */
+    val replaceRunNamePF: DboPatchFunc = SamplesPatch.replaceRunNamePF
   }
 }
