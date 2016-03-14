@@ -102,7 +102,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
                                      patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
       sampleDbos <- ? <~ getReadGroupRecordsDbo(readGroupIds.toSet)
-      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches, patchFunc)
+      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
       writeResults <- ? <~ updateReadGroupsDbo(patchedSampleDbos)
       nUpdated = writeResults.map(_.getN).sum
       if readGroupIds.length == nUpdated

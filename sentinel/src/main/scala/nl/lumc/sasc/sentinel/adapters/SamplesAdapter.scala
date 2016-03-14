@@ -100,7 +100,7 @@ trait SamplesAdapter extends UnitsAdapter {
                                   patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleRecordsDbo(sampleIds.toSet)
-      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches, patchFunc)
+      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
       writeResults <- ? <~ updateSamplesDbo(patchedSampleDbos)
       nUpdated = writeResults.map(_.getN).sum
       if sampleIds.length == nUpdated
