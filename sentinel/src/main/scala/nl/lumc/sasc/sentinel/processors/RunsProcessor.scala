@@ -443,26 +443,23 @@ object RunsProcessor {
     /** 'replace' patch for 'runName' in a single run */
     val replaceRunNamePF: DboPatchFunc = {
       case (dbo, SPPatch("replace", "/runName", v: String)) =>
-        dbo.put("runName", v)
-        dbo.right
-    }
-  }
-
-  object SamplesPatch {
-    /** 'replace' patch for 'runName' in samples */
-    val replaceRunNamePF: DboPatchFunc = {
-      case (dbo, SPPatch("replace", "/runName", v: String)) =>
         dbo.getAs[DBObject]("labels") match {
           case Some(ok) =>
             ok.put("runName", v)
-            ok.right
+            dbo.put("labels", ok)
+            dbo.right
           case None => UnexpectedDatabaseError("Required 'labels' not found.").left
         }
     }
   }
 
+  object SamplesPatch {
+    /** 'replace' patch for 'runName' in samples */
+    val replaceRunNamePF: DboPatchFunc = RunPatch.replaceRunNamePF
+  }
+
   object ReadGroupsPatch {
     /** 'replace' patch for 'runName' in samples */
-    val replaceRunNamePF: DboPatchFunc = SamplesPatch.replaceRunNamePF
+    val replaceRunNamePF: DboPatchFunc = RunPatch.replaceRunNamePF
   }
 }

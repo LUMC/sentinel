@@ -30,7 +30,7 @@ case class PrefRunRecord(
     pipeline: String,
     sampleIds: Seq[ObjectId],
     refId: ObjectId,
-    runName: Option[String] = None,
+    labels: RunLabels = RunLabels(),
     deletionTimeUtc: Option[Date] = None,
     creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 

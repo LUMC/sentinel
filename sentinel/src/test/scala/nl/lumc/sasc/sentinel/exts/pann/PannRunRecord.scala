@@ -30,7 +30,7 @@ case class PannRunRecord(
     pipeline: String,
     sampleIds: Seq[ObjectId],
     annotIds: Seq[ObjectId],
-    runName: Option[String] = None,
+    labels: RunLabels = RunLabels(),
     deletionTimeUtc: Option[Date] = None,
     creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 

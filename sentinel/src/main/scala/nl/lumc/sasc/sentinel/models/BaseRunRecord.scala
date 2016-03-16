@@ -29,8 +29,10 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
   /** Run ID. */
   def runId: ObjectId
 
-  /** Run name. */
-  def runName: Option[String]
+  /*
+  /** Labels. */
+  def labels: Option[Labels]
+*/
 
   /** Run uploader ID. */
   def uploaderId: String
@@ -47,6 +49,9 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
   /** Name of the pipeline that produced the run. */
   def pipeline: String
+
+  /** Labels. */
+  def labels: RunLabelsLike
 
   /** Sample IDs linked to this run. */
   def sampleIds: Seq[ObjectId]
@@ -78,6 +83,11 @@ object BaseRunRecord {
   /** Sample name. */
   def sampleName: Option[String]
 
+  /*
+  /** Labels. */
+  def labels: Option[SampleLabelsLike]
+*/
+
   @Persist val creationTimeUtc: Date = utcTimeNow
 }
 
@@ -89,6 +99,11 @@ object BaseRunRecord {
 
   /** Library name. */
   def readGroupName: Option[String]
+  /*
+
+  /** Labels. */
+  def labels: Option[ReadGroupLabelsLike]
+*/
 
   /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
   def isPaired: Boolean

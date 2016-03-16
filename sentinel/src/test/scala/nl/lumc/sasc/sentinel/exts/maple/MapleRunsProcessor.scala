@@ -22,7 +22,7 @@ import org.bson.types.ObjectId
 import org.json4s.JValue
 
 import nl.lumc.sasc.sentinel.adapters._
-import nl.lumc.sasc.sentinel.models.User
+import nl.lumc.sasc.sentinel.models.{ RunLabels, User }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject }
 
@@ -137,7 +137,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
       // Create run record
       sampleIds = units.samples.map(_.dbId)
       readGroupIds = units.readGroups.map(_.dbId)
-      run = MapleRunRecord(fileId, uploader.id, pipelineName, sampleIds, readGroupIds, runName)
+      run = MapleRunRecord(fileId, uploader.id, pipelineName, sampleIds, readGroupIds, RunLabels(runName))
       // Store run record into database
       _ <- ? <~ storeRun(run)
     } yield run

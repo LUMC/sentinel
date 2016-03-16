@@ -30,7 +30,7 @@ case class MapleRunRecord(
   pipeline: String,
   sampleIds: Seq[ObjectId],
   readGroupIds: Seq[ObjectId],
-  runName: Option[String] = None,
+  labels: RunLabels = RunLabels(),
   deletionTimeUtc: Option[Date] = None,
   creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord
 

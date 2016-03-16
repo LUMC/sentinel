@@ -36,3 +36,35 @@ case class DataPointLabels(
 trait LabeledStats { this: CaseClass =>
   def labels: Option[DataPointLabels]
 }
+
+/** Trait for run record labels. */
+trait RunLabelsLike {
+  def runName: Option[String]
+}
+
+/** Trait for sample record labels. */
+trait SampleLabelsLike {
+  def runName: Option[String]
+  def sampleName: Option[String]
+}
+
+/** Trait for read group record labels. */
+trait ReadGroupLabelsLike {
+  def runName: Option[String]
+  def sampleName: Option[String]
+  def readGroupName: Option[String]
+}
+
+/** Base implementation of a run record label. */
+case class RunLabels(runName: Option[String] = None) extends RunLabelsLike
+
+/** Base implementation of a sample record label. */
+case class SampleLabels(
+  runName: Option[String] = None,
+  sampleName: Option[String]) extends SampleLabelsLike
+
+/** Base implementation of a read group record label. */
+case class ReadGroupLabels(
+  runName: Option[String] = None,
+  sampleName: Option[String] = None,
+  readGroupName: Option[String] = None) extends ReadGroupLabelsLike

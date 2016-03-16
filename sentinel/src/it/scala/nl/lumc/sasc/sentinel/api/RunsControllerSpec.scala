@@ -1535,8 +1535,8 @@ class RunsControllerSpec extends SentinelServletSpec {
                   Map(HeaderApiKey -> UserExamples.admin.activeKey)) { response })
                 "when the supposedly patched run is queried afterwards" should ctx.priorReqs(iictx1) { iiihttp =>
                   "return the run name unchanged" in {
-                    iiihttp.rep.body must /("runName" -> "Maple_04")
-                    iiihttp.rep.body must not /("runName" -> "patchedRunName")
+                    iiihttp.rep.body must /("labels") /("runName" -> "Maple_04")
+                    iiihttp.rep.body must not / "labels"  /("runName" -> "patchedRunName")
                   }
                 }
               }
@@ -1654,7 +1654,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                   "return JSON object containing the expected 'runName' attribute" in {
                     iiihttp.rep.contentType mustEqual MimeType.Json
-                    iiihttp.rep.body must /("runName" -> "Maple_04")
+                    iiihttp.rep.body must /("labels") /("runName" -> "Maple_04")
                   }
                 }
 
@@ -1679,7 +1679,7 @@ class RunsControllerSpec extends SentinelServletSpec {
 
                   "return a JSON object with an updated 'runName' attribute" in {
                     iiihttp.rep.contentType mustEqual MimeType.Json
-                    iiihttp.rep.body must /("runName" -> "patchedRunName")
+                    iiihttp.rep.body must /("labels") /("runName" -> "patchedRunName")
                   }
                 }
               }
