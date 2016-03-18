@@ -24,10 +24,7 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.Payloads._
 
-import nl.lumc.sasc.sentinel.utils.FutureMixin
-
-trait UnitsAdapter extends MongodbAdapter
-    with FutureMixin {
+trait UnitsAdapter extends FutureMongodbAdapter {
 
   /**
    * Retrieves the raw database object of the given unit IDs.

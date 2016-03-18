@@ -23,10 +23,9 @@ import com.novus.salat._
 import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.ReferenceRecord
-import nl.lumc.sasc.sentinel.utils.FutureMixin
 
 /** Trait for connecting to a reference records collection. */
-trait ReferencesAdapter extends MongodbAdapter with FutureMixin {
+trait ReferencesAdapter extends FutureMongodbAdapter {
 
   /** Overridable execution context for this adapter. */
   protected def referencesAdapterContext = ExecutionContext.global

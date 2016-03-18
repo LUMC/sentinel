@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.adapters
 
-import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.{ FutureMixin, MongodbAccessObject }
 
 /** Trait for connecting to a MongoDB database. */
 trait MongodbAdapter {
@@ -64,3 +64,6 @@ object MongodbAdapter {
     def pipelineReadGroups(name: String) = s"$name.readGroups"
   }
 }
+
+/** Trait for MongoDB database connections with Future implicits provided. */
+trait FutureMongodbAdapter extends MongodbAdapter with FutureMixin

@@ -25,11 +25,10 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
 import nl.lumc.sasc.sentinel.models.Payloads._
-import nl.lumc.sasc.sentinel.utils.{ FutureMixin, SinglePathPatchJsonExtractor }
+import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 
 /** Trait for performing operations on user records. */
-trait UsersAdapter extends MongodbAdapter
-    with FutureMixin
+trait UsersAdapter extends FutureMongodbAdapter
     with SinglePathPatchJsonExtractor {
 
   /** Overridable execution context for this adapter. */

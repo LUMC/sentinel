@@ -23,10 +23,9 @@ import com.novus.salat._
 import com.novus.salat.global._
 
 import nl.lumc.sasc.sentinel.models.AnnotationRecord
-import nl.lumc.sasc.sentinel.utils.FutureMixin
 
 /** Trait for connecting to an annotation records collection. */
-trait AnnotationsAdapter extends MongodbAdapter with FutureMixin {
+trait AnnotationsAdapter extends FutureMongodbAdapter {
 
   /** Overridable execution context for this adapter. */
   protected def annotationsAdapterContext = ExecutionContext.global
