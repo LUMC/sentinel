@@ -329,7 +329,10 @@
         "FOLD_ENRICHMENT": { "type": "number" },
         "GC_DROPOUT": { "type": "number" },
         "GENOME_SIZE": { "type": "integer" },
-        "HS_LIBRARY_SIZE": { "type": "integer" },
+        "HS_LIBRARY_SIZE": { "oneOf": [
+          { "type": "integer" },
+          { "type": "string", "pattern": "^$" }
+        ] },
         "HS_PENALTY_100X": { "type": "number" },
         "HS_PENALTY_10X": { "type": "number" },
         "HS_PENALTY_20X": { "type": "number" },

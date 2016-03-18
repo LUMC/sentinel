@@ -81,7 +81,7 @@
             "description": "Settings used for the Gentrap run",
             "type": "object",
             "required": [
-              "aligner", "call_variants", "remove_ribosomal_reads",
+              "call_variants", "remove_ribosomal_reads",
               "expression_measures", "strand_protocol", "reference"
             ],
 
@@ -98,7 +98,8 @@
                 "items": {
                   "type": "string",
                   "enum": [
-                    "FragmentsPerGene", "FragmentsPerExon", "BasesPerGene", "BasesPerExon",
+                    "FragmentsPerGene", "FragmentsPerExon",
+                    "BasesPerGene", "BasesPerExon", "BaseCounts",
                     "CufflinksStrict", "CufflinksGuided", "CufflinksBlind"
                   ]
                 }
@@ -245,20 +246,36 @@
           "properties": {
 
             "files": {
-              "description": "File groups tracked by Mapping",
-              "type": "object",
-              "required": [ "pipeline" ],
-
-              "properties": {
-
-                "pipeline": {
-                  "description": "Initial input files and final output files in Mapping",
+              "oneOf": [
+                {
+                  "description": "File groups tracked by Mapping",
                   "type": "object",
-                  "required": [ "input_R1", "output_bamfile" ],
-                  "additionalProperties": { "$ref": "#/definitions/file" }
+                  "required": [ "pipeline" ],
+                  "properties": {
+                    "pipeline": {
+                      "description": "Initial input files and final output files in Mapping",
+                      "type": "object",
+                      "required": [ "input_R1", "output_bamfile" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    }
+                  },
+                  "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+                },
+                {
+                  "description": "File groups tracked by Mapping",
+                  "type": "object",
+                  "required": [ "pipeline" ],
+                  "properties": {
+                    "pipeline": {
+                      "description": "Initial input files and final output files in Mapping",
+                      "type": "object",
+                      "required": [ "input_R1", "output_bam" ],
+                      "additionalProperties": { "$ref": "#/definitions/file" }
+                    }
+                  },
+                  "additionalProperties": { "$ref": "#/definitions/fileGroup" }
                 }
-              },
-              "additionalProperties": { "$ref": "#/definitions/fileGroup" }
+              ]
             },
 
             "executables": {
