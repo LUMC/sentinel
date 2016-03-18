@@ -185,16 +185,6 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                  (implicit m: Manifest[T]): Future[Perhaps[Seq[T]]] = {
     // format: ON
 
-    // Projection for data point label
-    val labelProjection =
-      MongoDBObject(
-        "runId" -> "$runId",
-        "runName" -> "$runName",
-        "sampleName" -> "$sampleName") ++ {
-          if (accLevel == AccLevel.ReadGroup) MongoDBObject("readGroupName" -> "$readGroupName")
-          else MongoDBObject.empty
-        }
-
     // MongoDB aggregation framework operations
     val operations = {
       val opProjectAlnStats =
@@ -203,7 +193,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
             "_id" -> 0,
             metricName -> 1,
             "uploaderId" -> 1,
-            "labels" -> labelProjection))
+            "runId" -> 1,
+            "labels" -> 1))
 
       // Initial document selection
       val opMatch = MongoDBObject("$match" -> matchers).asDBObject
@@ -226,11 +217,13 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
         .aggregate(operations, AggregationOptions(AggregationOptions.CURSOR))
         .map { aggres =>
           val uploaderId = aggres.getAs[String]("uploaderId")
-          val labels = aggres.getAs[DBObject]("labels")
           val astat = aggres.getAs[DBObject](metricName)
+          val labels = aggres.getAs[MongoDBObject]("labels")
+          val runId = aggres.getAs[ObjectId]("runId")
           val dbo = (user, uploaderId, astat, labels) match {
             case (Some(u), Some(uid), Some(s), Some(n)) =>
-              if (u.id == uid) Option(s ++ MongoDBObject("labels" -> n))
+              if (u.id == uid) Option(s ++
+                MongoDBObject("labels" -> (n ++ MongoDBObject("runId" -> runId))))
               else Option(s)
             case (None, _, Some(s), _) => Option(s)
             case otherwise             => None

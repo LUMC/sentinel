@@ -22,7 +22,7 @@ import org.bson.types.ObjectId
 import org.json4s.JValue
 
 import nl.lumc.sasc.sentinel.adapters._
-import nl.lumc.sasc.sentinel.models.{ RunLabels, User }
+import nl.lumc.sasc.sentinel.models.{ ReadGroupLabels, RunLabels, SampleLabels, User }
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
 import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject }
 
@@ -83,9 +83,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
           nReadsAligned = (readGroupJson \ "nReadsAligned").extract[Long]),
         uploaderId = uploaderId,
         runId = runId,
-        readGroupName = Option(readGroupName),
-        sampleName = Option(sampleName),
-        runName = runName)
+        labels = ReadGroupLabels(runName, Option(sampleName), Option(readGroupName)))
 
     /** Given the sample name and JSON section of the sample, create a sample container. */
     def makeSample(sampleName: String, sampleJson: JValue) =
@@ -93,8 +91,7 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
         uploaderId = uploaderId,
         runId = runId,
         dbId = new ObjectId,
-        sampleName = Option(sampleName),
-        runName = runName,
+        labels = SampleLabels(runName, Option(sampleName)),
         stats = MapleSampleStats(nSnps = (sampleJson \ "nSnps").extract[Long]))
 
     /** Raw sample and read group containers. */

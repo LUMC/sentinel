@@ -45,8 +45,7 @@ case class PannSampleRecord(
   dbId: ObjectId,
   runId: ObjectId,
   annotIds: Seq[ObjectId],
-  sampleName: Option[String] = None,
-  runName: Option[String] = None) extends BaseSampleRecord
+  labels: SampleLabels = SampleLabels()) extends BaseSampleRecord
 
 /** Container for a single Pann sample statistics. */
 case class PannSampleStats(num: Long)

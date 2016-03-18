@@ -40,8 +40,7 @@ case class MapleSampleRecord(
   uploaderId: String,
   dbId: ObjectId,
   runId: ObjectId,
-  sampleName: Option[String] = None,
-  runName: Option[String] = None) extends BaseSampleRecord
+  labels: SampleLabels = SampleLabels()) extends BaseSampleRecord
 
 /** Container for a single Maple sample statistics. */
 case class MapleSampleStats(
@@ -59,9 +58,7 @@ case class MapleReadGroupRecord(
   sampleId: ObjectId,
   runId: ObjectId,
   isPaired: Boolean = true,
-  readGroupName: Option[String] = None,
-  sampleName: Option[String] = None,
-  runName: Option[String] = None) extends BaseReadGroupRecord
+  labels: ReadGroupLabels = ReadGroupLabels()) extends BaseReadGroupRecord
 
 /** Container for a single Maple read group statistics. */
 case class MapleReadGroupStats(

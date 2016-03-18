@@ -65,7 +65,8 @@ class PannRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
         case (sampleName, sampleJson) =>
           PannSampleRecord(
             stats = PannSampleStats(num = (sampleJson \ "num").extract[Long]),
-            uploaderId, new ObjectId, runId, annotIds, Option(sampleName), (runJson \ "runName").extractOpt[String])
+            uploaderId, new ObjectId, runId, annotIds,
+            SampleLabels((runJson \ "runName").extractOpt[String], Option(sampleName)))
       }.toSeq
 
   /** Uploaded file processor. */

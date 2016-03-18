@@ -29,10 +29,8 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
   /** Run ID. */
   def runId: ObjectId
 
-  /*
   /** Labels. */
-  def labels: Option[Labels]
-*/
+  def labels: UnitLabels
 
   /** Run uploader ID. */
   def uploaderId: String
@@ -80,13 +78,8 @@ object BaseRunRecord {
   /** Internal database ID for the document. */
   @Key("_id") def dbId: ObjectId
 
-  /** Sample name. */
-  def sampleName: Option[String]
-
-  /*
   /** Labels. */
-  def labels: Option[SampleLabelsLike]
-*/
+  def labels: SampleLabelsLike
 
   @Persist val creationTimeUtc: Date = utcTimeNow
 }
@@ -97,13 +90,8 @@ object BaseRunRecord {
   /** Database ID of the sample record linked to this read group. */
   def sampleId: ObjectId
 
-  /** Library name. */
-  def readGroupName: Option[String]
-  /*
-
   /** Labels. */
-  def labels: Option[ReadGroupLabelsLike]
-*/
+  def labels: ReadGroupLabelsLike
 
   /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
   def isPaired: Boolean

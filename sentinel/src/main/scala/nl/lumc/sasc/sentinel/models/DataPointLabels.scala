@@ -37,19 +37,22 @@ trait LabeledStats { this: CaseClass =>
   def labels: Option[DataPointLabels]
 }
 
+/** Base trait for unit labels. */
+trait UnitLabels
+
 /** Trait for run record labels. */
-trait RunLabelsLike {
+trait RunLabelsLike extends UnitLabels {
   def runName: Option[String]
 }
 
 /** Trait for sample record labels. */
-trait SampleLabelsLike {
+trait SampleLabelsLike extends UnitLabels {
   def runName: Option[String]
   def sampleName: Option[String]
 }
 
 /** Trait for read group record labels. */
-trait ReadGroupLabelsLike {
+trait ReadGroupLabelsLike extends SampleLabelsLike {
   def runName: Option[String]
   def sampleName: Option[String]
   def readGroupName: Option[String]
@@ -61,7 +64,7 @@ case class RunLabels(runName: Option[String] = None) extends RunLabelsLike
 /** Base implementation of a sample record label. */
 case class SampleLabels(
   runName: Option[String] = None,
-  sampleName: Option[String]) extends SampleLabelsLike
+  sampleName: Option[String] = None) extends SampleLabelsLike
 
 /** Base implementation of a read group record label. */
 case class ReadGroupLabels(

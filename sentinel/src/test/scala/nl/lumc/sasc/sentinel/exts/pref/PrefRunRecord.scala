@@ -45,8 +45,7 @@ case class PrefSampleRecord(
   dbId: ObjectId,
   runId: ObjectId,
   refId: ObjectId,
-  sampleName: Option[String] = None,
-  runName: Option[String] = None) extends BaseSampleRecord
+  labels: SampleLabels = SampleLabels()) extends BaseSampleRecord
 
 /** Container for a single Pref sample statistics. */
 case class PrefSampleStats(num: Long)
