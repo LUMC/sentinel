@@ -257,8 +257,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param pipelineNames Pipeline names. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Future[Seq[BaseRunRecord]] = {
-    val recordGrater = grater[BaseRunRecord]
+  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Future[Seq[RunRecord]] = {
+    val recordGrater = grater[RunRecord]
     val userQ = "uploaderId" $eq user.id
     val pipelineQ = $or(pipelineNames.map(pn => "pipeline" $eq pn))
     val delQ = "deletionTimeUtc" $exists false
