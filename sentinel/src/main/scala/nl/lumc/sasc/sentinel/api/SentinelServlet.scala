@@ -163,6 +163,10 @@ abstract class SentinelServlet extends ScalatraServlet
           model.copy(properties = interceptedProp.filter {
             case (propName, prop) => !BaseRunRecord.hiddenAttributes.contains(propName)
           })
+        } else if (isSubclass[ApiPayload](model.qualifiedName)) {
+          model.copy(properties = interceptedProp.filter {
+            case (propName, prop) => !ApiPayload.hiddenAttributes.contains(propName)
+          })
         } else
           model.copy(properties = interceptedProp)
       super.registerModel(newModel)
