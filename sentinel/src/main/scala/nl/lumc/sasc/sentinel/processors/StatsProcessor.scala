@@ -170,6 +170,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
    * @param accLevel Accumulation level of the retrieved statistics.
    * @param matchers MongoDBObject containing query parameters.
    * @param user If defined, returned data points belonging to the user will show its labels.
+   * @param nLimit Maximum number of data points to return. If set to `None`, all data points will be returned.
    * @param timeSorted Whether to time-sort the returned items or not.
    * @tparam T Labeled stats object representing the metrics object to return.
    * @return Sequence of unit statistics objects.
@@ -179,6 +180,7 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
                                  (accLevel: AccLevel.Value)
                                  (matchers: MongoDBObject,
                                   user: Option[User] = None,
+                                  nLimit: Option[Int]= None,
                                   timeSorted: Boolean = false)
                                  (implicit m: Manifest[T]): Future[Perhaps[Seq[T]]] = {
     // format: ON
@@ -240,8 +242,12 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
     val results = for {
       coll <- ? <~ getColl(accLevel)
       queryResults <- ? <~ runQuery(coll)
+      items = if (timeSorted) queryResults else shuffle(queryResults)
       // TODO: switch to database-level randomization when SERVER-533 is resolved
-    } yield if (timeSorted) queryResults else shuffle(queryResults)
+    } yield nLimit match {
+      case None    => items
+      case Some(n) => items.take(n)
+    }
 
     results.run
   }
