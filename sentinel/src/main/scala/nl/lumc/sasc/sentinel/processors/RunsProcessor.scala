@@ -85,8 +85,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user Run uploader.
    * @return Run record database object, if it exists.
    */
-  protected def getRunRecordDbo(runId: ObjectId,
-                                user: User)(implicit m: Manifest[RunRecord]): Future[Option[DBObject]] = {
+  protected def getRunRecordDbo(runId: ObjectId, user: User): Future[Option[DBObject]] = {
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
@@ -227,7 +226,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @return Run record, if it exists.
    */
   def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[RunRecord]] =
-    getRunRecordDbo(runId, user)(m)
+    getRunRecordDbo(runId, user)
       .map { maybeDbo =>
         maybeDbo.map { dbo => grater[RunRecord].asObject(dbo) }
       }
