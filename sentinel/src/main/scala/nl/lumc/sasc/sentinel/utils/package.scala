@@ -32,7 +32,6 @@ import org.json4s._
 import org.scalatra.util.io.readBytes
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CaseClass }
-import nl.lumc.sasc.sentinel.processors.RunsProcessor
 
 /** General utilities */
 package object utils {
@@ -147,25 +146,6 @@ package object utils {
   object reflect {
 
     import ru._
-
-    /** Shared mirror instance. */
-    private val mirror = ru.runtimeMirror(getClass.getClassLoader)
-
-    /**
-     * Given a [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass, returns a single-parameter function that
-     * takes a [[nl.lumc.sasc.sentinel.utils.MongodbAccessObject]] instance and instantiates the runs processor. In other
-     * words, the function creates a delayed constructor for the runs processor.
-     *
-     * @tparam T [[nl.lumc.sasc.sentinel.processors.RunsProcessor]] subclass.
-     * @return Delayed constructor for the given class.
-     */
-    def makeDelayedProcessor[T <: RunsProcessor](implicit m: Manifest[T]) = {
-      val klass = ru.typeOf[T].typeSymbol.asClass
-      val km = mirror.reflectClass(klass)
-      val ctor = klass.toType.decl(ru.termNames.CONSTRUCTOR).asMethod
-      val ctorm = km.reflectConstructor(ctor)
-      (mongo: MongodbAccessObject) => ctorm(mongo).asInstanceOf[RunsProcessor]
-    }
 
     // modified from: http://stackoverflow.com/a/29131875
     /** Method to fetch the type used for storing read statistics in a fragment statistics object dynamically. */

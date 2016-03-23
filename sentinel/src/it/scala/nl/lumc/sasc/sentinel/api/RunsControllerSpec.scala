@@ -23,14 +23,14 @@ import scalaz.NonEmptyList
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.models.{ Payloads, SinglePathPatch }
 import nl.lumc.sasc.sentinel.testing.{ MimeType, SentinelServletSpec, UserExamples, VariableSizedPart }
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.settings.{ MaxRunSummarySize, MaxRunSummarySizeMb }
-import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class RunsControllerSpec extends SentinelServletSpec {
 
   val runsProcessorMakers = Set(
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor],
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor(dao),
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
   val servlet = new RunsController()(swagger, dao, runsProcessorMakers)
   val baseEndpoint = "/runs"
   addServlet(servlet, s"$baseEndpoint/*")

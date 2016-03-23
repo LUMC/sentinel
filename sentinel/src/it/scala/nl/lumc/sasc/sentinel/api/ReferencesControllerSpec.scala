@@ -23,13 +23,13 @@ import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.models.ReferenceRecord
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, SentinelServletSpec }
-import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
   val runsProcessorMakers = Set(
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor],
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor(dao),
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
 
   val refsServlet = new ReferencesController()(swagger, dao)
   val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)

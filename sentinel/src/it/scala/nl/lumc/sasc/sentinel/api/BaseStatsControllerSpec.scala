@@ -21,7 +21,6 @@ import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, SentinelServletSpec }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
-import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
 
 class BaseStatsControllerSpec extends SentinelServletSpec {
 
@@ -29,8 +28,8 @@ class BaseStatsControllerSpec extends SentinelServletSpec {
     extends BaseStatsController
 
   val runsProcessorMakers = Set(
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor],
-    makeDelayedProcessor[nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor])
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor(dao),
+    (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
 
   val statsServlet = new TestBaseStatsController()(swagger, dao)
   val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)

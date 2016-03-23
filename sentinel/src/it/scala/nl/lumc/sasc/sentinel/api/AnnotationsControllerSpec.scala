@@ -7,20 +7,20 @@ package nl.lumc.sasc.sentinel.api
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.specs2.specification.core.Fragment
+import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.exts.pann.PannRunsProcessor
 import nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, SentinelServletSpec }
-import nl.lumc.sasc.sentinel.utils.reflect.makeDelayedProcessor
-import org.specs2.specification.core.Fragment
-import scalaz.NonEmptyList
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 /** Specifications for [[AnnotationsController]]. */
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
   val runsProcessorMakers = Set(
-    makeDelayedProcessor[PannRunsProcessor],
-    makeDelayedProcessor[PlainRunsProcessor])
+    (dao: MongodbAccessObject) => new PannRunsProcessor(dao),
+    (dao: MongodbAccessObject) => new PlainRunsProcessor(dao))
 
   val annotsServlet = new AnnotationsController()(swagger, dao)
   val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
