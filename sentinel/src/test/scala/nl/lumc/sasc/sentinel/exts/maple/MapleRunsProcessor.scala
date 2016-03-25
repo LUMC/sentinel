@@ -44,12 +44,15 @@ class MapleRunsProcessor(mongo: MongodbAccessObject)
 
   /** Run records container. */
   type RunRecord = MapleRunRecord
+  val runManifest = implicitly[Manifest[MapleRunRecord]]
 
   /** Sample-level metrics container. */
   type SampleRecord = MapleSampleRecord
+  val sampleManifest = implicitly[Manifest[MapleSampleRecord]]
 
   /** Read group-level metrics container. */
   type ReadGroupRecord = MapleReadGroupRecord
+  val readGroupManifest = implicitly[Manifest[MapleReadGroupRecord]]
 
   /** Execution context. */
   implicit private def context: ExecutionContext = ExecutionContext.global

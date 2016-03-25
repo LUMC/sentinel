@@ -16,12 +16,38 @@
  */
 package nl.lumc.sasc.sentinel.utils
 
+import com.mongodb.casbah.Imports._
 import org.scalatra.servlet.FileItem
-import scalaz._
+import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.ApiPayload
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, Payloads, Perhaps, User }, Payloads._
 
 object Implicits {
+
+  /** Implicit class for checking user access to a run database object. */
+  implicit class RunRecordDBObject(dbo: DBObject) {
+
+    /** Given a [[User]], checks whether has authorization to access the run record. */
+    def checkForAccessBy(user: User): Perhaps[Unit] = {
+      dbo.getAs[String]("uploaderId") match {
+        case None => UnexpectedDatabaseError("Run object does not have the required 'uploaderId' key.").left
+        case Some(uploaderId) =>
+          if (uploaderId == user.id || user.isAdmin) ().right
+          else AuthorizationError.left
+      }
+    }
+
+    /** Shorthand function for accessing the pipeline name of the run. */
+    def pipelineName: Perhaps[String] = dbo
+      .getAs[String]("pipeline")
+      .toRightDisjunction(UnexpectedDatabaseError("Run object does not have the required 'pipeline' key."))
+
+    /** Shorthand function for accessing the sample IDs belonging to the run. */
+    def sampleIds: Seq[ObjectId] = dbo.getAsOrElse[Seq[ObjectId]]("sampleIds", Seq())
+
+    /** Shorthand function for accessing the read group IDs belonging to the run. */
+    def readGroupIds: Seq[ObjectId] = dbo.getAsOrElse[Seq[ObjectId]]("readGroupIds", Seq())
+  }
 
   /** Implicit class for adding our custom read function to an uploaded file item. */
   implicit class RichFileItem(fi: FileItem) {

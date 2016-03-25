@@ -21,7 +21,7 @@ import scala.concurrent._
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
-import com.novus.salat.global._
+import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
@@ -36,6 +36,9 @@ trait ReadGroupsAdapter extends SamplesAdapter {
 
   /** Read group-level metrics container. */
   type ReadGroupRecord <: BaseReadGroupRecord with CaseClass
+
+  /** Manifest for ReadGroupRecord. */
+  def readGroupManifest: Manifest[ReadGroupRecord]
 
   /** Pipeline name of read group. */
   def pipelineName: String
@@ -58,10 +61,10 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @param readGroups Read groups to store.
    * @return Bulk write operation result.
    */
-  protected[adapters] def storeReadGroups(readGroups: Seq[ReadGroupRecord])(implicit m: Manifest[ReadGroupRecord]): Future[BulkWriteResult] =
+  protected[adapters] def storeReadGroups(readGroups: Seq[ReadGroupRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
-      val recordGrater = grater[ReadGroupRecord]
+      val recordGrater = grater[ReadGroupRecord](SalatContext, readGroupManifest)
       val docs = readGroups.map { sample => recordGrater.asDBObject(sample) }
       docs.foreach { doc => builder.insert(doc) }
       builder.execute()

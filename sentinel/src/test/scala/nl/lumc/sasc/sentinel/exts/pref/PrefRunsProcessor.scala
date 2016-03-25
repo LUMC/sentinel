@@ -38,9 +38,11 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
 
   /** Run records container. */
   type RunRecord = PrefRunRecord
+  val runManifest = implicitly[Manifest[PrefRunRecord]]
 
   /** Sample-level metrics container. */
   type SampleRecord = PrefSampleRecord
+  val sampleManifest = implicitly[Manifest[PrefSampleRecord]]
 
   /** Execution context. */
   implicit private def context: ExecutionContext = ExecutionContext.global

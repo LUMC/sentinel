@@ -18,7 +18,7 @@ import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 /** Specifications for [[AnnotationsController]]. */
 class AnnotationsControllerSpec extends SentinelServletSpec {
 
-  val runsProcessorMakers = Set(
+  val runsProcessorMakers = Seq(
     (dao: MongodbAccessObject) => new PannRunsProcessor(dao),
     (dao: MongodbAccessObject) => new PlainRunsProcessor(dao))
 

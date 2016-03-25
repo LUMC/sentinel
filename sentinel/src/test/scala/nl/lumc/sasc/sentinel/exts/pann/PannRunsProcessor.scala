@@ -38,9 +38,11 @@ class PannRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
 
   /** Run records container. */
   type RunRecord = PannRunRecord
+  val runManifest = implicitly[Manifest[PannRunRecord]]
 
   /** Sample-level metrics container. */
   type SampleRecord = PannSampleRecord
+  val sampleManifest = implicitly[Manifest[PannSampleRecord]]
 
   /** Execution context. */
   implicit private def context: ExecutionContext = ExecutionContext.global

@@ -22,7 +22,7 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 
 /** Object for patching runs. */
-class RunsPatcher extends SinglePathPatchJsonExtractor {
+object RunsPatcher extends SinglePathPatchJsonExtractor {
 
   override def patchValidationFuncs = super.patchValidationFuncs :+ mustHaveValidPathAndValue
 

@@ -21,7 +21,7 @@ import scala.concurrent._
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
-import com.novus.salat.global._
+import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
@@ -34,6 +34,9 @@ trait SamplesAdapter extends UnitsAdapter {
 
   /** Sample-level metrics container. */
   type SampleRecord <: BaseSampleRecord with CaseClass
+
+  /** Manifest for SampleRecord. */
+  def sampleManifest: Manifest[SampleRecord]
 
   /** Pipeline name of sample. */
   def pipelineName: String
@@ -56,10 +59,10 @@ trait SamplesAdapter extends UnitsAdapter {
    * @param samples Samples to store.
    * @return Bulk write operation result.
    */
-  protected[adapters] def storeSamples(samples: Seq[SampleRecord])(implicit m: Manifest[SampleRecord]): Future[BulkWriteResult] =
+  protected[adapters] def storeSamples(samples: Seq[SampleRecord]): Future[BulkWriteResult] =
     Future {
       val builder = coll.initializeUnorderedBulkOperation
-      val recordGrater = grater[SampleRecord]
+      val recordGrater = grater[SampleRecord](SalatContext, sampleManifest)
       val docs = samples.map { sample => recordGrater.asDBObject(sample) }
       docs.foreach { doc => builder.insert(doc) }
       builder.execute()

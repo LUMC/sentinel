@@ -27,7 +27,7 @@ import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReferencesControllerSpec extends SentinelServletSpec {
 
-  val runsProcessorMakers = Set(
+  val runsProcessorMakers = Seq(
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.pref.PrefRunsProcessor(dao),
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
 

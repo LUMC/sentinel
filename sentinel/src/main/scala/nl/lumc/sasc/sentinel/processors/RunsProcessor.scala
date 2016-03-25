@@ -30,16 +30,25 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
 import nl.lumc.sasc.sentinel.models.Payloads._
-
 import nl.lumc.sasc.sentinel.utils._
+import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
 /**
  * Base class for processing run summary files.
  */
-abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends Processor {
+abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
 
   /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass
+
+  /**
+   * Manifest for the subclass-defined RunRecord.
+   *
+   * Although in most cases this would be implemented in the subclass as `implicitly[Manifest[{subclass_run_record}]]`,
+   * we still need to have the subclass implement that actual code. A concrete implementation at this level would not
+   * compile since the compiler can not give a manifest for abstract types.
+   */
+  def runManifest: Manifest[RunRecord]
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
@@ -48,7 +57,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   implicit private def context: ExecutionContext = runsProcessorContext
 
   /** Helper class for patching runs. */
-  val patcher: RunsPatcher = new RunsPatcher
+  val patcher = RunsPatcher
 
   /** Default patch functions for run records. */
   def runPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(RunsProcessor.RunPatch.replaceRunNamePF)
@@ -85,7 +94,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user Run uploader.
    * @return Run record database object, if it exists.
    */
-  protected def getRunRecordDbo(runId: ObjectId, user: User): Future[Option[DBObject]] = {
+  def getRunRecordDbo(runId: ObjectId, user: User): Future[Option[DBObject]] = {
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty
       else MongoDBObject("uploaderId" -> user.id)
@@ -97,23 +106,17 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
   }
 
   /**
-   * Applies the given patch operations to an existing run record in the database.
+   * Applies the given patch operations to the given raw run record object.
    *
-   * @param runId ID of the run to patch.
-   * @param user The user performing the patch operation.
+   * @param dbo Raw run record object to patch.
+   * @param user User performing the patch.
    * @param patches Patch operations to apply
    * @return Either error messages or the number of (run, samples, read groups) updated.
    */
-  def patchAndUpdateRunRecord(runId: ObjectId, user: User,
-                              patches: List[SPPatch])(implicit m: Manifest[RunRecord]): Future[Perhaps[(Int, Int, Int)]] = {
-
-    val run = for {
-      obj <- ? <~ getRunRecord(runId, user)(m).map(_.toRightDisjunction(RunIdNotFoundError))
-      _ <- ? <~ (if (!(obj.uploaderId == user.id || user.isAdmin)) AuthorizationError.left else ().right)
-    } yield obj
+  def patchAndUpdateRunRecordDbo(dbo: DBObject, user: User, patches: List[SPPatch]): Future[Perhaps[(Int, Int, Int)]] = {
 
     val runRecordPatch = for {
-      dbo <- run.map(r => grater[RunRecord].asDBObject(r))
+      _ <- ? <~ dbo.checkForAccessBy(user)
       patchedRunDbo <- ? <~ patchDbo(dbo, patches) { runPatchFuncs.list.reduceLeft { _ orElse _ } }
       writeResult <- ? <~ updateRunDbo(patchedRunDbo)
     } yield writeResult.getN
@@ -122,8 +125,8 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
 
       case rga: ReadGroupsAdapter => for {
         nRunsUpdated <- runRecordPatch
-        sampleIds <- run.map(_.sampleIds)
-        readGroupIds <- run.map(_.readGroupIds)
+        sampleIds = dbo.sampleIds
+        readGroupIds = dbo.readGroupIds
         // Update samples and read groups in parallel
         sUpdate = rga.patchAndUpdateSampleRecords(sampleIds, patches) {
           samplesPatchFuncs.list.reduceLeft { _ orElse _ }
@@ -137,7 +140,7 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
 
       case sa: SamplesAdapter => for {
         nRunsUpdated <- runRecordPatch
-        sampleIds <- run.map(_.sampleIds)
+        sampleIds = dbo.sampleIds
         nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleRecords(sampleIds, patches) {
           samplesPatchFuncs.list.reduceLeft { _ orElse _ }
         }
@@ -210,10 +213,19 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param run Run record to store.
    * @return Result of the store operation.
    */
-  def storeRun(run: RunRecord)(implicit m: Manifest[RunRecord]): Future[WriteResult] = Future {
-    val dbo = grater[RunRecord].asDBObject(run)
+  def storeRun(run: RunRecord): Future[WriteResult] = Future {
+    val dbo = grater[RunRecord](SalatContext, runManifest).asDBObject(run)
     coll.insert(dbo)
   }
+
+  /**
+   * Helper method for transforming a given raw run database object into the RunRecord object.
+   *
+   * @param runDbo The raw run database object.
+   * @return RunRecord object of this processor.
+   */
+  def dbo2RunRecord(runDbo: DBObject): Option[RunRecord] =
+    scala.util.Try(grater[RunRecord](SalatContext, runManifest).asObject(runDbo)).toOption
 
   /**
    * Retrieves a single run record owned by the given user.
@@ -225,51 +237,27 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * @param user Run uploader.
    * @return Run record, if it exists.
    */
-  def getRunRecord(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Option[RunRecord]] =
+  def getRunRecord(runId: ObjectId, user: User): Future[Option[RunRecord]] =
     getRunRecordDbo(runId, user)
       .map { maybeDbo =>
-        maybeDbo.map { dbo => grater[RunRecord].asObject(dbo) }
+        maybeDbo.map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
       }
-
-  /**
-   * Retrieves an uploaded run file owned by the given user.
-   *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
-   *
-   * @param runId ID of the run to retrieve.
-   * @param user Run uploader.
-   * @return Uploaded run file, if it exists.
-   */
-  def getRunFile(runId: ObjectId, user: User): Future[Option[GridFSDBFile]] = {
-    val userCheck =
-      if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("metadata.uploaderId" -> user.id)
-
-    Future { mongo.gridfs.findOne(MongoDBObject("_id" -> runId) ++ userCheck) }
-  }
 
   /**
    * Retrieves all run records uploaded by the given user.
    *
    * @param user Run summary files uploader.
-   * @param pipelineNames Pipeline names. If non-empty, only run records of the pipelines in the sequence will be retrieved.
    * @return Run records.
    */
-  def getRuns(user: User, pipelineNames: Seq[String])(implicit m: Manifest[RunRecord]): Future[Seq[RunRecord]] = {
-    val recordGrater = grater[RunRecord]
+  def getRuns(user: User): Future[Seq[RunRecord]] = {
+    val recordGrater = grater[RunRecord](SalatContext, runManifest)
     val userQ = "uploaderId" $eq user.id
-    val pipelineQ = $or(pipelineNames.map(pn => "pipeline" $eq pn))
+    val pipelineQ = "pipeline" $eq pipelineName
     val delQ = "deletionTimeUtc" $exists false
 
     val query =
-      if (user.isAdmin) {
-        if (pipelineNames.isEmpty) delQ
-        else $and(pipelineQ :: delQ)
-      } else {
-        if (pipelineNames.isEmpty) $and(userQ :: delQ)
-        else $and($and(pipelineQ, userQ) :: delQ)
-      }
+      if (user.isAdmin) $and(pipelineQ :: delQ)
+      else $and($and(pipelineQ, userQ) :: delQ)
 
     Future {
       coll
@@ -333,16 +321,16 @@ abstract class RunsProcessor(protected val mongo: MongodbAccessObject) extends P
    * deleted run record ID exist).
    *
    * Still, even though they exist in the database, run records with a `deletionTimeUtc` attribute can not be retrieved
-   * using [[getRunRecord]] or [[getRunFile]] and will not be returned by [[getRuns]]. For all practical purposes by
-   * the user, it is almost as if the run record is not present.
+   * using [[getRunRecord]] or [[nl.lumc.sasc.sentinel.processors.CompositeRunsProcessor.getRunFile]] and will not be
+   * returned by [[getRuns]]. For all practical purposes by the user, it is almost as if the run record is not present.
    *
    * @param runId Run ID to remove.
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
    * @return Run record with `deletionTimeUtc` attribute or an enum indicating any deletion errors.
    */
-  def deleteRun(runId: ObjectId, user: User)(implicit m: Manifest[RunRecord]): Future[Perhaps[RunRecord]] = {
+  def deleteRun(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = {
 
-    val recordGrater = grater[RunRecord]
+    val recordGrater = grater[RunRecord](SalatContext, runManifest)
 
     val userCheck =
       if (user.isAdmin) MongoDBObject.empty

@@ -28,7 +28,7 @@ import nl.lumc.sasc.sentinel.settings.{ MaxRunSummarySize, MaxRunSummarySizeMb }
 
 class RunsControllerSpec extends SentinelServletSpec {
 
-  val runsProcessorMakers = Set(
+  val runsProcessorMakers = Seq(
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor(dao),
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
   val servlet = new RunsController()(swagger, dao, runsProcessorMakers)

@@ -35,6 +35,7 @@ class PlainRunsProcessor(mongo: MongodbAccessObject)
     with ValidatedJsonExtractor {
 
   type RunRecord = PlainRunRecord
+  val runManifest = implicitly[Manifest[PlainRunRecord]]
 
   implicit private def context: ExecutionContext = ExecutionContext.global
 

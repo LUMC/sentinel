@@ -54,6 +54,10 @@ class ReadGroupsAdapterSpec extends Specification
 
     type SampleRecord = MapleSampleRecord
 
+    val sampleManifest = implicitly[Manifest[MapleSampleRecord]]
+
+    val readGroupManifest = implicitly[Manifest[MapleReadGroupRecord]]
+
     def pipelineName = self.pipelineName
 
     val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)

@@ -50,6 +50,8 @@ class SamplesAdapterSpec extends Specification
 
     type SampleRecord = MapleSampleRecord
 
+    val sampleManifest = implicitly[Manifest[SampleRecord]]
+
     def pipelineName = self.pipelineName
 
     val mongo = MongodbAccessObject.fromJava(mockDb.getMongo, testDbName)
