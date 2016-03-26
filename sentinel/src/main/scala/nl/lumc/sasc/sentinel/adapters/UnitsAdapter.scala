@@ -42,9 +42,12 @@ trait UnitsAdapter extends FutureMongodbAdapter {
   protected[adapters] def getUnitRecordsDbo(coll: MongoCollection)(ids: Set[ObjectId],
                                                                    extraQuery: DBObject = MongoDBObject.empty): Perhaps[Seq[DBObject]] = {
     val idQuery = MongoDBObject("_id" -> MongoDBObject("$in" -> ids))
-    val res = coll.find(idQuery ++ extraQuery).toSeq
-    if (ids.size == res.length) res.right
-    else Payloads.UnexpectedDatabaseError("Not all sample IDs can be retrieved.").left
+    val res = coll.find(idQuery ++ extraQuery).toList
+    if (ids.size > res.length)
+      Payloads.UnexpectedDatabaseError(s"Only a portion of unit IDs (${res.length}/${ids.size}) can be retrieved.").left
+    else if (ids.size < res.length)
+      Payloads.UnexpectedDatabaseError(s"Query (${res.length}) returned more unit IDs than requested (${ids.size}).").left
+    else res.right
   }
 
   /** Updates an existing database object in the given collection. */

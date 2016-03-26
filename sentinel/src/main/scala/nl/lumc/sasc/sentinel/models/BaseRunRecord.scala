@@ -85,7 +85,10 @@ object BaseRunRecord {
 }
 
 /** Representation of a read group metrics. */
-@Salat abstract class BaseReadGroupRecord extends BaseSampleRecord { this: CaseClass =>
+@Salat abstract class BaseReadGroupRecord extends BaseUnitRecord { this: CaseClass =>
+
+  /** Internal database ID for the document. */
+  @Key("_id") def dbId: ObjectId
 
   /** Database ID of the sample record linked to this read group. */
   def sampleId: ObjectId
@@ -95,4 +98,6 @@ object BaseRunRecord {
 
   /** Short hand attribute that returns true if the read group was created from a paired-end sequence. */
   def isPaired: Boolean
+
+  @Persist val creationTimeUtc: Date = utcTimeNow
 }

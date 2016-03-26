@@ -52,7 +52,7 @@ trait SampleLabelsLike extends UnitLabels {
 }
 
 /** Trait for read group record labels. */
-trait ReadGroupLabelsLike extends SampleLabelsLike {
+trait ReadGroupLabelsLike extends UnitLabels {
   def runName: Option[String]
   def sampleName: Option[String]
   def readGroupName: Option[String]
