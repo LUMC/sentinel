@@ -85,27 +85,6 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   private val updateRunDbo = updateDbo(coll) _
 
   /**
-   * Retrieves a single run record owned by the given user as a raw database object.
-   *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
-   *
-   * @param runId ID of the run to retrieve.
-   * @param user Run uploader.
-   * @return Run record database object, if it exists.
-   */
-  def getRunRecordDbo(runId: ObjectId, user: User): Future[Option[DBObject]] = {
-    val userCheck =
-      if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("uploaderId" -> user.id)
-
-    Future {
-      coll
-        .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-    }
-  }
-
-  /**
    * Applies the given patch operations to the given raw run record object.
    *
    * @param dbo Raw run record object to patch.
@@ -230,18 +209,30 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   /**
    * Retrieves a single run record owned by the given user.
    *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
-   *
    * @param runId ID of the run to retrieve.
    * @param user Run uploader.
-   * @return Run record, if it exists.
+   * @return Run record, if it exists, or an [[ApiPayload]] object containing the reason why the run can not be returned.
    */
-  def getRunRecord(runId: ObjectId, user: User): Future[Option[RunRecord]] =
-    getRunRecordDbo(runId, user)
-      .map { maybeDbo =>
-        maybeDbo.map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
+  def getRunRecord(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = {
+
+    val query =
+      MongoDBObject("_id" -> runId, "pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
+      else MongoDBObject("uploaderId" -> user.id))
+
+    val maybeRec = Future {
+      coll
+        .findOne(query)
+        .map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
+    }
+
+    maybeRec.map {
+      case Some(rec) => rec.deletionTimeUtc match {
+        case Some(_) => Payloads.ResourceGoneError.left
+        case None    => rec.right
       }
+      case None => Payloads.RunIdNotFoundError.left
+    }
+  }
 
   /**
    * Retrieves all run records uploaded by the given user.
