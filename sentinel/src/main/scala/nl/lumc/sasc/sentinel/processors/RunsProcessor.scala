@@ -84,6 +84,11 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   /** Function for updating run record database objects. */
   private val updateRunDbo = updateDbo(coll) _
 
+  /** Helper method to create required database queries of this runs processor. */
+  final def makeBasicDbQuery(runId: ObjectId, user: User) =
+    MongoDBObject("_id" -> runId, "pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
+    else MongoDBObject("uploaderId" -> user.id))
+
   /**
    * Applies the given patch operations to the given raw run record object.
    *
@@ -211,28 +216,21 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    *
    * @param runId ID of the run to retrieve.
    * @param user Run uploader.
+   * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
    * @return Run record, if it exists, or an [[ApiPayload]] object containing the reason why the run can not be returned.
    */
-  def getRunRecord(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = {
-
-    val query =
-      MongoDBObject("_id" -> runId, "pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("uploaderId" -> user.id))
-
-    val maybeRec = Future {
+  def getRunRecord(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[RunRecord]] =
+    Future {
       coll
-        .findOne(query)
+        .findOne(makeBasicDbQuery(runId, user))
         .map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
-    }
-
-    maybeRec.map {
+    }.map {
       case Some(rec) => rec.deletionTimeUtc match {
-        case Some(_) => Payloads.ResourceGoneError.left
+        case Some(_) => if (ignoreDeletionStatus) rec.right else Payloads.ResourceGoneError.left
         case None    => rec.right
       }
       case None => Payloads.RunIdNotFoundError.left
     }
-  }
 
   /**
    * Retrieves all run records uploaded by the given user.
@@ -321,26 +319,6 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    */
   def deleteRun(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = {
 
-    val recordGrater = grater[RunRecord](SalatContext, runManifest)
-
-    val userCheck =
-      if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("uploaderId" -> user.id)
-
-    /** Helper method to retrieve run record to delete. */
-    def getExistingRecord(): Future[Perhaps[RunRecord]] = Future {
-      val maybeDoc = coll
-        .findOne(MongoDBObject("_id" -> runId) ++ userCheck)
-        .map { dbo => recordGrater.asObject(dbo) }
-      maybeDoc match {
-        case Some(doc) => doc.deletionTimeUtc match {
-          case Some(_) => Payloads.ResourceGoneError.left
-          case None    => doc.right
-        }
-        case None => Payloads.RunIdNotFoundError.left
-      }
-    }
-
     /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
     def deleteGridFS(record: RunRecord): Future[Perhaps[Unit]] = deleteRunGridFSEntry(record)
       .map(_.right)
@@ -360,8 +338,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     def markRecord(): Future[Perhaps[RunRecord]] = Future {
       val doc = coll
         .findAndModify(
-          query = MongoDBObject("_id" -> runId,
-            "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck,
+          query = makeBasicDbQuery(runId, user) ++ MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
           update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> utcTimeNow)),
           returnNew = true,
           fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
@@ -373,7 +350,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     }
 
     val result = for {
-      record <- ? <~ getExistingRecord()
+      record <- ? <~ getRunRecord(runId, user)
       // Invoke the deletion methods as value declarations so they can be launched asynchronously instead of waiting
       // for a previous invocation to complete.
       d1 = deleteGridFS(record)
