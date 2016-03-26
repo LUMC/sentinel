@@ -65,7 +65,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     Future {
       val builder = coll.initializeUnorderedBulkOperation
       val recordGrater = grater[ReadGroupRecord](SalatContext, readGroupManifest)
-      val docs = readGroups.map { sample => recordGrater.asDBObject(sample) }
+      val docs = readGroups.map { readGroup => recordGrater.asDBObject(readGroup) }
       docs.foreach { doc => builder.insert(doc) }
       builder.execute()
     }

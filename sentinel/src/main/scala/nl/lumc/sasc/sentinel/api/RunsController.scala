@@ -17,7 +17,6 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.concurrent.Future
 
 import org.scalatra._
 import org.scalatra.swagger._
