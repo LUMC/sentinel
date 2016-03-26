@@ -127,11 +127,13 @@ trait SinglePathPatchJsonExtractor extends ValidatedJsonExtractor {
   def extractPatches(contents: Array[Byte]): Perhaps[Seq[SinglePathPatch]] =
     for {
       // Make sure incoming data is JArray ~ so we wrap single item in a list
-      json <- extractAndValidateJson(contents).map {
+      json <- extractJson(contents).map {
+        // Make it so that a single patch (outside of a list) also works.
         case single @ JObject(_) => JArray(List(single))
         case otherwise           => otherwise
       }
-      patchOps <- json.extract[Seq[SinglePathPatch]].right
+      validatedJson <- validateJson(json)
+      patchOps <- validatedJson.extract[Seq[SinglePathPatch]].right
     } yield patchOps
 
   /** Validation functions to apply to incoming patches. */
