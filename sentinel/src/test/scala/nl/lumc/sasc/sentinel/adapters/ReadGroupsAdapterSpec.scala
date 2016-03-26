@@ -77,7 +77,12 @@ class ReadGroupsAdapterSpec extends Specification
   /** Helper method for creating sample records. */
   private def makeReadGroup(sampleDbId: ObjectId, nReadsInput: Long, nReadsAligned: Long,
                             uploaderId: String = "tester", runId: ObjectId = runId) =
-    MapleReadGroupRecord(MapleReadGroupStats(nReadsInput, nReadsAligned), uploaderId, runId, sampleDbId, new ObjectId)
+    MapleReadGroupRecord(
+      stats = MapleReadGroupStats(nReadsInput, nReadsAligned),
+      uploaderId = uploaderId,
+      dbId = new ObjectId,
+      sampleId = sampleDbId,
+      runId = runId)
 
   /** ReadGroup records to test. */
   private val testReadGroupObjs = {
