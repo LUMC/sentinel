@@ -264,7 +264,9 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @return
    */
   // TODO: how to get the WriteResult of this operation? The underlying Java driver just hides it :(.
-  def deleteRunGridFSEntry(record: RunRecord): Future[Unit] = Future { mongo.gridfs.remove(record.runId) }
+  protected def deleteUploadedFile(record: RunRecord): Future[Perhaps[Unit]] =
+    Future { mongo.gridfs.remove(record.runId).right }
+      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
   /**
    * Deletes the sample records of the given run record.
@@ -272,13 +274,15 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param record Run record of the samples to delete.
    * @return
    */
-  def deleteRunSamples(record: RunRecord): Future[BulkWriteResult] = Future {
+  protected def deleteSamples(record: RunRecord): Future[Perhaps[BulkWriteResult]] = Future {
     val samplesColl = mongo.db(collectionNames.pipelineSamples(record.pipeline))
     val deleter = samplesColl.initializeUnorderedBulkOperation
     val query = MongoDBObject("runId" -> record.runId)
     deleter.find(query).remove()
     deleter.execute()
   }
+    .map(_.right)
+    .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
   /**
    * Deletes the read group records of the given run record.
@@ -286,12 +290,26 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param record Run record of the read groups to delete.
    * @return
    */
-  def deleteRunReadGroups(record: RunRecord): Future[BulkWriteResult] = Future {
+  protected def deleteReadGroups(record: RunRecord): Future[Perhaps[BulkWriteResult]] = Future {
     val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(record.pipeline))
     val builder = readGroupsColl.initializeUnorderedBulkOperation
     val query = MongoDBObject("runId" -> record.runId)
     builder.find(query).remove()
     builder.execute()
+  }
+    .map(_.right)
+    .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
+
+  /** Marks the record with the given runId as deleted. */
+  protected def markRunAsDeleted(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = Future {
+    coll
+      .findAndModify(
+        query = makeBasicDbQuery(runId, user) ++ MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
+        update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> utcTimeNow)),
+        returnNew = true,
+        fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
+      .map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
+      .toRightDisjunction(Payloads.IncompleteDeletionError)
   }
 
   /**
@@ -313,56 +331,28 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * using [[getRunRecord]] or [[nl.lumc.sasc.sentinel.processors.CompositeRunsProcessor.getRunFile]] and will not be
    * returned by [[getRuns]]. For all practical purposes by the user, it is almost as if the run record is not present.
    *
-   * @param runId Run ID to remove.
+   * @param dbo Raw database object of the run to remove.
    * @param user User requesting the delete operation. Only the run uploader him/herself or an admin can delete runs.
    * @return Run record with `deletionTimeUtc` attribute or an enum indicating any deletion errors.
    */
-  def deleteRun(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = {
-
-    /** Helper method that marks all GridFS deletion errors as incomplete deletion. */
-    def deleteGridFS(record: RunRecord): Future[Perhaps[Unit]] = deleteRunGridFSEntry(record)
-      .map(_.right)
-      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
-
-    /** Helper method that marks all sample deletion errors as incomplete deletion. */
-    def deleteSamples(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunSamples(record)
-      .map(_.right)
-      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
-
-    /** Helper method that marks all read groups deletion errors as incomplete deletion. */
-    def deleteReadGroups(record: RunRecord): Future[Perhaps[BulkWriteResult]] = deleteRunReadGroups(record)
-      .map(_.right)
-      .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
-
-    /** Helper method to mark run document as deleted. */
-    def markRecord(): Future[Perhaps[RunRecord]] = Future {
-      val doc = coll
-        .findAndModify(
-          query = makeBasicDbQuery(runId, user) ++ MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
-          update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> utcTimeNow)),
-          returnNew = true,
-          fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
-        .map { dbo => recordGrater.asObject(dbo) }
-      doc match {
-        case Some(obj) => obj.right
-        case None      => Payloads.IncompleteDeletionError.left
-      }
-    }
-
-    val result = for {
-      record <- ? <~ getRunRecord(runId, user)
+  def deleteRunDbo(dbo: DBObject, user: User): Future[Perhaps[RunRecord]] = {
+    val deletion = for {
+      _ <- ? <~ dbo.checkForAccessBy(user)
+      record <- ? <~ dbo2RunRecord(dbo)
+        .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
+      _ <- ? <~ (if (record.deletionTimeUtc.nonEmpty) ResourceGoneError.left else ().right)
       // Invoke the deletion methods as value declarations so they can be launched asynchronously instead of waiting
       // for a previous invocation to complete.
-      d1 = deleteGridFS(record)
+      d1 = deleteUploadedFile(record)
       d2 = deleteSamples(record)
       d3 = deleteReadGroups(record)
       _ <- ? <~ d1
       _ <- ? <~ d2
       _ <- ? <~ d3
-      markedRecord <- ? <~ markRecord()
+      markedRecord <- ? <~ markRunAsDeleted(record.runId, user)
     } yield markedRecord
 
-    result.run
+    deletion.run
   }
 
   /**

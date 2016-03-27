@@ -51,9 +51,6 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
   /** Controller description, shown in the generated Swagger spec. */
   protected val applicationDescription: String = "Submission and retrieval of run summaries"
 
-  /** Adapter for connecting to run collections. */
-  val runs = new PlainRunsProcessor(mongo)
-
   /** Adapter for connecting to users collection. */
   val users = new UsersAdapter { val mongo = self.mongo }
 
@@ -120,7 +117,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
     val user = simpleKeyAuth(params => params.get("userId"))
 
     new AsyncResult {
-      val is = runs.deleteRun(runId, user).map {
+      val is = compositeProcessor.deleteRun(runId, user).map {
         case \/-(doc) => Ok(doc)
         case -\/(err) => err.actionResult
       }

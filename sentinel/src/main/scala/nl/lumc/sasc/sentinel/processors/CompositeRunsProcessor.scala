@@ -112,21 +112,27 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    * Retrieves a single run record owned by the given user as a raw database object.
    *
    * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
+   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none, unless the
+   * ignoreDeletionStatus option is set to `true`.
    *
    * @param runId ID of the run to retrieve.
    * @param user Run uploader.
-   * @return Run record database object, if it exists.
+   * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
+   * @return Run record database object.
    */
-  def getRunRecordDbo(runId: ObjectId, user: User): Future[Option[DBObject]] = {
-    val userCheck =
-      if (user.isAdmin) MongoDBObject.empty
-      else MongoDBObject("uploaderId" -> user.id)
+  def getRunRecordDbo(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[DBObject]] = {
 
-    Future {
-      coll
-        .findOne(MongoDBObject("_id" -> runId, "deletionTimeUtc" -> MongoDBObject("$exists" -> false)) ++ userCheck)
-    }
+    val query = MongoDBObject("_id" -> runId) ++ (if (user.isAdmin) MongoDBObject.empty
+    else MongoDBObject("uploaderId" -> user.id))
+
+    Future { coll.findOne(query) }
+      .map {
+        case Some(dbo) => dbo.getAs[java.util.Date]("deletionTimeUtc") match {
+          case Some(_) => if (ignoreDeletionStatus) dbo.right else ResourceGoneError.left
+          case None    => dbo.right
+        }
+        case None => RunIdNotFoundError.left
+      }
   }
 
   /**
@@ -141,7 +147,11 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    */
   def getRunRecord(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
     val res = for {
-      dbo <- ? <~ getRunRecordDbo(runId, user).map(_.toRightDisjunction(RunIdNotFoundError))
+      dbo <- ? <~ getRunRecordDbo(runId, user)
+        .map {
+          case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
+          case otherwise                               => otherwise
+        }
       pipelineName <- ? <~ dbo.pipelineName
       rec <- ? <~ processorsMap.get(pipelineName)
         .flatMap { proc => proc.dbo2RunRecord(dbo) }
@@ -161,7 +171,11 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   def patchAndUpdateRunRecord(runId: ObjectId, user: User, rawPatch: Array[Byte]): Future[Perhaps[(Int, Int, Int)]] = {
     val patching = for {
       patches <- ? <~ patcher.extractAndValidatePatches(rawPatch)
-      dbo <- ? <~ getRunRecordDbo(runId, user).map(_.toRightDisjunction(RunIdNotFoundError))
+      dbo <- ? <~ getRunRecordDbo(runId, user)
+        .map {
+          case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
+          case otherwise                               => otherwise
+        }
       pipelineName <- ? <~ dbo.pipelineName
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
@@ -171,4 +185,15 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
     patching.run
   }
 
+  def deleteRun(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
+    val deletion: AsyncPerhaps[BaseRunRecord] = for {
+      dbo <- ? <~ getRunRecordDbo(runId, user)
+      pipelineName <- ? <~ dbo.pipelineName
+      processor <- ? <~ processorsMap.get(pipelineName)
+        .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
+      res <- ? <~ processor.deleteRunDbo(dbo, user)
+    } yield res
+
+    deletion.run
+  }
 }
