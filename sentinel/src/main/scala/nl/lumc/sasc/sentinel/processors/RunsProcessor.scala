@@ -268,38 +268,6 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     Future { mongo.gridfs.remove(record.runId).right }
       .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
 
-  /**
-   * Deletes the sample records of the given run record.
-   *
-   * @param record Run record of the samples to delete.
-   * @return
-   */
-  protected def deleteSamples(record: RunRecord): Future[Perhaps[BulkWriteResult]] = Future {
-    val samplesColl = mongo.db(collectionNames.pipelineSamples(record.pipeline))
-    val deleter = samplesColl.initializeUnorderedBulkOperation
-    val query = MongoDBObject("runId" -> record.runId)
-    deleter.find(query).remove()
-    deleter.execute()
-  }
-    .map(_.right)
-    .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
-
-  /**
-   * Deletes the read group records of the given run record.
-   *
-   * @param record Run record of the read groups to delete.
-   * @return
-   */
-  protected def deleteReadGroups(record: RunRecord): Future[Perhaps[BulkWriteResult]] = Future {
-    val readGroupsColl = mongo.db(collectionNames.pipelineReadGroups(record.pipeline))
-    val builder = readGroupsColl.initializeUnorderedBulkOperation
-    val query = MongoDBObject("runId" -> record.runId)
-    builder.find(query).remove()
-    builder.execute()
-  }
-    .map(_.right)
-    .recover { case e: Exception => Payloads.IncompleteDeletionError.left }
-
   /** Marks the record with the given runId as deleted. */
   protected def markRunAsDeleted(runId: ObjectId, user: User): Future[Perhaps[RunRecord]] = Future {
     coll
@@ -344,8 +312,20 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
       // Invoke the deletion methods as value declarations so they can be launched asynchronously instead of waiting
       // for a previous invocation to complete.
       d1 = deleteUploadedFile(record)
-      d2 = deleteSamples(record)
-      d3 = deleteReadGroups(record)
+      d2 = this match {
+        case sa: SamplesAdapter =>
+          sa.deleteSamples(record.sampleIds)
+            .map(_.right)
+            .recover { case e: Exception => IncompleteDeletionError.left }
+        case otherwise => Future.successful(().right)
+      }
+      d3 = this match {
+        case rga: ReadGroupsAdapter =>
+          rga.deleteReadGroups(record.readGroupIds)
+            .map(_.right)
+            .recover { case e: Exception => IncompleteDeletionError.left }
+        case otherwise => Future.successful(().right)
+      }
       _ <- ? <~ d1
       _ <- ? <~ d2
       _ <- ? <~ d3

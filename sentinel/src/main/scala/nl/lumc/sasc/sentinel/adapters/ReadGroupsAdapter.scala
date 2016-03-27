@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, Payloads, SinglePathPatch }
 
 /**
  * Trait for storing read groups from run summaries.
@@ -113,4 +113,18 @@ trait ReadGroupsAdapter extends SamplesAdapter {
 
     res.run
   }
+
+  /**
+   * Deletes the read groups with the given IDs.
+   *
+   * @param readGroupIds Seq of read group database IDs.
+   * @return
+   */
+  def deleteReadGroups(readGroupIds: Seq[ObjectId]): Future[BulkWriteResult] =
+    Future {
+      val deleter = coll.initializeUnorderedBulkOperation
+      val query = MongoDBObject("_id" -> MongoDBObject("$in" -> readGroupIds))
+      deleter.find(query).remove()
+      deleter.execute()
+    }
 }

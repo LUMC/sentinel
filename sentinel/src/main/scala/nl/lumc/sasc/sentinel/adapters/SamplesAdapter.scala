@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, Payloads, SinglePathPatch }
 
 /**
  * Trait for storing samples from run summaries.
@@ -111,4 +111,18 @@ trait SamplesAdapter extends UnitsAdapter {
 
     res.run
   }
+
+  /**
+   * Deletes the samples with the given IDs.
+   *
+   * @param sampleIds Seq of sample database IDs.
+   * @return
+   */
+  def deleteSamples(sampleIds: Seq[ObjectId]): Future[BulkWriteResult] =
+    Future {
+      val deleter = coll.initializeUnorderedBulkOperation
+      val query = MongoDBObject("_id" -> MongoDBObject("$in" -> sampleIds))
+      deleter.find(query).remove()
+      deleter.execute()
+    }
 }
