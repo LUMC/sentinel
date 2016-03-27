@@ -26,10 +26,13 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.FutureMongodbAdapter
 import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, PipelineStats, User }, Payloads._
+import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
 /** Class for performing operations on multiple pipeline runs. */
-class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) extends FutureMongodbAdapter {
+class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
+    extends FutureMongodbAdapter
+    with SinglePathPatchJsonExtractor {
   require(processors.nonEmpty, "CompositeRunsProcessor must contain at least one RunsProcessor.")
 
   /** Database connection. */
@@ -38,9 +41,6 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
       "CompositeRunsProcessor must combine only runs with the same database access.")
     processors.head.mongo
   }
-
-  /** Helper class for patching runs. */
-  private val patcher = RunsPatcher
 
   /** Runs collection that this processor works with. */
   private val coll = mongo.db(collectionNames.Runs)
@@ -175,7 +175,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    */
   def patchAndUpdateRun(runId: ObjectId, user: User, rawPatch: Array[Byte]): Future[Perhaps[(Int, Int, Int)]] = {
     val patching = for {
-      patches <- ? <~ patcher.extractAndValidatePatches(rawPatch)
+      patches <- ? <~ extractAndValidatePatches(rawPatch)
       dbo <- ? <~ getRunDbo(runId, user)
         .map {
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
