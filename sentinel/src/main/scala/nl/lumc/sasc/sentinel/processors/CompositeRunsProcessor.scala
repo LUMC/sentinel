@@ -28,10 +28,11 @@ import nl.lumc.sasc.sentinel.adapters.FutureMongodbAdapter
 import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, PipelineStats, User }, Payloads._
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
-/** Class for combining multiple [[nl.lumc.sasc.sentinel.processors.RunsProcessor]]s. */
+/** Class for performing operations on multiple pipeline runs. */
 class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) extends FutureMongodbAdapter {
   require(processors.nonEmpty, "CompositeRunsProcessor must contain at least one RunsProcessor.")
 
+  /** Database connection. */
   protected val mongo = {
     require(processors.map(_.mongo).distinct.size == 1,
       "CompositeRunsProcessor must combine only runs with the same database access.")
@@ -39,7 +40,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   }
 
   /** Helper class for patching runs. */
-  val patcher = RunsPatcher
+  private val patcher = RunsPatcher
 
   /** Runs collection that this processor works with. */
   private val coll = mongo.db(collectionNames.Runs)
@@ -61,7 +62,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    * @param contents Upload contents as a byte array.
    * @param uploadName File name of the upload.
    * @param uploader Uploader of the run summary file.
-   * @return A run record of the uploaded run summary file.
+   * @return A run record of the uploaded run summary file or a reason why the query fails.
    */
   def processRunUpload(pipelineName: String, contents: Array[Byte], uploadName: String,
                        uploader: User): Future[Perhaps[BaseRunRecord]] =
@@ -73,8 +74,10 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   /**
    * Retrieves all run records uploaded by the given user.
    *
-   * @param user Run summary files uploader.
-   * @return Run records.
+   * @param user User performing the query. If he/she is not an admin, he/she will only be able to see the runs he/she
+   *             uploaded.
+   * @param pipelineNames If given, only return the runs of that pipeline. If not given, return runs from all pipelines.
+   * @return Run records or the reason why the query fails.
    */
   def getRuns(user: User, pipelineNames: Seq[String] = Seq[String]()): Future[Perhaps[Seq[BaseRunRecord]]] = {
 
@@ -96,11 +99,11 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   /**
    * Retrieves an uploaded run file owned by the given user.
    *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
+   * If a run exists but the user ID is different, none is returned. Only when the query is performed by an admin
+   * will the run be returned even if it was uploaded by someone else.
    *
    * @param runId ID of the run to retrieve.
-   * @param user Run uploader.
+   * @param user User performing the query.
    * @return Uploaded run file, if it exists.
    */
   def getRunFile(runId: ObjectId, user: User): Future[Option[GridFSDBFile]] = {
@@ -113,16 +116,17 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   /**
    * Retrieves a single run record owned by the given user as a raw database object.
    *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none, unless the
-   * ignoreDeletionStatus option is set to `true`.
+   * If `ignoreDeletionStatus` is set to `false`, a run will only be returned if the user performing the query is an
+   * admin and/or the user was the one who uploaded the run, and the run does not have the deletion flag
+   * (`deletionTimeUtc`) set to a value. If `ignoreDeletionStatus` is set to `true`, the deletion flag status will
+   * not affect whether the run is returned or not.
    *
    * @param runId ID of the run to retrieve.
-   * @param user Run uploader.
+   * @param user User performing the query.
    * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
-   * @return Run record database object.
+   * @return Run record database object or a reason why the run can not be returned.
    */
-  def getRunRecordDbo(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[DBObject]] = {
+  def getRunDbo(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[DBObject]] = {
 
     val query = MongoDBObject("_id" -> runId) ++ (if (user.isAdmin) MongoDBObject.empty
     else MongoDBObject("uploaderId" -> user.id))
@@ -138,25 +142,24 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
   }
 
   /**
-   * Retrieves a single run record owned by the given user.
-   *
-   * If a run exists but the user ID is different, none is returned. A deleted run record (a run record without
-   * the corresponding run summary file, marked with the `deletionTimeUtc` key) will also return none.
+   * Retrieves a single run record.
    *
    * @param runId ID of the run to retrieve.
-   * @param user Run uploader.
-   * @return Run record, if it exists.
+   * @param user User performing the query.
+   * @return Run record or a reason why the run can not be returned.
    */
-  def getRunRecord(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
+  def getRun(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
     val res = for {
-      dbo <- ? <~ getRunRecordDbo(runId, user)
+      dbo <- ? <~ getRunDbo(runId, user)
         .map {
+          // We change the HTTP 410 error to 404 since 410 should only be returned when a DELETE request tries to delete
+          // an already deleted run.
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
           case otherwise                               => otherwise
         }
       pipelineName <- ? <~ dbo.pipelineName
       rec <- ? <~ processorsMap.get(pipelineName)
-        .flatMap { proc => proc.dbo2RunRecord(dbo) }
+        .flatMap { proc => proc.dbo2Run(dbo) }
         .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
     } yield rec
 
@@ -170,10 +173,10 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    * @param rawPatch Byte array of the raw request patch.
    * @return Either error messages or the number of (run, samples, read groups) updated.
    */
-  def patchAndUpdateRunRecord(runId: ObjectId, user: User, rawPatch: Array[Byte]): Future[Perhaps[(Int, Int, Int)]] = {
+  def patchAndUpdateRun(runId: ObjectId, user: User, rawPatch: Array[Byte]): Future[Perhaps[(Int, Int, Int)]] = {
     val patching = for {
       patches <- ? <~ patcher.extractAndValidatePatches(rawPatch)
-      dbo <- ? <~ getRunRecordDbo(runId, user)
+      dbo <- ? <~ getRunDbo(runId, user)
         .map {
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
           case otherwise                               => otherwise
@@ -181,15 +184,25 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
       pipelineName <- ? <~ dbo.pipelineName
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
-      res <- ? <~ processor.patchAndUpdateRunRecordDbo(dbo, user, patches.toList)
+      res <- ? <~ processor.patchAndUpdateRunDbo(dbo, user, patches.toList)
     } yield res
 
     patching.run
   }
 
+  /**
+   * Deletes the run with the given ID.
+   *
+   * The deletion call cascades to all subunits (samples and/or read groups) that are linked to the run.
+   *
+   * @param runId ID of the run to delete.
+   * @param user User performing the query.
+   * @return The deleted run record with a `deletionTimeUtc` attribute showing the time of deletion, or the reason why
+   *         the deletion does not succeed.
+   */
   def deleteRun(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
     val deletion: AsyncPerhaps[BaseRunRecord] = for {
-      dbo <- ? <~ getRunRecordDbo(runId, user)
+      dbo <- ? <~ getRunDbo(runId, user)
       pipelineName <- ? <~ dbo.pipelineName
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
@@ -204,7 +217,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
    *
    * @return Objects containing statistics of each supported pipeline type.
    */
-  final def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
+  def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
     val statsGrater = grater[PipelineStats]
     coll
       .aggregate(List(

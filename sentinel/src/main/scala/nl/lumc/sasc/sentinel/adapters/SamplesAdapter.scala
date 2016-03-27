@@ -69,8 +69,8 @@ trait SamplesAdapter extends UnitsAdapter {
     }
 
   /** Retrieves the raw database records of the given sample record IDs. */
-  def getSampleRecordsDbo(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
-    getUnitRecordsDbo(coll)(ids, extraQuery)
+  def getSampleDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
+    getUnitDbos(coll)(ids, extraQuery)
 
   /**
    * Updates existing sample database objects.
@@ -78,7 +78,7 @@ trait SamplesAdapter extends UnitsAdapter {
    * @param dbos Raw database objects.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or a sequence of write results.
    */
-  def updateSamplesDbo(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
+  def updateSampleDbos(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
     Future
       .sequence(dbos.map(updateSampleDbo))
       .map {
@@ -99,12 +99,12 @@ trait SamplesAdapter extends UnitsAdapter {
    * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
-  def patchAndUpdateSampleRecords(sampleIds: Seq[ObjectId],
-                                  patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
+  def patchAndUpdateSampleDbos(sampleIds: Seq[ObjectId],
+                               patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
-      sampleDbos <- ? <~ getSampleRecordsDbo(sampleIds.toSet)
+      sampleDbos <- ? <~ getSampleDbos(sampleIds.toSet)
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
-      writeResults <- ? <~ updateSamplesDbo(patchedSampleDbos)
+      writeResults <- ? <~ updateSampleDbos(patchedSampleDbos)
       nUpdated = writeResults.map(_.getN).sum
       if sampleIds.length == nUpdated
     } yield nUpdated

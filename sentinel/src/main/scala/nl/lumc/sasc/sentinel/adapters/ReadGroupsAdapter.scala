@@ -71,8 +71,8 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     }
 
   /** Retrieves the raw database records of the given read group record IDs. */
-  def getReadGroupRecordsDbo(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
-    getUnitRecordsDbo(coll)(ids, extraQuery)
+  def getReadGroupDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
+    getUnitDbos(coll)(ids, extraQuery)
 
   /**
    * Updates existing sample database objects.
@@ -80,7 +80,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @param dbos Raw database objects.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or a sequence of write results.
    */
-  def updateReadGroupsDbo(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
+  def updateReadGroupDbos(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
     Future
       .sequence(dbos.map(updateReadGroupDbo))
       .map {
@@ -101,12 +101,12 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
-  def patchAndUpdateReadGroupRecords(readGroupIds: Seq[ObjectId],
-                                     patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
+  def patchAndUpdateReadGroupDbos(readGroupIds: Seq[ObjectId],
+                                  patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
     val res = for {
-      sampleDbos <- ? <~ getReadGroupRecordsDbo(readGroupIds.toSet)
-      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
-      writeResults <- ? <~ updateReadGroupsDbo(patchedSampleDbos)
+      readGroupDbos <- ? <~ getReadGroupDbos(readGroupIds.toSet)
+      patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(patchFunc)
+      writeResults <- ? <~ updateReadGroupDbos(patchedReadGroupDbos)
       nUpdated = writeResults.map(_.getN).sum
       if readGroupIds.length == nUpdated
     } yield nUpdated

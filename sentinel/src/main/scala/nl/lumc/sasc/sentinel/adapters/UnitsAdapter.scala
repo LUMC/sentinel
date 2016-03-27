@@ -39,8 +39,8 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param extraQuery Additional query for further selection of the raw database objects.
    * @return Sequence of raw database objects or an API payload containing an error message.
    */
-  protected[adapters] def getUnitRecordsDbo(coll: MongoCollection)(ids: Set[ObjectId],
-                                                                   extraQuery: DBObject = MongoDBObject.empty): Perhaps[Seq[DBObject]] = {
+  protected[adapters] def getUnitDbos(coll: MongoCollection)(ids: Set[ObjectId],
+                                                             extraQuery: DBObject = MongoDBObject.empty): Perhaps[Seq[DBObject]] = {
     val idQuery = MongoDBObject("_id" -> MongoDBObject("$in" -> ids))
     val res = coll.find(idQuery ++ extraQuery).toList
     if (ids.size > res.length)

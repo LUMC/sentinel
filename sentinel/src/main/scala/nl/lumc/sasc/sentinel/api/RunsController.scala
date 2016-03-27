@@ -55,10 +55,10 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
   val users = new UsersAdapter { val mongo = self.mongo }
 
   /** Processor for connecting to different run processors. */
-  val compositeProcessor = new CompositeRunsProcessor(runsProcessors.map { rp => rp(mongo) })
+  val runs = new CompositeRunsProcessor(runsProcessors.map { rp => rp(mongo) })
 
   /** Container for supported pipelines. */
-  protected lazy val supportedPipelines = compositeProcessor.processorsMap
+  protected lazy val supportedPipelines = runs.processorsMap
 
   /** Documentation string for available pipeline parameters. */
   protected lazy val supportedPipelineParams = "`" + supportedPipelines.keySet.mkString("`, `") + "`"
@@ -117,7 +117,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
     val user = simpleKeyAuth(params => params.get("userId"))
 
     new AsyncResult {
-      val is = compositeProcessor.deleteRun(runId, user).map {
+      val is = runs.deleteRun(runId, user).map {
         case \/-(doc) => Ok(doc)
         case -\/(err) => err.actionResult
       }
@@ -165,7 +165,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
 
     new AsyncResult {
       val is =
-        compositeProcessor.patchAndUpdateRunRecord(runId, user, request.body.getBytes).map {
+        runs.patchAndUpdateRun(runId, user, request.body.getBytes).map {
           case -\/(err) => err.actionResult
           case \/-(_)   => NoContent()
         }
@@ -208,7 +208,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
 
     new AsyncResult {
       val is =
-        if (doDownload) compositeProcessor.getRunFile(runId, user).map {
+        if (doDownload) runs.getRunFile(runId, user).map {
           case None => NotFound(Payloads.RunIdNotFoundError)
           case Some(runFile) =>
             contentType = "application/octet-stream"
@@ -216,7 +216,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
               "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
             Ok(runFile.inputStream)
         }
-        else compositeProcessor.getRunRecord(runId, user).map {
+        else runs.getRun(runId, user).map {
           case -\/(err) => err.actionResult
           case \/-(res) => Ok(res)
         }
@@ -259,7 +259,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
           val is = {
-            compositeProcessor.processRunUpload(pipeline, upload.readUncompressedBytes(), upload.getName, user)
+            runs.processRunUpload(pipeline, upload.readUncompressedBytes(), upload.getName, user)
               .map {
                 case -\/(err) => err.actionResult
                 case \/-(run) => Created(run)
@@ -309,7 +309,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
       val user = simpleKeyAuth(params => params.get("userId"))
       new AsyncResult {
         val is =
-          compositeProcessor
+          runs
             .getRuns(user, validPipelines)
             .map {
               case -\/(err) => err.actionResult
