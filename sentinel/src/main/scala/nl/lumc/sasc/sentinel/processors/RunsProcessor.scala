@@ -327,32 +327,6 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
     deletion.run
   }
-
-  /**
-   * Retrieves general statistics of all uploaded runs.
-   *
-   * @return Objects containing statistics of each supported pipeline type.
-   */
-  final def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
-    val statsGrater = grater[PipelineStats]
-    coll
-      .aggregate(List(
-        MongoDBObject("$match" ->
-          MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false))
-        ),
-        MongoDBObject("$project" ->
-          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
-        MongoDBObject("$group" ->
-          MongoDBObject(
-            "_id" -> "$pipeline",
-            "nRuns" -> MongoDBObject("$sum" -> 1),
-            "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
-            "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
-        MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
-        AggregationOptions(AggregationOptions.CURSOR))
-      .map { pstat => statsGrater.asObject(pstat) }
-      .toSeq
-  }
 }
 
 object RunsProcessor {

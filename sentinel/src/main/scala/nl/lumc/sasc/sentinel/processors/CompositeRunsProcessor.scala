@@ -20,10 +20,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
+import com.novus.salat._
+import com.novus.salat.global.ctx
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.FutureMongodbAdapter
-import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, User }, Payloads._
+import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, PipelineStats, User }, Payloads._
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
 /** Class for combining multiple [[nl.lumc.sasc.sentinel.processors.RunsProcessor]]s. */
@@ -195,5 +197,31 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor]) exten
     } yield res
 
     deletion.run
+  }
+
+  /**
+   * Retrieves general statistics of all uploaded runs.
+   *
+   * @return Objects containing statistics of each supported pipeline type.
+   */
+  final def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
+    val statsGrater = grater[PipelineStats]
+    coll
+      .aggregate(List(
+        MongoDBObject("$match" ->
+          MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false))
+        ),
+        MongoDBObject("$project" ->
+          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
+        MongoDBObject("$group" ->
+          MongoDBObject(
+            "_id" -> "$pipeline",
+            "nRuns" -> MongoDBObject("$sum" -> 1),
+            "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
+            "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
+        MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
+        AggregationOptions(AggregationOptions.CURSOR))
+      .map { pstat => statsGrater.asObject(pstat) }
+      .toSeq
   }
 }

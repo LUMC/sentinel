@@ -22,6 +22,7 @@ import org.scalatra.swagger._
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor
+import nl.lumc.sasc.sentinel.processors.CompositeRunsProcessor
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
@@ -46,7 +47,7 @@ abstract class BaseStatsController extends SentinelServlet
   protected val applicationDescription: String = "Statistics of deposited run summaries"
 
   /** Adapter for connecting to the run collections */
-  protected val runs = new PlainRunsProcessor(mongo)
+  protected val runs = new CompositeRunsProcessor(Seq(new PlainRunsProcessor(mongo)))
 
   /** Adapter for connecting to the users collection */
   protected val users = new UsersAdapter { val mongo = self.mongo }
