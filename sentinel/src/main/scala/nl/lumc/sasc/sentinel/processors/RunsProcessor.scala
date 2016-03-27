@@ -85,8 +85,12 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   private val updateRunDbo = updateDbo(coll) _
 
   /** Helper method to create required database queries of this runs processor. */
-  final def makeBasicDbQuery(runId: ObjectId, user: User) =
-    MongoDBObject("_id" -> runId, "pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
+  final protected def makeBasicDbQuery(runId: ObjectId, user: User): DBObject =
+    MongoDBObject("_id" -> runId) ++ makeBasicDbQuery(user)
+
+  /** Helper method to create required database queries of this runs processor. */
+  final protected def makeBasicDbQuery(user: User): DBObject =
+    MongoDBObject("pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
     else MongoDBObject("uploaderId" -> user.id))
 
   /**
@@ -238,23 +242,12 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param user Run summary files uploader.
    * @return Run records.
    */
-  def getRuns(user: User): Future[Seq[RunRecord]] = {
-    val recordGrater = grater[RunRecord](SalatContext, runManifest)
-    val userQ = "uploaderId" $eq user.id
-    val pipelineQ = "pipeline" $eq pipelineName
-    val delQ = "deletionTimeUtc" $exists false
-
-    val query =
-      if (user.isAdmin) $and(pipelineQ :: delQ)
-      else $and($and(pipelineQ, userQ) :: delQ)
-
-    Future {
-      coll
-        .find(query)
-        .sort(MongoDBObject("creationTimeUtc" -> -1))
-        .map { dbo => recordGrater.asObject(dbo) }
-        .toSeq
-    }
+  def getRuns(user: User): Future[Seq[RunRecord]] = Future {
+    coll
+      .find(makeBasicDbQuery(user) ++ MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false)))
+      .sort(MongoDBObject("creationTimeUtc" -> -1))
+      .map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
+      .toSeq
   }
 
   /**
