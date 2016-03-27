@@ -18,8 +18,8 @@ package nl.lumc.sasc.sentinel.processors
 
 import nl.lumc.sasc.sentinel.adapters.UnitsAdapter
 
-/** Base trait for defining processors. */
-trait Processor extends UnitsAdapter {
+/** Base trait for defining processors accessing a single pipeline. */
+trait SingularProcessor extends UnitsAdapter {
 
   /** Run summary pipeline name. */
   def pipelineName: String

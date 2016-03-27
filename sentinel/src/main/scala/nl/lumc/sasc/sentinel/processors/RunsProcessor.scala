@@ -36,7 +36,7 @@ import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 /**
  * Base class for processing run summary files.
  */
-abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObject) extends Processor {
+abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObject) extends SingularProcessor {
 
   /** Type alias for the Processor's run record. */
   type RunRecord <: BaseRunRecord with CaseClass
