@@ -39,15 +39,20 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param extraQuery Additional query for further selection of the raw database objects.
    * @return Sequence of raw database objects or an API payload containing an error message.
    */
-  protected[adapters] def getUnitDbos(coll: MongoCollection)(ids: Set[ObjectId],
-                                                             extraQuery: DBObject = MongoDBObject.empty): Perhaps[Seq[DBObject]] = {
+  // format: OFF
+  protected[adapters] def getUnitDbos(coll: MongoCollection)
+                                     (ids: Set[ObjectId],extraQuery: DBObject = MongoDBObject.empty)
+                                     (implicit ec: ExecutionContext): Future[Perhaps[Seq[DBObject]]] = {
+    // format: ON
     val idQuery = MongoDBObject("_id" -> MongoDBObject("$in" -> ids))
-    val res = coll.find(idQuery ++ extraQuery).toList
-    if (ids.size > res.length)
-      Payloads.UnexpectedDatabaseError(s"Only a portion of unit IDs (${res.length}/${ids.size}) can be retrieved.").left
-    else if (ids.size < res.length)
-      Payloads.UnexpectedDatabaseError(s"Query (${res.length}) returned more unit IDs than requested (${ids.size}).").left
-    else res.right
+    val query = Future { coll.find(idQuery ++ extraQuery).toList }
+    query.map { res =>
+      if (ids.size > res.length)
+        Payloads.UnexpectedDatabaseError(s"Only a portion of unit IDs (${res.length}/${ids.size}) can be retrieved.").left
+      else if (ids.size < res.length)
+        Payloads.UnexpectedDatabaseError(s"Query (${res.length}) returned more unit IDs than requested (${ids.size}).").left
+      else res.right
+    }
   }
 
   /** Updates an existing database object in the given collection. */
