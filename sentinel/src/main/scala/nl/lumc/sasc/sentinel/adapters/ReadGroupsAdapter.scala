@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, Payloads, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, SinglePathPatch }
 
 /**
  * Trait for storing read groups from run summaries.
@@ -73,6 +73,30 @@ trait ReadGroupsAdapter extends SamplesAdapter {
   /** Retrieves the raw database records of the given read group record IDs. */
   def getReadGroupDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
     getUnitDbos(coll)(ids, extraQuery)
+
+  /** Retrieves the read group records of the given read group database IDs. */
+  def getReadGroups(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) = {
+    val retrieval = for {
+      readGroupDbos <- ? <~ getReadGroupDbos(ids, extraQuery)
+    } yield readGroupDbos.map(dbo => grater[ReadGroupRecord](SalatContext, readGroupManifest).asObject(dbo))
+
+    retrieval.run
+  }
+
+  def getReadGroupsInfo(ids: Set[ObjectId]): Future[Perhaps[Seq[Map[String, Any]]]] = {
+    val retrieval = for {
+      readGroups <- ? <~ getReadGroups(ids)
+      infos <- ? <~ readGroups.map { rg =>
+        Map(
+          "readGroupId" -> rg.dbId,
+          "runName" -> rg.labels.runName,
+          "sampleName" -> rg.labels.sampleName,
+          "readGroupName" -> rg.labels.readGroupName)
+      }
+    } yield infos
+
+    retrieval.run
+  }
 
   /**
    * Updates existing sample database objects.

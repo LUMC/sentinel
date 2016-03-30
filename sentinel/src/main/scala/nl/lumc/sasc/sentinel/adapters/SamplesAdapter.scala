@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, Payloads, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, SinglePathPatch }
 
 /**
  * Trait for storing samples from run summaries.
@@ -71,6 +71,30 @@ trait SamplesAdapter extends UnitsAdapter {
   /** Retrieves the raw database records of the given sample record IDs. */
   def getSampleDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
     getUnitDbos(coll)(ids, extraQuery)
+
+  /** Retrieves the sample records of the given sample database IDs. */
+  def getSamples(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty): Future[Perhaps[Seq[SampleRecord]]] = {
+    val retrieval = for {
+      sampleDbos <- ? <~ getSampleDbos(ids, extraQuery)
+      samples = sampleDbos.map(dbo => grater[SampleRecord](SalatContext, sampleManifest).asObject(dbo))
+    } yield samples
+
+    retrieval.run
+  }
+
+  def getSamplesInfo(ids: Set[ObjectId]): Future[Perhaps[Seq[Map[String, Any]]]] = {
+    val retrieval = for {
+      samples <- ? <~ getSamples(ids)
+      infos <- ? <~ samples.map { sample =>
+        Map(
+          "sampleId" -> sample.dbId,
+          "runName" -> sample.labels.runName,
+          "sampleName" -> sample.labels.sampleName)
+      }
+    } yield infos
+
+    retrieval.run
+  }
 
   /**
    * Updates existing sample database objects.

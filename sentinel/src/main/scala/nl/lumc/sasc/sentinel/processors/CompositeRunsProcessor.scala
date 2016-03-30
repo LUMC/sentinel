@@ -24,7 +24,7 @@ import com.novus.salat._
 import com.novus.salat.global.ctx
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.FutureMongodbAdapter
+import nl.lumc.sasc.sentinel.adapters.{ FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, PipelineStats, User }, Payloads._
 import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
@@ -148,8 +148,9 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
    * @param user User performing the query.
    * @return Run record or a reason why the run can not be returned.
    */
-  def getRun(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
-    val res = for {
+  def getRun(runId: ObjectId, user: User, retrieveUnitsInfo: Boolean = false): Future[Perhaps[BaseRunRecord]] = {
+    val procError = UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline.")
+    val res: AsyncPerhaps[BaseRunRecord] = for {
       dbo <- ? <~ getRunDbo(runId, user)
         .map {
           // We change the HTTP 410 error to 404 since 410 should only be returned when a DELETE request tries to delete
@@ -158,8 +159,22 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
           case otherwise                               => otherwise
         }
       pipelineName <- ? <~ dbo.pipelineName
-      rec <- ? <~ processorsMap.get(pipelineName)
-        .flatMap { proc => proc.dbo2Run(dbo) }
+      processor <- ? <~ processorsMap.get(pipelineName).toRightDisjunction(procError)
+
+      // Launch info retrieval jobs asynchronously
+      samplesInfoRetrieval = processor match {
+        case sa: SamplesAdapter if retrieveUnitsInfo => sa.getSamplesInfo(dbo.sampleIds.toSet)
+        case otherwise                               => Future.successful(Seq.empty[Map[String, Any]].right)
+      }
+      readGroupsInfoRetrieval = processor match {
+        case rga: ReadGroupsAdapter if retrieveUnitsInfo => rga.getReadGroupsInfo(dbo.readGroupIds.toSet)
+        case otherwise                                   => Future.successful(Seq.empty[Map[String, Any]].right)
+      }
+      samplesInfo <- ? <~ samplesInfoRetrieval
+      readGroupsInfo <- ? <~ readGroupsInfoRetrieval
+      rdbo = dbo ++ (if (retrieveUnitsInfo)
+        MongoDBObject("unitsInfo" -> Map("samples" -> samplesInfo, "readGroups" -> readGroupsInfo)) else MongoDBObject.empty)
+      rec <- ? <~ processor.dbo2Run(rdbo)
         .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
     } yield rec
 

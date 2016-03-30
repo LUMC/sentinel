@@ -220,19 +220,49 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
    * @return Run record, if it exists, or an [[ApiPayload]] object containing the reason why the run can not be returned.
    */
-  def getRun(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[RunRecord]] =
-    Future {
+  def getRun(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false,
+             retrieveUnitsInfo: Boolean = false): Future[Perhaps[RunRecord]] = {
+
+    val runGrater = (dbo: DBObject) => grater[RunRecord](SalatContext, runManifest).asObject(dbo)
+
+    val retrieval = Future {
       coll
         .findOne(makeBasicDbQuery(runId, user))
         .toRightDisjunction(Payloads.RunIdNotFoundError)
         .flatMap { dbo =>
-          val rec = grater[RunRecord](SalatContext, runManifest).asObject(dbo)
-          rec.deletionTimeUtc match {
-            case Some(_) => if (ignoreDeletionStatus) rec.right else Payloads.ResourceGoneError.left
-            case None    => rec.right
+          dbo.getAs[java.util.Date]("deletionTimeUtc") match {
+            case Some(_) => if (ignoreDeletionStatus) dbo.right else Payloads.ResourceGoneError.left
+            case None    => dbo.right
           }
         }
     }
+
+    val action =
+
+      if (!retrieveUnitsInfo) for {
+        dbo <- ? <~ retrieval
+        record = runGrater(dbo)
+      } yield record
+
+      else {
+        val suInfos = for {
+          runDbo <- ? <~ retrieval
+          samplesInfo <- ? <~ (this match {
+            case sa: SamplesAdapter => sa.getSamplesInfo(runDbo.sampleIds.toSet)
+            case otherwise          => Future.successful(Seq.empty[Map[String, Any]].right)
+          })
+          readGroupsInfo <- ? <~ (this match {
+            case rga: ReadGroupsAdapter => rga.getReadGroupsInfo(runDbo.readGroupIds.toSet)
+            case otherwise              => Future.successful(Seq.empty[Map[String, Any]].right)
+          })
+          rdbo = runDbo ++ MongoDBObject("unitsInfo" -> Map("samples" -> samplesInfo, "readGroups" -> readGroupsInfo))
+        } yield runGrater(rdbo)
+
+        suInfos
+      }
+
+    action.run
+  }
 
   /**
    * Retrieves all run records.

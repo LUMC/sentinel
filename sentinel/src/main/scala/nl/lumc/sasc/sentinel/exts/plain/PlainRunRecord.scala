@@ -32,4 +32,5 @@ case class PlainRunRecord(
   deletionTimeUtc: Option[Date] = None,
   sampleIds: Seq[ObjectId] = Seq.empty,
   readGroupIds: Seq[ObjectId] = Seq.empty,
+  unitsInfo: Map[String, Map[String, Any]] = Map.empty,
   creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord

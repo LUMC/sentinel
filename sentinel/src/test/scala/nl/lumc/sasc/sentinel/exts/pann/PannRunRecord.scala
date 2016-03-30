@@ -31,6 +31,7 @@ case class PannRunRecord(
     sampleIds: Seq[ObjectId],
     annotIds: Seq[ObjectId],
     labels: RunLabels = RunLabels(),
+    unitsInfo: Map[String, Map[String, Any]] = Map.empty,
     deletionTimeUtc: Option[Date] = None,
     creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 

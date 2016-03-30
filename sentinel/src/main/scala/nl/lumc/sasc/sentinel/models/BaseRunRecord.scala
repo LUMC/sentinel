@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.models
 
 import java.util.Date
 
-import com.novus.salat.annotations.{ Key, Persist, Salat }
+import com.novus.salat.annotations.{ Ignore, Key, Persist, Salat }
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.utils.utcTimeNow
@@ -65,6 +65,13 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
   /** Number of read groups in the run summary file used for statistics. */
   @Persist val nReadGroups: Int = readGroupIds.size
+
+  /**
+   * IDs, tags, and labels of each samples and read groups.
+   *
+   * This field is meant to be filled by this run's processor directly from the database.
+   */
+  @Ignore val unitsInfo: Map[String, Map[String, Any]]
 }
 
 object BaseRunRecord {
