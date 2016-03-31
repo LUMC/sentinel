@@ -20,7 +20,7 @@ import java.util.Date
 
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, RunLabels }
+import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, RunLabels, UnitsInfo }
 import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /** Simple implementation of a run record for schema display. */
@@ -32,5 +32,5 @@ case class PlainRunRecord(
   deletionTimeUtc: Option[Date] = None,
   sampleIds: Seq[ObjectId] = Seq.empty,
   readGroupIds: Seq[ObjectId] = Seq.empty,
-  unitsInfo: Map[String, Map[String, Any]] = Map.empty,
+  unitsInfo: UnitsInfo = UnitsInfo(),
   creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord

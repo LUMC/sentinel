@@ -71,7 +71,7 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
    *
    * This field is meant to be filled by this run's processor directly from the database.
    */
-  @Ignore val unitsInfo: Map[String, Map[String, Any]]
+  @Ignore val unitsInfo: UnitsInfo
 }
 
 object BaseRunRecord {

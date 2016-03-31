@@ -60,6 +60,9 @@ trait ReadGroupLabelsLike extends UnitLabels {
   def readGroupName: Option[String]
 }
 
+/** Case class for storage of subunit labels in the run record. */
+case class UnitsInfo(samples: Option[Seq[Map[String, Any]]] = None, readGroups: Option[Seq[Map[String, Any]]] = None)
+
 /** Base implementation of a run record label. */
 case class RunLabels(runName: Option[String] = None, tags: Map[String, Any] = Map.empty) extends RunLabelsLike
 

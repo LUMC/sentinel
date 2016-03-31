@@ -31,7 +31,7 @@ case class PrefRunRecord(
     sampleIds: Seq[ObjectId],
     refId: ObjectId,
     labels: RunLabels = RunLabels(),
-    unitsInfo: Map[String, Map[String, Any]] = Map.empty,
+    unitsInfo: UnitsInfo = UnitsInfo(),
     deletionTimeUtc: Option[Date] = None,
     creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 
