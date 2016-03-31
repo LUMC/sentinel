@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseReadGroupRecord, CaseClass, DboPatchFunc, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models._
 
 /**
  * Trait for storing read groups from run summaries.
@@ -83,17 +83,10 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     retrieval.run
   }
 
-  def getReadGroupsInfo(ids: Set[ObjectId]): Future[Perhaps[Seq[Map[String, Any]]]] = {
+  def getReadGroupsInfo(ids: Set[ObjectId]): Future[Perhaps[Map[String, ReadGroupLabelsLike]]] = {
     val retrieval = for {
       readGroups <- ? <~ getReadGroups(ids)
-      infos <- ? <~ readGroups.map { rg =>
-        Map(
-          "readGroupId" -> rg.dbId,
-          "runName" -> rg.labels.runName,
-          "sampleName" -> rg.labels.sampleName,
-          "readGroupName" -> rg.labels.readGroupName,
-          "tags" -> rg.labels.tags)
-      }
+      infos <- ? <~ readGroups.map { rg => rg.dbId.toString -> rg.labels }.toMap
     } yield infos
 
     retrieval.run

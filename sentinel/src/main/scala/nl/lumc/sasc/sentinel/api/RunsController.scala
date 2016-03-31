@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.api
 
 import java.io.File
 
+import org.json4s._
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }

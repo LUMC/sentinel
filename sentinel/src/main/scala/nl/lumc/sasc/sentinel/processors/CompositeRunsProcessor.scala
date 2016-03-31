@@ -25,7 +25,7 @@ import com.novus.salat.global.ctx
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter }
-import nl.lumc.sasc.sentinel.models.{ BaseRunRecord, Payloads, PipelineStats, User }, Payloads._
+import nl.lumc.sasc.sentinel.models._, Payloads._
 import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
@@ -164,11 +164,11 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
       // Launch info retrieval jobs asynchronously
       samplesInfoRetrieval = processor match {
         case sa: SamplesAdapter if retrieveUnitsInfo => sa.getSamplesInfo(dbo.sampleIds.toSet)
-        case otherwise                               => Future.successful(Seq.empty[Map[String, Any]].right)
+        case otherwise                               => Future.successful(Map.empty[String, SampleLabelsLike].right)
       }
       readGroupsInfoRetrieval = processor match {
         case rga: ReadGroupsAdapter if retrieveUnitsInfo => rga.getReadGroupsInfo(dbo.readGroupIds.toSet)
-        case otherwise                                   => Future.successful(Seq.empty[Map[String, Any]].right)
+        case otherwise                                   => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
       }
       samplesInfo <- ? <~ samplesInfoRetrieval
       readGroupsInfo <- ? <~ readGroupsInfoRetrieval

@@ -25,7 +25,7 @@ import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ BaseSampleRecord, CaseClass, DboPatchFunc, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models._
 
 /**
  * Trait for storing samples from run summaries.
@@ -82,16 +82,10 @@ trait SamplesAdapter extends UnitsAdapter {
     retrieval.run
   }
 
-  def getSamplesInfo(ids: Set[ObjectId]): Future[Perhaps[Seq[Map[String, Any]]]] = {
+  def getSamplesInfo(ids: Set[ObjectId]): Future[Perhaps[Map[String, SampleLabelsLike]]] = {
     val retrieval = for {
       samples <- ? <~ getSamples(ids)
-      infos <- ? <~ samples.map { sample =>
-        Map(
-          "sampleId" -> sample.dbId,
-          "runName" -> sample.labels.runName,
-          "sampleName" -> sample.labels.sampleName,
-          "tags" -> sample.labels.tags)
-      }
+      infos <- ? <~ samples.map { sample => sample.dbId.toString -> sample.labels }.toMap
     } yield infos
 
     retrieval.run
