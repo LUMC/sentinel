@@ -38,7 +38,9 @@ trait LabeledStats { this: CaseClass =>
 }
 
 /** Base trait for unit labels. */
-trait UnitLabels
+trait UnitLabels {
+  def tags: Map[String, Any]
+}
 
 /** Trait for run record labels. */
 trait RunLabelsLike extends UnitLabels {
@@ -59,15 +61,17 @@ trait ReadGroupLabelsLike extends UnitLabels {
 }
 
 /** Base implementation of a run record label. */
-case class RunLabels(runName: Option[String] = None) extends RunLabelsLike
+case class RunLabels(runName: Option[String] = None, tags: Map[String, Any] = Map.empty) extends RunLabelsLike
 
 /** Base implementation of a sample record label. */
 case class SampleLabels(
   runName: Option[String] = None,
-  sampleName: Option[String] = None) extends SampleLabelsLike
+  sampleName: Option[String] = None,
+  tags: Map[String, Any] = Map.empty) extends SampleLabelsLike
 
 /** Base implementation of a read group record label. */
 case class ReadGroupLabels(
   runName: Option[String] = None,
   sampleName: Option[String] = None,
-  readGroupName: Option[String] = None) extends ReadGroupLabelsLike
+  readGroupName: Option[String] = None,
+  tags: Map[String, Any] = Map.empty) extends ReadGroupLabelsLike

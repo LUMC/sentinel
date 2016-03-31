@@ -89,7 +89,8 @@ trait SamplesAdapter extends UnitsAdapter {
         Map(
           "sampleId" -> sample.dbId,
           "runName" -> sample.labels.runName,
-          "sampleName" -> sample.labels.sampleName)
+          "sampleName" -> sample.labels.sampleName,
+          "tags" -> sample.labels.tags)
       }
     } yield infos
 

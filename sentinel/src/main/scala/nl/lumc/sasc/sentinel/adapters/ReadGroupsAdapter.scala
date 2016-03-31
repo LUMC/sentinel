@@ -91,7 +91,8 @@ trait ReadGroupsAdapter extends SamplesAdapter {
           "readGroupId" -> rg.dbId,
           "runName" -> rg.labels.runName,
           "sampleName" -> rg.labels.sampleName,
-          "readGroupName" -> rg.labels.readGroupName)
+          "readGroupName" -> rg.labels.readGroupName,
+          "tags" -> rg.labels.tags)
       }
     } yield infos
 
