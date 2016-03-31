@@ -221,7 +221,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @return Run record, if it exists, or an [[ApiPayload]] object containing the reason why the run can not be returned.
    */
   def getRun(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false,
-             retrieveUnitsInfo: Boolean = false): Future[Perhaps[RunRecord]] = {
+             retrieveUnitsLabels: Boolean = false): Future[Perhaps[RunRecord]] = {
 
     val runGrater = (dbo: DBObject) => grater[RunRecord](SalatContext, runManifest).asObject(dbo)
 
@@ -239,7 +239,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
     val action =
 
-      if (!retrieveUnitsInfo) for {
+      if (!retrieveUnitsLabels) for {
         dbo <- ? <~ retrieval
         record = runGrater(dbo)
       } yield record
@@ -247,15 +247,15 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
       else {
         val suInfos = for {
           runDbo <- ? <~ retrieval
-          samplesInfo <- ? <~ (this match {
-            case sa: SamplesAdapter => sa.getSamplesInfo(runDbo.sampleIds.toSet)
-            case otherwise          => Future.successful(Seq.empty[Map[String, Any]].right)
+          sLabels <- ? <~ (this match {
+            case sa: SamplesAdapter => sa.getSamplesLabels(runDbo.sampleIds.toSet)
+            case otherwise          => Future.successful(Map.empty[String, SampleLabelsLike].right)
           })
-          readGroupsInfo <- ? <~ (this match {
-            case rga: ReadGroupsAdapter => rga.getReadGroupsInfo(runDbo.readGroupIds.toSet)
-            case otherwise              => Future.successful(Seq.empty[Map[String, Any]].right)
+          rgLabels <- ? <~ (this match {
+            case rga: ReadGroupsAdapter => rga.getReadGroupsLabels(runDbo.readGroupIds.toSet)
+            case otherwise              => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
           })
-          rdbo = runDbo ++ MongoDBObject("unitsInfo" -> Map("samples" -> samplesInfo, "readGroups" -> readGroupsInfo))
+          rdbo = runDbo ++ MongoDBObject("sampleLabels" -> sLabels, "readGroupLabels" -> rgLabels)
         } yield runGrater(rdbo)
 
         suInfos
@@ -365,7 +365,7 @@ object RunsProcessor {
   object RunPatch {
     /** 'replace' patch for 'runName' in a single run */
     val replaceRunNamePF: DboPatchFunc = {
-      case (dbo, SPPatch("replace", "/runName", v: String)) =>
+      case (dbo, SPPatch("replace", "/labels/runName", v: String)) =>
         dbo.getAs[DBObject]("labels") match {
           case Some(ok) =>
             ok.put("runName", v)

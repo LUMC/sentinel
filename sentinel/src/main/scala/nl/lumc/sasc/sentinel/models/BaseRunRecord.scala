@@ -67,11 +67,18 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
   @Persist val nReadGroups: Int = readGroupIds.size
 
   /**
-   * IDs, tags, and labels of each samples and read groups.
+   * IDs, tags, and labels of each sample.
    *
    * This field is meant to be filled by this run's processor directly from the database.
    */
-  @Ignore val unitsInfo: UnitsInfo
+  @Ignore val sampleLabels: Map[String, SampleLabelsLike]
+
+  /**
+   * IDs, tags, and labels of each read group.
+   *
+   * This field is meant to be filled by this run's processor directly from the database.
+   */
+  @Ignore val readGroupLabels: Map[String, ReadGroupLabelsLike]
 }
 
 object BaseRunRecord {

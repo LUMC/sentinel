@@ -188,7 +188,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
       queryParam[String]("userId").description("Run summary uploader ID."),
       headerParam[String](HeaderApiKey).description("Run summary uploader API key."),
       pathParam[String]("runId").description("Run summary ID."),
-      queryParam[Boolean]("showUnitsInfo")
+      queryParam[Boolean]("showUnitsLabels")
         .description(
           """Whether to show the samples and/or read groups belonging to the queried run or not (default: `false`). This
             |parameter has no effect when the `download` parameter is set to `true`.
@@ -210,9 +210,9 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
   get("/:runId", operation(runIdGetOp)) {
     logger.info(requestLog)
     val doDownload = params.getAs[Boolean]("download").getOrElse(false)
-    val showUnitsInfo =
+    val showUnitsLabels =
       if (doDownload) false
-      else params.getAs[Boolean]("showUnitsInfo").getOrElse(false)
+      else params.getAs[Boolean]("showUnitsLabels").getOrElse(false)
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.RunIdNotFoundError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
@@ -226,7 +226,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
               "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
             Ok(runFile.inputStream)
         }
-        else runs.getRun(runId, user, showUnitsInfo).map {
+        else runs.getRun(runId, user, showUnitsLabels).map {
           case -\/(err) => err.actionResult
           case \/-(res) => Ok(res)
         }

@@ -82,7 +82,7 @@ trait SamplesAdapter extends UnitsAdapter {
     retrieval.run
   }
 
-  def getSamplesInfo(ids: Set[ObjectId]): Future[Perhaps[Map[String, SampleLabelsLike]]] = {
+  def getSamplesLabels(ids: Set[ObjectId]): Future[Perhaps[Map[String, SampleLabelsLike]]] = {
     val retrieval = for {
       samples <- ? <~ getSamples(ids)
       infos <- ? <~ samples.map { sample => sample.dbId.toString -> sample.labels }.toMap

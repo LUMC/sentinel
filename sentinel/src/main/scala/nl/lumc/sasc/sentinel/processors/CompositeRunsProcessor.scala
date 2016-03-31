@@ -148,7 +148,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
    * @param user User performing the query.
    * @return Run record or a reason why the run can not be returned.
    */
-  def getRun(runId: ObjectId, user: User, retrieveUnitsInfo: Boolean = false): Future[Perhaps[BaseRunRecord]] = {
+  def getRun(runId: ObjectId, user: User, retrieveUnitsLabels: Boolean = false): Future[Perhaps[BaseRunRecord]] = {
     val procError = UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline.")
     val res: AsyncPerhaps[BaseRunRecord] = for {
       dbo <- ? <~ getRunDbo(runId, user)
@@ -162,18 +162,17 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
       processor <- ? <~ processorsMap.get(pipelineName).toRightDisjunction(procError)
 
       // Launch info retrieval jobs asynchronously
-      samplesInfoRetrieval = processor match {
-        case sa: SamplesAdapter if retrieveUnitsInfo => sa.getSamplesInfo(dbo.sampleIds.toSet)
-        case otherwise                               => Future.successful(Map.empty[String, SampleLabelsLike].right)
+      samplesLabelsRetrieval = processor match {
+        case sa: SamplesAdapter if retrieveUnitsLabels => sa.getSamplesLabels(dbo.sampleIds.toSet)
+        case otherwise                                 => Future.successful(Map.empty[String, SampleLabelsLike].right)
       }
-      readGroupsInfoRetrieval = processor match {
-        case rga: ReadGroupsAdapter if retrieveUnitsInfo => rga.getReadGroupsInfo(dbo.readGroupIds.toSet)
-        case otherwise                                   => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
+      readGroupsLabelsRetrieval = processor match {
+        case rga: ReadGroupsAdapter if retrieveUnitsLabels => rga.getReadGroupsLabels(dbo.readGroupIds.toSet)
+        case otherwise                                     => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
       }
-      samplesInfo <- ? <~ samplesInfoRetrieval
-      readGroupsInfo <- ? <~ readGroupsInfoRetrieval
-      rdbo = dbo ++ (if (retrieveUnitsInfo)
-        MongoDBObject("unitsInfo" -> Map("samples" -> samplesInfo, "readGroups" -> readGroupsInfo)) else MongoDBObject.empty)
+      sLabels <- ? <~ samplesLabelsRetrieval
+      rgLabels <- ? <~ readGroupsLabelsRetrieval
+      rdbo = dbo ++ (if (retrieveUnitsLabels) MongoDBObject("sampleLabels" -> sLabels, "readGroupLabels" -> rgLabels) else MongoDBObject.empty)
       rec <- ? <~ processor.dbo2Run(rdbo)
         .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
     } yield rec

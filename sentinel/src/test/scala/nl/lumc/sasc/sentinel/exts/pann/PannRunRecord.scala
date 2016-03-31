@@ -31,12 +31,13 @@ case class PannRunRecord(
     sampleIds: Seq[ObjectId],
     annotIds: Seq[ObjectId],
     labels: RunLabels = RunLabels(),
-    unitsInfo: UnitsInfo = UnitsInfo(),
+    sampleLabels: Map[String, SampleLabelsLike] = Map.empty,
     deletionTimeUtc: Option[Date] = None,
     creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord {
 
   lazy val readGroupIds = Seq.empty[ObjectId]
 
+  lazy val readGroupLabels = Map.empty[String, ReadGroupLabelsLike]
 }
 
 /** Container for a single Pann sample. */

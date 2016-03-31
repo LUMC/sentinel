@@ -83,7 +83,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     retrieval.run
   }
 
-  def getReadGroupsInfo(ids: Set[ObjectId]): Future[Perhaps[Map[String, ReadGroupLabelsLike]]] = {
+  def getReadGroupsLabels(ids: Set[ObjectId]): Future[Perhaps[Map[String, ReadGroupLabelsLike]]] = {
     val retrieval = for {
       readGroups <- ? <~ getReadGroups(ids)
       infos <- ? <~ readGroups.map { rg => rg.dbId.toString -> rg.labels }.toMap

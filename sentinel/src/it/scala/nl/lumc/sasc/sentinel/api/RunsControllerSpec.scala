@@ -1428,7 +1428,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(ctx1, populate = true) { case http: UploadContext =>
 
       val ictx1 = HttpContext(() => patch(endpoint(http.runId),
-        Seq(SinglePathPatch("replace", "/runName", "test")).toByteArray) { response })
+        Seq(SinglePathPatch("replace", "/labels/runName", "test")).toByteArray) { response })
       "when the user ID is not specified" should ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
 
         "return status 400" in {
@@ -1444,7 +1444,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     }
 
     val ctx2 = HttpContext(() => patch(endpoint(""), Seq(("userId", UserExamples.avg2.id)),
-      Seq(SinglePathPatch("replace", "/runName", "test")).toByteArray,
+      Seq(SinglePathPatch("replace", "/labels/runName", "test")).toByteArray,
       Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
     "when the run ID is not specified" should ctx.priorReqsOnCleanDb(ctx2, populate = true) { http =>
 
@@ -1461,7 +1461,7 @@ class RunsControllerSpec extends SentinelServletSpec {
     "using an unverified user" >> {
       br
 
-      val patches = Seq(SinglePathPatch("replace", "/runName", "patchedRunName"))
+      val patches = Seq(SinglePathPatch("replace", "/labels/runName", "patchedRunName"))
 
       val ictx1 = mapleContext
       "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(ictx1, populate = true) { case ihttp: UploadContext =>
@@ -1659,7 +1659,7 @@ class RunsControllerSpec extends SentinelServletSpec {
                 }
 
                 val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
-                  Seq(SinglePathPatch("replace", "/runName", "patchedRunName")).toByteArray, headers) { response })
+                  Seq(SinglePathPatch("replace", "/labels/runName", "patchedRunName")).toByteArray, headers) { response })
                 "when 'runName' is patched with 'replace'" should ctx.priorReqs(iiictx2) { iiihttp =>
 
                     "return status 204" in {
