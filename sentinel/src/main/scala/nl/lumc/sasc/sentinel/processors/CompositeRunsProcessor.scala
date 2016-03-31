@@ -126,40 +126,26 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
    * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
    * @return Run record database object or a reason why the run can not be returned.
    */
-  def getRunDbo(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false): Future[Perhaps[DBObject]] = {
+  def getRunDbo(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false,
+                retrieveUnitsLabels: Boolean = false): Future[Perhaps[DBObject]] = {
 
     val query = MongoDBObject("_id" -> runId) ++ (if (user.isAdmin) MongoDBObject.empty
     else MongoDBObject("uploaderId" -> user.id))
 
-    Future { coll.findOne(query) }
+    val maybeDbo = Future { coll.findOne(query) }
       .map {
-        case Some(dbo) => dbo.getAs[java.util.Date]("deletionTimeUtc") match {
-          case Some(_) => if (ignoreDeletionStatus) dbo.right else ResourceGoneError.left
-          case None    => dbo.right
-        }
         case None => RunIdNotFoundError.left
-      }
-  }
-
-  /**
-   * Retrieves a single run record.
-   *
-   * @param runId ID of the run to retrieve.
-   * @param user User performing the query.
-   * @return Run record or a reason why the run can not be returned.
-   */
-  def getRun(runId: ObjectId, user: User, retrieveUnitsLabels: Boolean = false): Future[Perhaps[BaseRunRecord]] = {
-    val procError = UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline.")
-    val res: AsyncPerhaps[BaseRunRecord] = for {
-      dbo <- ? <~ getRunDbo(runId, user)
-        .map {
-          // We change the HTTP 410 error to 404 since 410 should only be returned when a DELETE request tries to delete
-          // an already deleted run.
-          case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
-          case otherwise                               => otherwise
+        case Some(dbo) => dbo.getAs[java.util.Date]("deletionTimeUtc") match {
+          case Some(_) if !ignoreDeletionStatus => ResourceGoneError.left
+          case otherwise                        => dbo.right
         }
+      }
+
+    val action: AsyncPerhaps[DBObject] = for {
+      dbo <- ? <~ maybeDbo
       pipelineName <- ? <~ dbo.pipelineName
-      processor <- ? <~ processorsMap.get(pipelineName).toRightDisjunction(procError)
+      processor <- ? <~ processorsMap.get(pipelineName)
+        .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
 
       // Launch info retrieval jobs asynchronously
       samplesLabelsRetrieval = processor match {
@@ -172,8 +158,33 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
       }
       sLabels <- ? <~ samplesLabelsRetrieval
       rgLabels <- ? <~ readGroupsLabelsRetrieval
-      rdbo = dbo ++ (if (retrieveUnitsLabels) MongoDBObject("sampleLabels" -> sLabels, "readGroupLabels" -> rgLabels) else MongoDBObject.empty)
-      rec <- ? <~ processor.dbo2Run(rdbo)
+      rdbo = if (retrieveUnitsLabels) dbo ++ MongoDBObject("sampleLabels" -> sLabels, "readGroupLabels" -> rgLabels)
+      else dbo ++ MongoDBObject.empty
+    } yield rdbo
+
+    action.run
+  }
+
+  /**
+   * Retrieves a single run record.
+   *
+   * @param runId ID of the run to retrieve.
+   * @param user User performing the query.
+   * @return Run record or a reason why the run can not be returned.
+   */
+  def getRun(runId: ObjectId, user: User, retrieveUnitsLabels: Boolean = false): Future[Perhaps[BaseRunRecord]] = {
+    val res: AsyncPerhaps[BaseRunRecord] = for {
+      dbo <- ? <~ getRunDbo(runId, user, retrieveUnitsLabels = retrieveUnitsLabels)
+        .map {
+          // We change the HTTP 410 error to 404 since 410 should only be returned when a DELETE request tries to delete
+          // an already deleted run.
+          case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
+          case otherwise                               => otherwise
+        }
+      pipelineName <- ? <~ dbo.pipelineName
+      processor <- ? <~ processorsMap.get(pipelineName)
+        .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
+      rec <- ? <~ processor.dbo2Run(dbo)
         .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
     } yield rec
 
