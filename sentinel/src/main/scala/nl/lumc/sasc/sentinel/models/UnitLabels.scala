@@ -18,25 +18,6 @@ package nl.lumc.sasc.sentinel.models
 
 import org.bson.types.ObjectId
 
-/**
- * Data point label.
- *
- * @param runId Database ID of the run in which this data point is contained.
- * @param runName Name of the run in which this data point is contained.
- * @param sampleName Name of the sample in which this data point is contained.
- * @param readGroupName Name of the read group in which this data points is contained.
- */
-case class DataPointLabels(
-  runId: ObjectId,
-  runName: Option[String],
-  sampleName: Option[String],
-  readGroupName: Option[String])
-
-/** Trait for statistics / metrics container with labels. */
-trait LabeledStats { this: CaseClass =>
-  def labels: Option[DataPointLabels]
-}
-
 /** Base trait for unit labels. */
 trait UnitLabels {
   def tags: Map[String, Any]
@@ -61,7 +42,9 @@ trait ReadGroupLabelsLike extends UnitLabels {
 }
 
 /** Base implementation of a run record label. */
-case class RunLabels(runName: Option[String] = None, tags: Map[String, Any] = Map.empty) extends RunLabelsLike
+case class RunLabels(
+  runName: Option[String] = None,
+  tags: Map[String, Any] = Map.empty) extends RunLabelsLike
 
 /** Base implementation of a sample record label. */
 case class SampleLabels(
@@ -75,3 +58,24 @@ case class ReadGroupLabels(
   sampleName: Option[String] = None,
   readGroupName: Option[String] = None,
   tags: Map[String, Any] = Map.empty) extends ReadGroupLabelsLike
+
+/**
+ * Data point label.
+ *
+ * @param runId Database ID of the run in which this data point is contained.
+ * @param runName Name of the run in which this data point is contained.
+ * @param sampleName Name of the sample in which this data point is contained.
+ * @param readGroupName Name of the read group in which this data points is contained.
+ */
+case class DataPointLabels(
+  runId: ObjectId,
+  runName: Option[String] = None,
+  sampleName: Option[String] = None,
+  readGroupName: Option[String] = None,
+  tags: Map[String, Any] = Map.empty) extends RunLabelsLike with SampleLabelsLike with ReadGroupLabelsLike
+
+/** Trait for statistics / metrics container with labels. */
+trait LabeledStats { this: CaseClass =>
+  def labels: Option[DataPointLabels]
+}
+
