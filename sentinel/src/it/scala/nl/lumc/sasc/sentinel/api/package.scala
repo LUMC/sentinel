@@ -16,7 +16,10 @@
  */
 package nl.lumc.sasc.sentinel
 
-import nl.lumc.sasc.sentinel.testing.PipelinePart
+import scalaz.NonEmptyList
+
+import nl.lumc.sasc.sentinel.testing.{ PipelinePart, SentinelServletSpec, UserExamples }
+import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 package object api {
 
@@ -75,5 +78,37 @@ package object api {
       /** Contains one annotation already in Ann1. */
       lazy val Ann2 = PipelinePart("/summary_examples/pann/pann_02.json", "pann")
     }
+  }
+
+  /** Base trait to be extended for `/runs` endpoint testing. */
+  trait BaseRunsControllerSpec extends SentinelServletSpec {
+
+    val runsProcessorMakers = Seq(
+      (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor(dao),
+      (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
+    val servlet = new RunsController()(swagger, dao, runsProcessorMakers)
+    val baseEndpoint = "/runs"
+    addServlet(servlet, s"$baseEndpoint/*")
+
+    /** Helper function to create commonly used upload context in this test spec. */
+    def plainContext = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Plain))
+    def mapleContext = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG))
+    def plainThenMapleContext = UploadContext(NonEmptyList(
+      UploadSet(UserExamples.avg, SummaryExamples.Plain),
+      UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG)))
+  }
+
+  class OptionsRunsControllerSpec extends BaseRunsControllerSpec {
+
+    s"OPTIONS '$baseEndpoint'" >> {
+      br
+      "when using the default parameters" should ctx.optionsReq(baseEndpoint, "GET,HEAD,POST")
+    }
+
+    s"OPTIONS '$baseEndpoint/:runId'" >> {
+      br
+      "when using the default parameters" should ctx.optionsReq(s"$baseEndpoint/:runId", "DELETE,GET,HEAD,PATCH")
+    }; br
+
   }
 }
