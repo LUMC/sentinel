@@ -82,7 +82,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     parameters (
       pathParam[String]("userRecordId").description("User ID to update."),
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[List[SinglePathPatch]]("body").description("Patch operations to apply."))
+      bodyParam[SinglePathPatch]("body").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),

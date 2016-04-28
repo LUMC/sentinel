@@ -18,10 +18,10 @@ package nl.lumc.sasc.sentinel.api
 
 import java.io.File
 import javax.servlet.http.HttpServletRequest
+
 import scala.concurrent.ExecutionContext
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
-import xml.NodeSeq
 
 import org.bson.types.ObjectId
 import org.json4s._
@@ -31,8 +31,9 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
 import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
+import xml.NodeSeq
 
-import nl.lumc.sasc.sentinel.models.{ AccLevel, ApiPayload, BaseRunRecord, LibType, Payloads, SeqQcPhase }
+import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
@@ -204,6 +205,10 @@ abstract class SentinelServlet extends ScalatraServlet
         } else if (isSubclass[ApiPayload](model.qualifiedName)) {
           model.copy(properties = interceptedProp.filter {
             case (propName, prop) => !ApiPayload.hiddenAttributes.contains(propName)
+          })
+        } else if (isSubclass[SinglePathPatch](model.qualifiedName)) {
+          model.copy(properties = interceptedProp.filter {
+            case (propName, prop) => !SinglePathPatch.hiddenAttributes.contains(propName)
           })
         } else
           model.copy(properties = interceptedProp)

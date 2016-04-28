@@ -138,14 +138,8 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
     parameters (
       queryParam[String]("userId").description("User ID."),
       pathParam[String]("runId").description("Run ID to patch."),
-      queryParam[List[String]]("sampleNames")
-        .description("Sample names to update. If specified, only the specified samples will be patched.")
-        .optional,
-      queryParam[List[String]]("readGroupNames")
-        .description("Read group namess to update. If specified, only the specified read groups will be patched.")
-        .optional,
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[List[_]]("body").description("Patch operations to apply."))
+      bodyParam[SinglePathPatch]("body").description("Patch operations to apply."))
     responseMessages (
     StringResponseMessage(204, "Record(s) patched successfully."),
     StringResponseMessage(400, "Patch document is invalid or malformed."),

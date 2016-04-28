@@ -27,3 +27,7 @@ case class SinglePathPatch(op: String, path: String, value: Any) extends JsonPat
   /** Tokens in the path. */
   lazy val pathTokens: List[String] = path.split("/").filter(_.nonEmpty).toList
 }
+
+object SinglePathPatch {
+  val hiddenAttributes: Set[String] = Set("pathTokens")
+}
