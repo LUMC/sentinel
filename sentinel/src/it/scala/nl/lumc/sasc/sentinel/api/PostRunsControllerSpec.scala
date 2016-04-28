@@ -390,8 +390,8 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
             ihttp.rep.body must /("runId" -> """\S+""".r)
             ihttp.rep.body must not /("sampleIds" -> ".+".r)
             ihttp.rep.body must not /("readGroupIds" -> ".+".r)
-            ihttp.rep.body must /("sampleLabels") */("""\S+""".r) /("sampleName" -> """\S+""".r)
-            ihttp.rep.body must /("readGroupLabels") */("""\S+""".r) /("readGroupName" -> """\S+""".r)
+            ihttp.rep.body must /("sampleLabels") */ """\S+""".r  /("sampleName" -> """\S+""".r)
+            ihttp.rep.body must /("readGroupLabels") */ """\S+""".r  /("readGroupName" -> """\S+""".r)
           }
         }
     }
