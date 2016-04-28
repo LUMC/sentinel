@@ -62,7 +62,7 @@ trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>
 
   protected implicit def jsonFormats = SentinelJsonFormats
 
-  private val jsonFormatsWithNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.preserve)
+  private val jsonFormatsWithBlanks = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.preserve)
 
   private val jsonFormatsWithoutNull = jsonFormats.withEmptyValueStrategy(hideBlanks)
 
@@ -96,15 +96,15 @@ trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>
     case x: NodeSeq ⇒
       response.writer.write(x.toString())
     case p: Product if isJValueResponse =>
-      val displayNull = paramsGetter.displayNull(params)
-      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      val showBlanks = paramsGetter.showBlanks(params)
+      if (showBlanks) Extraction.decompose(p)(jsonFormatsWithBlanks)
       // FIXME: Find out why we need to do the replaceEmpty twice here.
       //        If we do it once, empty traversables are not removed :(.
       else hideBlanks.replaceEmpty(Extraction.decompose(p)(jsonFormatsWithoutNull))
 
     case p: TraversableOnce[_] if isJValueResponse =>
-      val displayNull = paramsGetter.displayNull(params)
-      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      val showBlanks = paramsGetter.showBlanks(params)
+      if (showBlanks) Extraction.decompose(p)(jsonFormatsWithBlanks)
       else Extraction.decompose(p)(jsonFormatsWithoutNull)
   }
 
@@ -147,8 +147,8 @@ abstract class SentinelServlet extends ScalatraServlet
     def showUnitLabels(p: Params): Boolean =
       !downloadRunSummary(p) && p.getAs[Boolean]("showUnitsLabels").getOrElse(false)
 
-    /** Whether to display null and blank values or not. */
-    def displayNull(p: Params): Boolean = p.getAs[Boolean]("displayNull").getOrElse(false)
+    /** Whether to show blank values (null values and empty containers) or not. */
+    def showBlanks(p: Params): Boolean = p.getAs[Boolean]("showBlanks").getOrElse(false)
   }
 
   /** Mirror for reflection. */

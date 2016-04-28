@@ -194,8 +194,8 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
           """.stripMargin)
         .defaultValue(false),
       queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional,
-      queryParam[Boolean]("displayNull")
-        .description("Whether to display JSON with `null` attributes or remove them completely.")
+      queryParam[Boolean]("showBlanks")
+        .description("Whether to display JSON with `null` attributes and empty containers or remove them completely.")
         .defaultValue(false)
         .optional)
     responseMessages (
