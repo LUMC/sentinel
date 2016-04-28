@@ -36,7 +36,7 @@ import nl.lumc.sasc.sentinel.models.{ AccLevel, ApiPayload, BaseRunRecord, LibTy
 import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
 
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
-trait SentinelJsonSupport extends JacksonJsonSupport {
+trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>
 
   protected implicit def jsonFormats = SentinelJsonFormats
 
@@ -74,15 +74,14 @@ trait SentinelJsonSupport extends JacksonJsonSupport {
     case x: NodeSeq ⇒
       response.writer.write(x.toString())
     case p: Product if isJValueResponse =>
-      val displayNull = params.getAs[Boolean]("displayNull").getOrElse(false)
+      val displayNull = paramsGetter.displayNull(params)
       if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
       else Extraction.decompose(p)(jsonFormatsWithoutNull)
 
     case p: TraversableOnce[_] if isJValueResponse =>
-      val displayNull = params.getAs[Boolean]("displayNull").getOrElse(false)
-      val yolo = if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      val displayNull = paramsGetter.displayNull(params)
+      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
       else Extraction.decompose(p)(jsonFormatsWithoutNull)
-      yolo
   }
 
   override def render(value: JValue)(implicit formats: Formats): JValue =
@@ -113,6 +112,20 @@ abstract class SentinelServlet extends ScalatraServlet
 
   /** Delimiter for multi-valued URL parameter. */
   protected val multiParamDelimiter: String = ","
+
+  /** Collection of reusable methods for parsing request params. */
+  object paramsGetter {
+
+    /** Whether to download the run summary file or not. */
+    def downloadRunSummary(p: Params): Boolean = p.getAs[Boolean]("download").getOrElse(false)
+
+    /** Whether to show the unit labels or not. */
+    def showUnitLabels(p: Params): Boolean =
+      !downloadRunSummary(p) && p.getAs[Boolean]("showUnitsLabels").getOrElse(false)
+
+    /** Whether to display null and blank values or not. */
+    def displayNull(p: Params): Boolean = p.getAs[Boolean]("displayNull").getOrElse(false)
+  }
 
   /** Mirror for reflection. */
   private val mirror = ru.runtimeMirror(getClass.getClassLoader)

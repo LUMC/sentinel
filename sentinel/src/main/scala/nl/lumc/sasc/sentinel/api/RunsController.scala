@@ -209,10 +209,8 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
 
   get("/:runId", operation(runIdGetOp)) {
     logger.info(requestLog)
-    val doDownload = params.getAs[Boolean]("download").getOrElse(false)
-    val showUnitsLabels =
-      if (doDownload) false
-      else params.getAs[Boolean]("showUnitsLabels").getOrElse(false)
+    val doDownload = paramsGetter.downloadRunSummary(params)
+    val showUnitsLabels = paramsGetter.showUnitLabels(params)
     val runId = params.getAs[DbId]("runId").getOrElse(halt(404, Payloads.RunIdNotFoundError))
     val user = simpleKeyAuth(params => params.get("userId"))
 
