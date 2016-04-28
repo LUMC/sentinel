@@ -371,6 +371,29 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
             ihttp.rep.body must not /("readGroupIds" -> ".+".r)
           }
         }
+
+      val ictx2 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+      "when a multi sample, multi read group summary is uploaded to an empty database and 'showUnitsLabels' is true" should
+        ctx.priorReqsOnCleanDb(ictx2, populate = true) { ihttp =>
+
+          "return status 201" in {
+            ihttp.rep.status mustEqual 201
+          }
+
+          "return a JSON object of the uploaded run" in {
+            ihttp.rep.contentType mustEqual "application/json"
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must /("uploaderId" -> ictx2.uploader.id)
+            ihttp.rep.body must /("pipeline" -> "maple")
+            ihttp.rep.body must /("nSamples" -> 2)
+            ihttp.rep.body must /("nReadGroups" -> 3)
+            ihttp.rep.body must /("runId" -> """\S+""".r)
+            ihttp.rep.body must not /("sampleIds" -> ".+".r)
+            ihttp.rep.body must not /("readGroupIds" -> ".+".r)
+            ihttp.rep.body must /("sampleLabels") */("""\S+""".r) /("sampleName" -> """\S+""".r)
+            ihttp.rep.body must /("readGroupLabels") */("""\S+""".r) /("readGroupName" -> """\S+""".r)
+          }
+        }
     }
   }
 }

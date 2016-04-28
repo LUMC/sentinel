@@ -81,11 +81,13 @@ trait SentinelServletSpec extends MutableScalatraSpec
 
   /** Helper container for an upload. */
   sealed case class UploadSet(uploader: User, payload: SentinelTestPart with Uploadable,
+                              showUnitsLabels: Boolean = false,
                               uploadEndpoint: String = "/runs") {
 
     /** Helper method for creating upload requests. */
     lazy val reqFunc: ReqFunc = {
-      val params = Seq(("userId", uploader.id), ("pipeline", payload.pipelineName))
+      val params = Seq(("userId", uploader.id), ("pipeline", payload.pipelineName)) ++
+        (if (showUnitsLabels) Seq(("showUnitsLabels", "true")) else Seq())
       val headers = Map(HeaderApiKey -> uploader.activeKey)
       () => post(uploadEndpoint, params, Map("run" -> payload.toBytesPart), headers) { response }
     }

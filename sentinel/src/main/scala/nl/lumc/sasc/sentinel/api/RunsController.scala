@@ -237,7 +237,12 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
       queryParam[String]("pipeline")
         .description(s"Name of the pipeline that produces the uploaded summary. Valid values are $supportedPipelineParams.")
         .allowableValues(supportedPipelines.keys),
-      formParam[File]("run").description("Run summary file."))
+      formParam[File]("run").description("Run summary file."),
+      queryParam[Boolean]("showUnitsLabels")
+        .description(
+          """Whether to show the samples and/or read groups belonging to the queried run or not (default: `false`).
+          """.stripMargin)
+        .defaultValue(false))
     responseMessages (
       StringResponseMessage(201, "Run summary added."),
       StringResponseMessage(400, Payloads.UnspecifiedUserIdError.message),
@@ -255,6 +260,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
     logger.info(requestLog)
     val pipeline = params.getOrElse("pipeline", halt(400, Payloads.UnspecifiedPipelineError))
     val upload = fileParams.getOrElse("run", halt(400, ApiPayload("Run summary file not specified.")))
+    val showUnitsLabels = paramsGetter.showUnitLabels(params)
 
     supportedPipelines.get(pipeline) match {
 
@@ -264,7 +270,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
         val user = simpleKeyAuth(params => params.get("userId"))
         new AsyncResult {
           val is = {
-            runs.processRunUpload(pipeline, upload.readUncompressedBytes(), upload.getName, user)
+            runs.processRunUpload(pipeline, upload.readUncompressedBytes(), upload.getName, user, showUnitsLabels)
               .map {
                 case -\/(err) => err.actionResult
                 case \/-(run) => Created(run)

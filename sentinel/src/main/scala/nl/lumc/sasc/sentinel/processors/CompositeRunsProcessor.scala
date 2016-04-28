@@ -67,10 +67,18 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
    * @return A run record of the uploaded run summary file or a reason why the query fails.
    */
   def processRunUpload(pipelineName: String, contents: Array[Byte], uploadName: String,
-                       uploader: User): Future[Perhaps[BaseRunRecord]] =
+                       uploader: User, retrieveUnitsLabels: Boolean = false): Future[Perhaps[BaseRunRecord]] =
     processorsMap.get(pipelineName) match {
-      case None       => Future.successful(InvalidPipelineError(processorsMap.keySet.toSeq).left)
-      case Some(proc) => proc.processRunUpload(contents, uploadName, uploader)
+      case None => Future.successful(InvalidPipelineError(processorsMap.keySet.toSeq).left)
+      case Some(proc) =>
+        val justUpload = proc.processRunUpload(contents, uploadName, uploader)
+        if (retrieveUnitsLabels) {
+          val processing = for {
+            rec <- ? <~ justUpload
+            recWithUnitLabels <- ? <~ getRun(rec.runId, uploader, retrieveUnitsLabels)
+          } yield recWithUnitLabels
+          processing.run
+        } else justUpload
     }
 
   /**
