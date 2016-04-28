@@ -21,7 +21,6 @@ import scala.concurrent._
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
 import com.novus.salat.{ CaseClass => _, _ }
-import com.novus.salat.global.{ ctx => SalatContext }
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 

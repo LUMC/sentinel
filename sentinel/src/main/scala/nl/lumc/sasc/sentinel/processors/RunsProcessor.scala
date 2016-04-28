@@ -24,7 +24,6 @@ import scala.util.Try
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat.{ CaseClass => _, _ }
-import com.novus.salat.global.{ ctx => SalatContext }
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }

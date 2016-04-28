@@ -26,6 +26,9 @@ import nl.lumc.sasc.sentinel.models.Payloads._
 
 trait UnitsAdapter extends FutureMongodbAdapter {
 
+  /** Context for Salat conversions. */
+  implicit val SalatContext = nl.lumc.sasc.sentinel.utils.SentinelSalatContext
+
   /**
    * Retrieves the raw database object of the given unit IDs.
    *

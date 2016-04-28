@@ -20,7 +20,6 @@ import scala.concurrent._
 
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
-import com.novus.salat.global._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, SinglePathPatch, User }
@@ -30,6 +29,9 @@ import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
 /** Trait for performing operations on user records. */
 trait UsersAdapter extends FutureMongodbAdapter
     with SinglePathPatchJsonExtractor {
+
+  /** Context for Salat conversions. */
+  implicit val SalatContext = nl.lumc.sasc.sentinel.utils.SentinelSalatContext
 
   /** Overridable execution context for this adapter. */
   protected def usersAdapterContext = ExecutionContext.global

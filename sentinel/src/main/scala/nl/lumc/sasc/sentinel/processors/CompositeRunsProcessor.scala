@@ -21,7 +21,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat._
-import com.novus.salat.global.ctx
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter }
@@ -34,6 +33,9 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
     extends FutureMongodbAdapter
     with SinglePathPatchJsonExtractor {
   require(processors.nonEmpty, "CompositeRunsProcessor must contain at least one RunsProcessor.")
+
+  /** Context for Salat conversions. */
+  implicit val SalatContext = nl.lumc.sasc.sentinel.utils.SentinelSalatContext
 
   /** Database connection. */
   protected val mongo = {

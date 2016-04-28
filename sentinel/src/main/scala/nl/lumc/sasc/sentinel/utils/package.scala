@@ -27,6 +27,7 @@ import scala.reflect.{ ClassTag, ManifestFactory }
 import scala.reflect.runtime.{ universe => ru }
 import scala.util.{ Failure, Success, Try }
 
+import com.novus.salat.{ CaseClass => _, _ }
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.util.io.readBytes
@@ -142,6 +143,13 @@ package object utils {
 
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer + ApiPayloadSerializer
+
+  /** Salat context used across the entire package. */
+  implicit val SentinelSalatContext = new Context {
+    val name = "When-Necessary-Context"
+    override val typeHintStrategy = StringTypeHintStrategy(when = TypeHintFrequency.Always,
+      typeHint = "_typeHint")
+  }
 
   object reflect {
 
