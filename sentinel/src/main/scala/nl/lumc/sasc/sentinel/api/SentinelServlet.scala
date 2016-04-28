@@ -38,11 +38,33 @@ import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, try
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
 trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>
 
+  /** Strategy to ensure all blank values (nulls, nones, empty traversables) are removed. */
+  private val hideBlanks = new EmptyValueStrategy {
+
+    def noneValReplacement = None
+
+    def replaceEmpty(value: JValue): JValue = value match {
+      case JArray(items) =>
+        val replacedItems = items
+          .map(replaceEmpty)
+          .filter(_.toOption.isDefined)
+        if (replacedItems.nonEmpty) JArray(replacedItems)
+        else JNothing
+      case JObject(fields) =>
+        val replacedFields = fields
+          .map { case JField(name, v) => JField(name, replaceEmpty(v)) }
+          .filter { case (name, v) => v.toOption.isDefined }
+        if (replacedFields.nonEmpty) JObject(replacedFields)
+        else JNothing
+      case oth => oth
+    }
+  }
+
   protected implicit def jsonFormats = SentinelJsonFormats
 
   private val jsonFormatsWithNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.preserve)
 
-  private val jsonFormatsWithoutNull = jsonFormats.withEmptyValueStrategy(EmptyValueStrategy.skip)
+  private val jsonFormatsWithoutNull = jsonFormats.withEmptyValueStrategy(hideBlanks)
 
   override protected def renderPipeline: RenderPipeline = renderToCustomJson orElse super.renderPipeline
 
@@ -76,7 +98,9 @@ trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>
     case p: Product if isJValueResponse =>
       val displayNull = paramsGetter.displayNull(params)
       if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
-      else Extraction.decompose(p)(jsonFormatsWithoutNull)
+      // FIXME: Find out why we need to do the replaceEmpty twice here.
+      //        If we do it once, empty traversables are not removed :(.
+      else hideBlanks.replaceEmpty(Extraction.decompose(p)(jsonFormatsWithoutNull))
 
     case p: TraversableOnce[_] if isJValueResponse =>
       val displayNull = paramsGetter.displayNull(params)

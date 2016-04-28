@@ -18,7 +18,6 @@ package nl.lumc.sasc.sentinel.api
 
 import java.io.File
 
-import org.json4s._
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
@@ -194,7 +193,11 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
             |parameter has no effect when the `download` parameter is set to `true`.
           """.stripMargin)
         .defaultValue(false),
-      queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional)
+      queryParam[Boolean]("download").description("Whether to download the raw summary file or not.").optional,
+      queryParam[Boolean]("displayNull")
+        .description("Whether to display JSON with `null` attributes or remove them completely.")
+        .defaultValue(false)
+        .optional)
     responseMessages (
       StringResponseMessage(400, "User ID or run summary ID not specified."),
       StringResponseMessage(401, Payloads.AuthenticationError.message),
