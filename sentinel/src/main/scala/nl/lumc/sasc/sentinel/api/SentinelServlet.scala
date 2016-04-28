@@ -80,8 +80,9 @@ trait SentinelJsonSupport extends JacksonJsonSupport {
 
     case p: TraversableOnce[_] if isJValueResponse =>
       val displayNull = params.getAs[Boolean]("displayNull").getOrElse(false)
-      if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
+      val yolo = if (displayNull) Extraction.decompose(p)(jsonFormatsWithNull)
       else Extraction.decompose(p)(jsonFormatsWithoutNull)
+      yolo
   }
 
   override def render(value: JValue)(implicit formats: Formats): JValue =

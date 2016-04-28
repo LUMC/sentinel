@@ -21,13 +21,12 @@ import scala.concurrent.duration._
 import com.github.fakemongo.Fongo
 import com.mongodb.casbah.Imports._
 import com.novus.salat._
-import com.novus.salat.global._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
 import nl.lumc.sasc.sentinel.exts.maple.{ MapleSampleRecord, MapleSampleStats }
-import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
+import nl.lumc.sasc.sentinel.utils.{ MongodbAccessObject, SentinelSalatContext }
 
 class SamplesAdapterSpec extends Specification
     with Mockito { self =>
