@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.models
 
+import scala.util.matching.Regex
+
 /** Trait for JSON patch objects. */
 sealed trait JsonPatch {
   def op: String
@@ -26,8 +28,11 @@ sealed trait JsonPatch {
 case class SinglePathPatch(op: String, path: String, value: Any) extends JsonPatch {
   /** Tokens in the path. */
   lazy val pathTokens: List[String] = path.split("/").filter(_.nonEmpty).toList
+
+  /** Given a regex pattern, return whether the patch path matches. */
+  def pathMatches(pattern: Regex): Boolean = pattern.findAllIn(path).nonEmpty
 }
 
 object SinglePathPatch {
-  val hiddenAttributes: Set[String] = Set("pathTokens")
+  val hiddenAttributes: Set[String] = Set("pathTokens", "pathMatches")
 }
