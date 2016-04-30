@@ -130,8 +130,42 @@ trait SentinelServletSpec extends MutableScalatraSpec
     /** Uploaded summary run IDs. */
     lazy val runIds: NonEmptyList[String] = reps.map { pr => (parse(pr.body) \ "runId").extract[String] }
 
+    /** Uploaded summary sample labels. */
+    lazy val sampleLabelsAll: NonEmptyList[Map[String, Map[String, Any]]] = sets.zip(reps)
+      .map {
+        case (uplset, uplrep) =>
+          if (!uplset.showUnitsLabels) Map.empty
+          else (parse(uplrep.body) \ "sampleLabels").extract[Map[String, Map[String, Any]]]
+      }
+
+    /** Uploaded summary sample IDs. */
+    lazy val sampleIdsAll: NonEmptyList[List[String]] = sampleLabelsAll.map(_.keys.toList)
+
+    /** Uploaded summary sample labels. */
+    lazy val readGroupLabelsAll: NonEmptyList[Map[String, Map[String, Any]]] = sets.zip(reps)
+      .map {
+        case (uplset, uplrep) =>
+          if (!uplset.showUnitsLabels) Map.empty
+          else (parse(uplrep.body) \ "readGroupLabels").extract[Map[String, Map[String, Any]]]
+      }
+
+    /** Uploaded summary sample IDs. */
+    lazy val readGroupIdsAll: NonEmptyList[List[String]] = readGroupLabelsAll.map(_.keys.toList)
+
     /** First run ID. */
     lazy val runId: String = runIds.head
+
+    /** First run's sample labels. */
+    lazy val sampleLabels: Map[String, Map[String, Any]] = sampleLabelsAll.head
+
+    /** First run's sample IDs. */
+    lazy val sampleIds: List[String] = sampleIdsAll.head
+
+    /** First run's read group labels. */
+    lazy val readGroupLabels: Map[String, Map[String, Any]] = readGroupLabelsAll.head
+
+    /** First run's read group IDs. */
+    lazy val readGroupIds: List[String] = readGroupIdsAll.head
 
     /** Uploading users. */
     lazy val uploaders: NonEmptyList[User] = sets.map(_.uploader)
