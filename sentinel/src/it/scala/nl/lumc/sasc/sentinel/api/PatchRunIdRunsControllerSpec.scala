@@ -290,10 +290,15 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
               }
             }
 
-            val iictx7 = mapleContext
+            val iictx7 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
             "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx7, populate = true) { case iihttp: UploadContext =>
 
-              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId), Seq(("userId", UserExamples.avg2.id)),
+              lazy val sampleId = iihttp.sampleLabels
+                .collect { case (sid, slabels) if slabels.get("sampleName") == Option("sampleA") => sid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
                 Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
 
               "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
@@ -302,15 +307,16 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                   iiihttp.rep.status mustEqual 200
                 }
 
-                "return JSON object containing the expected 'runName' attribute" in {
+                "return JSON object containing the expected '/sampleLabels/*/sampleName/sampleA' attribute" in {
                   iiihttp.rep.contentType mustEqual MimeType.Json
-                  iiihttp.rep.body must /("labels") /("runName" -> "Maple_04")
+                  iiihttp.rep.body must /("sampleLabels") / sampleId /("sampleName" -> "sampleA")
                 }
               }
 
               val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
-                Seq(SinglePathPatch("replace", "/labels/runName", "patchedRunName")).toByteArray, headers) { response })
-              "when 'runName' is patched with 'replace'" should ctx.priorReqs(iiictx2) { iiihttp =>
+                Seq(SinglePathPatch("replace", s"/sampleLabels/$sampleId/sampleName", "notSampleA")).toByteArray,
+                headers) { response })
+              "when 'sampleName' is patched with 'replace'" should ctx.priorReqs(iiictx2) { iiihttp =>
 
                 "return status 204" in {
                   iiihttp.rep.status mustEqual 204
@@ -327,9 +333,9 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                   iiihttp.rep.status mustEqual 200
                 }
 
-                "return a JSON object with an updated 'runName' attribute" in {
+                "return a JSON object with an updated 'sampleName' attribute" in {
                   iiihttp.rep.contentType mustEqual MimeType.Json
-                  iiihttp.rep.body must /("labels") /("runName" -> "patchedRunName")
+                  iiihttp.rep.body must /("sampleLabels") / sampleId /("sampleName" -> "notSampleA")
                 }
               }
             }
