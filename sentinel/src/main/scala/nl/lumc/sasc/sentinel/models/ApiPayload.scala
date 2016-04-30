@@ -75,6 +75,7 @@ object Payloads {
   object UnexpectedDatabaseError {
     def message = "Unexpected database error."
     def apply(hint: String) = ApiPayload(message, hints = List(hint))
+    def apply(hints: List[String]) = ApiPayload(message, hints = hints)
     def apply() = ApiPayload(message)
   }
 
