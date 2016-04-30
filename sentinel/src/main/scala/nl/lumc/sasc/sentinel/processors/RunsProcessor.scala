@@ -411,10 +411,8 @@ object RunsProcessor {
     val replaceSampleNamePF: DboPatchFunc = {
 
       case (dbo, patch @ SPPatch("replace", path, value: String)) if patch.pathMatches(replaceSampleNameRegex) =>
-        val sampleId = getSampleId(path)
-
         dbo._id match {
-          case Some(okId) if sampleId.contains(okId.toString) =>
+          case Some(okId) if getSampleId(path).contains(okId.toString) =>
             for {
               okLabels <- dbo
                 .getAs[DBObject]("labels")
