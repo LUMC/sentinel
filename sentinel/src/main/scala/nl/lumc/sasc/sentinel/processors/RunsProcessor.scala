@@ -378,13 +378,17 @@ object RunsProcessor {
     /** 'replace' patch for 'runName' in a single run */
     val replaceRunNamePF: DboPatchFunc = {
       case (dbo, SPPatch("replace", "/labels/runName", v: String)) =>
-        dbo.getAs[DBObject]("labels") match {
-          case Some(ok) =>
-            ok.put("runName", v)
-            dbo.put("labels", ok)
-            dbo.right
-          case None => UnexpectedDatabaseError("Required 'labels' not found.").left
-        }
+        for {
+          okLabels <- dbo
+            .getAs[DBObject]("labels")
+            .toRightDisjunction(UnexpectedDatabaseError("Run record does not have the required 'labels' attribute."))
+          _ <- Try(okLabels.put("runName", v))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError("Can not patch 'runName' in run record."))
+          _ <- Try(dbo.put("labels", okLabels))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError("Can not patch 'labels' in run record."))
+        } yield dbo
     }
   }
 
