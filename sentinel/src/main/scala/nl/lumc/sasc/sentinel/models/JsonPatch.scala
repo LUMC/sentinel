@@ -25,25 +25,6 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
-/** Trait for JSON patch objects. */
-sealed trait OldJsonPatch {
-  def op: String
-  def path: String
-}
-
-/** JSON patch operations that contain the `value` key. */
-case class SinglePathPatch(op: String, path: String, value: Any) extends OldJsonPatch {
-  /** Tokens in the path. */
-  lazy val pathTokens: List[String] = path.split("/").filter(_.nonEmpty).toList
-
-  /** Given a regex pattern, return whether the patch path matches. */
-  def pathMatches(pattern: Regex): Boolean = pattern.findAllIn(path).nonEmpty
-}
-
-object SinglePathPatch {
-  val hiddenAttributes: Set[String] = Set("pathTokens", "pathMatches")
-}
-
 object JsonPatch {
 
   /** Base trait for JSON patch operations. See http://jsonpatch.com/ for more information. */

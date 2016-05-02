@@ -97,8 +97,6 @@ object Payloads {
     def message = "Invalid patch operation(s)."
     def apply(patch: JsonPatch.PatchOp) = ApiPayload(message,
       List(s"Unsupported patch operation and/or value: '${patch.op}' on '${patch.path}'."), func)
-    def apply(patch: SinglePathPatch) = ApiPayload(message,
-      List(s"Unexpected operation '${patch.op}' on '${patch.path}' with value '${patch.value}'."))
   }
 
   object InvalidDbError {

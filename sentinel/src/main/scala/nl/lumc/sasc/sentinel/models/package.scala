@@ -39,12 +39,6 @@ package object models {
   /** Type alias for partial functions for performing database object patching. */
   type DboPatchFunction = PatchFunction[DBObject]
 
-  /** General patch function. */
-  type PatchFunc[T] = PartialFunction[(T, SinglePathPatch), Perhaps[T]]
-
-  /** Type alias for partial functions for performing database object patching. */
-  type DboPatchFunc = PatchFunc[DBObject]
-
   /** Supported statistics accumulation level */
   object AccLevel extends Enumeration {
     type AccLevel = Value

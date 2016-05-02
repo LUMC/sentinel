@@ -28,7 +28,7 @@ import com.novus.salat.{ CaseClass => _, _ }
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
-import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
+import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.utils._

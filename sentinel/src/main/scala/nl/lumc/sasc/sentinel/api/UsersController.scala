@@ -26,7 +26,7 @@ import scalaz._
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
-import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models._, JsonPatch._
 import nl.lumc.sasc.sentinel.utils.{ JsonPatchExtractor, MongodbAccessObject, ValidatedJsonExtractor }
 
 /**
@@ -82,7 +82,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
     parameters (
       pathParam[String]("userRecordId").description("User ID to update."),
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[SinglePathPatch]("body").description("Patch operations to apply."))
+      bodyParam[PatchOp]("body").description("Patch operations to apply."))
     responseMessages (
       StringResponseMessage(204, "User patched successfully."),
       StringResponseMessage(400, "User ID not specified."),

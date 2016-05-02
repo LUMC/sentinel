@@ -29,7 +29,7 @@ import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.exts.plain._
 import nl.lumc.sasc.sentinel.processors.{ CompositeRunsProcessor, RunsProcessor }
 import nl.lumc.sasc.sentinel.settings._
-import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models._, JsonPatch._
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 import nl.lumc.sasc.sentinel.utils.Implicits._
 
@@ -139,7 +139,7 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
       queryParam[String]("userId").description("User ID."),
       pathParam[String]("runId").description("Run ID to patch."),
       headerParam[String](HeaderApiKey).description("User API key."),
-      bodyParam[SinglePathPatch]("body").description("Patch operations to apply."))
+      bodyParam[PatchOp]("body").description("Patch operations to apply."))
     responseMessages (
     StringResponseMessage(204, "Record(s) patched successfully."),
     StringResponseMessage(400, "Patch document is invalid or malformed."),
