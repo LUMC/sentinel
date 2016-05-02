@@ -21,13 +21,13 @@ import scala.concurrent.Future
 import org.scalatra._
 import org.scalatra.swagger._
 import org.json4s._
-import scalaz._, Scalaz._
+import scalaz._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{ JsonPatchExtractor, MongodbAccessObject, ValidatedJsonExtractor }
 
 /**
  * Controller for the `/users` endpoint.
@@ -103,7 +103,7 @@ class UsersController(implicit val swagger: Swagger, mongo: MongodbAccessObject)
 
     new AsyncResult {
       val is =
-        users.extractAndValidatePatches(request.body.getBytes) match {
+        JsonPatchExtractor.extractPatches(request.body.getBytes) match {
           case -\/(err) => Future.successful(err.actionResult)
           case \/-(ops) =>
             users.patchAndUpdateUser(user, userRecordId, ops.toList).map {

@@ -27,7 +27,8 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
-import nl.lumc.sasc.sentinel.models.{ Payloads, User, SinglePathPatch }
+import nl.lumc.sasc.sentinel.models.{ Payloads, User }
+import nl.lumc.sasc.sentinel.models.JsonPatch
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class UsersAdapterSpec extends Specification
@@ -174,9 +175,9 @@ class UsersAdapterSpec extends Specification
     }
 
     "return an updated user as expected when patchOps has multiple valid patches" in { implicit ee: ExecutionEnv =>
-      val patch1 = SinglePathPatch("replace", "/verified", false)
-      val patch2 = SinglePathPatch("replace", "/email", "my@email.com")
-      val patch3 = SinglePathPatch("replace", "/password", "SuperSecret126")
+      val patch1 = JsonPatch.ReplaceOp("/verified", false)
+      val patch2 = JsonPatch.ReplaceOp("/email", "my@email.com")
+      val patch3 = JsonPatch.ReplaceOp("/password", "SuperSecret126")
       testAdapter.patchUser(testUserObj, List(patch1, patch2, patch3)).toEither must beRight.like {
         case user =>
           user.email mustEqual "my@email.com"
@@ -187,15 +188,14 @@ class UsersAdapterSpec extends Specification
 
     "return the correct error message when the value for a valid path is unexpected" in { implicit ee: ExecutionEnv =>
       val invalidCombinations = List(
-        ("/verified", 1),
-        ("/verified", "yes"),
-        ("/password", 1235),
-        ("/email", true))
+        JsonPatch.ReplaceOp("/verified", 1),
+        JsonPatch.ReplaceOp("/verified", "yes"),
+        JsonPatch.ReplaceOp("/password", 1235),
+        JsonPatch.ReplaceOp("/email", true))
       foreach(invalidCombinations) {
-        case (path, value) =>
-          testAdapter.patchUser(testUserObj, List(SinglePathPatch("replace", path, value))).toEither must beLeft.like {
-            case errs =>
-              errs mustEqual Payloads.PatchValidationError(List(s"Unexpected '$path' value: '$value'."))
+        case invalidPatch =>
+          testAdapter.patchUser(testUserObj, List(invalidPatch)).toEither must beLeft.like {
+            case errs => errs mustEqual Payloads.PatchValidationError(invalidPatch)
           }
       }
     }
@@ -220,7 +220,7 @@ class UsersAdapterSpec extends Specification
       }.await(asyncRetries, asyncWait)
     }
 
-    "succeed when the database contain the specified user" in { implicit ee: ExecutionEnv =>
+    "succeed when the database contains the specified user" in { implicit ee: ExecutionEnv =>
       val adapter = usingAdapter(makeFongo) { coll =>
         val dbo = grater[User].asDBObject(testUserObj)
         coll.insert(dbo)
@@ -252,8 +252,8 @@ class UsersAdapterSpec extends Specification
       }
       val newEmail = "new@email.com"
       val newStatus = !testUserObj.verified
-      val patch1 = SinglePathPatch("replace", "/verified", newStatus)
-      val patch2 = SinglePathPatch("replace", "/email", newEmail)
+      val patch1 = JsonPatch.ReplaceOp("/verified", newStatus)
+      val patch2 = JsonPatch.ReplaceOp("/email", newEmail)
       val patches = List(patch1, patch2)
       adapter.find(MongoDBObject("email" -> newEmail)).count mustEqual 0
       adapter.find(MongoDBObject("verified" -> newStatus)).count mustEqual 0

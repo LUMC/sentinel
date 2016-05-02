@@ -24,7 +24,8 @@ import org.specs2.specification.core.Fragments
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.testing.{ MimeType, SentinelServletSpec, UserExamples }
-import nl.lumc.sasc.sentinel.models.{ Payloads, SinglePathPatch, User, UserRequest }
+import nl.lumc.sasc.sentinel.models.{ Payloads, User, UserRequest }
+import nl.lumc.sasc.sentinel.models.JsonPatch._
 
 class UsersControllerSpec extends SentinelServletSpec {
 
@@ -409,7 +410,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
             def headers = Map("Authorization" -> makeBasicAuthHeader(uobj, pwd))
 
-            val payload1 = Seq(SinglePathPatch("replace", "/verified", true))
+            val payload1 = Seq(ReplaceOp("/verified", true))
             val ictx1 = HttpContext(() => patch(endpoint(UserExamples.unverified.id), payload1.toByteArray,
               Map("Authorization" -> makeBasicAuthHeader(uobj, s"${pwd}_nomatch"))) { response })
             br; "when the password does not match" should ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
@@ -441,7 +442,7 @@ class UsersControllerSpec extends SentinelServletSpec {
             br
 
               val ictx0 = HttpContext(() => patch(endpoint(""),
-                Seq(SinglePathPatch("replace", "/verified", true)).toByteArray, headers) { response })
+                Seq(ReplaceOp("/verified", true)).toByteArray, headers) { response })
               "when the user record ID is not specified" should ctx.priorReqsOnCleanDb(ictx0, populate = true) { ihttp =>
 
                 "return status 400" in {
@@ -469,7 +470,7 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               val ictx2 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq.empty[SinglePathPatch].toByteArray, headers) { response })
+                Seq.empty[PatchOp].toByteArray, headers) { response })
               "when the patch document is an empty list" should ctx.priorReqsOnCleanDb(ictx2, populate = true) { ihttp =>
 
                 "return status 400" in {
@@ -478,8 +479,8 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 "return a JSON object containing the expected message" in {
                   ihttp.rep.contentType mustEqual MimeType.Json
-                  ihttp.rep.body must /("message" -> Payloads.JsonValidationError.message)
-                  ihttp.rep.body must /("hints") /# 0 / startWith("error: array is too short")
+                  ihttp.rep.body must /("message" -> "Invalid patch operation(s).")
+                  ihttp.rep.body must /("hints") /# 0 / "Patch array can not be empty."
                 }
               }
 
@@ -499,7 +500,7 @@ class UsersControllerSpec extends SentinelServletSpec {
               }
 
               val ictx4 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq("yalala", SinglePathPatch("replace", "/password", "newPass123")).toByteArray, headers) { response })
+                Seq("yalala", ReplaceOp("/password", "newPass123")).toByteArray, headers) { response })
               "when the patch document contains an invalid entry" should
                 ctx.priorReqsOnCleanDb(ictx4, populate = true) { ihttp =>
 
@@ -517,12 +518,11 @@ class UsersControllerSpec extends SentinelServletSpec {
               "using forbidden 'op' values" >> {
               br
 
-                Fragments.foreach(Seq("add", "remove", "test")) { op =>
+                Fragments.foreach(Seq(AddOp("/password", "newPass123"))) { p =>
 
                   val ictx5 = HttpContext(() => patch(endpoint(uobj.id), Seq(
-                    SinglePathPatch("replace", "/password", "newPass123"),
-                    SinglePathPatch(op, "/password", "newPass123")).toByteArray, headers) { response })
-                  s"such as '$op'" should ctx.priorReqsOnCleanDb(ictx5, populate = true) { ihttp =>
+                    ReplaceOp("/password", "newPass123"), p).toByteArray, headers) { response })
+                  s"such as '${p.op}' on '${p.path}'" should ctx.priorReqsOnCleanDb(ictx5, populate = true) { ihttp =>
 
                     "return status 400" in {
                       ihttp.rep.status mustEqual 400
@@ -531,14 +531,14 @@ class UsersControllerSpec extends SentinelServletSpec {
                     "return a JSON object containing the expected message" in {
                       ihttp.rep.contentType mustEqual MimeType.Json
                       ihttp.rep.body must /("message" -> "Invalid patch operation(s).")
-                      ihttp.rep.body must /("hints") /# 0 / s"Unsupported operation: '$op'."
+                      ihttp.rep.body must /("hints") /# 0 / s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}'."
                     }
                   }
                 }
               }
 
               val ictx6 = HttpContext(() => patch(endpoint(UserExamples.unverified.id),
-                Seq(SinglePathPatch("replace", "/verified", true)).toByteArray, headers) { response })
+                Seq(ReplaceOp("/verified", true)).toByteArray, headers) { response })
               "when the patch contains an op with path '/verified' and targets another user" should
                 ctx.priorReqsOnCleanDb(ictx6, populate = true) { ihttp =>
 
@@ -584,7 +584,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                 }
 
               val ictx7 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq(SinglePathPatch("replace", "/verified", false)).toByteArray, headers) { response })
+                Seq(ReplaceOp("/verified", false)).toByteArray, headers) { response })
               "when the patch contains an op with path '/verified' and targets the same user" should
                 ctx.priorReqsOnCleanDb(ictx7, populate = true) { ihttp =>
 
@@ -637,7 +637,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               val newEmail = "new@email.com"
               val ictx8 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq(SinglePathPatch("replace", "/email", newEmail)).toByteArray, headers) { response })
+                Seq(ReplaceOp("/email", newEmail)).toByteArray, headers) { response })
               "when the patch contains an op with path '/email' and targets the same user" should
                 ctx.priorReqsOnCleanDb(ictx8, populate = true) { iihttp =>
 
@@ -662,7 +662,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               val newPass = "newPass123"
               val ictx9 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq(SinglePathPatch("replace", "/password", newPass)).toByteArray, headers) { response })
+                Seq(ReplaceOp("/password", newPass)).toByteArray, headers) { response })
               "when the patch contains an op with path '/password' and targets the same user" should
                 ctx.priorReqsOnCleanDb(ictx9, populate = true) { iihttp =>
 
@@ -677,7 +677,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                   // Mock request that uses HTTP auth
                   val iictx1 = HttpContext(() => patch(endpoint(uobj.id),
-                    Seq(SinglePathPatch("replace", "/email", uobj.email)).toByteArray,
+                    Seq(ReplaceOp("/email", uobj.email)).toByteArray,
                     Map("Authorization" -> makeBasicAuthHeader(uobj, newPass))) { response })
                   "when a new request using the new password is done afterwards" should
                     ctx.priorReqs(iictx1) { iihttp =>
@@ -698,7 +698,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         val pwd = "0PwdUnverified"
         def headers = Map("Authorization" -> makeBasicAuthHeader(uobj, pwd))
 
-        val payload1 = Seq(SinglePathPatch("replace", "/verified", true))
+        val payload1 = Seq(ReplaceOp("/verified", true))
         val ictx1 = HttpContext(() => patch(endpoint(UserExamples.unverified.id), payload1.toByteArray,
           Map("Authorization" -> makeBasicAuthHeader(uobj, s"${pwd}_nomatch"))) { response })
         "when the password does not match" should ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
@@ -730,7 +730,7 @@ class UsersControllerSpec extends SentinelServletSpec {
         br
 
           val ictx1 = HttpContext(() => patch(endpoint(uobj.id),
-            Seq(SinglePathPatch("replace", "/verified", false)).toByteArray, headers) { response })
+            Seq(ReplaceOp("/verified", false)).toByteArray, headers) { response })
           "when the patch contains an op with path '/verified' and targets the same user" should
             ctx.priorReqsOnCleanDb(ictx1, populate = true) { ihttp =>
 
@@ -755,7 +755,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           val newEmail = "new@email.com"
           val ictx2 = HttpContext(() => patch(endpoint(uobj.id),
-            Seq(SinglePathPatch("replace", "/email", newEmail)).toByteArray, headers) { response })
+            Seq(ReplaceOp("/email", newEmail)).toByteArray, headers) { response })
           "when the patch contains an op with path '/email' and targets the same user" should
             ctx.priorReqsOnCleanDb(ictx2, populate = true) { ihttp =>
 
@@ -781,7 +781,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
           val newPass = "newPass123"
           val ictx3 = HttpContext(() => patch(endpoint(uobj.id),
-            Seq(SinglePathPatch("replace", "/password", newPass)).toByteArray, headers) { response })
+            Seq(ReplaceOp("/password", newPass)).toByteArray, headers) { response })
           "when the patch contains an op with path '/password' and targets the same user" should
             ctx.priorReqsOnCleanDb(ictx3, populate = true) { ihttp =>
 
@@ -796,7 +796,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
               // Mock request that uses HTTP auth
               val iictx1 = HttpContext(() => patch(endpoint(uobj.id),
-                Seq(SinglePathPatch("replace", "/email", uobj.email)).toByteArray,
+                Seq(ReplaceOp("/email", uobj.email)).toByteArray,
                 Map("Authorization" -> makeBasicAuthHeader(uobj, newPass))) { response })
               "when a new request using the new password is done afterwards" should
                 ctx.priorReqs(iictx1) { iihttp =>

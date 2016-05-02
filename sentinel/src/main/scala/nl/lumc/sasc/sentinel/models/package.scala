@@ -34,6 +34,12 @@ package object models {
   type AsyncPerhaps[T] = EitherT[Future, ApiPayload, T]
 
   /** General patch function. */
+  type PatchFunction[T] = PartialFunction[(T, JsonPatch.PatchOp), Perhaps[T]]
+
+  /** Type alias for partial functions for performing database object patching. */
+  type DboPatchFunction = PatchFunction[DBObject]
+
+  /** General patch function. */
   type PatchFunc[T] = PartialFunction[(T, SinglePathPatch), Perhaps[T]]
 
   /** Type alias for partial functions for performing database object patching. */

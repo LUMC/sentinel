@@ -17,7 +17,6 @@
 package nl.lumc.sasc.sentinel.testing
 
 import scala.util.Try
-
 import com.mongodb.casbah.Imports._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -26,8 +25,7 @@ import org.scalatra.test.ClientResponse
 import org.scalatra.test.specs2.BaseScalatraSpec
 import org.specs2.data.Sized
 import org.specs2.matcher.ThrownExpectations
-
-import nl.lumc.sasc.sentinel.models.{ SinglePathPatch, UserRequest }
+import nl.lumc.sasc.sentinel.models.{ JsonPatch, UserRequest }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations =>
@@ -57,6 +55,13 @@ trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations 
 
     /** Body contents as a byte array. */
     lazy val toByteArray: Array[Byte] = write(patches).getBytes
+  }
+
+  /** Implicit class for testing patch requests. */
+  implicit class TestPatchRequest(patches: Seq[JsonPatch.PatchOp]) {
+
+    /** Body contents as a byte array. */
+    lazy val toByteArray: Array[Byte] = write(patches.map(_.toJValue)).getBytes
   }
 
   implicit class TestMongodbAccessObject(dao: MongodbAccessObject) {

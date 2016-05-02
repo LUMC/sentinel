@@ -17,16 +17,17 @@
 package nl.lumc.sasc.sentinel.utils
 
 import java.io.ByteArrayInputStream
+import scala.collection.JavaConversions._
 
-import nl.lumc.sasc.sentinel.models.Payloads._
-import nl.lumc.sasc.sentinel.models.{ Perhaps, SinglePathPatch }
-import nl.lumc.sasc.sentinel.utils.Implicits._
 import org.json4s._
 import org.json4s.jackson.JsonMethods.parseOpt
+import org.json4s.jackson.Serialization.write
+import scalaz._, Scalaz._
 
-import scala.collection.JavaConversions._
-import scalaz.Scalaz._
-import scalaz._
+import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.JsonPatch.PatchOp
+import nl.lumc.sasc.sentinel.models.Payloads._
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /** Trait for parsing JSON. */
 trait JsonExtractor {
@@ -181,4 +182,39 @@ trait SinglePathPatchJsonExtractor extends ValidatedJsonExtractor {
           case Some(nel) => nel.failure
           case None      => ops.successNel
         }
+}
+
+/**
+ * Object for parsing and validating JSON patch inputs
+ *
+ * See http://jsonpatch.com/ for the JSON patch specification.
+ */
+object JsonPatchExtractor extends ValidatedJsonExtractor {
+
+  /** Patch schema URL. */
+  final val jsonSchemaUrls = Seq("/schemas/json_patch.json")
+
+  /**
+   * Extracts the given byte array into patch objects.
+   *
+   * @param contents Raw byte contents to extract.
+   * @return Patch operations or an error message-containing payload for user display.
+   */
+  def extractPatches(contents: Array[Byte]): Perhaps[Seq[PatchOp]] =
+    for {
+      // Make sure incoming data is JArray ~ so we wrap single item in a list
+      json <- extractJson(contents).flatMap {
+        // Make it so that a single patch (outside of a list) also works.
+        case single @ JObject(fields) =>
+          if (fields.nonEmpty) JArray(List(single)).right
+          else PatchValidationError("Patch object can not be empty.").left
+        case array @ JArray(items) =>
+          if (items.nonEmpty) array.right
+          else PatchValidationError("Patch array can not be empty.").left
+        case otherwise =>
+          PatchValidationError("Unexpected JSON patch type.").left
+      }
+      _ <- validateJson(json)
+      patchOps <- PatchOp.fromJson(json).toRightDisjunction(PatchValidationError(write(json)))
+    } yield patchOps
 }
