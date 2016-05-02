@@ -25,13 +25,12 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models._, Payloads._
-import nl.lumc.sasc.sentinel.utils.SinglePathPatchJsonExtractor
+import nl.lumc.sasc.sentinel.utils.{ JsonPatchExtractor }
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
 /** Class for performing operations on multiple pipeline runs. */
 class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
-    extends FutureMongodbAdapter
-    with SinglePathPatchJsonExtractor {
+    extends FutureMongodbAdapter {
   require(processors.nonEmpty, "CompositeRunsProcessor must contain at least one RunsProcessor.")
 
   /** Context for Salat conversions. */
@@ -210,7 +209,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
    */
   def patchAndUpdateRun(runId: ObjectId, user: User, rawPatch: Array[Byte]): Future[Perhaps[(Int, Int, Int)]] = {
     val patching = for {
-      patches <- ? <~ extractAndValidatePatches(rawPatch)
+      patches <- ? <~ JsonPatchExtractor.extractPatches(rawPatch)
       dbo <- ? <~ getRunDbo(runId, user)
         .map {
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left

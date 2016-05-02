@@ -119,7 +119,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchAndUpdateReadGroupDbos(readGroupIds: Seq[ObjectId],
-                                  patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
+                                  patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Int]] = {
     val res = for {
       readGroupDbos <- ? <~ getReadGroupDbos(readGroupIds.toSet)
       patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(patchFunc)

@@ -29,6 +29,7 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
 import nl.lumc.sasc.sentinel.models.{ SinglePathPatch => SPPatch, _ }
+import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.utils._
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
@@ -67,17 +68,17 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   implicit private def context: ExecutionContext = runsProcessorContext
 
   /** Default patch functions for run records. */
-  def runPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(
+  def runPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
     RunsProcessor.RunPatch.replaceRunNamePF,
     RunsProcessor.RunPatch.replaceSampleNamePF)
 
   /** Default patch functions for the samples of a given run. */
-  def samplesPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(
+  def samplesPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
     RunsProcessor.SamplesPatch.replaceRunNamePF,
     RunsProcessor.SamplesPatch.replaceSampleNamePF)
 
   /** Default patch functions for the read groups of a given run. */
-  def readGroupsPatchFuncs: NonEmptyList[DboPatchFunc] = NonEmptyList(
+  def readGroupsPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
     RunsProcessor.ReadGroupsPatch.replaceRunNamePF,
     RunsProcessor.ReadGroupsPatch.replaceSampleNamePF)
 
@@ -104,7 +105,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param patches Patch operations to apply
    * @return Either error messages or the number of (run, samples, read groups) updated.
    */
-  def patchAndUpdateRunDbo(dbo: DBObject, user: User, patches: List[SPPatch]): Future[Perhaps[(Int, Int, Int)]] = {
+  def patchAndUpdateRunDbo(dbo: DBObject, user: User, patches: List[JsonPatch.PatchOp]): Future[Perhaps[(Int, Int, Int)]] = {
 
     val runRecordPatch = for {
       _ <- ? <~ dbo.checkForAccessBy(user)
@@ -371,13 +372,13 @@ object RunsProcessor {
   object RunPatch {
 
     /** 'replace' patch for 'sampleName' in a single run. */
-    val replaceSampleNamePF: DboPatchFunc = {
-      case (dbo, patch @ SPPatch("replace", path, value: String)) if patch.pathMatches(SamplesPatch.replaceSampleNameRegex) => dbo.right
+    val replaceSampleNamePF: DboPatchFunction = {
+      case (dbo, patch @ ReplaceOp(path, value: String)) if SamplesPatch.replaceSampleNameRegex.findAllIn(path).nonEmpty => dbo.right
     }
 
     /** 'replace' patch for 'runName' in a single run */
-    val replaceRunNamePF: DboPatchFunc = {
-      case (dbo, SPPatch("replace", "/labels/runName", v: String)) =>
+    val replaceRunNamePF: DboPatchFunction = {
+      case (dbo: DBObject, ReplaceOp("/labels/runName", v: String)) =>
         for {
           okLabels <- dbo
             .getAs[DBObject]("labels")
@@ -403,14 +404,15 @@ object RunsProcessor {
       res.nonEmpty.option { res.group("sampleId") }
     }
 
+    val replaceSampleNameRegex: Regex = """/sampleLabels/\S+/sampleName""".r
+
     /** 'replace' patch for 'runName' in samples. */
-    val replaceRunNamePF: DboPatchFunc = RunPatch.replaceRunNamePF
+    val replaceRunNamePF: DboPatchFunction = RunPatch.replaceRunNamePF
 
     /** 'replace' patch for 'sampleName' in samples. */
-    val replaceSampleNameRegex: Regex = """/sampleLabels/\S+/sampleName""".r
-    val replaceSampleNamePF: DboPatchFunc = {
+    val replaceSampleNamePF: DboPatchFunction = {
 
-      case (dbo, patch @ SPPatch("replace", path, value: String)) if patch.pathMatches(replaceSampleNameRegex) =>
+      case (dbo: DBObject, patch @ ReplaceOp(path, value: String)) if replaceSampleNameRegex.findAllIn(path).nonEmpty =>
         dbo._id match {
           case Some(okId) if getSampleId(path).contains(okId.toString) =>
             for {
@@ -431,9 +433,9 @@ object RunsProcessor {
 
   object ReadGroupsPatch {
     /** 'replace' patch for 'runName' in read groups. */
-    val replaceRunNamePF: DboPatchFunc = RunPatch.replaceRunNamePF
+    val replaceRunNamePF: DboPatchFunction = RunPatch.replaceRunNamePF
 
     /** 'replace' patch for 'sampleName' in read groups. */
-    val replaceSampleNamePF: DboPatchFunc = SamplesPatch.replaceSampleNamePF
+    val replaceSampleNamePF: DboPatchFunction = SamplesPatch.replaceSampleNamePF
   }
 }

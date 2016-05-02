@@ -118,7 +118,7 @@ trait SamplesAdapter extends UnitsAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchAndUpdateSampleDbos(sampleIds: Seq[ObjectId],
-                               patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Future[Perhaps[Int]] = {
+                               patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Int]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleDbos(sampleIds.toSet)
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)

@@ -79,13 +79,13 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @return Either an [[ApiPayload]] or the patched run record object.
    */
   // format: OFF
-  def patchDbo(dbo: DBObject, patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Perhaps[DBObject] =
+  def patchDbo(dbo: DBObject, patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[DBObject] =
     // format: ON
     patches.foldLeft(dbo.right[ApiPayload]) {
       case (recordDbo, patch) =>
         for {
           rdbo <- recordDbo
-          patchedDbo <- patchFunc.applyOrElse((rdbo, patch), UnitsAdapter.dboPatchFuncBaseCase)
+          patchedDbo <- patchFunc.applyOrElse((rdbo, patch), UnitsAdapter.dboPatchFunctionDefault)
         } yield patchedDbo
     }
 
@@ -97,7 +97,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param patchFunc Partial functions for performing the patch.
    * @return Either an [[ApiPayload]] or the patched run record objects.
    */
-  def patchDbos(dbos: Seq[DBObject], patches: List[SinglePathPatch])(patchFunc: DboPatchFunc): Perhaps[Seq[DBObject]] = {
+  def patchDbos(dbos: Seq[DBObject], patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[Seq[DBObject]] = {
 
     val patchedDbos = dbos
       .map(dbo => patchDbo(dbo, patches)(patchFunc))
@@ -117,5 +117,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
 
 object UnitsAdapter {
   /** Catch-all partial function that is meant to be called when the patch does not match any existing case block. */
-  val dboPatchFuncBaseCase: DboPatchFunc = { case (_, p) => PatchValidationError(p).left }
+  val dboPatchFunctionDefault: DboPatchFunction = {
+    case (_: DBObject, p: JsonPatch.PatchOp) => PatchValidationError(p).left
+  }
 }
