@@ -107,44 +107,54 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    */
   def patchAndUpdateRunDbo(dbo: DBObject, user: User, patches: List[JsonPatch.PatchOp]): Future[Perhaps[(Int, Int, Int)]] = {
 
-    val runRecordPatch = for {
+    val runPatchOps = for {
       _ <- ? <~ dbo.checkForAccessBy(user)
-      patchedRunDbo <- ? <~ patchDbo(dbo, patches) { runPatchFuncs.list.reduceLeft { _ orElse _ } }
-      writeResult <- ? <~ updateRunDbo(patchedRunDbo)
-    } yield writeResult.getN
+      patchedDbo <- ? <~ patchDbo(dbo, patches) { runPatchFuncs.list.reduceLeft { _ orElse _ } }
+    } yield patchedDbo
 
-    val allUnitsPatch: AsyncPerhaps[(Int, Int, Int)] = this match {
-
-      case rga: ReadGroupsAdapter => for {
-        nRunsUpdated <- runRecordPatch
-        sampleIds = dbo.sampleIds
-        readGroupIds = dbo.readGroupIds
-        // Update samples and read groups in parallel
-        sUpdate = rga.patchAndUpdateSampleDbos(sampleIds, patches) {
-          samplesPatchFuncs.list.reduceLeft { _ orElse _ }
-        }
-        rgUpdate = rga.patchAndUpdateReadGroupDbos(readGroupIds, patches) {
-          readGroupsPatchFuncs.list.reduceLeft { _ orElse _ }
-        }
-        nSamplesUpdated <- ? <~ sUpdate
-        nReadGroupsUpdated <- ? <~ rgUpdate
-      } yield (nRunsUpdated, nSamplesUpdated, nReadGroupsUpdated)
+    val samplePatchOps = this match {
 
       case sa: SamplesAdapter => for {
-        nRunsUpdated <- runRecordPatch
+        patchedRun <- runPatchOps
         sampleIds = dbo.sampleIds
-        nSamplesUpdated <- ? <~ sa.patchAndUpdateSampleDbos(sampleIds, patches) {
+        patchedSamples <- ? <~ sa.patchSampleDbos(sampleIds, patches) {
           samplesPatchFuncs.list.reduceLeft { _ orElse _ }
         }
-      } yield (nRunsUpdated, nSamplesUpdated, 0)
+      } yield patchedSamples
 
-      case otherwise => for {
-        nRunsUpdated <- runRecordPatch
-      } yield (nRunsUpdated, 0, 0)
-
+      case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
     }
 
-    allUnitsPatch.run
+    val readGroupPatchOps = this match {
+
+      case rga: ReadGroupsAdapter => for {
+        patchedRun <- runPatchOps
+        readGroupIds = dbo.readGroupIds
+        patchedReadGroups <- ? <~ rga.patchReadGroupDbos(readGroupIds, patches) {
+          readGroupsPatchFuncs.list.reduceLeft { _ orElse _ }
+        }
+      } yield patchedReadGroups
+
+      case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
+    }
+
+    val writeOps: AsyncPerhaps[(Int, Int, Int)] = for {
+      patchedRunDbo <- runPatchOps
+      patchedSampleDbos <- samplePatchOps
+      patchedReadGroupDbos <- readGroupPatchOps
+
+      runWrite <- ? <~ updateRunDbo(patchedRunDbo)
+      samplesWrite <- ? <~ (this match {
+        case sa: SamplesAdapter => sa.updateSampleDbos(patchedSampleDbos)
+        case otherwise          => Future.successful(Seq.empty[WriteResult].right[ApiPayload])
+      })
+      readGroupsWrite <- ? <~ (this match {
+        case rga: ReadGroupsAdapter => rga.updateReadGroupDbos(patchedReadGroupDbos)
+        case otherwise              => Future.successful(Seq.empty[WriteResult].right[ApiPayload])
+      })
+    } yield (runWrite.getN, samplesWrite.map(_.getN).sum, readGroupsWrite.map(_.getN).sum)
+
+    writeOps.run
   }
 
   /**
