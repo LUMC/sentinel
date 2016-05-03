@@ -128,17 +128,9 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or a sequence of write results.
    */
   def updateReadGroupDbos(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
-    Future
-      .sequence(dbos.map(updateReadGroupDbo))
-      .map {
-        case res =>
-          val oks = res.collect { case \/-(ok) => ok }
-          if (oks.length == dbos.length) oks.right
-          else res
-            .collect { case -\/(nope) => nope }
-            .reduceLeft { _ |+| _ }
-            .left
-      }
+    dbos.map(updateReadGroupDbo).toList
+      .traverse[AsyncPerhaps, WriteResult] { EitherT(_) }
+      .run
 
   /**
    * Patches the read group with the given database ID.

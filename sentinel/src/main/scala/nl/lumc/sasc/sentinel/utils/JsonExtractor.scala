@@ -131,6 +131,9 @@ object JsonPatchExtractor extends ValidatedJsonExtractor {
           PatchValidationError("Unexpected JSON patch type.").left
       }
       _ <- validateJson(json)
-      patchOps <- PatchOp.fromJson(json).toRightDisjunction(PatchValidationError(write(json)))
+      patchOps <- json.arr
+        .map { PatchOp.fromJson }
+        .sequence[Option, PatchOp]
+        .toRightDisjunction(PatchValidationError(write(json)))
     } yield patchOps
 }

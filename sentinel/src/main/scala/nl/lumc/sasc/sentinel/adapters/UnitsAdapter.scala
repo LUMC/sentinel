@@ -98,22 +98,10 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param patchFunc Partial functions for performing the patch.
    * @return Either an [[ApiPayload]] or the patched run record objects.
    */
-  def patchDbos(dbos: Seq[DBObject], patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[Seq[DBObject]] = {
-
-    val patchedDbos = dbos
-      .map(dbo => patchDbo(dbo, patches)(patchFunc))
-
-    val oks = patchedDbos
-      .collect { case \/-(s) => s }
-
-    // If the number of successful patches is the same as the number of inputs, that means we're good.
-    if (oks.length == dbos.length) oks.right
-    // Otherwise we accumulate all the errors.
-    else patchedDbos
-      .collect { case -\/(f) => f }
-      .reduceLeft { _ |+| _ }
-      .left
-  }
+  def patchDbos(dbos: Seq[DBObject], patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[Seq[DBObject]] =
+    dbos
+      .map(dbo => patchDbo(dbo, patches)(patchFunc)).toList
+      .sequence[Perhaps, DBObject]
 }
 
 object UnitsAdapter {

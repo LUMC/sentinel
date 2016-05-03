@@ -104,17 +104,9 @@ trait SamplesAdapter extends UnitsAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or a sequence of write results.
    */
   def updateSampleDbos(dbos: Seq[DBObject]): Future[Perhaps[Seq[WriteResult]]] =
-    Future
-      .sequence(dbos.map(updateSampleDbo))
-      .map {
-        case res =>
-          val oks = res.collect { case \/-(ok) => ok }
-          if (oks.length == dbos.length) oks.right
-          else res
-            .collect { case -\/(nope) => nope }
-            .reduceLeft { _ |+| _ }
-            .left
-      }
+    dbos.map(updateSampleDbo).toList
+      .traverse[AsyncPerhaps, WriteResult] { EitherT(_) }
+      .run
 
   /**
    * Patches the sample with the given database IDs.

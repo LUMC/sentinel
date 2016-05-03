@@ -106,15 +106,5 @@ object JsonPatch {
       case JString("test")    => jv.extractOpt[TestOp]
       case otherwise          => None
     }
-
-    /** Creates a series of JSON patch objects from the given raw JSON array. */
-    def fromJson(jarray: JArray)(implicit formats: Formats): Option[Seq[PatchOp]] = {
-      val maybePatches = jarray.arr.map { fromJson }
-      val pairs = jarray.arr.zip(maybePatches)
-      val oks = pairs
-        .collect { case (jv, Some(patch)) => patch }
-      (oks.length == jarray.arr.length).option { oks }
-    }
   }
-
 }
