@@ -95,8 +95,18 @@ object Payloads {
 
   object PatchValidationError extends ValidationErrorLike {
     def message = "Invalid patch operation(s)."
-    def apply(patch: JsonPatch.PatchOp) = ApiPayload(message,
-      List(s"Unsupported patch operation and/or value: '${patch.op}' on '${patch.path}'."), func)
+    def apply(patch: JsonPatch.PatchOp) = patch match {
+
+      case p: JsonPatch.PatchOpWithValue => ApiPayload(message,
+        List(s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}' with value '${p.value}'."), func)
+
+      case p: JsonPatch.PatchOpWithFrom => ApiPayload(message,
+        List(s"Unsupported patch operation: '${p.op}' on '${p.path}' from '${p.from}'."), func)
+
+      case otherwise => ApiPayload(message,
+        List(s"Unsupported patch operation: '${otherwise.op}' on '${otherwise.path}'."), func)
+    }
+
   }
 
   object InvalidDbError {

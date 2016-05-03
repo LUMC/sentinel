@@ -531,7 +531,7 @@ class UsersControllerSpec extends SentinelServletSpec {
                     "return a JSON object containing the expected message" in {
                       ihttp.rep.contentType mustEqual MimeType.Json
                       ihttp.rep.body must /("message" -> "Invalid patch operation(s).")
-                      ihttp.rep.body must /("hints") /# 0 / s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}'."
+                      ihttp.rep.body must /("hints") /# 0 / s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}' with value '${p.value}'."
                     }
                   }
                 }
