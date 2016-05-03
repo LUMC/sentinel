@@ -16,6 +16,8 @@
  */
 package nl.lumc.sasc.sentinel.utils
 
+import scala.util.Try
+
 import com.mongodb.casbah.Imports._
 import org.scalatra.servlet.FileItem
 import scalaz._, Scalaz._
@@ -23,6 +25,9 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.models.{ ApiPayload, Payloads, Perhaps, User }, Payloads._
 
 object Implicits {
+
+  /** Implicit class for converting a String to an ObjectId. */
+  implicit class ObjectIdFromString(str: String) { def toObjectId: Option[ObjectId] = Try(new ObjectId(str)).toOption }
 
   /** Implicit class for checking user access to a run database object. */
   implicit class RunRecordDBObject(dbo: DBObject) {

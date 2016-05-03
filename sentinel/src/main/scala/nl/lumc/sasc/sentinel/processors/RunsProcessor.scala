@@ -17,22 +17,20 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
-
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
-import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat.{ CaseClass => _, _ }
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter }
+import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter, UnitsAdapter }
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.utils._
-import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
+import nl.lumc.sasc.sentinel.utils.Implicits.{ ObjectIdFromString, RunRecordDBObject }
 
 /**
  * Base class for processing run summary files.
@@ -68,19 +66,9 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   implicit private def context: ExecutionContext = runsProcessorContext
 
   /** Default patch functions for run records. */
-  def runPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
-    RunsProcessor.RunPatch.replaceRunNamePF,
-    RunsProcessor.RunPatch.replaceSampleNamePF)
-
-  /** Default patch functions for the samples of a given run. */
-  def samplesPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
-    RunsProcessor.SamplesPatch.replaceRunNamePF,
-    RunsProcessor.SamplesPatch.replaceSampleNamePF)
-
-  /** Default patch functions for the read groups of a given run. */
-  def readGroupsPatchFuncs: NonEmptyList[DboPatchFunction] = NonEmptyList(
-    RunsProcessor.ReadGroupsPatch.replaceRunNamePF,
-    RunsProcessor.ReadGroupsPatch.replaceSampleNamePF)
+  val runPatchFunc: DboPatchFunction = List(
+    RunsProcessor.PatchFunctions.labelsPF,
+    UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -97,6 +85,72 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     MongoDBObject("pipeline" -> pipelineName) ++ (if (user.isAdmin) MongoDBObject.empty
     else MongoDBObject("uploaderId" -> user.id))
 
+  /** Converts the given JsonPatches for the given run ID to UnitPatches objects. */
+  protected def jsonPatches2unitPatches(runId: ObjectId,
+                                        jsonPatches: List[JsonPatch.PatchOp]): Perhaps[List[UnitPatch.OnUnit]] =
+    jsonPatches.traverse[Perhaps, UnitPatch.OnUnit] {
+
+      case p if p.pathTokens.headOption.contains("sampleLabels") =>
+        p.pathTokens.lift(1).flatMap(_.toObjectId) match {
+          case Some(okId) =>
+            if (p.pathTokens.length < 3) PatchValidationError(p).left
+            else UnitPatch.OnSample(okId, List(p.updatePath("labels" +: p.pathTokens.drop(2)))).right
+          case None => PatchValidationError("'sampleLabels' does not point to a valid sample ID.").left
+        }
+
+      case p if p.pathTokens.headOption.contains("readGroupLabels") =>
+        p.pathTokens.lift(1).flatMap(_.toObjectId) match {
+          case Some(okId) =>
+            if (p.pathTokens.length < 3) PatchValidationError(p).left
+            else UnitPatch.OnReadGroup(okId, List(p.updatePath("labels" +: p.pathTokens.drop(2)))).right
+          case None => PatchValidationError("'readGroupLabels' does not point to a valid read group ID.").left
+        }
+
+      case otherwise => UnitPatch.OnRun(runId, List(otherwise)).right
+    }
+
+  /** Combines the given patches for a database object into a single `UnitPatch.Combined` object. */
+  private def combinePatches(dbo: DBObject, patches: List[JsonPatch.PatchOp]): AsyncPerhaps[UnitPatch.Combined] = {
+
+    // Transform json patch objects to unit patch objects
+    val unitsPatches = dbo._id
+      .toRightDisjunction(UnexpectedDatabaseError("Run record for patching does not have an ID."))
+      .flatMap { runId => jsonPatches2unitPatches(runId, patches) }
+
+    for {
+      patches <- ? <~ unitsPatches
+      // Create the necessary patch objects, e.g. if patching run objects we may also need to patch the subunits
+      cpatch <- patches
+        .traverse[AsyncPerhaps, UnitPatch.Combined] {
+
+          case p @ UnitPatch.OnRun(_, ops) =>
+            val runLevelP = List(p)
+            val sampleLevelPs = dbo.sampleIds.map(sid => UnitPatch.OnSample(sid, ops)).toList
+            val readGroupLevelPs = dbo.readGroupIds.map(rgid => UnitPatch.OnReadGroup(rgid, ops)).toList
+            UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelPs).point[AsyncPerhaps]
+
+          case p @ UnitPatch.OnSample(dbId, ops) =>
+            val runLevelP = List.empty[UnitPatch.OnRun]
+            val sampleLevelPs = List(p)
+            this match {
+              case rga: ReadGroupsAdapter => for {
+                rgids <- ? <~ rga.getReadGroupIds(Seq(dbId))
+                readGroupLevelOps <- ? <~ rgids.map { rgid => UnitPatch.OnReadGroup(rgid, ops) }.toList
+              } yield UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelOps)
+              case otherwise =>
+                UnitPatch.Combined(runLevelP, sampleLevelPs, List.empty[UnitPatch.OnReadGroup]).point[AsyncPerhaps]
+            }
+
+          case p @ UnitPatch.OnReadGroup(dbId, _) =>
+            val runLevelP = List.empty[UnitPatch.OnRun]
+            val sampleLevelPs = List.empty[UnitPatch.OnSample]
+            val readGroupLevelPs = List(p)
+            UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelPs).point[AsyncPerhaps]
+        }
+        .map(_.foldLeft(UnitPatch.Combined.empty)((acc, x) => acc ++ x))
+    } yield cpatch
+  }
+
   /**
    * Applies the given patch operations to the given raw run record object.
    *
@@ -107,37 +161,47 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    */
   def patchAndUpdateRunDbo(dbo: DBObject, user: User, patches: List[JsonPatch.PatchOp]): Future[Perhaps[(Int, Int, Int)]] = {
 
-    val runPatchOps = for {
+    // Combine all patches into a single container after ensuring the requesting user has access to the run
+    val combinedPatch = for {
       _ <- ? <~ dbo.checkForAccessBy(user)
-      patchedDbo <- ? <~ patchDbo(dbo, patches) { runPatchFuncs.list.reduceLeft { _ orElse _ } }
+      cpatch <- combinePatches(dbo, patches)
+    } yield cpatch
+
+    // Patch run records
+    val runPatchOps = for {
+      cpatch <- combinedPatch
+      patchedDbo <- ? <~ patchDbo(dbo, cpatch.runPatchOps) { runPatchFunc }
     } yield patchedDbo
 
+    // Patch sample records
     val samplePatchOps = this match {
 
       case sa: SamplesAdapter => for {
-        patchedRun <- runPatchOps
-        sampleIds = dbo.sampleIds
-        patchedSamples <- ? <~ sa.patchSampleDbos(sampleIds, patches) {
-          samplesPatchFuncs.list.reduceLeft { _ orElse _ }
-        }
-      } yield patchedSamples
+        cpatch <- combinedPatch
+        patchedSamples <- cpatch.samplePatchOps
+          .traverse[AsyncPerhaps, Seq[DBObject]] {
+            case (sid, spatches) => ? <~ sa.patchSampleDbo(sid, spatches) { sa.samplesPatchFunc }
+          }
+      } yield patchedSamples.flatten
 
       case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
     }
 
+    // Patch read group records
     val readGroupPatchOps = this match {
 
       case rga: ReadGroupsAdapter => for {
-        patchedRun <- runPatchOps
-        readGroupIds = dbo.readGroupIds
-        patchedReadGroups <- ? <~ rga.patchReadGroupDbos(readGroupIds, patches) {
-          readGroupsPatchFuncs.list.reduceLeft { _ orElse _ }
-        }
-      } yield patchedReadGroups
+        cpatch <- combinedPatch
+        patchedReadGroups <- cpatch.readGroupPatchOps
+          .traverse[AsyncPerhaps, Seq[DBObject]] {
+            case (rgid, rgpatches) => ? <~ rga.patchReadGroupDbo(rgid, rgpatches) { rga.readGroupsPatchFunc }
+          }
+      } yield patchedReadGroups.flatten
 
       case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
     }
 
+    // Write patched objects back to the database
     val writeOps: AsyncPerhaps[(Int, Int, Int)] = for {
       patchedRunDbo <- runPatchOps
       patchedSampleDbos <- samplePatchOps
@@ -265,11 +329,11 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
         val suInfos = for {
           runDbo <- ? <~ retrieval
           sLabels <- ? <~ (this match {
-            case sa: SamplesAdapter => sa.getSamplesLabels(runDbo.sampleIds.toSet)
+            case sa: SamplesAdapter => sa.getSamplesLabels(runDbo.sampleIds)
             case otherwise          => Future.successful(Map.empty[String, SampleLabelsLike].right)
           })
           rgLabels <- ? <~ (this match {
-            case rga: ReadGroupsAdapter => rga.getReadGroupsLabels(runDbo.readGroupIds.toSet)
+            case rga: ReadGroupsAdapter => rga.getReadGroupsLabels(runDbo.readGroupIds)
             case otherwise              => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
           })
           rdbo = runDbo ++ MongoDBObject("sampleLabels" -> sLabels, "readGroupLabels" -> rgLabels)
@@ -379,73 +443,24 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
 object RunsProcessor {
 
-  object RunPatch {
+  object PatchFunctions {
 
-    /** 'replace' patch for 'sampleName' in a single run. */
-    val replaceSampleNamePF: DboPatchFunction = {
-      case (dbo, patch @ ReplaceOp(path, value: String)) if SamplesPatch.replaceSampleNameRegex.findAllIn(path).nonEmpty => dbo.right
-    }
+    private val replaceablePaths = Set("/labels/runName")
 
     /** 'replace' patch for 'runName' in a single run */
-    val replaceRunNamePF: DboPatchFunction = {
-      case (dbo: DBObject, ReplaceOp("/labels/runName", v: String)) =>
+    val labelsPF: DboPatchFunction = {
+      case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
         for {
           okLabels <- dbo
             .getAs[DBObject]("labels")
             .toRightDisjunction(UnexpectedDatabaseError("Run record does not have the required 'labels' attribute."))
-          _ <- Try(okLabels.put("runName", v))
+          _ <- Try(okLabels.put(p.pathTokens(1), value))
             .toOption
-            .toRightDisjunction(UnexpectedDatabaseError("Can not patch 'runName' in run record."))
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
           _ <- Try(dbo.put("labels", okLabels))
             .toOption
             .toRightDisjunction(UnexpectedDatabaseError("Can not patch 'labels' in run record."))
         } yield dbo
     }
-  }
-
-  object SamplesPatch {
-
-    /** Regex for retrieving sample ID from a patch's path. */
-    private val sampleIdRegex: Regex = new Regex("""/sampleLabels/(\S+)/""", "sampleId")
-
-    /** Helper method to get sample ID from a patch's path. */
-    private def getSampleId(path: String): Option[String] = {
-      val res = sampleIdRegex.findAllIn(path)
-      res.nonEmpty.option { res.group("sampleId") }
-    }
-
-    val replaceSampleNameRegex: Regex = """/sampleLabels/\S+/sampleName""".r
-
-    /** 'replace' patch for 'runName' in samples. */
-    val replaceRunNamePF: DboPatchFunction = RunPatch.replaceRunNamePF
-
-    /** 'replace' patch for 'sampleName' in samples. */
-    val replaceSampleNamePF: DboPatchFunction = {
-
-      case (dbo: DBObject, patch @ ReplaceOp(path, value: String)) if replaceSampleNameRegex.findAllIn(path).nonEmpty =>
-        dbo._id match {
-          case Some(okId) if getSampleId(path).contains(okId.toString) =>
-            for {
-              okLabels <- dbo
-                .getAs[DBObject]("labels")
-                .toRightDisjunction(UnexpectedDatabaseError(s"Sample '$okId' does not have the required 'labels' attribute."))
-              _ <- Try(okLabels.put("sampleName", value))
-                .toOption
-                .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch 'sampleName' in sample '$okId'."))
-              _ <- Try(dbo.put("labels", okLabels))
-                .toOption
-                .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch 'labels' in sample '$okId'."))
-            } yield dbo
-          case otherwise => dbo.right
-        }
-    }
-  }
-
-  object ReadGroupsPatch {
-    /** 'replace' patch for 'runName' in read groups. */
-    val replaceRunNamePF: DboPatchFunction = RunPatch.replaceRunNamePF
-
-    /** 'replace' patch for 'sampleName' in read groups. */
-    val replaceSampleNamePF: DboPatchFunction = SamplesPatch.replaceSampleNamePF
   }
 }

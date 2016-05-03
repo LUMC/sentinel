@@ -44,16 +44,17 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    */
   // format: OFF
   protected[adapters] def getUnitDbos(coll: MongoCollection)
-                                     (ids: Set[ObjectId],extraQuery: DBObject = MongoDBObject.empty)
+                                     (ids: Seq[ObjectId], extraQuery: DBObject = MongoDBObject.empty)
                                      (implicit ec: ExecutionContext): Future[Perhaps[Seq[DBObject]]] = {
     // format: ON
     val idQuery = MongoDBObject("_id" -> MongoDBObject("$in" -> ids))
     val query = Future { coll.find(idQuery ++ extraQuery).toList }
+    val nDistinctIds = ids.distinct.length
     query.map { res =>
-      if (ids.size > res.length)
-        Payloads.UnexpectedDatabaseError(s"Only a portion of unit IDs (${res.length}/${ids.size}) can be retrieved.").left
-      else if (ids.size < res.length)
-        Payloads.UnexpectedDatabaseError(s"Query (${res.length}) returned more unit IDs than requested (${ids.size}).").left
+      if (nDistinctIds > res.length)
+        Payloads.UnexpectedDatabaseError(s"Only a portion of unit IDs (${res.length}/$nDistinctIds) can be retrieved.").left
+      else if (nDistinctIds < res.length)
+        Payloads.UnexpectedDatabaseError(s"Query (${res.length}) returned more unit IDs than requested ($nDistinctIds).").left
       else res.right
     }
   }

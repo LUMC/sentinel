@@ -158,11 +158,11 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
 
       // Launch info retrieval jobs asynchronously
       samplesLabelsRetrieval = processor match {
-        case sa: SamplesAdapter if retrieveUnitsLabels => sa.getSamplesLabels(dbo.sampleIds.toSet)
+        case sa: SamplesAdapter if retrieveUnitsLabels => sa.getSamplesLabels(dbo.sampleIds)
         case otherwise                                 => Future.successful(Map.empty[String, SampleLabelsLike].right)
       }
       readGroupsLabelsRetrieval = processor match {
-        case rga: ReadGroupsAdapter if retrieveUnitsLabels => rga.getReadGroupsLabels(dbo.readGroupIds.toSet)
+        case rga: ReadGroupsAdapter if retrieveUnitsLabels => rga.getReadGroupsLabels(dbo.readGroupIds)
         case otherwise                                     => Future.successful(Map.empty[String, ReadGroupLabelsLike].right)
       }
       sLabels <- ? <~ samplesLabelsRetrieval

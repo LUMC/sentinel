@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent._
+import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
@@ -25,6 +26,7 @@ import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.Payloads.UnexpectedDatabaseError
 
 /**
  * Trait for storing read groups from run summaries.
@@ -54,6 +56,11 @@ trait ReadGroupsAdapter extends SamplesAdapter {
   /** Function for updating a single read group database raw object. */
   private val updateReadGroupDbo = updateDbo(coll) _
 
+  /** Default patch functions for the read groups of a given run. */
+  val readGroupsPatchFunc: DboPatchFunction = List(
+    ReadGroupsAdapter.PatchFunctions.labelsPF,
+    UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
+
   /**
    * Stores the given sequence of read group metrics into its collection.
    *
@@ -70,11 +77,11 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     }
 
   /** Retrieves the raw database records of the given read group record IDs. */
-  def getReadGroupDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
+  def getReadGroupDbos(ids: Seq[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
     getUnitDbos(coll)(ids, extraQuery)
 
   /** Retrieves the read group records of the given read group database IDs. */
-  def getReadGroups(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) = {
+  def getReadGroups(ids: Seq[ObjectId], extraQuery: DBObject = MongoDBObject.empty) = {
     val retrieval = for {
       readGroupDbos <- ? <~ getReadGroupDbos(ids, extraQuery)
     } yield readGroupDbos.map(dbo => grater[ReadGroupRecord](SalatContext, readGroupManifest).asObject(dbo))
@@ -82,11 +89,34 @@ trait ReadGroupsAdapter extends SamplesAdapter {
     retrieval.run
   }
 
-  def getReadGroupsLabels(ids: Set[ObjectId]): Future[Perhaps[Map[String, ReadGroupLabelsLike]]] = {
+  def getReadGroupsLabels(ids: Seq[ObjectId]): Future[Perhaps[Map[String, ReadGroupLabelsLike]]] = {
     val retrieval = for {
       readGroups <- ? <~ getReadGroups(ids)
       infos <- ? <~ readGroups.map { rg => rg.dbId.toString -> rg.labels }.toMap
     } yield infos
+
+    retrieval.run
+  }
+
+  /** Retrieves the read group IDs of the given read sample IDs. */
+  def getReadGroupIds(sampleIds: Seq[ObjectId]): Future[Perhaps[Seq[ObjectId]]] = {
+    val retrieval = for {
+      dbos <- ? <~ Future {
+        val query = MongoDBObject("sampleId" -> MongoDBObject("$in" -> sampleIds))
+        coll.find(query).toSeq
+      }
+      rgids <- ? <~ {
+        val maybeIds = dbos.map(_._id)
+        val okIds = maybeIds.collect { case Some(okId) => okId }
+        if (okIds.length == sampleIds.length) okIds.right
+        else {
+          val badIds = maybeIds.zip(sampleIds)
+            .collect { case (None, badId) => badId }
+          val badIdsStr = badIds.mkString("', '")
+          Payloads.UnexpectedDatabaseError(s"Sample IDs not found: '$badIdsStr'.").left
+        }
+      }
+    } yield rgids
 
     retrieval.run
   }
@@ -111,17 +141,17 @@ trait ReadGroupsAdapter extends SamplesAdapter {
       }
 
   /**
-   * Patches the read groups with the given database IDs.
+   * Patches the read group with the given database ID.
    *
-   * @param readGroupIds Database IDs of the read group records.
+   * @param readGroupId Database IDs of the read group records.
    * @param patches Patches to perform.
    * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
-  def patchReadGroupDbos(readGroupIds: Seq[ObjectId],
-                         patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+  def patchReadGroupDbo(readGroupId: ObjectId,
+                        patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
-      readGroupDbos <- ? <~ getReadGroupDbos(readGroupIds.toSet)
+      readGroupDbos <- ? <~ getReadGroupDbos(Seq(readGroupId))
       patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(patchFunc)
     } yield patchedReadGroupDbos
 
@@ -141,4 +171,29 @@ trait ReadGroupsAdapter extends SamplesAdapter {
       deleter.find(query).remove()
       deleter.execute()
     }
+}
+
+object ReadGroupsAdapter {
+
+  object PatchFunctions {
+
+    private val replaceablePaths = Seq("/labels/runName", "/labels/sampleName", "/labels/readGroupName")
+
+    /** 'replace' patch for 'labels' in a single read group. */
+    val labelsPF: DboPatchFunction = {
+      case (dbo: DBObject, p @ JsonPatch.ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
+        for {
+          okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Read group record for patching does not have an ID."))
+          okLabels <- dbo
+            .getAs[DBObject]("labels")
+            .toRightDisjunction(UnexpectedDatabaseError(s"Read group '$okId' does not have the required 'labels' attribute."))
+          _ <- Try(okLabels.put(p.pathTokens(1), value))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group '$okId'."))
+          _ <- Try(dbo.put("labels", okLabels))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch 'labels' in read group '$okId'."))
+        } yield dbo
+    }
+  }
 }

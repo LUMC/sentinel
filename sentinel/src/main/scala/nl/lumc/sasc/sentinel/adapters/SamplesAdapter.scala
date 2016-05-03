@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent._
+import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
@@ -25,6 +26,7 @@ import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.Payloads.UnexpectedDatabaseError
 
 /**
  * Trait for storing samples from run summaries.
@@ -52,6 +54,11 @@ trait SamplesAdapter extends UnitsAdapter {
   /** Function for updating a single sample database raw object. */
   private val updateSampleDbo = updateDbo(coll) _
 
+  /** Default patch functions for the samples of a given run. */
+  val samplesPatchFunc: DboPatchFunction = List(
+    SamplesAdapter.PatchFunctions.labelsPF,
+    UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
+
   /**
    * Stores the given sequence of sample metrics into its collection.
    *
@@ -68,11 +75,11 @@ trait SamplesAdapter extends UnitsAdapter {
     }
 
   /** Retrieves the raw database records of the given sample record IDs. */
-  def getSampleDbos(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
+  def getSampleDbos(ids: Seq[ObjectId], extraQuery: DBObject = MongoDBObject.empty) =
     getUnitDbos(coll)(ids, extraQuery)
 
   /** Retrieves the sample records of the given sample database IDs. */
-  def getSamples(ids: Set[ObjectId], extraQuery: DBObject = MongoDBObject.empty): Future[Perhaps[Seq[SampleRecord]]] = {
+  def getSamples(ids: Seq[ObjectId], extraQuery: DBObject = MongoDBObject.empty): Future[Perhaps[Seq[SampleRecord]]] = {
     val retrieval = for {
       sampleDbos <- ? <~ getSampleDbos(ids, extraQuery)
       samples = sampleDbos.map(dbo => grater[SampleRecord](SalatContext, sampleManifest).asObject(dbo))
@@ -81,7 +88,7 @@ trait SamplesAdapter extends UnitsAdapter {
     retrieval.run
   }
 
-  def getSamplesLabels(ids: Set[ObjectId]): Future[Perhaps[Map[String, SampleLabelsLike]]] = {
+  def getSamplesLabels(ids: Seq[ObjectId]): Future[Perhaps[Map[String, SampleLabelsLike]]] = {
     val retrieval = for {
       samples <- ? <~ getSamples(ids)
       infos <- ? <~ samples.map { sample => sample.dbId.toString -> sample.labels }.toMap
@@ -110,17 +117,17 @@ trait SamplesAdapter extends UnitsAdapter {
       }
 
   /**
-   * Patches the samples with the given database IDs.
+   * Patches the sample with the given database IDs.
    *
-   * @param sampleIds Database IDs of the sample records.
+   * @param sampleId Database ID of the sample records.
    * @param patches Patches to perform.
    * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
-  def patchSampleDbos(sampleIds: Seq[ObjectId],
-                      patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+  def patchSampleDbo(sampleId: ObjectId,
+                     patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
-      sampleDbos <- ? <~ getSampleDbos(sampleIds.toSet)
+      sampleDbos <- ? <~ getSampleDbos(Seq(sampleId))
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
     } yield patchedSampleDbos
 
@@ -140,4 +147,30 @@ trait SamplesAdapter extends UnitsAdapter {
       deleter.find(query).remove()
       deleter.execute()
     }
+}
+
+object SamplesAdapter {
+
+  object PatchFunctions {
+
+    private val replaceablePaths = Seq("/labels/runName", "/labels/sampleName")
+
+    /** 'replace' patch for 'sampleName' in a single sample */
+    val labelsPF: DboPatchFunction = {
+      case (dbo: DBObject, p @ JsonPatch.ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
+        for {
+          okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Sample record for patching does not have an ID."))
+          okLabels <- dbo
+            .getAs[DBObject]("labels")
+            .toRightDisjunction(UnexpectedDatabaseError(s"Sample '$okId' does not have the required 'labels' attribute."))
+          _ <- Try(okLabels.put(p.pathTokens(1), value))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in sample '$okId'."))
+          _ <- Try(dbo.put("labels", okLabels))
+            .toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch 'labels' in sample '$okId'."))
+        } yield dbo
+    }
+  }
+
 }

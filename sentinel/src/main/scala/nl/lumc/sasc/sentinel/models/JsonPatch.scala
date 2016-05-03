@@ -27,6 +27,10 @@ import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
 object JsonPatch {
 
+  private val pathSep: String = "/"
+
+  private def mkPath(toks: Seq[String]): String = s"$pathSep${toks.mkString(pathSep)}"
+
   /** Base trait for JSON patch operations. See http://jsonpatch.com/ for more information. */
   sealed trait PatchOp {
     /** Patch operation name. */
@@ -36,10 +40,20 @@ object JsonPatch {
     def path: String
 
     /** Helper method for getting the tokens of the path. */
-    val pathTokens: List[String] = path.split("/").filter(_.nonEmpty).toList
+    val pathTokens: List[String] = path.split(pathSep).filter(_.nonEmpty).toList
 
     /** Creates a JValue object of this patch. */
     def toJValue: JObject = ("op", op) ~ ("path", path)
+
+    /** Creates a new PatchOp object with the given path tokens. */
+    def updatePath(toks: Seq[String]) = this match {
+      case p: AddOp     => p.copy(path = mkPath(toks))
+      case p: CopyOp    => p.copy(path = mkPath(toks))
+      case p: MoveOp    => p.copy(path = mkPath(toks))
+      case p: RemoveOp  => p.copy(path = mkPath(toks))
+      case p: ReplaceOp => p.copy(path = mkPath(toks))
+      case p: TestOp    => p.copy(path = mkPath(toks))
+    }
   }
 
   /** Trait for JSON patch objects with a 'value' attribute. */
@@ -80,7 +94,7 @@ object JsonPatch {
   object PatchOp {
 
     /** Attributes that are hidden from the Swagger spec. */
-    val hiddenAttributes: Set[String] = Set("pathTokens", "toJValue")
+    val hiddenAttributes: Set[String] = Set("pathTokens", "toJValue", "updatePathTokens")
 
     /** Creates a patch object, if possible, from the given JValue object. */
     def fromJson(jv: JValue)(implicit formats: Formats): Option[PatchOp] = jv \ "op" match {
