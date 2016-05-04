@@ -65,30 +65,6 @@ object Implicits {
     def readBytes(): Array[Byte] = org.scalatra.util.io.readBytes(fi.getInputStream)
   }
 
-  /** Implicit class for adding custom merging function for scalaz's Validation type. */
-  implicit class RichValidation[+E, +A](a: Validation[E, A]) {
-
-    // Adapted from scalaz's `+++` method.
-    /**
-     * Method for merging two Validation objects.
-     *
-     * If both are Success, then the first one is returned.
-     * If one is a Failure, then that one is returned.
-     * If both are Failures, then they are concatenated.
-     */
-    def <@>[EE >: E, AA >: A](b: => Validation[EE, AA])(implicit M2: Semigroup[EE]): Validation[EE, AA] =
-      a match {
-        case Success(s) => b match {
-          case Failure(_) => b
-          case Success(_) => a
-        }
-        case f1 @ Failure(fv1) => b match {
-          case Failure(fv2) => Failure(M2.append(fv1, fv2))
-          case Success(_)   => f1
-        }
-      }
-  }
-
   /**
    * Implicit method for making [[nl.lumc.sasc.sentinel.models.ApiPayload]] a monoid instance.
    *
