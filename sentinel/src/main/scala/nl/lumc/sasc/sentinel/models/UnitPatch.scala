@@ -21,7 +21,7 @@ import org.bson.types.ObjectId
 object UnitPatch {
 
   /** Helper object for patch operations on runs, samples, and read groups. */
-  trait OnUnit {
+  sealed trait OnUnit {
     def dbId: ObjectId
     def patchOps: Seq[JsonPatch.PatchOp]
   }
@@ -36,7 +36,7 @@ object UnitPatch {
   final case class OnReadGroup(dbId: ObjectId, patchOps: List[JsonPatch.PatchOp]) extends OnUnit
 
   /** Helper case class for unit patching. */
-  case class Combined(
+  final case class Combined(
       runPatches: List[UnitPatch.OnRun],
       samplePatches: List[UnitPatch.OnSample],
       readGroupPatches: List[UnitPatch.OnReadGroup]) {
