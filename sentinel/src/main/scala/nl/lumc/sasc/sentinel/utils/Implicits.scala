@@ -33,7 +33,7 @@ object Implicits {
   implicit class RunRecordDBObject(dbo: DBObject) {
 
     /** Given a [[User]], checks whether has authorization to access the run record. */
-    def checkForAccessBy(user: User): Perhaps[Unit] = {
+    def authorize(user: User): Perhaps[Unit] = {
       dbo.getAs[String]("uploaderId") match {
         case None => UnexpectedDatabaseError("Run object does not have the required 'uploaderId' key.").left
         case Some(uploaderId) =>

@@ -171,7 +171,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
     // Combine all patches into a single container after ensuring the requesting user has access to the run
     val combinedPatch = for {
-      _ <- ? <~ dbo.checkForAccessBy(user)
+      _ <- ? <~ dbo.authorize(user)
       cpatch <- combinePatches(dbo, patches)
     } yield cpatch
 
@@ -418,7 +418,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    */
   def deleteRunDbo(dbo: DBObject, user: User): Future[Perhaps[RunRecord]] = {
     val deletion = for {
-      _ <- ? <~ dbo.checkForAccessBy(user)
+      _ <- ? <~ dbo.authorize(user)
       record <- ? <~ dbo2Run(dbo)
         .toRightDisjunction(UnexpectedDatabaseError("Error when trying to convert raw database entry into an object."))
       _ <- ? <~ (if (record.deletionTimeUtc.nonEmpty) ResourceGoneError.left else ().right)
