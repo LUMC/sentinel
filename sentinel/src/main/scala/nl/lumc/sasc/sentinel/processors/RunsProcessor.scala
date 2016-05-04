@@ -91,20 +91,28 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     jsonPatches.traverse[Perhaps, UnitPatch.OnUnit] {
 
       case p if p.pathTokens.headOption.contains("sampleLabels") =>
-        p.pathTokens.lift(1).flatMap(_.toObjectId) match {
-          case Some(okId) =>
-            if (p.pathTokens.length < 3) PatchValidationError(p).left
-            else UnitPatch.OnSample(okId, List(p.updatePath("labels" +: p.pathTokens.drop(2)))).right
-          case None => PatchValidationError("'sampleLabels' does not point to a valid sample ID.").left
-        }
+        for {
+          strId <- p.pathTokens.lift(1)
+            .toRightDisjunction(PatchValidationError("'sampleLabels' does not point to any IDs."))
+          dbId <- strId.toObjectId
+            .toRightDisjunction(PatchValidationError(s"'sampleLabels' targets an invalid ID: '$strId'."))
+          updatedPatch <- p.pathTokens.drop(2) match {
+            case Nil  => PatchValidationError(s"'sampleLabels' on '$strId' does not have any target attribute.").left
+            case vals => p.updatePath("labels" +: vals).right
+          }
+        } yield UnitPatch.OnSample(dbId, List(updatedPatch))
 
       case p if p.pathTokens.headOption.contains("readGroupLabels") =>
-        p.pathTokens.lift(1).flatMap(_.toObjectId) match {
-          case Some(okId) =>
-            if (p.pathTokens.length < 3) PatchValidationError(p).left
-            else UnitPatch.OnReadGroup(okId, List(p.updatePath("labels" +: p.pathTokens.drop(2)))).right
-          case None => PatchValidationError("'readGroupLabels' does not point to a valid read group ID.").left
-        }
+        for {
+          strId <- p.pathTokens.lift(1)
+            .toRightDisjunction(PatchValidationError("'readGroupLabels' does not point to any IDs."))
+          dbId <- strId.toObjectId
+            .toRightDisjunction(PatchValidationError(s"'readGroupLabels' targets an invalid ID: '$strId'."))
+          updatedPatch <- p.pathTokens.drop(2) match {
+            case Nil  => PatchValidationError(s"'readGroupLabels' on '$strId' does not have any target attribute.").left
+            case vals => p.updatePath("labels" +: vals).right
+          }
+        } yield UnitPatch.OnReadGroup(dbId, List(updatedPatch))
 
       case otherwise => UnitPatch.OnRun(runId, List(otherwise)).right
     }
