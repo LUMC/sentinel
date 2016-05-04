@@ -63,6 +63,17 @@ object JsonPatch {
 
     abstract override def toJValue: JObject = JObject(
       super.toJValue.obj :+ JField("value", Extraction.decompose(value)(SentinelJsonFormats)))
+
+    /** Returns the value if it is either string, int, bigint, boolean, double, or bigdecimal. Nulls, arrays, or objects return None. */
+    def atomicValue: Option[Any] = value match {
+      case i: Int        => Option(i)
+      case i: BigInt     => Option(i)
+      case b: Boolean    => Option(b)
+      case d: Double     => Option(d)
+      case d: BigDecimal => Option(d)
+      case s: String     => Option(s)
+      case otherwise     => None
+    }
   }
 
   /** Trait for JSON patch objects with a 'from' attribute. */
