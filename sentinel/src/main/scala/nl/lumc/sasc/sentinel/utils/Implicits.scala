@@ -43,9 +43,9 @@ object Implicits {
     }
 
     /** Shorthand function for accessing the pipeline name of the run. */
-    def pipelineName: Perhaps[String] = dbo
+    def pipelineName: String \/ String = dbo
       .getAs[String]("pipeline")
-      .toRightDisjunction(UnexpectedDatabaseError("Run object does not have the required 'pipeline' key."))
+      .toRightDisjunction("Run object does not have the required 'pipeline' key.")
 
     /** Shorthand function for accessing the sample IDs belonging to the run. */
     def sampleIds: Seq[ObjectId] = dbo.getAsOrElse[Seq[ObjectId]]("sampleIds", Seq())

@@ -152,7 +152,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
 
     val action: AsyncPerhaps[DBObject] = for {
       dbo <- ? <~ maybeDbo
-      pipelineName <- ? <~ dbo.pipelineName
+      pipelineName <- ? <~ dbo.pipelineName.leftMap(UnexpectedDatabaseError(_))
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
 
@@ -190,7 +190,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
           case otherwise                               => otherwise
         }
-      pipelineName <- ? <~ dbo.pipelineName
+      pipelineName <- ? <~ dbo.pipelineName.leftMap(UnexpectedDatabaseError(_))
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
       rec <- ? <~ processor.dbo2Run(dbo)
@@ -215,7 +215,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
           case -\/(err) if err.actionStatusCode == 410 => RunIdNotFoundError.left
           case otherwise                               => otherwise
         }
-      pipelineName <- ? <~ dbo.pipelineName
+      pipelineName <- ? <~ dbo.pipelineName.leftMap(UnexpectedDatabaseError(_))
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
       res <- ? <~ processor.patchAndUpdateRunDbo(dbo, user, patches.toList)
@@ -237,7 +237,7 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
   def deleteRun(runId: ObjectId, user: User): Future[Perhaps[BaseRunRecord]] = {
     val deletion: AsyncPerhaps[BaseRunRecord] = for {
       dbo <- ? <~ getRunDbo(runId, user)
-      pipelineName <- ? <~ dbo.pipelineName
+      pipelineName <- ? <~ dbo.pipelineName.leftMap(UnexpectedDatabaseError(_))
       processor <- ? <~ processorsMap.get(pipelineName)
         .toRightDisjunction(UnexpectedDatabaseError(s"Run ID $runId was created by an unsupported pipeline."))
       res <- ? <~ processor.deleteRunDbo(dbo, user)
