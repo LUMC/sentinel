@@ -54,6 +54,45 @@ object Implicits {
     def readGroupIds: Seq[ObjectId] = dbo.getAsOrElse[Seq[ObjectId]]("readGroupIds", Seq())
   }
 
+  /** Implicit class for retrieving labels from a unit database object. */
+  implicit class UnitRecordDBObject(unitDbo: DBObject) {
+
+    /** Name of the 'labels' attribute. */
+    private val labelsName: String = "labels"
+
+    /** Name of the 'tags' attribute. */
+    private val tagsName: String = "tags"
+
+    /** ID for error reporting .*/
+    private def errorId: String = unitDbo._id.map(_.toString).getOrElse("?")
+
+    /** The 'labels' attribute of a unit database object. */
+    def labels: String \/ DBObject = unitDbo.getAs[DBObject](labelsName)
+      .toRightDisjunction(s"Record ID '$errorId' does not have the required 'labels' attribute.")
+
+    /** Replaces the 'labels' attribute with the given DBObject. */
+    def putLabels(newLabels: DBObject): String \/ Unit =
+      Try(unitDbo.put(labelsName, newLabels)).toOption
+        .toRightDisjunction(s"Can not put 'labels' in record ID '$errorId'.")
+        .map(res => ())
+
+    /** The 'tags' attribute of a unit database object. Assumes that 'tags' are located inside 'labels'. */
+    def tags: String \/ DBObject = labels
+      .flatMap { obj =>
+        obj
+          .getAs[DBObject](tagsName)
+          .toRightDisjunction(s"Record ID '$errorId' does not have the required 'tags' attribute.")
+      }
+
+    /** Replaces the 'tags' attribute in the 'labels' attribute with the given DBObject. */
+    def putTags(newTags: DBObject): String \/ Unit =
+      for {
+        maybeLabels <- labels
+        _ <- Try(maybeLabels.put(tagsName, newTags)).toOption
+          .toRightDisjunction(s"Can not put 'tags' in record ID '$errorId'.")
+      } yield ()
+  }
+
   /** Implicit class for adding our custom read function to an uploaded file item. */
   implicit class RichFileItem(fi: FileItem) {
 
