@@ -27,6 +27,7 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.Payloads.UnexpectedDatabaseError
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
  * Trait for storing read groups from run summaries.
@@ -176,15 +177,11 @@ object ReadGroupsAdapter {
       case (dbo: DBObject, p @ JsonPatch.ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
         for {
           okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Read group record for patching does not have an ID."))
-          okLabels <- dbo
-            .getAs[DBObject]("labels")
-            .toRightDisjunction(UnexpectedDatabaseError(s"Read group '$okId' does not have the required 'labels' attribute."))
+          okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
           _ <- Try(okLabels.put(p.pathTokens(1), value))
             .toOption
             .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group '$okId'."))
-          _ <- Try(dbo.put("labels", okLabels))
-            .toOption
-            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch 'labels' in read group '$okId'."))
+          _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
         } yield dbo
     }
   }

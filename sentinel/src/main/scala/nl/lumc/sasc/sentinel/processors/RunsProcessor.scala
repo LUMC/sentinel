@@ -30,7 +30,7 @@ import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.utils._
-import nl.lumc.sasc.sentinel.utils.Implicits.{ ObjectIdFromString, RunRecordDBObject }
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
  * Base class for processing run summary files.
@@ -459,15 +459,10 @@ object RunsProcessor {
     val labelsPF: DboPatchFunction = {
       case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
         for {
-          okLabels <- dbo
-            .getAs[DBObject]("labels")
-            .toRightDisjunction(UnexpectedDatabaseError("Run record does not have the required 'labels' attribute."))
-          _ <- Try(okLabels.put(p.pathTokens(1), value))
-            .toOption
+          okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+          _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
             .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
-          _ <- Try(dbo.put("labels", okLabels))
-            .toOption
-            .toRightDisjunction(UnexpectedDatabaseError("Can not patch 'labels' in run record."))
+          _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
         } yield dbo
     }
   }
