@@ -339,6 +339,56 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 }
               }
             }
+
+            val iictx8 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx8, populate = true) { case iihttp: UploadContext =>
+
+              lazy val readGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if rglabels.get("readGroupName") == Option("rg1") => rgid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing the expected '/readGroupLabels/*/readGroupName/rg1' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId /("readGroupName" -> "rg1")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.ReplaceOp(s"/readGroupLabels/$readGroupId/readGroupName", "rgA")).toByteArray,
+                headers) { response })
+              "when 'readGroupName' is patched with 'replace'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated 'readGroupName' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId /("readGroupName" -> "rgA")
+                }
+              }
+            }
           }
         }
       }
