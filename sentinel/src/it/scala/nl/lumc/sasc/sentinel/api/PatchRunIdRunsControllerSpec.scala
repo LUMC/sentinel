@@ -297,6 +297,10 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 .collect { case (sid, slabels) if slabels.get("sampleName") == Option("sampleA") => sid }
                 .toSeq.head
 
+              lazy val readGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if rglabels.get("sampleName") == Option("sampleA") => rgid }
+                .toSeq.head
+
               def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
                 Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
                 Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
@@ -310,6 +314,7 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 "return JSON object containing the expected '/sampleLabels/*/sampleName/sampleA' attribute" in {
                   iiihttp.rep.contentType mustEqual MimeType.Json
                   iiihttp.rep.body must /("sampleLabels") / sampleId /("sampleName" -> "sampleA")
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId /("sampleName" -> "sampleA")
                 }
               }
 
@@ -336,6 +341,7 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 "return a JSON object with an updated 'sampleName' attribute" in {
                   iiihttp.rep.contentType mustEqual MimeType.Json
                   iiihttp.rep.body must /("sampleLabels") / sampleId /("sampleName" -> "notSampleA")
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId /("sampleName" -> "notSampleA")
                 }
               }
             }
