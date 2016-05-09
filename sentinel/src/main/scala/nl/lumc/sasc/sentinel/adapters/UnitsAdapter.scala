@@ -118,7 +118,7 @@ object UnitsAdapter {
   private val taggablePath = new Regex("^/labels/tags/[^/]+$")
 
   /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
-  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+  private def tagsAddOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
     for {
       validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
       okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
@@ -131,10 +131,10 @@ object UnitsAdapter {
   val tagsPF: DboPatchFunction = {
 
     case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
+      tagsAddOrReplacePF(dbo, patch)
 
     case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
+      tagsAddOrReplacePF(dbo, patch)
 
     case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
       for {
