@@ -64,7 +64,7 @@ object Implicits {
     private val tagsName: String = "tags"
 
     /** ID for error reporting .*/
-    private def errorId: String = unitDbo._id.map(_.toString).getOrElse("?")
+    def errorId: String = unitDbo._id.map(_.toString).getOrElse("?")
 
     /** The 'labels' attribute of a unit database object. */
     def labels: String \/ DBObject = unitDbo.getAs[DBObject](labelsName)
