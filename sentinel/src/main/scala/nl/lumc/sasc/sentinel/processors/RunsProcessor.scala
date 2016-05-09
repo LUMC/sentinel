@@ -504,6 +504,15 @@ object RunsProcessor {
 
       case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
         addOrReplacePF(dbo, patch)
+
+      case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+        for {
+          currTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+          target = patch.pathTokens.last
+          _ <- currTags.remove(target)
+            .toRightDisjunction(PatchValidationError(s"Attribute '$target' does not exist in run record for removal."))
+          _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
+        } yield dbo
     }
   }
 }
