@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent._
 import scala.util.Try
+import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
@@ -26,7 +27,8 @@ import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.models.Payloads.UnexpectedDatabaseError
+import nl.lumc.sasc.sentinel.models.JsonPatch._
+import nl.lumc.sasc.sentinel.models.Payloads.{ PatchValidationError, UnexpectedDatabaseError }
 import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
@@ -58,6 +60,7 @@ trait SamplesAdapter extends UnitsAdapter {
   /** Default patch functions for the samples of a given run. */
   val samplesPatchFunc: DboPatchFunction = List(
     SamplesAdapter.PatchFunctions.labelsPF,
+    SamplesAdapter.PatchFunctions.tagsPF,
     UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
 
   /**
@@ -118,7 +121,7 @@ trait SamplesAdapter extends UnitsAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchSampleDbo(sampleId: ObjectId,
-                     patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+                     patches: List[PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleDbos(Seq(sampleId))
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
@@ -150,7 +153,7 @@ object SamplesAdapter {
 
     /** 'replace' patch for 'sampleName' in a single sample */
     val labelsPF: DboPatchFunction = {
-      case (dbo: DBObject, p @ JsonPatch.ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
+      case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
         for {
           okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Sample record for patching does not have an ID."))
           okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
@@ -160,6 +163,19 @@ object SamplesAdapter {
           _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
         } yield dbo
     }
-  }
 
+    private val taggablePath = new Regex("^/labels/tags/[^/]+$")
+
+    /** 'add' patch for 'tags' in a single sample. */
+    val tagsPF: DboPatchFunction = {
+      case (dbo: DBObject, patch @ AddOp(path, value)) if taggablePath.findAllIn(path).nonEmpty =>
+        for {
+          validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+          okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+          _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in sample record."))
+          _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+        } yield dbo
+    }
+  }
 }

@@ -467,6 +467,89 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 }
               }
             }
+
+            val iictx10 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx10, populate = true) { case iihttp: UploadContext =>
+
+              lazy val sampleId = iihttp.sampleLabels
+                .collect { case (sid, slabels) if slabels.get("sampleName") == Option("sampleA") => sid }
+                .toSeq.head
+
+              lazy val anotherSampleId = iihttp.sampleLabels
+                .collect { case (sid, slabels) if slabels.get("sampleName") != Option("sampleA") => sid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing the expected '/sampleLabels/*/tags' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "sampleLabels" /(sampleId -> "tags")
+                  iiihttp.rep.body must not / "sampleLabels" /(anotherSampleId -> "tags")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/sampleLabels/$sampleId/tags/newTag", "newValue")).toByteArray,
+                headers) { response })
+              "when '/sampleLabels/*/tags/newTag' is patched with 'add'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated '/sampleLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("sampleLabels") / sampleId / "tags" /("newTag" -> "newValue")
+                  iiihttp.rep.body must not / "sampleLabels" / anotherSampleId /("tags" -> ".+".r)
+                }
+              }
+
+              val iiictx3 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/sampleLabels/$sampleId/tags/newTag", 100)).toByteArray,
+                headers) { response })
+              "when '/labels/tags/newTag' is patched with 'add' again" should ctx.priorReqs(iiictx3) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated '/sampleLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("sampleLabels") / sampleId / "tags" /("newTag" -> 100)
+                  iiihttp.rep.body must not / "sampleLabels" / anotherSampleId /("tags" -> ".+".r)
+                }
+              }
+            }
           }
         }
       }
