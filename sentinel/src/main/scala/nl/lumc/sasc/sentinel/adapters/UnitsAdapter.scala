@@ -17,6 +17,7 @@
 package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import scalaz._, Scalaz._
@@ -61,14 +62,13 @@ trait UnitsAdapter extends FutureMongodbAdapter {
 
   /** Updates an existing database object in the given collection. */
   def updateDbo(coll: MongoCollection)(dbo: DBObject)(implicit ec: ExecutionContext): Future[Perhaps[WriteResult]] = Future {
-    dbo._id match {
-      case None => UnexpectedDatabaseError("Database object missing the required identifier '_id'.").left
-      case Some(dbid) =>
-        val wr = coll
-          .update(MongoDBObject("_id" -> dbid), dbo, upsert = false)
-        if (wr.getN == 1) wr.right
-        else UnexpectedDatabaseError("Database object update failed.").left
-    }
+    for {
+      dbId <- dbo._id
+        .toRightDisjunction(UnexpectedDatabaseError("Database object missing the required identifier '_id'."))
+      wr <- Try(coll.update(MongoDBObject("_id" -> dbId), dbo, upsert = false)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not update record ID ${dbId.toString}."))
+      res <- if (wr.getN == 1) wr.right else UnexpectedDatabaseError(s"Database update for record ${dbId.toString} failed.").left
+    } yield res
   }
 
   /**
