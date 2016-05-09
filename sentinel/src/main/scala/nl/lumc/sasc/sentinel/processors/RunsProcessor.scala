@@ -486,16 +486,24 @@ object RunsProcessor {
 
     private val taggablePath = new Regex("^/labels/tags/[^/]+$")
 
-    /** 'add' patch for 'tags' in a single run. */
+    /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
+    private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+      for {
+        validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+        okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+        _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in run record."))
+        _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+      } yield dbo
+
+    /** Patch for 'tags' in a single run. */
     val tagsPF: DboPatchFunction = {
-      case (dbo: DBObject, patch @ AddOp(path, value)) if taggablePath.findAllIn(path).nonEmpty =>
-        for {
-          validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
-          okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-          _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
-            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
-          _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
-        } yield dbo
+
+      case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+        addOrReplacePF(dbo, patch)
+
+      case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+        addOrReplacePF(dbo, patch)
     }
   }
 }
