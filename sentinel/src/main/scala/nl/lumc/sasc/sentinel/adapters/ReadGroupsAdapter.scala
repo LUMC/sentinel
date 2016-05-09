@@ -17,8 +17,6 @@
 package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent._
-import scala.util.Try
-import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
@@ -28,8 +26,6 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.JsonPatch._
-import nl.lumc.sasc.sentinel.models.Payloads.{ PatchValidationError, UnexpectedDatabaseError }
-import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
  * Trait for storing read groups from run summaries.
