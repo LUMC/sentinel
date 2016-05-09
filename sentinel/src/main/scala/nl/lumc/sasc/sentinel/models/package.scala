@@ -39,7 +39,15 @@ package object models {
   /** Type alias for partial functions for performing database object patching. */
   type DboPatchFunction = PatchFunction[DBObject]
 
-  /** Supported statistics accumulation level */
+  /** Supported unit levels. */
+  object UnitType extends Enumeration {
+    type UnitType = Value
+    val Run = Value("run")
+    val Sample = Value("sample")
+    val ReadGroup = Value("readgroup")
+  }
+
+  /** Supported statistics accumulation level set via an HTTP request parameter. */
   object AccLevel extends Enumeration {
     type AccLevel = Value
     val ReadGroup = Value("readgroup")

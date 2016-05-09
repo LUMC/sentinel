@@ -59,6 +59,11 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    */
   def runManifest: Manifest[RunRecord]
 
+  /** Label attributes whose patch will be propagate to the subunits */
+  def propagatedPatchTargets: Map[UnitType.Value, Set[String]] = Map(
+    UnitType.Run -> Set("/labels/runName"),
+    UnitType.Sample -> Set("/labels/sampleName"))
+
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
 
@@ -133,17 +138,28 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
           case p @ UnitPatch.OnRun(_, ops) =>
             val runLevelP = List(p)
-            val sampleLevelPs = dbo.sampleIds.map(sid => UnitPatch.OnSample(sid, ops)).toList
-            val readGroupLevelPs = dbo.readGroupIds.map(rgid => UnitPatch.OnReadGroup(rgid, ops)).toList
+            val subUnitOps = ops.filter(pop => propagatedPatchTargets(UnitType.Run).contains(pop.path))
+            val (sampleLevelPs, readGroupLevelPs) = subUnitOps match {
+              case Nil => (Nil, Nil)
+              case vals =>
+                (dbo.sampleIds.map(sid => UnitPatch.OnSample(sid, vals)).toList,
+                  dbo.readGroupIds.map(rgid => UnitPatch.OnReadGroup(rgid, vals)).toList)
+            }
             UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelPs).point[AsyncPerhaps]
 
           case p @ UnitPatch.OnSample(dbId, ops) =>
             val runLevelP = List.empty[UnitPatch.OnRun]
             val sampleLevelPs = List(p)
+            val subUnitOps = ops.filter(pop => propagatedPatchTargets(UnitType.Sample).contains(pop.path))
             this match {
               case rga: ReadGroupsAdapter => for {
                 rgids <- ? <~ rga.getReadGroupIds(Seq(dbId))
-                readGroupLevelOps <- ? <~ rgids.map { rgid => UnitPatch.OnReadGroup(rgid, ops) }.toList
+                readGroupLevelOps <- {
+                  val rgpatches =
+                    if (subUnitOps.nonEmpty) rgids.map { rgid => UnitPatch.OnReadGroup(rgid, ops) }.toList
+                    else List.empty[UnitPatch.OnReadGroup]
+                  rgpatches.point[AsyncPerhaps]
+                }
               } yield UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelOps)
               case otherwise =>
                 UnitPatch.Combined(runLevelP, sampleLevelPs, List.empty[UnitPatch.OnReadGroup]).point[AsyncPerhaps]
