@@ -86,7 +86,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
       case (recordDbo, patch) =>
         for {
           rdbo <- recordDbo
-          patchedDbo <- patchFunc.applyOrElse((rdbo, patch), UnitsAdapter.dboPatchFunctionDefault)
+          patchedDbo <- patchFunc.applyOrElse((rdbo, patch), UnitsAdapter.defaultPF)
         } yield patchedDbo
     }
 
@@ -106,7 +106,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
 
 object UnitsAdapter {
   /** Catch-all partial function that is meant to be called when the patch does not match any existing case block. */
-  val dboPatchFunctionDefault: DboPatchFunction = {
+  val defaultPF: DboPatchFunction = {
     case (_: DBObject, p: JsonPatch.PatchOp) => PatchValidationError(p).left
   }
 }

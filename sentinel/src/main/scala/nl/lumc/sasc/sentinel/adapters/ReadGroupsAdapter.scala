@@ -61,9 +61,9 @@ trait ReadGroupsAdapter extends SamplesAdapter {
 
   /** Default patch functions for the read groups of a given run. */
   val readGroupsPatchFunc: DboPatchFunction = List(
-    ReadGroupsAdapter.PatchFunctions.labelsPF,
-    ReadGroupsAdapter.PatchFunctions.tagsPF,
-    UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
+    ReadGroupsAdapter.labelsPF,
+    ReadGroupsAdapter.tagsPF,
+    UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /**
    * Stores the given sequence of read group metrics into its collection.
@@ -171,43 +171,40 @@ trait ReadGroupsAdapter extends SamplesAdapter {
 
 object ReadGroupsAdapter {
 
-  object PatchFunctions {
+  private val replaceablePaths = Seq("/labels/runName", "/labels/sampleName", "/labels/readGroupName")
 
-    private val replaceablePaths = Seq("/labels/runName", "/labels/sampleName", "/labels/readGroupName")
-
-    /** 'replace' patch for 'labels' in a single read group. */
-    val labelsPF: DboPatchFunction = {
-      case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
-        for {
-          okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Read group record for patching does not have an ID."))
-          okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
-          _ <- Try(okLabels.put(p.pathTokens(1), value))
-            .toOption
-            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group '$okId'."))
-          _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
-        } yield dbo
-    }
-
-    private val taggablePath = new Regex("^/labels/tags/[^/]+$")
-
-    /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
-    private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+  /** 'replace' patch for 'labels' in a single read group. */
+  val labelsPF: DboPatchFunction = {
+    case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
       for {
-        validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
-        okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-        _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
-          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in read group record."))
-        _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+        okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Read group record for patching does not have an ID."))
+        okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+        _ <- Try(okLabels.put(p.pathTokens(1), value))
+          .toOption
+          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group '$okId'."))
+        _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
       } yield dbo
+  }
 
-    /** Patch for 'tags' in a single sample. */
-    val tagsPF: DboPatchFunction = {
+  private val taggablePath = new Regex("^/labels/tags/[^/]+$")
 
-      case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-        addOrReplacePF(dbo, patch)
+  /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
+  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+    for {
+      validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+      okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+      _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in read group record."))
+      _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+    } yield dbo
 
-      case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-        addOrReplacePF(dbo, patch)
-    }
+  /** Patch for 'tags' in a single sample. */
+  val tagsPF: DboPatchFunction = {
+
+    case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
   }
 }

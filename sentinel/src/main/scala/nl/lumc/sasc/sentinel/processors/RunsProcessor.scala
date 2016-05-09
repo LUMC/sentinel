@@ -73,9 +73,9 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
   /** Default patch functions for run records. */
   val runPatchFunc: DboPatchFunction = List(
-    RunsProcessor.PatchFunctions.labelsPF,
-    RunsProcessor.PatchFunctions.tagsPF,
-    UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
+    RunsProcessor.labelsPF,
+    RunsProcessor.tagsPF,
+    UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -469,50 +469,47 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
 object RunsProcessor {
 
-  object PatchFunctions {
+  private val replaceablePaths = Set("/labels/runName")
 
-    private val replaceablePaths = Set("/labels/runName")
-
-    /** 'replace' patch for 'runName' in a single run */
-    val labelsPF: DboPatchFunction = {
-      case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
-        for {
-          okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
-          _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
-            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
-          _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
-        } yield dbo
-    }
-
-    private val taggablePath = new Regex("^/labels/tags/[^/]+$")
-
-    /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
-    private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+  /** 'replace' patch for 'runName' in a single run */
+  val labelsPF: DboPatchFunction = {
+    case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
       for {
-        validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
-        okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-        _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
-          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in run record."))
-        _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+        okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+        _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
+          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
+        _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
       } yield dbo
+  }
 
-    /** Patch for 'tags' in a single run. */
-    val tagsPF: DboPatchFunction = {
+  private val taggablePath = new Regex("^/labels/tags/[^/]+$")
 
-      case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-        addOrReplacePF(dbo, patch)
+  /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
+  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+    for {
+      validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+      okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+      _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in run record."))
+      _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+    } yield dbo
 
-      case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-        addOrReplacePF(dbo, patch)
+  /** Patch for 'tags' in a single run. */
+  val tagsPF: DboPatchFunction = {
 
-      case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-        for {
-          currTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-          target = patch.pathTokens.last
-          _ <- currTags.remove(target)
-            .toRightDisjunction(PatchValidationError(s"Attribute '$target' does not exist in run record for removal."))
-          _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
-        } yield dbo
-    }
+    case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      for {
+        currTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+        target = patch.pathTokens.last
+        _ <- currTags.remove(target)
+          .toRightDisjunction(PatchValidationError(s"Attribute '$target' does not exist in run record for removal."))
+        _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
+      } yield dbo
   }
 }
