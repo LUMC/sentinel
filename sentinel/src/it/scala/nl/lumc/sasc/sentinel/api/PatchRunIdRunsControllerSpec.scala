@@ -502,7 +502,7 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
 
                 "return a JSON object containing the expected message" in {
                   iiihttp.rep.body must /("message" -> "Invalid patch operation(s).")
-                  iiihttp.rep.body must /("hints") /# 0 / "Attribute 'newTag' does not exist in run record for removal."
+                  iiihttp.rep.body must /("hints") /# 0 / s"Attribute 'newTag' does not exist in record ID '${iihttp.runId}' for removal."
                 }
               }
 

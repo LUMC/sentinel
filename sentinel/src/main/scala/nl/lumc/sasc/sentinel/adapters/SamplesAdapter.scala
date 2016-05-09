@@ -60,7 +60,7 @@ trait SamplesAdapter extends UnitsAdapter {
   /** Default patch functions for the samples of a given run. */
   val samplesPatchFunc: DboPatchFunction = List(
     SamplesAdapter.labelsPF,
-    SamplesAdapter.tagsPF,
+    UnitsAdapter.tagsPF,
     UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /**
@@ -160,27 +160,5 @@ object SamplesAdapter {
           .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in sample '$okId'."))
         _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
       } yield dbo
-  }
-
-  private val taggablePath = new Regex("^/labels/tags/[^/]+$")
-
-  /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
-  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
-    for {
-      validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
-      okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-      _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
-        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in sample record."))
-      _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
-    } yield dbo
-
-  /** Patch for 'tags' in a single sample. */
-  val tagsPF: DboPatchFunction = {
-
-    case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
-
-    case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
   }
 }

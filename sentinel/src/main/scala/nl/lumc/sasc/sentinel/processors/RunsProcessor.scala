@@ -19,7 +19,6 @@ package nl.lumc.sasc.sentinel.processors
 import java.io.ByteArrayInputStream
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
-import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
@@ -74,7 +73,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   /** Default patch functions for run records. */
   val runPatchFunc: DboPatchFunction = List(
     RunsProcessor.labelsPF,
-    RunsProcessor.tagsPF,
+    UnitsAdapter.tagsPF,
     UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */
@@ -479,37 +478,6 @@ object RunsProcessor {
         _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
           .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
         _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
-      } yield dbo
-  }
-
-  private val taggablePath = new Regex("^/labels/tags/[^/]+$")
-
-  /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
-  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
-    for {
-      validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
-      okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-      _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
-        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in run record."))
-      _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
-    } yield dbo
-
-  /** Patch for 'tags' in a single run. */
-  val tagsPF: DboPatchFunction = {
-
-    case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
-
-    case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      addOrReplacePF(dbo, patch)
-
-    case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
-      for {
-        currTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
-        target = patch.pathTokens.last
-        _ <- currTags.remove(target)
-          .toRightDisjunction(PatchValidationError(s"Attribute '$target' does not exist in run record for removal."))
-        _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
       } yield dbo
   }
 }

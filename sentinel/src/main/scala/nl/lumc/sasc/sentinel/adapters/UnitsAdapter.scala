@@ -18,12 +18,15 @@ package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
+import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
+import nl.lumc.sasc.sentinel.utils.Implicits._
 
 trait UnitsAdapter extends FutureMongodbAdapter {
 
@@ -105,8 +108,41 @@ trait UnitsAdapter extends FutureMongodbAdapter {
 }
 
 object UnitsAdapter {
+
   /** Catch-all partial function that is meant to be called when the patch does not match any existing case block. */
   val defaultPF: DboPatchFunction = {
     case (_: DBObject, p: JsonPatch.PatchOp) => PatchValidationError(p).left
+  }
+
+  /** Regex for matching 'tags' patch paths. */
+  private val taggablePath = new Regex("^/labels/tags/[^/]+$")
+
+  /** Helper function for add/replace ops in tags, since they are functionally the same for our use case. */
+  private def addOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+    for {
+      validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+      okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+      _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in record ID '${dbo.errorId}'."))
+      _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
+    } yield dbo
+
+  /** Patch functions for 'tags'. */
+  val tagsPF: DboPatchFunction = {
+
+    case (dbo: DBObject, patch @ AddOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ ReplaceOp(_, _)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      addOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ RemoveOp(_)) if taggablePath.findAllIn(patch.path).nonEmpty =>
+      for {
+        currTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+        target = patch.pathTokens.last
+        _ <- currTags.remove(target)
+          .toRightDisjunction(PatchValidationError(s"Attribute '$target' does not exist in record ID '${dbo.errorId}' for removal."))
+        _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
+      } yield dbo
   }
 }
