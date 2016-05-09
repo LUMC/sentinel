@@ -587,6 +587,57 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                   iiihttp.rep.body must beEmpty
                 }
               }
+
+              val iiictx4 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.RemoveOp(s"/sampleLabels/$sampleId/tags/newTag")).toByteArray, headers) { response })
+              "when '/sampleLabels/*/tags/newTag' is patched with 'remove'" should ctx.priorReqs(iiictx4) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with a removed '/sampleLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "sampleLabels" / sampleId / "tags" /("newTag" -> ".+".r)
+                }
+              }
+
+              val iiictx5 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.RemoveOp(s"/sampleLabels/$sampleId/tags/newTag")).toByteArray, headers) { response })
+              "when '/sampleLabels/*/tags/newTag' is patched with 'remove' again" should ctx.priorReqs(iiictx5) { iiihttp =>
+
+                "return status 400" in {
+                  iiihttp.rep.status mustEqual 400
+                }
+
+                "return a JSON object containing the expected message" in {
+                  iiihttp.rep.body must /("message" -> "Invalid patch operation(s).")
+                  iiihttp.rep.body must /("hints") /# 0 / s"Attribute 'newTag' does not exist in record ID '$sampleId' for removal."
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with a removed '/sampleLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "sampleLabels" / sampleId / "tags" /("newTag" -> ".+".r)
+                }
+              }
             }
 
             val iictx11 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
@@ -668,6 +719,57 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                   iiihttp.rep.contentType mustEqual MimeType.Json
                   iiihttp.rep.body must /("readGroupLabels") / readGroupId / "tags" /("newTag" -> 100)
                   iiihttp.rep.body must not / "readGroupLabels" / anotherReadGroupId /("tags" -> ".+".r)
+                }
+              }
+
+              val iiictx4 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.RemoveOp(s"/readGroupLabels/$readGroupId/tags/newTag")).toByteArray, headers) { response })
+              "when '/readGroupLabels/*/tags/newTag' is patched with 'remove'" should ctx.priorReqs(iiictx4) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with a removed '/readGroupLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "readGroupLabels" / readGroupId / "tags" /("newTag" -> ".+".r)
+                }
+              }
+
+              val iiictx5 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.RemoveOp(s"/readGroupLabels/$readGroupId/tags/newTag")).toByteArray, headers) { response })
+              "when '/readGroupLabels/*/tags/newTag' is patched with 'remove' again" should ctx.priorReqs(iiictx5) { iiihttp =>
+
+                "return status 400" in {
+                  iiihttp.rep.status mustEqual 400
+                }
+
+                "return a JSON object containing the expected message" in {
+                  iiihttp.rep.body must /("message" -> "Invalid patch operation(s).")
+                  iiihttp.rep.body must /("hints") /# 0 / s"Attribute 'newTag' does not exist in record ID '$readGroupId' for removal."
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with a removed '/readGroupLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "readGroupLabels" / readGroupId / "tags" /("newTag" -> ".+".r)
                 }
               }
             }
