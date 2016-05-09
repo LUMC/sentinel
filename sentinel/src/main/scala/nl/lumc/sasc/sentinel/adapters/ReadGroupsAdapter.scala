@@ -18,6 +18,7 @@ package nl.lumc.sasc.sentinel.adapters
 
 import scala.concurrent._
 import scala.util.Try
+import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
@@ -26,7 +27,8 @@ import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.models.Payloads.UnexpectedDatabaseError
+import nl.lumc.sasc.sentinel.models.JsonPatch._
+import nl.lumc.sasc.sentinel.models.Payloads.{ PatchValidationError, UnexpectedDatabaseError }
 import nl.lumc.sasc.sentinel.utils.Implicits._
 
 /**
@@ -60,6 +62,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
   /** Default patch functions for the read groups of a given run. */
   val readGroupsPatchFunc: DboPatchFunction = List(
     ReadGroupsAdapter.PatchFunctions.labelsPF,
+    ReadGroupsAdapter.PatchFunctions.tagsPF,
     UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
 
   /**
@@ -142,7 +145,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchReadGroupDbo(readGroupId: ObjectId,
-                        patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+                        patches: List[PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
       readGroupDbos <- ? <~ getReadGroupDbos(Seq(readGroupId))
       patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(patchFunc)
@@ -174,7 +177,7 @@ object ReadGroupsAdapter {
 
     /** 'replace' patch for 'labels' in a single read group. */
     val labelsPF: DboPatchFunction = {
-      case (dbo: DBObject, p @ JsonPatch.ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
+      case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
         for {
           okId <- dbo._id.toRightDisjunction(UnexpectedDatabaseError("Read group record for patching does not have an ID."))
           okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
@@ -182,6 +185,20 @@ object ReadGroupsAdapter {
             .toOption
             .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group '$okId'."))
           _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
+        } yield dbo
+    }
+
+    private val taggablePath = new Regex("^/labels/tags/[^/]+$")
+
+    /** 'add' patch for 'tags' in a single sample. */
+    val tagsPF: DboPatchFunction = {
+      case (dbo: DBObject, patch @ AddOp(path, value)) if taggablePath.findAllIn(path).nonEmpty =>
+        for {
+          validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+          okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+          _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in read group record."))
+          _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
         } yield dbo
     }
   }

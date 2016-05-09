@@ -550,6 +550,89 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 }
               }
             }
+
+            val iictx11 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx11, populate = true) { case iihttp: UploadContext =>
+
+              lazy val readGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if rglabels.get("readGroupName").contains("rg1") && rglabels.get("sampleName").contains("sampleA") => rgid }
+                .toSeq.head
+
+              lazy val anotherReadGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if !rglabels.get("sampleName").contains("sampleA") => rgid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing the expected '/readGroupLabels/*/tags' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "readGroupLabels" /(readGroupId -> "tags")
+                  iiihttp.rep.body must not / "readGroupLabels" /(anotherReadGroupId -> "tags")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/readGroupLabels/$readGroupId/tags/newTag", "newValue")).toByteArray,
+                headers) { response })
+              "when '/readGroupLabels/*/tags/newTag' is patched with 'add'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated '/readGroupLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId / "tags" /("newTag" -> "newValue")
+                  iiihttp.rep.body must not / "readGroupLabels" / anotherReadGroupId /("tags" -> ".+".r)
+                }
+              }
+
+              val iiictx3 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/readGroupLabels/$readGroupId/tags/newTag", 100)).toByteArray,
+                headers) { response })
+              "when '/labels/tags/newTag' is patched with 'add' again" should ctx.priorReqs(iiictx3) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated '/readGroupLabels/*/tags/newTag' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId / "tags" /("newTag" -> 100)
+                  iiihttp.rep.body must not / "readGroupLabels" / anotherReadGroupId /("tags" -> ".+".r)
+                }
+              }
+            }
           }
         }
       }
