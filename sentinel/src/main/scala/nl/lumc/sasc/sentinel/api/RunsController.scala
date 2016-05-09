@@ -132,8 +132,28 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
     summary "Updates an uploaded run record."
     notes
     """This endpoint is used for updating an existing run record. Operations are defined using a subset of the JSON
-      | patch specification. Only the `add`, `remove`, and `replace` operations on tags are supported and only
-      | administrators or the run record uploader can perform patching.
+      | patch specification (http://jsonpatch.com). Only the `add`, `remove`, and `replace` operations on tags are
+      | supported and only administrators or the run record uploader can perform patching.
+      |
+      | An HTTP PATCH request is always sent to one and only one run ID. A single request, however, may contain one
+      | or more JSON patch objects targeting the run and/or the samples and/or read groups belonging to the run. If
+      | multiple patch objects are sent, they must be sent in a JSON array. Samples and/or read groups may be targeted
+      | for patching using their respective IDs. These IDs can be viewed by querying the particular sample and setting
+      | the URL parameter 'showUnitsLabels' to 'true'.
+      |
+      | More specifically, the following paths can be patched:
+      |
+      | Run-level:
+      |   * '/labels/runName', whose patch will be propagated to all samples and/or read groups under the run.
+      |   * '/labels/tags/*'
+      |
+      | Sample-level:
+      |   * '/sampleLabels/{sampleId}/sampleName', whose patch will be propagated to all read groups under the run.
+      |   * '/sampleLabels/{sampleId}/tags/*'
+      |
+      | Read group-level:
+      |   * '/readGroupLabels/{readGroupId}/readGroupName'.
+      |   * '/readGroupLabels/{readGroupId}/tags/*'
     """.stripMargin.replaceAll("\n", "")
     parameters (
       queryParam[String]("userId").description("User ID."),
