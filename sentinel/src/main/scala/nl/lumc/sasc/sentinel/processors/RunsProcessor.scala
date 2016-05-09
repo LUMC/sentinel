@@ -472,12 +472,11 @@ object RunsProcessor {
 
   /** 'replace' patch for 'runName' in a single run */
   val labelsPF: DboPatchFunction = {
-    case (dbo: DBObject, p @ ReplaceOp(path, value: String)) if replaceablePaths.contains(path) =>
-      for {
-        okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
-        _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
-          .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
-        _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
-      } yield dbo
+
+    case (dbo: DBObject, patch @ AddOp(_, _: String)) if replaceablePaths.contains(patch.path) =>
+      UnitsAdapter.labelsAddOrReplacePF(dbo, patch)
+
+    case (dbo: DBObject, patch @ ReplaceOp(_, _: String)) if replaceablePaths.contains(patch.path) =>
+      UnitsAdapter.labelsAddOrReplacePF(dbo, patch)
   }
 }

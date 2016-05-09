@@ -114,6 +114,19 @@ object UnitsAdapter {
     case (_: DBObject, p: JsonPatch.PatchOp) => PatchValidationError(p).left
   }
 
+  /** Helper function for add/replace ops in labels, since they are functionally the same for our use case. */
+  def labelsAddOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+    for {
+      validValue <- (patch.atomicValue match {
+        case Some(v: String) => Option(v)
+        case otherwise       => None
+      }).toRightDisjunction(PatchValidationError(patch))
+      okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+      _ <- Try(okLabels.put(patch.pathTokens(1), validValue)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '${patch.path}' in record ID '${dbo.errorId}'."))
+      _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
+    } yield dbo
+
   /** Regex for matching 'tags' patch paths. */
   private val taggablePath = new Regex("^/labels/tags/[^/]+$")
 
