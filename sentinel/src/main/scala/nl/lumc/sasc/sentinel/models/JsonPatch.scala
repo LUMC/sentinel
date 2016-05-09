@@ -16,12 +16,10 @@
  */
 package nl.lumc.sasc.sentinel.models
 
-import scala.util.matching.Regex
 import scala.language.reflectiveCalls
 
 import org.json4s._
 import org.json4s.JsonDSL._
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.utils.SentinelJsonFormats
 
@@ -64,15 +62,17 @@ object JsonPatch {
     abstract override def toJValue: JObject = JObject(
       super.toJValue.obj :+ JField("value", Extraction.decompose(value)(SentinelJsonFormats)))
 
-    /** Returns the value if it is either string, int, bigint, boolean, double, or bigdecimal. Nulls, arrays, or objects return None. */
+    /** Returns the value if it is either string, int, long, double, or boolean. Nulls, arrays, or other objects return None. */
     def atomicValue: Option[Any] = value match {
-      case i: Int        => Option(i)
-      case i: BigInt     => Option(i)
-      case b: Boolean    => Option(b)
-      case d: Double     => Option(d)
-      case d: BigDecimal => Option(d)
-      case s: String     => Option(s)
-      case otherwise     => None
+      case i: Int                             => Option(i)
+      case l: Long                            => Option(l)
+      case i: BigInt if i.isValidInt          => Option(i.intValue)
+      case i: BigInt if i.isValidLong         => Option(i.longValue)
+      case d: Double                          => Option(d)
+      case d: BigDecimal if d.isDecimalDouble => Option(d.toDouble)
+      case s: String                          => Option(s)
+      case b: Boolean                         => Option(b)
+      case otherwise                          => None
     }
   }
 
