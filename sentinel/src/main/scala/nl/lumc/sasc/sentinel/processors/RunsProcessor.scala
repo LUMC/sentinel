@@ -19,6 +19,7 @@ package nl.lumc.sasc.sentinel.processors
 import java.io.ByteArrayInputStream
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
+import scala.util.matching.Regex
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
@@ -73,6 +74,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   /** Default patch functions for run records. */
   val runPatchFunc: DboPatchFunction = List(
     RunsProcessor.PatchFunctions.labelsPF,
+    RunsProcessor.PatchFunctions.tagsPF,
     UnitsAdapter.dboPatchFunctionDefault).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */
@@ -479,6 +481,20 @@ object RunsProcessor {
           _ <- Try(okLabels.put(p.pathTokens(1), value)).toOption
             .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
           _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
+        } yield dbo
+    }
+
+    private val taggablePath = new Regex("^/labels/tags/[^/]+$")
+
+    /** 'add' patch for 'tags' in a single run. */
+    val tagsPF: DboPatchFunction = {
+      case (dbo: DBObject, patch @ AddOp(path, value)) if taggablePath.findAllIn(path).nonEmpty =>
+        for {
+          validValue <- patch.atomicValue.toRightDisjunction(PatchValidationError(patch))
+          okTags <- dbo.tags.leftMap(UnexpectedDatabaseError(_))
+          _ <- Try(okTags.put(patch.pathTokens.last, validValue)).toOption
+            .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '$path' in run record."))
+          _ <- dbo.putTags(okTags).leftMap(UnexpectedDatabaseError(_))
         } yield dbo
     }
   }
