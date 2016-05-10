@@ -773,6 +773,156 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 }
               }
             }
+
+            val iictx12 = mapleContext
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx12, populate = true) { case iihttp: UploadContext =>
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId), Seq(("userId", UserExamples.avg2.id)),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing without the 'notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not /("labels" -> "notes")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp("/labels/notes", "this is a new note")).toByteArray, headers) { response })
+              "when '/labels/notes' is patched with 'add'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated 'notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("labels") /("notes" -> "this is a new note")
+                }
+              }
+            }
+
+            val iictx13 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx13, populate = true) { case iihttp: UploadContext =>
+
+              lazy val sampleId = iihttp.sampleLabels
+                .collect { case (sid, slabels) if slabels.get("sampleName") == Option("sampleA") => sid }
+                .toSeq.head
+
+              lazy val readGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if rglabels.get("sampleName") == Option("sampleA") => rgid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing the expected '/sampleLabels/*/notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "sampleLabels" /(sampleId -> "notes")
+                  iiihttp.rep.body must not / "readGroupLabels" /(readGroupId -> "notes")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/sampleLabels/$sampleId/notes", "new sample note")).toByteArray,
+                headers) { response })
+              "when 'notes' is patched with 'add'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated 'notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("sampleLabels") / sampleId /("notes" -> "new sample note")
+                  iiihttp.rep.body must not / "readGroupLabels" /(readGroupId -> "notes")
+                }
+              }
+            }
+
+            val iictx14 = UploadContext(UploadSet(UserExamples.avg2, SummaryExamples.Maple.MSampleMRG, showUnitsLabels = true))
+            "using a 'maple' run summary file" >> ctx.priorReqsOnCleanDb(iictx14, populate = true) { case iihttp: UploadContext =>
+
+              lazy val readGroupId = iihttp.readGroupLabels
+                .collect { case (rgid, rglabels) if rglabels.get("readGroupName") == Option("rg1") => rgid }
+                .toSeq.head
+
+              def iiictx1 = HttpContext(() => get(endpoint(iihttp.runId),
+                Seq(("userId", UserExamples.avg2.id), ("showUnitsLabels", "true")),
+                Map(HeaderApiKey -> UserExamples.avg2.activeKey)) { response })
+
+              "when the run is queried" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return JSON object containing the expected '/readGroupLabels/*/notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must not / "readGroupLabels" /(readGroupId -> "notes")
+                }
+              }
+
+              val iiictx2 = HttpContext(() => patch(endpoint(iihttp.runId), uparams,
+                Seq(JsonPatch.AddOp(s"/readGroupLabels/$readGroupId/notes", "new rg note")).toByteArray,
+                headers) { response })
+              "when 'notes' is patched with 'add'" should ctx.priorReqs(iiictx2) { iiihttp =>
+
+                "return status 204" in {
+                  iiihttp.rep.status mustEqual 204
+                }
+
+                "return an empty body" in {
+                  iiihttp.rep.body must beEmpty
+                }
+              }
+
+              "when the patched run is queried afterwards" should ctx.priorReqs(iiictx1) { iiihttp =>
+
+                "return status 200" in {
+                  iiihttp.rep.status mustEqual 200
+                }
+
+                "return a JSON object with an updated 'notes' attribute" in {
+                  iiihttp.rep.contentType mustEqual MimeType.Json
+                  iiihttp.rep.body must /("readGroupLabels") / readGroupId /("notes" -> "new rg note")
+                }
+              }
+            }
           }
         }
       }

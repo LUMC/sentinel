@@ -145,14 +145,17 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
       |
       | Run-level:
       |   * '/labels/runName', whose patch will be propagated to all samples and/or read groups under the run.
+      |   * '/labels/notes'
       |   * '/labels/tags/*'
       |
       | Sample-level:
       |   * '/sampleLabels/{sampleId}/sampleName', whose patch will be propagated to all read groups under the run.
+      |   * '/sampleLabels/{sampleId}/notes'
       |   * '/sampleLabels/{sampleId}/tags/*'
       |
       | Read group-level:
       |   * '/readGroupLabels/{readGroupId}/readGroupName'.
+      |   * '/readGroupLabels/{readGroupId}/notes'
       |   * '/readGroupLabels/{readGroupId}/tags/*'
     """.stripMargin.replaceAll("\n", "")
     parameters (

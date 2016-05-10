@@ -158,4 +158,31 @@ object UnitsAdapter {
         _ <- dbo.putTags(currTags).leftMap(UnexpectedDatabaseError(_))
       } yield dbo
   }
+
+  /** Helper function for add/replace ops in notes, since they are functionally the same for our use case. */
+  private def notesAddOrReplacePF(dbo: DBObject, patch: PatchOpWithValue): Perhaps[DBObject] =
+    for {
+      validValue <- patch.atomicValue match {
+        case Some(v: String) => v.right
+        case otherwise       => PatchValidationError(patch).left
+      }
+      okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+      _ <- Try(okLabels.put("notes", validValue)).toOption
+        .toRightDisjunction(UnexpectedDatabaseError(s"Can not patch '/notes' in record ID '${dbo.errorId}'."))
+      _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
+    } yield dbo
+
+  /** Patch function for 'notes'. */
+  val notesPF: DboPatchFunction = {
+
+    case (dbo: DBObject, patch @ AddOp("/labels/notes", v: String))     => notesAddOrReplacePF(dbo, patch)
+    case (dbo: DBObject, patch @ ReplaceOp("/labels/notes", v: String)) => notesAddOrReplacePF(dbo, patch)
+    case (dbo: DBObject, patch @ RemoveOp("/labels/notes")) =>
+      for {
+        okLabels <- dbo.labels.leftMap(UnexpectedDatabaseError(_))
+        _ <- okLabels.remove("notes")
+          .toRightDisjunction(PatchValidationError(s"Attribute '${patch.path}' does not exist in record ID '${dbo.errorId}' for removal."))
+        _ <- dbo.putLabels(okLabels).leftMap(UnexpectedDatabaseError(_))
+      } yield dbo
+  }
 }

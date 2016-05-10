@@ -59,6 +59,7 @@ trait ReadGroupsAdapter extends SamplesAdapter {
   val readGroupsPatchFunc: DboPatchFunction = List(
     ReadGroupsAdapter.labelsPF,
     UnitsAdapter.tagsPF,
+    UnitsAdapter.notesPF,
     UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /**

@@ -74,6 +74,7 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   val runPatchFunc: DboPatchFunction = List(
     RunsProcessor.labelsPF,
     UnitsAdapter.tagsPF,
+    UnitsAdapter.notesPF,
     UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */

@@ -57,6 +57,7 @@ trait SamplesAdapter extends UnitsAdapter {
   val samplesPatchFunc: DboPatchFunction = List(
     SamplesAdapter.labelsPF,
     UnitsAdapter.tagsPF,
+    UnitsAdapter.notesPF,
     UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
 
   /**
