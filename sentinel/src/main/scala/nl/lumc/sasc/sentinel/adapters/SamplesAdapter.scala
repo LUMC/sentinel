@@ -114,14 +114,13 @@ trait SamplesAdapter extends UnitsAdapter {
    *
    * @param sampleId Database ID of the sample records.
    * @param patches Patches to perform.
-   * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchSampleDbo(sampleId: ObjectId,
-                     patches: List[PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+                     patches: List[PatchOp]): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleDbos(Seq(sampleId))
-      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(patchFunc)
+      patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(samplesPatchFunc)
     } yield patchedSampleDbos
 
     res.run

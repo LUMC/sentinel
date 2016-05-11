@@ -138,14 +138,13 @@ trait ReadGroupsAdapter extends SamplesAdapter {
    *
    * @param readGroupId Database IDs of the read group records.
    * @param patches Patches to perform.
-   * @param patchFunc Partial functions to apply the patch.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
   def patchReadGroupDbo(readGroupId: ObjectId,
-                        patches: List[PatchOp])(patchFunc: DboPatchFunction): Future[Perhaps[Seq[DBObject]]] = {
+                        patches: List[PatchOp]): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
       readGroupDbos <- ? <~ getReadGroupDbos(Seq(readGroupId))
-      patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(patchFunc)
+      patchedReadGroupDbos <- ? <~ patchDbos(readGroupDbos, patches)(readGroupsPatchFunc)
     } yield patchedReadGroupDbos
 
     res.run

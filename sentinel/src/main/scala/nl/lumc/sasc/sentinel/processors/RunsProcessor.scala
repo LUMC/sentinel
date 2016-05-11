@@ -204,10 +204,9 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
       case sa: SamplesAdapter => for {
         cpatch <- combinedPatch
-        patchedSamples <- cpatch.samplePatchOps
-          .traverse[AsyncPerhaps, Seq[DBObject]] {
-            case (sid, spatches) => ? <~ sa.patchSampleDbo(sid, spatches) { sa.samplesPatchFunc }
-          }
+        patchedSamples <- cpatch.samplePatchOps.traverse[AsyncPerhaps, Seq[DBObject]] {
+          case (sid, spatches) => EitherT(sa.patchSampleDbo(sid, spatches))
+        }
       } yield patchedSamples.flatten
 
       case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
@@ -218,10 +217,9 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
 
       case rga: ReadGroupsAdapter => for {
         cpatch <- combinedPatch
-        patchedReadGroups <- cpatch.readGroupPatchOps
-          .traverse[AsyncPerhaps, Seq[DBObject]] {
-            case (rgid, rgpatches) => ? <~ rga.patchReadGroupDbo(rgid, rgpatches) { rga.readGroupsPatchFunc }
-          }
+        patchedReadGroups <- cpatch.readGroupPatchOps.traverse[AsyncPerhaps, Seq[DBObject]] {
+          case (rgid, rgpatches) => EitherT(rga.patchReadGroupDbo(rgid, rgpatches))
+        }
       } yield patchedReadGroups.flatten
 
       case otherwise => Seq.empty[DBObject].point[AsyncPerhaps]
