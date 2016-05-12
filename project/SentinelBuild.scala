@@ -1,20 +1,22 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
-import com.earldouglas.xwp.XwpPlugin._
 import com.sksamuel.scapegoat.sbt.ScapegoatSbtPlugin.autoImport._
 import com.typesafe.sbt.SbtGit.GitCommand
 import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
 import net.virtualvoid.sbt.graph.Plugin.graphSettings
-import sbtassembly.{ AssemblyKeys, MergeStrategy, PathList }, AssemblyKeys._
-import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
 object SentinelBuild extends Build {
 
   val Release = "SNAPSHOT"
   val Version = "0.2" + { if (Release.endsWith("SNAPSHOT")) s"-$Release" else s".$Release" }
+  val Homepage = "https://github.com/LUMC/sentinel"
+  object License {
+    val Name = "Apache License, Version 2.0"
+    val Url = "http://www.apache.org/licenses/LICENSE-2.0"
+  }
 
   val Organization = "nl.lumc.sasc"
   val ScalaSeries = "2.11"
@@ -22,7 +24,6 @@ object SentinelBuild extends Build {
   val JavaVersion = "1.8"
   val ScalatraVersion = "2.4.0"
   val Json4sVersion = "3.3.0"
-  val JettyVersion = "9.2.14.v20151106"
 
   val scalaSeries = SettingKey[String]("scala-series", "The series of Scala used for building.")
 
@@ -36,9 +37,6 @@ object SentinelBuild extends Build {
     "commons-codec"           %  "commons-codec"              % "1.7",
     "commons-io"              %  "commons-io"                 % "2.4",
     "de.flapdoodle.embed"     %  "de.flapdoodle.embed.mongo"  % "1.50.2",
-    "javax.servlet"           %  "javax.servlet-api"          % "3.1.0"               % "container;compile;provided;test;it",
-    "org.eclipse.jetty"       %  "jetty-plus"                 % JettyVersion          % "container",
-    "org.eclipse.jetty"       %  "jetty-webapp"               % JettyVersion          % "container;compile",
     "org.json4s"              %% "json4s-jackson"             % Json4sVersion,
     "org.json4s"              %% "json4s-mongo"               % Json4sVersion,
     "org.json4s"              %% "json4s-ext"                 % Json4sVersion,
@@ -77,15 +75,15 @@ object SentinelBuild extends Build {
   lazy val headerSettings = Seq(HeaderPlugin.autoImport.headers := Map(
     "scala" -> (
       HeaderPattern.cStyleBlockComment,
-      """|/*
+      s"""|/*
         | * Copyright (c) 2015-2016 Leiden University Medical Center and contributors
         | *                         (see AUTHORS.md file for details).
         | *
-        | * Licensed under the Apache License, Version 2.0 (the "License");
+        | * Licensed under the ${License.Name} (the "License");
         | * you may not use this file except in compliance with the License.
         | * You may obtain a copy of the License at
         | *
-        | * http://www.apache.org/licenses/LICENSE-2.0
+        | * ${License.Url}
         | *
         | * Unless required by applicable law or agreed to in writing, software
         | * distributed under the License is distributed on an "AS IS" BASIS,
@@ -96,7 +94,34 @@ object SentinelBuild extends Build {
         |""".stripMargin
       )))
 
-  lazy val rootSettings = scalariformSettings ++
+  lazy val publishSettings = Seq(
+    licenses := Seq(License.Name -> url(License.Url)),
+    homepage := Some(url(Homepage)),
+    publishMavenStyle := true,
+    publishTo := {
+      val nexus = "http://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "content/repositories/releases")
+    },
+    publishArtifact in Test := false,
+    publishArtifact in IntegrationTest := false,
+    pomExtra := {
+      <scm>
+        <url>git@github.com:LUMC/sentinel.git</url>
+        <connection>scm:git:git@github.com:LUMC/sentinel.git</connection>
+      </scm>
+        <developers>
+          <developer>
+            <id>bow</id>
+            <name>Wibowo Arindrarto</name>
+            <email>w.arindrarto@lumc.nl</email>
+          </developer>
+        </developers>
+    })
+
+  lazy val rootSettings = scalariformSettings ++ publishSettings ++
     Seq(
     initialize := {
       val _ = initialize.value
@@ -131,12 +156,12 @@ object SentinelBuild extends Build {
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
   lazy val sentinelCore = Project(
-      id = "sentinel",
-      base = file("sentinel"),
+      id = "sentinel-core",
+      base = file("sentinel-core"),
       settings = commonSettings ++ docsSiteSettings ++ Defaults.itSettings ++
         AutomateHeaderPlugin.automateFor(IntegrationTest) ++ Seq(
           organization := Organization,
-          name := "sentinel",
+          name := "sentinel-core",
           version := Version,
           unmanagedSourceDirectories in IntegrationTest <++= baseDirectory { base =>
             Seq(base / "src/it/scala", base / "src/test/scala/nl/lumc/sasc/sentinel/exts")
@@ -146,52 +171,9 @@ object SentinelBuild extends Build {
     .enablePlugins(AutomateHeaderPlugin)
     .configs(IntegrationTest)
 
-  lazy val noPublish = Seq(publish := {}, publishLocal := {})
-
-  lazy val JettyRunnerModule = "org.eclipse.jetty" % "jetty-runner" % JettyVersion % "container"
-
-  lazy val sentinelLumc = Project(
-      id = "sentinel-lumc",
-      base = file("sentinel-lumc"),
-      settings = noPublish ++ addCommandAlias("assembly-fulltest", ";test; it:test; assembly") ++
-        jetty(Seq(JettyRunnerModule)) ++ Defaults.itSettings ++ gitStampSettings ++
-        commonSettings ++ Seq(
-          organization := Organization,
-          name := "sentinel-lumc",
-          version := Version,
-          unmanagedResourceDirectories in IntegrationTest ++= (unmanagedResourceDirectories in Test).value,
-          resourceGenerators in Compile <+= (resourceManaged, baseDirectory) map {
-            (managedBase, base) =>
-              val webappBase = base / "src" / "main" / "webapp"
-              for {
-                (from, to) <- webappBase ** "*" pair rebase(webappBase, managedBase / "main" / "webapp")
-              } yield {
-                Sync.copy(from, to)
-                to
-              }
-          },
-          mainClass in assembly := Some("nl.lumc.sasc.sentinel.JettyLauncher"),
-          test in assembly := {},
-          assemblyMergeStrategy in assembly := {
-            // TODO: track down conflicting dependency for this library ~ for now it seems safe to take the first one
-            case PathList("org", "apache", "commons", "collections", xs @ _*) => MergeStrategy.first
-            // NOTE: these all come from the test dependencies, so we don't expect anything to break in runtime
-            case PathList("org", "mockito", xs @ _*) => MergeStrategy.first
-            case PathList("org", "objenesis", xs @ _*) => MergeStrategy.first
-            case PathList("org", "hamcrest", xs @ _*) => MergeStrategy.first
-            case PathList("scalac-plugin.xml") => MergeStrategy.discard
-            case otherwise => (assemblyMergeStrategy in assembly).value(otherwise)
-          },
-          assemblyJarName in assembly := "Sentinel-" + Version + ".jar",
-          libraryDependencies ++= Seq("ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime"),
-          dependencyOverrides ++= Set(JettyRunnerModule)))
-    .enablePlugins(AutomateHeaderPlugin)
-    .configs(IntegrationTest)
-    .dependsOn(sentinelCore % "test->test; compile->compile")
-
-  lazy val sentinelRoot = Project(
-    id = "sentinel-root",
+  lazy val sentinel = Project(
+    id = "sentinel",
     base = file("."),
-    settings = rootSettings ++ noPublish,
-    aggregate = Seq(sentinelCore, sentinelLumc))
+    settings = rootSettings,
+    aggregate = Seq(sentinelCore))
 }

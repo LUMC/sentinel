@@ -1,7 +1,7 @@
 resolvers += Resolver.url("hmrc-sbt-plugin-releases",
                           url("https://dl.bintray.com/hmrc/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
+addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 
 addSbtPlugin("com.mojolly.scalate" % "xsbt-scalate-generator" % "0.5.0")
 
@@ -20,7 +20,5 @@ addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.4.0")
 addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.4")
-
-addSbtPlugin("uk.gov.hmrc" % "sbt-git-stamp" % "5.1.0")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
