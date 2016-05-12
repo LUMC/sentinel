@@ -13,10 +13,10 @@ cache:
     - "$HOME/.ivy2"
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel-core/test sentinel-core/it:test
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
 
 after_success:
-  - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel-core' coveralls
+  - bash <(curl -s https://codecov.io/bash) || echo 'Codecov did not collect coverage reports'
 
 notifications:
   email: false

@@ -17,8 +17,6 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.5.0")
 
 addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.4.0")
 
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
-
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.4")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.7.5")
