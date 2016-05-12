@@ -13,10 +13,10 @@ cache:
     - "$HOME/.ivy2"
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel/test sentinel/it:test
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage sentinel-core/test sentinel-core/it:test
 
 after_success:
-  - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel' coveralls
+  - sbt ++$TRAVIS_SCALA_VERSION 'project sentinel-core' coveralls
 
 notifications:
   email: false
