@@ -71,6 +71,3 @@ jrebel.lic
 
 # generated documentation
 *src/sphinx/_build
-
-# Vagrant hidden files
-.vagrant
