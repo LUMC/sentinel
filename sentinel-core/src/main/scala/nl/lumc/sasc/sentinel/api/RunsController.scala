@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 import com.typesafe.config.Config
 import org.scalatra._
@@ -65,19 +65,21 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
   /** Documentation string for available pipeline parameters. */
   protected lazy val supportedPipelineParams = "`" + supportedPipelines.keySet.mkString("`, `") + "`"
 
-  /** Set maximum allowed file upload size. */
-  configureMultipartHandling(MultipartConfig(maxFileSize =
-    Try(config.getLong(s"$SentinelConfKey.maxUploadByteSize")).toOption match {
-      case None      => Option(DefaultMaxRunSummarySize)
-      case otherwise => otherwise
+  /** Maxium allowed file upload size. */
+  protected lazy val maxUploadSize: Long =
+    Try(config.getLong(s"$SentinelConfKey.maxUploadByteSize")) match {
+      case Failure(_) => DefaultMaxRunSummarySize
+      case Success(n) => n
     }
-  ))
+
+  /** Set maximum allowed file upload size. */
+  configureMultipartHandling(MultipartConfig(maxFileSize = Option(maxUploadSize)))
 
   /** General error handler for any type of exception. */
   error {
     case sexc: SizeConstraintExceededException =>
       contentType = formats("json")
-      RequestEntityTooLarge(Payloads.RunSummaryTooLargeError)
+      RequestEntityTooLarge(Payloads.RunSummaryTooLargeError(maxUploadSize))
 
     case otherwise =>
       contentType = formats("json")
@@ -282,7 +284,7 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
       StringResponseMessage(401, Payloads.AuthenticationError.message),
       StringResponseMessage(403, Payloads.AuthorizationError.message),
       StringResponseMessage(409, "Run summary already uploaded by the user."),
-      StringResponseMessage(413, Payloads.RunSummaryTooLargeError.message)))
+      StringResponseMessage(413, Payloads.RunSummaryTooLargeError(maxUploadSize).message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 

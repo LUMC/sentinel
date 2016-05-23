@@ -18,8 +18,6 @@ package nl.lumc.sasc.sentinel.models
 
 import org.scalatra._
 
-import nl.lumc.sasc.sentinel.settings.MaxRunSummarySizeMb
-
 /**
  * Message sent to users interacting with any HTTP endpoint. This is implemented as a custom case class, where the
  * equality is only defined for the `message` and `hints` attribute.
@@ -160,9 +158,11 @@ object Payloads {
 
   val AuthorizationError = ApiPayload("Unauthorized to access resource.", httpFunc = (ap: ApiPayload) => Forbidden(ap))
 
-  val RunSummaryTooLargeError =
-    ApiPayload(s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.",
-      httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap))
+  object RunSummaryTooLargeError {
+    def apply(maxRunSummarySize: Long) =
+      ApiPayload(f"Run summary exceeded maximum allowed size of ${maxRunSummarySize / (1024 * 1024)}%1.2f MB.",
+        httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap))
+  }
 
   val UnexpectedError = ApiPayload("Unexpected error.", hints = List("Please contact the site administrators."))
 }

@@ -17,13 +17,15 @@
 package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.settings.{ DefaultMaxRunSummarySize, MaxRunSummarySizeMb }
+import nl.lumc.sasc.sentinel.settings.DefaultMaxRunSummarySize
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, VariableSizedPart }
 import org.json4s._
 
 import scalaz.NonEmptyList
 
 class PostRunsControllerSpec extends BaseRunsControllerSpec {
+
+  val MaxRunSummarySizeMb = DefaultMaxRunSummarySize / (1024 * 1024)
 
   s"POST '$baseEndpoint'" >> {
   br
@@ -334,7 +336,7 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
         }
 
       val ictx12 = UploadContext(UploadSet(UserExamples.avg, VariableSizedPart(DefaultMaxRunSummarySize + 100, "plain")))
-      s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should
+      s"when the submitted run summary exceeds 16.00 MB" should
         ctx.priorReqsOnCleanDb(ictx12, populate = true) { ihttp =>
 
           "return status 413" in {
@@ -343,7 +345,7 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
 
           "return a JSON object containing the expected message" in {
             ihttp.rep.contentType mustEqual MimeType.Json
-            ihttp.rep.body must /("message" -> s"Run summary exceeded maximum allowed size of $MaxRunSummarySizeMb MB.")
+            ihttp.rep.body must /("message" -> s"Run summary exceeded maximum allowed size of 16.00 MB.")
           }
         }
     }
