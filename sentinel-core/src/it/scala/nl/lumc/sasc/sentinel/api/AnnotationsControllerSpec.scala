@@ -5,6 +5,7 @@
   */
 package nl.lumc.sasc.sentinel.api
 
+import com.typesafe.config.ConfigFactory
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.specs2.specification.core.Fragment
@@ -23,7 +24,7 @@ class AnnotationsControllerSpec extends SentinelServletSpec {
     (dao: MongodbAccessObject) => new PlainRunsProcessor(dao))
 
   val annotsServlet = new AnnotationsController()(swagger, dao)
-  val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
+  val runsServlet = new RunsController(ConfigFactory.load())(swagger, dao, runsProcessorMakers)
 
   val baseEndpoint = "/annotations"
   addServlet(annotsServlet, s"$baseEndpoint/*")

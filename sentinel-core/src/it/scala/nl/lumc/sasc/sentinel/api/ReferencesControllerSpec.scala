@@ -16,6 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import com.typesafe.config.ConfigFactory
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.specs2.specification.core.Fragment
@@ -32,7 +33,7 @@ class ReferencesControllerSpec extends SentinelServletSpec {
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
 
   val refsServlet = new ReferencesController()(swagger, dao)
-  val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
+  val runsServlet = new RunsController(ConfigFactory.load())(swagger, dao, runsProcessorMakers)
 
   val baseEndpoint = "/references"
   addServlet(refsServlet, s"$baseEndpoint/*")

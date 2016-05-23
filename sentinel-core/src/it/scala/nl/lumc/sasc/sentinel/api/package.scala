@@ -16,6 +16,7 @@
  */
 package nl.lumc.sasc.sentinel
 
+import com.typesafe.config.ConfigFactory
 import scalaz.NonEmptyList
 
 import nl.lumc.sasc.sentinel.testing.{ PipelinePart, SentinelServletSpec, UserExamples }
@@ -86,7 +87,7 @@ package object api {
     val runsProcessorMakers = Seq(
       (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.maple.MapleRunsProcessor(dao),
       (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
-    val servlet = new RunsController()(swagger, dao, runsProcessorMakers)
+    val servlet = new RunsController(ConfigFactory.load())(swagger, dao, runsProcessorMakers)
     val baseEndpoint = "/runs"
     addServlet(servlet, s"$baseEndpoint/*")
 

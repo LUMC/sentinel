@@ -16,6 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import com.typesafe.config.ConfigFactory
 import org.scalatra.swagger.Swagger
 import scalaz.NonEmptyList
 
@@ -32,7 +33,7 @@ class BaseStatsControllerSpec extends SentinelServletSpec {
     (dao: MongodbAccessObject) => new nl.lumc.sasc.sentinel.exts.plain.PlainRunsProcessor(dao))
 
   val statsServlet = new TestBaseStatsController()(swagger, dao)
-  val runsServlet = new RunsController()(swagger, dao, runsProcessorMakers)
+  val runsServlet = new RunsController(ConfigFactory.load())(swagger, dao, runsProcessorMakers)
 
   val baseEndpoint = "/stats"
   addServlet(statsServlet, s"$baseEndpoint/*")

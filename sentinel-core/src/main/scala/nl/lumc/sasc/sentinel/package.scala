@@ -34,7 +34,7 @@ package object sentinel {
 
     val MaxRunSummarySizeMb = 16
 
-    val MaxRunSummarySize = MaxRunSummarySizeMb * 1024 * 1024
+    val DefaultMaxRunSummarySize: Long = MaxRunSummarySizeMb * 1024 * 1024
 
     val MinUserIdLength = 3
 

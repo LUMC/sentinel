@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.api
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
-import nl.lumc.sasc.sentinel.settings.{ MaxRunSummarySize, MaxRunSummarySizeMb }
+import nl.lumc.sasc.sentinel.settings.{ DefaultMaxRunSummarySize, MaxRunSummarySizeMb }
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, VariableSizedPart }
 import org.json4s._
 
@@ -333,7 +333,7 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
           }
         }
 
-      val ictx12 = UploadContext(UploadSet(UserExamples.avg, VariableSizedPart(MaxRunSummarySize + 100, "plain")))
+      val ictx12 = UploadContext(UploadSet(UserExamples.avg, VariableSizedPart(DefaultMaxRunSummarySize + 100, "plain")))
       s"when the submitted run summary exceeds $MaxRunSummarySizeMb MB" should
         ctx.priorReqsOnCleanDb(ictx12, populate = true) { ihttp =>
 

@@ -17,7 +17,9 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
+import scala.util.Try
 
+import com.typesafe.config.Config
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
@@ -39,8 +41,8 @@ import nl.lumc.sasc.sentinel.utils.Implicits._
  * @param swagger Container for main Swagger specification.
  * @param mongo Object for accessing the database.
  */
-class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: MongodbAccessObject,
-                                         runsProcessors: Seq[MongodbAccessObject => T])
+class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: Swagger, mongo: MongodbAccessObject,
+                                                         runsProcessors: Seq[MongodbAccessObject => T])
     extends SentinelServlet
     with FileUploadSupport
     with AuthenticationSupport { self =>
@@ -64,7 +66,12 @@ class RunsController[T <: RunsProcessor](implicit val swagger: Swagger, mongo: M
   protected lazy val supportedPipelineParams = "`" + supportedPipelines.keySet.mkString("`, `") + "`"
 
   /** Set maximum allowed file upload size. */
-  configureMultipartHandling(MultipartConfig(maxFileSize = Some(MaxRunSummarySize)))
+  configureMultipartHandling(MultipartConfig(maxFileSize =
+    Try(config.getLong(s"$SentinelConfKey.maxUploadByteSize")).toOption match {
+      case None      => Option(DefaultMaxRunSummarySize)
+      case otherwise => otherwise
+    }
+  ))
 
   /** General error handler for any type of exception. */
   error {
