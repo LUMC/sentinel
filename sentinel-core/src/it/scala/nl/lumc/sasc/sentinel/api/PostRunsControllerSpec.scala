@@ -345,7 +345,8 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
 
           "return a JSON object containing the expected message" in {
             ihttp.rep.contentType mustEqual MimeType.Json
-            ihttp.rep.body must /("message" -> s"Run summary exceeded maximum allowed size of 16.00 MB.")
+            ihttp.rep.body must /("message" -> s"Run summary exceeded maximum allowed size.")
+            ihttp.rep.body must /("hints") /# 0 / s"Maximum size is 16 MB."
           }
         }
     }

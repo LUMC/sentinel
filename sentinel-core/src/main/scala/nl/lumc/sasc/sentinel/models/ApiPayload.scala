@@ -159,8 +159,10 @@ object Payloads {
   val AuthorizationError = ApiPayload("Unauthorized to access resource.", httpFunc = (ap: ApiPayload) => Forbidden(ap))
 
   object RunSummaryTooLargeError {
+    def message = "Run summary exceeded maximum allowed size."
     def apply(maxRunSummarySize: Long) =
-      ApiPayload(f"Run summary exceeded maximum allowed size of ${maxRunSummarySize / (1024 * 1024)}%1.2f MB.",
+      ApiPayload(message,
+        List(f"Maximum size is ${maxRunSummarySize / (1024 * 1024)}%d MB.", "You may reduce the upload size using gzip."),
         httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap))
   }
 

@@ -284,7 +284,7 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
       StringResponseMessage(401, Payloads.AuthenticationError.message),
       StringResponseMessage(403, Payloads.AuthorizationError.message),
       StringResponseMessage(409, "Run summary already uploaded by the user."),
-      StringResponseMessage(413, Payloads.RunSummaryTooLargeError(maxUploadSize).message)))
+      StringResponseMessage(413, Payloads.RunSummaryTooLargeError.message)))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
