@@ -99,11 +99,8 @@ object SentinelBuild extends Build {
     homepage := Some(url(Homepage)),
     publishMavenStyle := true,
     publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases"  at nexus + "content/repositories/releases")
+      if (isSnapshot.value) Option(Resolver.sonatypeRepo("snapshots"))
+      else Option(Resolver.sonatypeRepo("releases"))
     },
     publishArtifact in Test := false,
     publishArtifact in IntegrationTest := false,
@@ -145,10 +142,10 @@ object SentinelBuild extends Build {
     testOptions in Test += Tests.Argument("console", "junitxml"),
     testOptions in IntegrationTest += Tests.Argument("console", "junitxml"),
     ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
-    resolvers += Classpaths.typesafeReleases,
+    resolvers += Resolver.typesafeRepo("releases"),
+    resolvers += Resolver.sonatypeRepo("releases"),
+    resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
-    resolvers += "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-    resolvers += "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
     ScalariformKeys.preferences := formattingPreferences)
 
   val commonSettings = rootSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings ++ graphSettings
