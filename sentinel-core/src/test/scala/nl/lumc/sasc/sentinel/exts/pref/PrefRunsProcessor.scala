@@ -54,7 +54,7 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
   def extractReference(runJson: JValue): ReferenceRecord = {
     val refJson = runJson \ "reference"
     val contigs = (refJson \ "contigs")
-      .extract[Map[String, ReferenceContigRecord]]
+      .extract[Map[String, ReferenceSequenceRecord]]
       .values.toSeq
     ReferenceRecord(
       combinedMd5 = calcMd5(contigs.map(_.md5).sorted),

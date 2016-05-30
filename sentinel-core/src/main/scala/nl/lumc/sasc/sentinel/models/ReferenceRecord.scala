@@ -33,7 +33,7 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
-  contigs: Seq[ReferenceContigRecord],
+  contigs: Seq[ReferenceSequenceRecord],
   // TODO: update to lazy val when we update our Scalatra dependency
   combinedMd5: String,
   refName: Option[String] = None,
@@ -44,7 +44,22 @@ case class ReferenceRecord(
 /**
  * Representation of a reference sequence contig / chromosome.
  *
- * @param md5 MD5 checksum of the sequence.
- * @param length Length of the sequence.
+ * We try to follow the reference sequence dictionary definition as outlined in the
+ * [[https://samtools.github.io/hts-specs/SAMv1.pdf SAM format specification]] as close as possible, except for the
+ * md5sum (or M5 tag) of the sequence. In the SAM specification, this value is optional. However in our case, the value
+ * is compulsory since we need them to compute a unique identifier for each reference.
+ *
+ * @param name Name of the contig (in a SAM file: SN tag).
+ * @param length Length of the sequence (in a SAM file: LN tag).
+ * @param assembly Genome assembly identifier (in a SAM file: AS tag).
+ * @param md5 MD5 checksum of the sequence (in a SAM file: M5 tag).
+ * @param species Species name (in a SAM file: SP tag).
+ * @param uri URI (in a SAM file: UR tag).
  */
-case class ReferenceContigRecord(md5: String, length: Long)
+case class ReferenceSequenceRecord(
+  name: String,
+  length: Long,
+  md5: String,
+  assembly: Option[String] = None,
+  species: Option[String] = None,
+  uri: Option[String] = None)

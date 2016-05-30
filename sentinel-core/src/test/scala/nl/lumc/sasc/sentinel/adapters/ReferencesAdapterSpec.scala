@@ -25,7 +25,7 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
-import nl.lumc.sasc.sentinel.models.{ ReferenceRecord, ReferenceContigRecord }
+import nl.lumc.sasc.sentinel.models.{ ReferenceRecord, ReferenceSequenceRecord }
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 class ReferencesAdapterSpec extends Specification
@@ -33,7 +33,9 @@ class ReferencesAdapterSpec extends Specification
 
   /** ReferenceRecord object for testing. */
   private val testRefObj = ReferenceRecord(
-    contigs = Seq(ReferenceContigRecord("md51", 100), ReferenceContigRecord("md52", 200)),
+    contigs = Seq(
+      ReferenceSequenceRecord("seq1", 100, "md51"),
+      ReferenceSequenceRecord("seq2", 200, "md52")),
     combinedMd5 = "md5C",
     refName = Option("ref"),
     species = Option("species"))
