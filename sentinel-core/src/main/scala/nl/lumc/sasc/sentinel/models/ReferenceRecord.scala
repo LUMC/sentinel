@@ -35,7 +35,6 @@ import nl.lumc.sasc.sentinel.utils.{ calcMd5, utcTimeNow }
 case class ReferenceRecord(
   contigs: Seq[ReferenceSequenceRecord],
   refName: Option[String] = None,
-  species: Option[String] = None,
   @Key("_id") refId: ObjectId = new ObjectId,
   creationTimeUtc: Date = utcTimeNow) {
 

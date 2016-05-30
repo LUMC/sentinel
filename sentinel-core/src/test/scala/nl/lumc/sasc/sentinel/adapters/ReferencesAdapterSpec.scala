@@ -36,8 +36,7 @@ class ReferencesAdapterSpec extends Specification
     contigs = Seq(
       ReferenceSequenceRecord("seq1", 100, "md51"),
       ReferenceSequenceRecord("seq2", 200, "md52")),
-    refName = Option("ref"),
-    species = Option("species"))
+    refName = Option("ref"))
 
   /** Database record of testing ReferenceRecord object. */
   private val testRefDbo = grater[ReferenceRecord].asDBObject(testRefObj)
