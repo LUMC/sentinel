@@ -36,7 +36,6 @@ class ReferencesAdapterSpec extends Specification
     contigs = Seq(
       ReferenceSequenceRecord("seq1", 100, "md51"),
       ReferenceSequenceRecord("seq2", 200, "md52")),
-    combinedMd5 = "md5C",
     refName = Option("ref"),
     species = Option("species"))
 

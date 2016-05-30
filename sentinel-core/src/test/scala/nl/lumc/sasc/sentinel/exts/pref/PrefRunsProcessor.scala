@@ -57,7 +57,6 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
       .extract[Map[String, ReferenceSequenceRecord]]
       .values.toSeq
     ReferenceRecord(
-      combinedMd5 = calcMd5(contigs.map(_.md5).sorted),
       contigs = contigs,
       species = (refJson \ "species").extractOpt[String],
       refName = (refJson \ "name").extractOpt[String])

@@ -19,27 +19,29 @@ package nl.lumc.sasc.sentinel.models
 import java.util.Date
 
 import com.novus.salat.annotations._
+import com.novus.salat.annotations.Persist
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.utils.utcTimeNow
+import nl.lumc.sasc.sentinel.utils.{ calcMd5, utcTimeNow }
 
 /**
  * Representation of an alignment reference sequence.
  *
  * @param refId Database IDs.
  * @param contigs Record of all contigs / chromosomes in this reference sequence.
- * @param combinedMd5 MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically.
  * @param refName Reference sequence name.
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
   contigs: Seq[ReferenceSequenceRecord],
-  // TODO: update to lazy val when we update our Scalatra dependency
-  combinedMd5: String,
   refName: Option[String] = None,
   species: Option[String] = None,
   @Key("_id") refId: ObjectId = new ObjectId,
-  creationTimeUtc: Date = utcTimeNow)
+  creationTimeUtc: Date = utcTimeNow) {
+
+  /** MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically. */
+  @Persist lazy val combinedMd5: String = calcMd5(contigs.map(_.md5).sorted)
+}
 
 /**
  * Representation of a reference sequence contig / chromosome.
