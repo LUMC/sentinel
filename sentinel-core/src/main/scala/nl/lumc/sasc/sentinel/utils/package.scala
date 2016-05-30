@@ -32,7 +32,7 @@ import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.util.io.readBytes
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CaseClass }
+import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CaseClass, ReferenceRecord }
 
 /** General utilities */
 package object utils {
@@ -142,7 +142,11 @@ package object utils {
       { case field => field })
 
   /** JSON format used across the entire package. */
-  val SentinelJsonFormats = DefaultFormats + new CustomObjectIdSerializer + RunDocumentSerializer + ApiPayloadSerializer
+  val SentinelJsonFormats = DefaultFormats +
+    ApiPayloadSerializer +
+    RunDocumentSerializer +
+    FieldSerializer[ReferenceRecord](includeLazyVal = true) +
+    new CustomObjectIdSerializer
 
   /** Salat context used across the entire package. */
   implicit val SentinelSalatContext = new Context {
