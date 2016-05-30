@@ -17,14 +17,16 @@
 package nl.lumc.sasc.sentinel.exts.pref
 
 import scala.concurrent._
-
+import scala.math.BigInt
 import org.bson.types.ObjectId
 import org.json4s.JValue
 
+import scalaz._, Scalaz._
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._
+import nl.lumc.sasc.sentinel.models.Payloads.JsonValidationError
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ JsonExtractor, MongodbAccessObject, calcMd5 }
+import nl.lumc.sasc.sentinel.utils.{ JsonExtractor, MongodbAccessObject }
 
 /**
  * Example of a simple pipeline runs processor.
@@ -51,14 +53,31 @@ class PrefRunsProcessor(mongo: MongodbAccessObject) extends RunsProcessor(mongo)
   def pipelineName = "pref"
 
   /** Extracts a reference record from the summary. */
-  def extractReference(runJson: JValue): ReferenceRecord = {
+  def extractReference(runJson: JValue): Perhaps[ReferenceRecord] = {
     val refJson = runJson \ "reference"
     val contigs = (refJson \ "contigs")
-      .extract[Map[String, ReferenceSequenceRecord]]
-      .values.toSeq
-    ReferenceRecord(
-      contigs = contigs,
-      refName = (refJson \ "name").extractOpt[String])
+      .extract[Map[String, Map[String, Any]]].toList
+      .traverse[Option, ReferenceSequenceRecord] { case (k, v) =>
+        for {
+          md5sum <- v.get("md5") match {
+            case res @ Some(iv: String) => Option(iv)
+            case otherwise              => None
+          }
+          length <- v.get("length") match {
+            case res @ Some(iv: Long)   => Option(iv)
+            case res @ Some(iv: Int)    => Option(iv.toLong)
+            case res @ Some(iv: BigInt) =>
+              if (iv.isValidLong) Option(iv.toLong)
+              else None
+            case otherwise              => None
+          }
+        } yield ReferenceSequenceRecord(k, length, md5sum)
+      }
+    contigs match {
+      case None    => JsonValidationError("One or more reference sequence(s) is unparseable.").left
+      case Some(v) =>
+        ReferenceRecord(contigs = v, refName = (refJson \ "name").extractOpt[String]).right
+    }
   }
 
   /** Sample extractor from JSON. */
