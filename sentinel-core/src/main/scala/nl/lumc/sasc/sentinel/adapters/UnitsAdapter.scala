@@ -41,7 +41,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    *
    * Note that since the input requires a set of IDs, the order of the returned database objects is undefined.
    *
-   * @param coll [[MongoCollection]] on which the query will be performed
+   * @param coll `MongoCollection` on which the query will be performed
    * @param ids IDs of the records to retrieve.
    * @param extraQuery Additional query for further selection of the raw database objects.
    * @return Sequence of raw database objects or an API payload containing an error message.
@@ -80,7 +80,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param dbo MongoDB object to apply the patch to.
    * @param patches Patch operations.
    * @param patchFunc Partial functions for performing the patch.
-   * @return Either an [[ApiPayload]] or the patched run record object.
+   * @return Either an [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the patched run record object.
    */
   // format: OFF
   def patchDbo(dbo: DBObject, patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[DBObject] =
@@ -99,7 +99,7 @@ trait UnitsAdapter extends FutureMongodbAdapter {
    * @param dbos Sequence of MongoDB objects to apply to.
    * @param patches Patch operations.
    * @param patchFunc Partial functions for performing the patch.
-   * @return Either an [[ApiPayload]] or the patched run record objects.
+   * @return Either an [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the patched run record objects.
    */
   def patchDbos(dbos: Seq[DBObject], patches: List[JsonPatch.PatchOp])(patchFunc: DboPatchFunction): Perhaps[Seq[DBObject]] =
     dbos

@@ -323,7 +323,8 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
    * @param runId ID of the run to retrieve.
    * @param user Run uploader.
    * @param ignoreDeletionStatus Whether to return runs that have been deleted or not.
-   * @return Run record, if it exists, or an [[ApiPayload]] object containing the reason why the run can not be returned.
+   * @return Run record, if it exists, or an [[nl.lumc.sasc.sentinel.models.ApiPayload]] object containing the reason
+   *         why the run can not be returned.
    */
   def getRun(runId: ObjectId, user: User, ignoreDeletionStatus: Boolean = false,
              retrieveUnitsLabels: Boolean = false): Future[Perhaps[RunRecord]] = {

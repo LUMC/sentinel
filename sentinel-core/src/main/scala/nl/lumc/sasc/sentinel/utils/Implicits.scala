@@ -32,7 +32,7 @@ object Implicits {
   /** Implicit class for checking user access to a run database object. */
   implicit class RunRecordDBObject(dbo: DBObject) {
 
-    /** Given a [[User]], checks whether has authorization to access the run record. */
+    /** Given a [[nl.lumc.sasc.sentinel.models.User]], checks whether has authorization to access the run record. */
     def authorize(user: User): Perhaps[Unit] = {
       dbo.getAs[String]("uploaderId") match {
         case None => UnexpectedDatabaseError("Run object does not have the required 'uploaderId' key.").left
