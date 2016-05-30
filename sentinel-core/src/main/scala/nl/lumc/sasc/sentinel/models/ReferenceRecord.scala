@@ -33,10 +33,10 @@ import nl.lumc.sasc.sentinel.utils.{ calcMd5, utcTimeNow }
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
-  contigs: Seq[ReferenceSequenceRecord],
-  refName: Option[String] = None,
-  @Key("_id") refId: ObjectId = new ObjectId,
-  creationTimeUtc: Date = utcTimeNow) {
+    contigs: Seq[ReferenceSequenceRecord],
+    refName: Option[String] = None,
+    @Key("_id") refId: ObjectId = new ObjectId,
+    creationTimeUtc: Date = utcTimeNow) {
 
   /** MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically. */
   @Persist lazy val combinedMd5: String = calcMd5(contigs.map(_.md5).sorted)
