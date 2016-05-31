@@ -16,10 +16,9 @@
  */
 package nl.lumc.sasc.sentinel.api
 
-import akka.actor.ActorSystem
 import org.scalatra.ScalatraServlet
 import org.scalatra.swagger._
 
 /** Controller for auto-generated Swagger specification. */
-class ApiSpecsController(implicit protected val system: ActorSystem, val swagger: Swagger) extends ScalatraServlet
+class ApiSpecsController(implicit val swagger: Swagger) extends ScalatraServlet
   with JacksonSwaggerBase
