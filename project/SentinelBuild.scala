@@ -7,6 +7,7 @@ import com.typesafe.sbt.SbtScalariform._
 import com.typesafe.sbt.SbtSite.site
 import de.heikoseeberger.sbtheader._
 import net.virtualvoid.sbt.graph.Plugin.graphSettings
+import java.util.Calendar
 
 object SentinelBuild extends Build {
 
@@ -75,7 +76,7 @@ object SentinelBuild extends Build {
     "scala" -> (
       HeaderPattern.cStyleBlockComment,
       s"""|/*
-        | * Copyright (c) 2015-2016 Leiden University Medical Center and contributors
+        | * Copyright (c) 2015-${Calendar.getInstance.get(Calendar.YEAR)} Leiden University Medical Center and contributors
         | *                         (see AUTHORS.md file for details).
         | *
         | * Licensed under the ${License.Name} (the "License");
