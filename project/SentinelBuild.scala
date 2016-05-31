@@ -63,7 +63,7 @@ object SentinelBuild extends Build {
       .setPreference(IndentSpaces, 2)
       .setPreference(IndentWithTabs, false)
       .setPreference(PlaceScaladocAsterisksBeneathSecondAsterisk, false)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(DanglingCloseParenthesis, Preserve)
       .setPreference(PreserveSpaceBeforeArguments, false)
       .setPreference(RewriteArrowSymbols, false)
       .setPreference(SpaceBeforeColon, false)
