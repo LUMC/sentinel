@@ -118,7 +118,7 @@ object SentinelBuild extends Build {
         </developers>
     })
 
-  lazy val rootSettings = scalariformSettings ++ publishSettings ++
+  lazy val rootSettings = scalariformSettings ++
     Seq(
     initialize := {
       val _ = initialize.value
@@ -148,7 +148,7 @@ object SentinelBuild extends Build {
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     ScalariformKeys.preferences := formattingPreferences)
 
-  val commonSettings = rootSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings ++ graphSettings
+  val commonSettings = rootSettings ++ publishSettings ++ headerSettings ++ ScalatraPlugin.scalatraSettings ++ graphSettings
 
   lazy val docsSiteSettings = site.settings ++ site.sphinxSupport() ++ site.includeScaladoc(s"scaladoc/$Version")
 
@@ -171,6 +171,9 @@ object SentinelBuild extends Build {
   lazy val sentinel = Project(
     id = "sentinel",
     base = file("."),
-    settings = rootSettings,
+    settings = rootSettings ++ Seq(
+      publishLocal := {},
+      publish := {}
+    ),
     aggregate = Seq(sentinelCore))
 }
