@@ -60,7 +60,8 @@ object JsonPatch {
     def value: Any
 
     abstract override def toJValue: JObject = JObject(
-      super.toJValue.obj :+ JField("value", Extraction.decompose(value)(SentinelJsonFormats)))
+      super.toJValue.obj :+ JField("value", Extraction.decompose(value)(SentinelJsonFormats))
+    )
 
     /** Returns the value if it is either string, int, long, double, or boolean. Nulls, arrays, or other objects return None. */
     def atomicValue: Option[Any] = value match {

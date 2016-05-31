@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.utils
 
-import com.mongodb.{ MongoCredential, ServerAddress }
+import com.mongodb.{MongoCredential, ServerAddress}
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.MongoClient
 import com.mongodb.casbah.gridfs.Imports._

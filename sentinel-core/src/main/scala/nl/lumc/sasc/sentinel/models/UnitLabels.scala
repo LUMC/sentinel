@@ -49,24 +49,27 @@ trait ReadGroupLabelsLike extends UnitLabels {
 
 /** Base implementation of a run record label. */
 case class RunLabels(
-  runName: Option[String] = None,
-  notes: Option[String] = None,
-  tags: Map[String, Any] = Map.empty) extends RunLabelsLike
+  runName: Option[String]   = None,
+  notes:   Option[String]   = None,
+  tags:    Map[String, Any] = Map.empty
+) extends RunLabelsLike
 
 /** Base implementation of a sample record label. */
 case class SampleLabels(
-  runName: Option[String] = None,
-  sampleName: Option[String] = None,
-  notes: Option[String] = None,
-  tags: Map[String, Any] = Map.empty) extends SampleLabelsLike
+  runName:    Option[String]   = None,
+  sampleName: Option[String]   = None,
+  notes:      Option[String]   = None,
+  tags:       Map[String, Any] = Map.empty
+) extends SampleLabelsLike
 
 /** Base implementation of a read group record label. */
 case class ReadGroupLabels(
-  runName: Option[String] = None,
-  sampleName: Option[String] = None,
-  readGroupName: Option[String] = None,
-  notes: Option[String] = None,
-  tags: Map[String, Any] = Map.empty) extends ReadGroupLabelsLike
+  runName:       Option[String]   = None,
+  sampleName:    Option[String]   = None,
+  readGroupName: Option[String]   = None,
+  notes:         Option[String]   = None,
+  tags:          Map[String, Any] = Map.empty
+) extends ReadGroupLabelsLike
 
 /**
  * Data point label.
@@ -77,11 +80,12 @@ case class ReadGroupLabels(
  * @param readGroupName Name of the read group in which this data points is contained.
  */
 case class DataPointLabels(
-    runId: ObjectId,
-    runName: Option[String] = None,
-    sampleName: Option[String] = None,
-    readGroupName: Option[String] = None,
-    tags: Map[String, Any] = Map.empty) extends RunLabelsLike with SampleLabelsLike with ReadGroupLabelsLike {
+    runId:         ObjectId,
+    runName:       Option[String]   = None,
+    sampleName:    Option[String]   = None,
+    readGroupName: Option[String]   = None,
+    tags:          Map[String, Any] = Map.empty
+) extends RunLabelsLike with SampleLabelsLike with ReadGroupLabelsLike {
 
   @Ignore val notes: Option[String] = None
 }

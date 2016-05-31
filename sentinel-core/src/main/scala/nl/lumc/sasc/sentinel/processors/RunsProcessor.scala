@@ -17,15 +17,15 @@
 package nl.lumc.sasc.sentinel.processors
 
 import java.io.ByteArrayInputStream
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
-import com.novus.salat.{ CaseClass => _, _ }
+import com.novus.salat.{CaseClass => _, _}
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.{ ReadGroupsAdapter, SamplesAdapter, UnitsAdapter }
+import nl.lumc.sasc.sentinel.adapters.{ReadGroupsAdapter, SamplesAdapter, UnitsAdapter}
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.JsonPatch._
 import nl.lumc.sasc.sentinel.models.Payloads._
@@ -62,7 +62,8 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
   /** Label attributes whose patch will be propagate to the subunits */
   def propagatedPatchTargets: Map[UnitType.Value, Set[String]] = Map(
     UnitType.Run -> Set("/labels/runName"),
-    UnitType.Sample -> Set("/labels/sampleName"))
+    UnitType.Sample -> Set("/labels/sampleName")
+  )
 
   /** Overridable execution context for this processor. */
   protected def runsProcessorContext = ExecutionContext.global
@@ -75,7 +76,8 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     RunsProcessor.labelsPF,
     UnitsAdapter.tagsPF,
     UnitsAdapter.notesPF,
-    UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
+    UnitsAdapter.defaultPF
+  ).reduceLeft { _ orElse _ }
 
   /** Collection used by this adapter. */
   private lazy val coll = mongo.db(collectionNames.Runs)
@@ -93,8 +95,10 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
     else MongoDBObject("uploaderId" -> user.id))
 
   /** Converts the given JsonPatches for the given run ID to UnitPatches objects. */
-  protected def jsonPatches2unitPatches(runId: ObjectId,
-                                        jsonPatches: List[JsonPatch.PatchOp]): Perhaps[List[UnitPatch.OnUnit]] =
+  protected def jsonPatches2unitPatches(
+    runId:       ObjectId,
+    jsonPatches: List[JsonPatch.PatchOp]
+  ): Perhaps[List[UnitPatch.OnUnit]] =
     jsonPatches.traverse[Perhaps, UnitPatch.OnUnit] {
 
       case p if p.pathTokens.headOption.contains("sampleLabels") =>
@@ -144,8 +148,10 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
             val (sampleLevelPs, readGroupLevelPs) = subUnitOps match {
               case Nil => (Nil, Nil)
               case vals =>
-                (dbo.sampleIds.map(sid => UnitPatch.OnSample(sid, vals)).toList,
-                  dbo.readGroupIds.map(rgid => UnitPatch.OnReadGroup(rgid, vals)).toList)
+                (
+                  dbo.sampleIds.map(sid => UnitPatch.OnSample(sid, vals)).toList,
+                  dbo.readGroupIds.map(rgid => UnitPatch.OnReadGroup(rgid, vals)).toList
+                )
             }
             UnitPatch.Combined(runLevelP, sampleLevelPs, readGroupLevelPs).point[AsyncPerhaps]
 
@@ -265,7 +271,8 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
           f.contentType = "application/json"
           f.metaData = MongoDBObject(
             "uploaderId" -> user.id,
-            "pipeline" -> pipelineName)
+            "pipeline" -> pipelineName
+          )
         }
 
       Try(storeSummary()) match {
@@ -405,7 +412,8 @@ abstract class RunsProcessor(protected[processors] val mongo: MongodbAccessObjec
         query = makeBasicDbQuery(runId, user) ++ MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false)),
         update = MongoDBObject("$set" -> MongoDBObject("deletionTimeUtc" -> utcTimeNow)),
         returnNew = true,
-        fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false)
+        fields = MongoDBObject.empty, sort = MongoDBObject.empty, remove = false, upsert = false
+      )
       .map { dbo => grater[RunRecord](SalatContext, runManifest).asObject(dbo) }
       .toRightDisjunction(Payloads.IncompleteDeletionError)
   }

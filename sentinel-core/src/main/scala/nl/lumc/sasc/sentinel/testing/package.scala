@@ -32,7 +32,7 @@
  */
 package nl.lumc.sasc.sentinel
 
-import org.scalatra.test.{ BytesPart, Uploadable }
+import org.scalatra.test.{BytesPart, Uploadable}
 
 import nl.lumc.sasc.sentinel.utils.readResourceBytes
 

@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.adapters
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import scala.util.matching.Regex
 

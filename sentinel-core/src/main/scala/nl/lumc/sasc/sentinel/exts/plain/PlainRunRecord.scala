@@ -25,13 +25,14 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
 
 /** Simple implementation of a run record for schema display. */
 case class PlainRunRecord(
-  runId: ObjectId,
-  uploaderId: String,
-  pipeline: String,
-  labels: RunLabels = RunLabels(),
-  deletionTimeUtc: Option[Date] = None,
-  sampleIds: Seq[ObjectId] = Seq.empty,
-  readGroupIds: Seq[ObjectId] = Seq.empty,
-  sampleLabels: Map[String, SampleLabelsLike] = Map.empty,
+  runId:           ObjectId,
+  uploaderId:      String,
+  pipeline:        String,
+  labels:          RunLabels                        = RunLabels(),
+  deletionTimeUtc: Option[Date]                     = None,
+  sampleIds:       Seq[ObjectId]                    = Seq.empty,
+  readGroupIds:    Seq[ObjectId]                    = Seq.empty,
+  sampleLabels:    Map[String, SampleLabelsLike]    = Map.empty,
   readGroupLabels: Map[String, ReadGroupLabelsLike] = Map.empty,
-  creationTimeUtc: Date = utcTimeNow) extends BaseRunRecord
+  creationTimeUtc: Date                             = utcTimeNow
+) extends BaseRunRecord

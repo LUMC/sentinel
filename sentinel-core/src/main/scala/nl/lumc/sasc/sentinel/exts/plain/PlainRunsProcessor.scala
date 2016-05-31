@@ -19,7 +19,7 @@ package nl.lumc.sasc.sentinel.exts.plain
 import scala.concurrent.ExecutionContext
 import nl.lumc.sasc.sentinel.models.User
 import nl.lumc.sasc.sentinel.processors.RunsProcessor
-import nl.lumc.sasc.sentinel.utils.{ ValidatedJsonExtractor, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{ValidatedJsonExtractor, MongodbAccessObject}
 
 /**
  * Input processor for generic run summary files.

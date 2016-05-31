@@ -22,7 +22,7 @@ import com.novus.salat.annotations._
 import com.novus.salat.annotations.Persist
 import org.bson.types.ObjectId
 
-import nl.lumc.sasc.sentinel.utils.{ calcMd5, utcTimeNow }
+import nl.lumc.sasc.sentinel.utils.{calcMd5, utcTimeNow}
 
 /**
  * Representation of an alignment reference sequence.
@@ -33,10 +33,11 @@ import nl.lumc.sasc.sentinel.utils.{ calcMd5, utcTimeNow }
  * @param creationTimeUtc UTC time when the reference record was created.
  */
 case class ReferenceRecord(
-    contigs: Seq[ReferenceSequenceRecord],
-    refName: Option[String] = None,
-    @Key("_id") refId: ObjectId = new ObjectId,
-    creationTimeUtc: Date = utcTimeNow) {
+    contigs:           Seq[ReferenceSequenceRecord],
+    refName:           Option[String]               = None,
+    @Key("_id") refId: ObjectId                     = new ObjectId,
+    creationTimeUtc:   Date                         = utcTimeNow
+) {
 
   /** MD5 checksum of the concatenated string of all contig MD5 checksums, sorted alphabetically. */
   @Persist lazy val combinedMd5: String = calcMd5(contigs.map(_.md5).sorted)
@@ -58,9 +59,10 @@ case class ReferenceRecord(
  * @param uri URI (in a SAM file: UR tag).
  */
 case class ReferenceSequenceRecord(
-  name: String,
-  length: Long,
-  md5: String,
+  name:     String,
+  length:   Long,
+  md5:      String,
   assembly: Option[String] = None,
-  species: Option[String] = None,
-  uri: Option[String] = None)
+  species:  Option[String] = None,
+  uri:      Option[String] = None
+)

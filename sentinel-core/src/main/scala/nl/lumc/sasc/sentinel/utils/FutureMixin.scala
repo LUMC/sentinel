@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.utils
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Scalaz._
 import scalaz._
 

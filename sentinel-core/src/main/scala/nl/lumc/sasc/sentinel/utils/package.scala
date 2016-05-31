@@ -16,23 +16,23 @@
  */
 package nl.lumc.sasc.sentinel
 
-import java.io.{ InputStream, PushbackInputStream }
+import java.io.{InputStream, PushbackInputStream}
 import java.util.Date
 import java.util.zip.GZIPInputStream
 import java.security.MessageDigest
 import java.time.Clock
 import scala.io.Source
 import scala.language.implicitConversions
-import scala.reflect.{ ClassTag, ManifestFactory }
-import scala.reflect.runtime.{ universe => ru }
-import scala.util.{ Failure, Success, Try }
+import scala.reflect.{ClassTag, ManifestFactory}
+import scala.reflect.runtime.{universe => ru}
+import scala.util.{Failure, Success, Try}
 
-import com.novus.salat.{ CaseClass => _, _ }
+import com.novus.salat.{CaseClass => _, _}
 import org.bson.types.ObjectId
 import org.json4s._
 import org.scalatra.util.io.readBytes
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, BaseRunRecord, CaseClass, ReferenceRecord }
+import nl.lumc.sasc.sentinel.models.{ApiPayload, BaseRunRecord, CaseClass, ReferenceRecord}
 
 /** General utilities */
 package object utils {
@@ -124,8 +124,10 @@ package object utils {
    */
   def separateObjectIds(strs: Seq[String]): (Seq[ObjectId], Seq[String]) = {
     val ids = strs.map { str => (tryMakeObjectId(str), str) }
-    (ids.collect { case (Success(dbId), _) => dbId },
-      ids.collect { case (Failure(_), strId) => strId })
+    (
+      ids.collect { case (Success(dbId), _) => dbId },
+      ids.collect { case (Failure(_), strId) => strId }
+    )
   }
 
   /** Gets the current UTC time. */
@@ -133,13 +135,17 @@ package object utils {
 
   /** Serializer for outgoing JSON representing run documents. */
   val RunDocumentSerializer =
-    FieldSerializer[BaseRunRecord]({ case (attr, _) if BaseRunRecord.hiddenAttributes.contains(attr) => None },
-      { case field => field })
+    FieldSerializer[BaseRunRecord](
+      { case (attr, _) if BaseRunRecord.hiddenAttributes.contains(attr) => None },
+      { case field => field }
+    )
 
   /** Serializer for outgoing `ApiPayload` objects. */
   val ApiPayloadSerializer =
-    FieldSerializer[ApiPayload]({ case (attr, _) if ApiPayload.hiddenAttributes.contains(attr) => None },
-      { case field => field })
+    FieldSerializer[ApiPayload](
+      { case (attr, _) if ApiPayload.hiddenAttributes.contains(attr) => None },
+      { case field => field }
+    )
 
   /** JSON format used across the entire package. */
   val SentinelJsonFormats = DefaultFormats +
@@ -151,8 +157,10 @@ package object utils {
   /** Salat context used across the entire package. */
   implicit val SentinelSalatContext = new Context {
     val name = "When-Necessary-Context"
-    override val typeHintStrategy = StringTypeHintStrategy(when = TypeHintFrequency.Always,
-      typeHint = "_typeHint")
+    override val typeHintStrategy = StringTypeHintStrategy(
+      when = TypeHintFrequency.Always,
+      typeHint = "_typeHint"
+    )
   }
 
   object reflect {

@@ -25,7 +25,7 @@ import org.scalatra.test.ClientResponse
 import org.scalatra.test.specs2.BaseScalatraSpec
 import org.specs2.data.Sized
 import org.specs2.matcher.ThrownExpectations
-import nl.lumc.sasc.sentinel.models.{ JsonPatch, UserRequest }
+import nl.lumc.sasc.sentinel.models.{JsonPatch, UserRequest}
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
 
 trait IntegrationTestImplicits { this: BaseScalatraSpec with ThrownExpectations =>

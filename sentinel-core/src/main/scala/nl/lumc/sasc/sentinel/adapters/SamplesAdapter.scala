@@ -20,7 +20,7 @@ import scala.concurrent._
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.BulkWriteResult
-import com.novus.salat.{ CaseClass => _, _ }
+import com.novus.salat.{CaseClass => _, _}
 import org.bson.types.ObjectId
 import scalaz._, Scalaz._
 
@@ -58,7 +58,8 @@ trait SamplesAdapter extends UnitsAdapter {
     SamplesAdapter.labelsPF,
     UnitsAdapter.tagsPF,
     UnitsAdapter.notesPF,
-    UnitsAdapter.defaultPF).reduceLeft { _ orElse _ }
+    UnitsAdapter.defaultPF
+  ).reduceLeft { _ orElse _ }
 
   /**
    * Stores the given sequence of sample metrics into its collection.
@@ -116,8 +117,10 @@ trait SamplesAdapter extends UnitsAdapter {
    * @param patches Patches to perform.
    * @return A future containing an error [[nl.lumc.sasc.sentinel.models.ApiPayload]] or the number of updated records.
    */
-  def patchSampleDbo(sampleId: ObjectId,
-                     patches: List[PatchOp]): Future[Perhaps[Seq[DBObject]]] = {
+  def patchSampleDbo(
+    sampleId: ObjectId,
+    patches:  List[PatchOp]
+  ): Future[Perhaps[Seq[DBObject]]] = {
     val res = for {
       sampleDbos <- ? <~ getSampleDbos(Seq(sampleId))
       patchedSampleDbos <- ? <~ patchDbos(sampleDbos, patches)(samplesPatchFunc)

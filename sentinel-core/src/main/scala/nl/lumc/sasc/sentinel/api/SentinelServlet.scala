@@ -20,21 +20,21 @@ import java.io.File
 import javax.servlet.http.HttpServletRequest
 
 import scala.concurrent.ExecutionContext
-import scala.reflect.runtime.{ universe => ru }
-import scala.util.{ Failure, Success, Try }
+import scala.reflect.runtime.{universe => ru}
+import scala.util.{Failure, Success, Try}
 
 import org.bson.types.ObjectId
 import org.json4s._
 import org.json4s.prefs.EmptyValueStrategy
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.{ DataType, Model, SwaggerSupport }
+import org.scalatra.swagger.{DataType, Model, SwaggerSupport}
 import org.scalatra.util.conversion.TypeConverter
 import org.slf4j.LoggerFactory
 import xml.NodeSeq
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ SentinelJsonFormats, separateObjectIds, tryMakeObjectId }
+import nl.lumc.sasc.sentinel.utils.{SentinelJsonFormats, separateObjectIds, tryMakeObjectId}
 
 /** Trait for custom Sentinel JSON handling ~ partially adapted from JValueResult. */
 trait SentinelJsonSupport extends JacksonJsonSupport { this: SentinelServlet =>

@@ -17,10 +17,10 @@
 package nl.lumc.sasc.sentinel.testing
 
 import scala.annotation.tailrec
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 import com.mongodb.casbah.Imports._
-import de.flapdoodle.embed.mongo.{ Command, MongodStarter }
+import de.flapdoodle.embed.mongo.{Command, MongodStarter}
 import de.flapdoodle.embed.mongo.config._
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.process.config.io.ProcessOutput

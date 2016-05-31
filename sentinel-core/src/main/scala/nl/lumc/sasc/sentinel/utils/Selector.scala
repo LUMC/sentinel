@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.utils
 
 import com.mongodb.casbah.Imports._
 
-import nl.lumc.sasc.sentinel.models.{ FragmentStatsLike, LibType }
+import nl.lumc.sasc.sentinel.models.{FragmentStatsLike, LibType}
 
 trait Selector {
 

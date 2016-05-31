@@ -37,14 +37,16 @@ object UnitPatch {
 
   /** Helper case class for unit patching. */
   final case class Combined(
-      runPatches: List[UnitPatch.OnRun],
-      samplePatches: List[UnitPatch.OnSample],
-      readGroupPatches: List[UnitPatch.OnReadGroup]) {
+      runPatches:       List[UnitPatch.OnRun],
+      samplePatches:    List[UnitPatch.OnSample],
+      readGroupPatches: List[UnitPatch.OnReadGroup]
+  ) {
 
     def ++(other: Combined) = Combined(
       runPatches ++ other.runPatches,
       samplePatches ++ other.samplePatches,
-      readGroupPatches ++ other.readGroupPatches)
+      readGroupPatches ++ other.readGroupPatches
+    )
 
     /** Patch operations to apply for the run object. Note that one `Combined` object is meant for one run. */
     lazy val runPatchOps: List[JsonPatch.PatchOp] = runPatches.flatMap(_.patchOps)

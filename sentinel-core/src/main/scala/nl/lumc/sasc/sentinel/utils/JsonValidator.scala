@@ -17,7 +17,7 @@
 package nl.lumc.sasc.sentinel.utils
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.core.report.{ ProcessingMessage, ProcessingReport }
+import com.github.fge.jsonschema.core.report.{ProcessingMessage, ProcessingReport}
 import com.github.fge.jsonschema.main._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._

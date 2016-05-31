@@ -28,9 +28,10 @@ import org.scalatra._
  *                 ApiPayload to always be associated with a HTTP action.
  */
 sealed case class ApiPayload(
-    message: String,
-    hints: List[String] = List.empty[String],
-    httpFunc: ApiPayload => ActionResult = ap => InternalServerError(ap)) {
+    message:  String,
+    hints:    List[String]               = List.empty[String],
+    httpFunc: ApiPayload => ActionResult = ap => InternalServerError(ap)
+) {
 
   // Need to be overridden to ensure hashCode generation is only affected by the first two attributes.
   override def productArity = 2
@@ -95,14 +96,20 @@ object Payloads {
     def message = "Invalid patch operation(s)."
     def apply(patch: JsonPatch.PatchOp) = patch match {
 
-      case p: JsonPatch.PatchOpWithValue => ApiPayload(message,
-        List(s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}' with value '${p.value}'."), func)
+      case p: JsonPatch.PatchOpWithValue => ApiPayload(
+        message,
+        List(s"Unsupported patch operation and/or value: '${p.op}' on '${p.path}' with value '${p.value}'."), func
+      )
 
-      case p: JsonPatch.PatchOpWithFrom => ApiPayload(message,
-        List(s"Unsupported patch operation: '${p.op}' on '${p.path}' from '${p.from}'."), func)
+      case p: JsonPatch.PatchOpWithFrom => ApiPayload(
+        message,
+        List(s"Unsupported patch operation: '${p.op}' on '${p.path}' from '${p.from}'."), func
+      )
 
-      case otherwise => ApiPayload(message,
-        List(s"Unsupported patch operation: '${otherwise.op}' on '${otherwise.path}'."), func)
+      case otherwise => ApiPayload(
+        message,
+        List(s"Unsupported patch operation: '${otherwise.op}' on '${otherwise.path}'."), func
+      )
     }
 
   }
@@ -114,22 +121,30 @@ object Payloads {
 
   object InvalidPipelineError {
     def message = "Pipeline parameter is invalid."
-    def apply(validList: Seq[String]) = ApiPayload(message,
+    def apply(validList: Seq[String]) = ApiPayload(
+      message,
       List("Valid values are " + validList.sorted.mkString(", ") + "."),
-      (ap: ApiPayload) => BadRequest(ap))
+      (ap: ApiPayload) => BadRequest(ap)
+    )
   }
 
-  val InvalidLibError = ApiPayload("Library type parameter is invalid.",
+  val InvalidLibError = ApiPayload(
+    "Library type parameter is invalid.",
     List("Valid values are '" + LibType.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
-    (ap: ApiPayload) => BadRequest(ap))
+    (ap: ApiPayload) => BadRequest(ap)
+  )
 
-  val InvalidAccLevelError = ApiPayload("Accumulation level parameter is invalid.",
+  val InvalidAccLevelError = ApiPayload(
+    "Accumulation level parameter is invalid.",
     List("Valid values are '" + AccLevel.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
-    (ap: ApiPayload) => BadRequest(ap))
+    (ap: ApiPayload) => BadRequest(ap)
+  )
 
-  val InvalidSeqQcPhaseError = ApiPayload("Sequencing QC phase parameter is invalid.",
+  val InvalidSeqQcPhaseError = ApiPayload(
+    "Sequencing QC phase parameter is invalid.",
     List("Valid values are '" + SeqQcPhase.values.toList.map(_.toString).sorted.mkString("', '") + "'."),
-    (ap: ApiPayload) => BadRequest(ap))
+    (ap: ApiPayload) => BadRequest(ap)
+  )
 
   val ResourceGoneError = ApiPayload("Resource already deleted.", httpFunc = (ap: ApiPayload) => Gone(ap))
 
@@ -150,20 +165,26 @@ object Payloads {
 
   val DataPointsNotFoundError = ApiPayload("No data points for aggregation found.", httpFunc = (ap: ApiPayload) => NotFound(ap))
 
-  val AuthenticationError = ApiPayload("Authentication required to access resource.",
-    httpFunc = (ap: ApiPayload) => Unauthorized(ap))
+  val AuthenticationError = ApiPayload(
+    "Authentication required to access resource.",
+    httpFunc = (ap: ApiPayload) => Unauthorized(ap)
+  )
 
-  val OptionalAuthenticationError = ApiPayload("User ID and/or API key is provided but authentication failed.",
-    httpFunc = (ap: ApiPayload) => Unauthorized(ap))
+  val OptionalAuthenticationError = ApiPayload(
+    "User ID and/or API key is provided but authentication failed.",
+    httpFunc = (ap: ApiPayload) => Unauthorized(ap)
+  )
 
   val AuthorizationError = ApiPayload("Unauthorized to access resource.", httpFunc = (ap: ApiPayload) => Forbidden(ap))
 
   object RunSummaryTooLargeError {
     def message = "Run summary exceeded maximum allowed size."
     def apply(maxRunSummarySize: Long) =
-      ApiPayload(message,
+      ApiPayload(
+        message,
         List(f"Maximum size is ${maxRunSummarySize / (1024 * 1024)}%d MB.", "You may reduce the upload size using gzip."),
-        httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap))
+        httpFunc = (ap: ApiPayload) => RequestEntityTooLarge(ap)
+      )
   }
 
   val UnexpectedError = ApiPayload("Unexpected error.", hints = List("Please contact the site administrators."))

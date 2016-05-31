@@ -22,7 +22,7 @@ import com.mongodb.casbah.Imports._
 import org.scalatra.servlet.FileItem
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, Payloads, Perhaps, User }, Payloads._
+import nl.lumc.sasc.sentinel.models.{ApiPayload, Payloads, Perhaps, User}, Payloads._
 
 object Implicits {
 

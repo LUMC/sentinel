@@ -23,7 +23,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatra.swagger._
 import org.scalatra.test.specs2.MutableScalatraSpec
-import org.scalatra.test.{ ClientResponse, Uploadable }
+import org.scalatra.test.{ClientResponse, Uploadable}
 import org.specs2.matcher.JsonMatchers
 import org.specs2.specification.core.Fragments
 import scalaz._, Scalaz._
@@ -82,7 +82,7 @@ trait SentinelServletSpec extends MutableScalatraSpec
   /** Helper container for an upload. */
   sealed case class UploadSet(uploader: User, payload: SentinelTestPart with Uploadable,
                               showUnitsLabels: Boolean = false,
-                              uploadEndpoint: String = "/runs") {
+                              uploadEndpoint:  String  = "/runs") {
 
     /** Helper method for creating upload requests. */
     lazy val reqFunc: ReqFunc = {
@@ -254,7 +254,8 @@ trait SwaggerProvider {
       termsOfServiceUrl = "http://placehold.er",
       contact = "test@placehold.er",
       license = "",
-      licenseUrl = "")
+      licenseUrl = ""
+    )
   }
 
   /** Implicit swagger value for testing. */

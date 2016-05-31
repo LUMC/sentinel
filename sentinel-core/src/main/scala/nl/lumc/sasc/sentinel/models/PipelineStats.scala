@@ -28,6 +28,7 @@ import com.novus.salat.annotations.Key
  */
 case class PipelineStats(
   @Key("_id") pipelineName: String,
-  nRuns: Int,
-  nSamples: Int,
-  nReadGroups: Int)
+  nRuns:                    Int,
+  nSamples:                 Int,
+  nReadGroups:              Int
+)

@@ -17,19 +17,19 @@
 package nl.lumc.sasc.sentinel.api
 
 import java.io.File
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 import com.typesafe.config.Config
 import org.scalatra._
 import org.scalatra.swagger._
-import org.scalatra.servlet.{ FileUploadSupport, MultipartConfig, SizeConstraintExceededException }
+import org.scalatra.servlet.{FileUploadSupport, MultipartConfig, SizeConstraintExceededException}
 import scalaz._
 
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.exts.plain._
-import nl.lumc.sasc.sentinel.processors.{ CompositeRunsProcessor, RunsProcessor }
+import nl.lumc.sasc.sentinel.processors.{CompositeRunsProcessor, RunsProcessor}
 import nl.lumc.sasc.sentinel.settings._
 import nl.lumc.sasc.sentinel.models._, JsonPatch._
 import nl.lumc.sasc.sentinel.utils.MongodbAccessObject
@@ -249,8 +249,10 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
           case None => NotFound(Payloads.RunIdNotFoundError)
           case Some(runFile) =>
             contentType = "application/octet-stream"
-            response.setHeader("Content-Disposition",
-              "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download"))
+            response.setHeader(
+              "Content-Disposition",
+              "attachment; filename=" + runFile.filename.getOrElse(s"$runId.download")
+            )
             Ok(runFile.inputStream)
         }
         else runs.getRun(runId, user, showUnitsLabels).map {
@@ -346,8 +348,11 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
 
     if (invalidPipelines.nonEmpty)
       BadRequest(
-        ApiPayload("One or more pipeline is invalid.",
-          hints = List("invalid pipelines: " + invalidPipelines.mkString(", ") + ".")))
+        ApiPayload(
+          "One or more pipeline is invalid.",
+          hints = List("invalid pipelines: " + invalidPipelines.mkString(", ") + ".")
+        )
+      )
     else {
       val user = simpleKeyAuth(params => params.get("userId"))
       new AsyncResult {

@@ -22,7 +22,7 @@ import com.mongodb.casbah.Imports._
 import com.novus.salat._
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.models.{ ApiPayload, User }
+import nl.lumc.sasc.sentinel.models.{ApiPayload, User}
 import nl.lumc.sasc.sentinel.models._
 import nl.lumc.sasc.sentinel.models.Payloads._
 import nl.lumc.sasc.sentinel.models.JsonPatch._

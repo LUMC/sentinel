@@ -18,17 +18,17 @@ package nl.lumc.sasc.sentinel.processors
 
 import scala.concurrent._
 import scala.language.higherKinds
-import scala.reflect.runtime.{ universe => ru }
+import scala.reflect.runtime.{universe => ru}
 import scala.util.Random.shuffle
 import scala.util.Try
 
-import com.novus.salat.{ CaseClass => _, _ }
-import com.novus.salat.global.{ ctx => SalatContext }
+import com.novus.salat.{CaseClass => _, _}
+import com.novus.salat.global.{ctx => SalatContext}
 import com.mongodb.casbah.Imports._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.sentinel.models._
-import nl.lumc.sasc.sentinel.utils.{ extractFieldNames, FutureMixin, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{extractFieldNames, FutureMixin, MongodbAccessObject}
 import nl.lumc.sasc.sentinel.utils.reflect.getReadStatsManifest
 
 /**
@@ -79,7 +79,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
       reduceFunction = reduceFunc,
       output = mapReduceOutput,
       finalizeFunction = Option(finalizeFunc),
-      query = query)
+      query = query
+    )
     .toSeq
     .headOption
     .map { res =>
@@ -194,7 +195,8 @@ abstract class StatsProcessor(protected[processors] val mongo: MongodbAccessObje
             metricName -> 1,
             "uploaderId" -> 1,
             "runId" -> 1,
-            "labels" -> 1))
+            "labels" -> 1
+          ))
 
       // Initial document selection
       val opMatch = MongoDBObject("$match" -> matchers).asDBObject

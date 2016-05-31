@@ -16,16 +16,16 @@
  */
 package nl.lumc.sasc.sentinel.processors
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.gridfs.GridFSDBFile
 import com.novus.salat._
 import scalaz._, Scalaz._
 
-import nl.lumc.sasc.sentinel.adapters.{ FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter }
+import nl.lumc.sasc.sentinel.adapters.{FutureMongodbAdapter, ReadGroupsAdapter, SamplesAdapter}
 import nl.lumc.sasc.sentinel.models._, Payloads._
-import nl.lumc.sasc.sentinel.utils.{ JsonPatchExtractor }
+import nl.lumc.sasc.sentinel.utils.{JsonPatchExtractor}
 import nl.lumc.sasc.sentinel.utils.Implicits.RunRecordDBObject
 
 /** Class for performing operations on multiple pipeline runs. */
@@ -38,8 +38,10 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
 
   /** Database connection. */
   protected val mongo = {
-    require(processors.map(_.mongo).distinct.size == 1,
-      "CompositeRunsProcessor must combine only runs with the same database access.")
+    require(
+      processors.map(_.mongo).distinct.size == 1,
+      "CompositeRunsProcessor must combine only runs with the same database access."
+    )
     processors.head.mongo
   }
 
@@ -254,20 +256,23 @@ class CompositeRunsProcessor(protected val processors: Seq[RunsProcessor])
   def getGlobalRunStats(): Future[Seq[PipelineStats]] = Future {
     val statsGrater = grater[PipelineStats]
     coll
-      .aggregate(List(
-        MongoDBObject("$match" ->
-          MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false))
+      .aggregate(
+        List(
+          MongoDBObject("$match" ->
+            MongoDBObject("deletionTimeUtc" -> MongoDBObject("$exists" -> false))),
+          MongoDBObject("$project" ->
+            MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
+          MongoDBObject("$group" ->
+            MongoDBObject(
+              "_id" -> "$pipeline",
+              "nRuns" -> MongoDBObject("$sum" -> 1),
+              "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
+              "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups")
+            )),
+          MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))
         ),
-        MongoDBObject("$project" ->
-          MongoDBObject("_id" -> 0, "pipeline" -> 1, "nSamples" -> 1, "nReadGroups" -> 1)),
-        MongoDBObject("$group" ->
-          MongoDBObject(
-            "_id" -> "$pipeline",
-            "nRuns" -> MongoDBObject("$sum" -> 1),
-            "nSamples" -> MongoDBObject("$sum" -> "$nSamples"),
-            "nReadGroups" -> MongoDBObject("$sum" -> "$nReadGroups"))),
-        MongoDBObject("$sort" -> MongoDBObject("_id" -> 1))),
-        AggregationOptions(AggregationOptions.CURSOR))
+        AggregationOptions(AggregationOptions.CURSOR)
+      )
       .map { pstat => statsGrater.asObject(pstat) }
       .toSeq
   }

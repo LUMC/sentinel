@@ -16,17 +16,17 @@
  */
 package nl.lumc.sasc.sentinel.api.auth
 
-import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
-import scala.concurrent.{ Await, ExecutionContext }
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.language.reflectiveCalls
 
-import org.scalatra.{ Forbidden, ScalatraBase }
+import org.scalatra.{Forbidden, ScalatraBase}
 import org.scalatra.auth.ScentrySupport
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
 import nl.lumc.sasc.sentinel.adapters.UsersAdapter
-import nl.lumc.sasc.sentinel.models.{ Payloads, User }
+import nl.lumc.sasc.sentinel.models.{Payloads, User}
 
 /**
  * Basic HTTP authentication strategy.

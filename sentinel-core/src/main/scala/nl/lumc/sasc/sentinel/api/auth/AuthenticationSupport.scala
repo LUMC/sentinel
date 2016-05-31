@@ -16,13 +16,13 @@
  */
 package nl.lumc.sasc.sentinel.api.auth
 
-import javax.servlet.http.{ HttpServletResponse, HttpServletRequest }
+import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
 
 import org.scalatra.auth.ScentryAuthStore.ScentryAuthStore
 
 import scala.language.reflectiveCalls
 
-import org.scalatra.auth.{ ScentryConfig, ScentrySupport }
+import org.scalatra.auth.{ScentryConfig, ScentrySupport}
 
 import nl.lumc.sasc.sentinel.api.SentinelServlet
 import nl.lumc.sasc.sentinel.adapters.UsersAdapter

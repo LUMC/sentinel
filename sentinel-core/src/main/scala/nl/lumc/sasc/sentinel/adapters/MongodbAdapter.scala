@@ -16,7 +16,7 @@
  */
 package nl.lumc.sasc.sentinel.adapters
 
-import nl.lumc.sasc.sentinel.utils.{ FutureMixin, MongodbAccessObject }
+import nl.lumc.sasc.sentinel.utils.{FutureMixin, MongodbAccessObject}
 
 /** Trait for connecting to a MongoDB database. */
 trait MongodbAdapter {

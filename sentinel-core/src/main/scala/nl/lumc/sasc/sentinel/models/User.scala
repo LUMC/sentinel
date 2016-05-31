@@ -39,15 +39,16 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
  * @param updateTimeUtc UTC time of the most recent update to the user entry.
  */
 case class User(
-    id: String,
-    email: String,
-    hashedPassword: String,
-    activeKey: String,
-    verified: Boolean,
-    isAdmin: Boolean,
-    creationTimeUtc: Date = utcTimeNow,
-    _id: ObjectId = new ObjectId,
-    updateTimeUtc: Option[Date] = None) {
+    id:              String,
+    email:           String,
+    hashedPassword:  String,
+    activeKey:       String,
+    verified:        Boolean,
+    isAdmin:         Boolean,
+    creationTimeUtc: Date         = utcTimeNow,
+    _id:             ObjectId     = new ObjectId,
+    updateTimeUtc:   Option[Date] = None
+) {
 
   /** Checks whether the given string matches the user password. */
   def passwordMatches(candidate: String): Boolean = BCrypt.checkpw(candidate, hashedPassword)
@@ -150,11 +151,12 @@ object User {
  * @param updateTimeUtc UTC time of the most recent update to the user entry.
  */
 case class UserResponse(
-  id: String,
-  email: String,
-  verified: Boolean,
-  activeKey: String,
-  updateTimeUtc: Option[Date])
+  id:            String,
+  email:         String,
+  verified:      Boolean,
+  activeKey:     String,
+  updateTimeUtc: Option[Date]
+)
 
 /**
  * Representation of an HTTP request payload for creating new users.
@@ -180,5 +182,6 @@ case class UserRequest(id: String, email: String, password: String, confirmPassw
       verified = false,
       isAdmin = false,
       creationTimeUtc = utcTimeNow,
-      _id = new ObjectId)
+      _id = new ObjectId
+    )
 }

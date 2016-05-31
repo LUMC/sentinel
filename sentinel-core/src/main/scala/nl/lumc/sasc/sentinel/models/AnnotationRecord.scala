@@ -33,10 +33,11 @@ import nl.lumc.sasc.sentinel.utils.utcTimeNow
  * @param creationTimeUtc UTC time when the annotation record was created.
  */
 case class AnnotationRecord(
-    annotMd5: String,
-    fileName: Option[String] = None,
-    @Key("_id") annotId: ObjectId = new ObjectId,
-    creationTimeUtc: Date = utcTimeNow) {
+    annotMd5:            String,
+    fileName:            Option[String] = None,
+    @Key("_id") annotId: ObjectId       = new ObjectId,
+    creationTimeUtc:     Date           = utcTimeNow
+) {
 
   /* Extension of the annotation file (lower case). */
   lazy val extension: Option[String] = fileName.map { fname => getExtension(fname.toLowerCase) }

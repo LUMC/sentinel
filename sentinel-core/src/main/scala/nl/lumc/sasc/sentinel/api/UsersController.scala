@@ -27,7 +27,7 @@ import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.api.auth.AuthenticationSupport
 import nl.lumc.sasc.sentinel.adapters._
 import nl.lumc.sasc.sentinel.models._, JsonPatch._
-import nl.lumc.sasc.sentinel.utils.{ JsonPatchExtractor, MongodbAccessObject, ValidatedJsonExtractor }
+import nl.lumc.sasc.sentinel.utils.{JsonPatchExtractor, MongodbAccessObject, ValidatedJsonExtractor}
 
 /**
  * Controller for the `/users` endpoint.

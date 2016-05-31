@@ -18,7 +18,7 @@ package nl.lumc.sasc.sentinel.models
 
 import java.util.Date
 
-import com.novus.salat.annotations.{ Ignore, Key, Persist, Salat }
+import com.novus.salat.annotations.{Ignore, Key, Persist, Salat}
 import org.bson.types.ObjectId
 
 import nl.lumc.sasc.sentinel.utils.utcTimeNow
