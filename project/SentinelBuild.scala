@@ -156,7 +156,7 @@ object SentinelBuild extends Build {
       id = "sentinel-core",
       base = file("sentinel-core"),
       settings = commonSettings ++ docsSiteSettings ++ Defaults.itSettings ++
-        AutomateHeaderPlugin.automateFor(IntegrationTest) ++ Seq(
+        AutomateHeaderPlugin.automateFor(Compile) ++ Seq(
           organization := Organization,
           name := "sentinel-core",
           version := Version,
