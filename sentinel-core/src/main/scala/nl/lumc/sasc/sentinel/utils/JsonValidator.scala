@@ -45,9 +45,10 @@ class JsonValidator(rawSchema: JValue) {
    * Validates the given JSON.
    *
    * @param instance JSON instance to validate.
+   * @param deepCheck Whether to do a deep validation check or not.
    * @return ProcessingReport instance.
    */
-  def validate(instance: JValue): ProcessingReport = schema.validate(instance)
+  def validate(instance: JValue, deepCheck: Boolean = true): ProcessingReport = schema.validate(instance, deepCheck)
 
   /**
    * Validates the given JSON and captures any validation messages in a container.
