@@ -70,4 +70,4 @@ jrebel.lic
 /.lib/
 
 # generated documentation
-*src/sphinx/_build
+sentinel-core/src/sphinx/_build
