@@ -464,7 +464,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 "return a JSON object containing the expected message" in {
                   ihttp.rep.contentType mustEqual "application/json"
-                  ihttp.rep.body must /("message" -> "JSON is invalid.")
+                  ihttp.rep.body must /("message" -> Payloads.SyntaxError.message)
                   ihttp.rep.body must /("hints") /# 0 / "Invalid syntax."
                 }
               }
@@ -473,8 +473,8 @@ class UsersControllerSpec extends SentinelServletSpec {
                 Seq.empty[PatchOp].toByteArray, headers) { response })
               "when the patch document is an empty list" should ctx.priorReqsOnCleanDb(ictx2, populate = true) { ihttp =>
 
-                "return status 400" in {
-                  ihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  ihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {
@@ -494,7 +494,7 @@ class UsersControllerSpec extends SentinelServletSpec {
 
                 "return a JSON object containing the expected message" in {
                   ihttp.rep.contentType mustEqual MimeType.Json
-                  ihttp.rep.body must /("message" -> Payloads.JsonValidationError.message)
+                  ihttp.rep.body must /("message" -> Payloads.SyntaxError.message)
                   ihttp.rep.body must /("hints") /# 0 / "Nothing to parse."
                 }
               }
@@ -504,8 +504,8 @@ class UsersControllerSpec extends SentinelServletSpec {
               "when the patch document contains an invalid entry" should
                 ctx.priorReqsOnCleanDb(ictx4, populate = true) { ihttp =>
 
-                  "return status 400" in {
-                    ihttp.rep.status mustEqual 400
+                  "return status 422" in {
+                    ihttp.rep.status mustEqual 422
                   }
 
                   "return a JSON object containing the expected message" in {
@@ -524,8 +524,8 @@ class UsersControllerSpec extends SentinelServletSpec {
                     ReplaceOp("/password", "newPass123"), p).toByteArray, headers) { response })
                   s"such as '${p.op}' on '${p.path}'" should ctx.priorReqsOnCleanDb(ictx5, populate = true) { ihttp =>
 
-                    "return status 400" in {
-                      ihttp.rep.status mustEqual 400
+                    "return status 422" in {
+                      ihttp.rep.status mustEqual 422
                     }
 
                     "return a JSON object containing the expected message" in {

@@ -182,7 +182,7 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
 
                 "return a JSON object containing the expected message" in {
                   ihttp.rep.contentType mustEqual "application/json"
-                  ihttp.rep.body must /("message" -> "JSON is invalid.")
+                  ihttp.rep.body must /("message" -> Payloads.SyntaxError.message)
                   ihttp.rep.body must /("hints") /# 0 / "Invalid syntax."
                 }
               }
@@ -195,8 +195,8 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 Seq.empty[JsonPatch.PatchOp].toByteArray, headers) { response })
               "when the patch document is an empty list" should ctx.priorReqs(iiictx1) { ihttp =>
 
-                "return status 400" in {
-                  ihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  ihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {
@@ -220,7 +220,7 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
 
                 "return a JSON object containing the expected message" in {
                   ihttp.rep.contentType mustEqual MimeType.Json
-                  ihttp.rep.body must /("message" -> Payloads.JsonValidationError.message)
+                  ihttp.rep.body must /("message" -> Payloads.SyntaxError.message)
                   ihttp.rep.body must /("hints") /# 0 / "Nothing to parse."
                 }
               }
@@ -234,8 +234,8 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 Seq("yalala", JsonPatch.ReplaceOp("/password", "newPass123")).toByteArray, headers) { response })
               "when the patch document contains an invalid entry" should ctx.priorReqs(iiictx1) { ihttp =>
 
-                "return status 400" in {
-                  ihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  ihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {
@@ -496,8 +496,8 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 Seq(JsonPatch.RemoveOp(s"/labels/tags/newTag")).toByteArray, headers) { response })
               "when '/labels/tags/newTag' is patched with 'remove' again" should ctx.priorReqs(iiictx5) { iiihttp =>
 
-                "return status 400" in {
-                  iiihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  iiihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {
@@ -617,8 +617,8 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 Seq(JsonPatch.RemoveOp(s"/sampleLabels/$sampleId/tags/newTag")).toByteArray, headers) { response })
               "when '/sampleLabels/*/tags/newTag' is patched with 'remove' again" should ctx.priorReqs(iiictx5) { iiihttp =>
 
-                "return status 400" in {
-                  iiihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  iiihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {
@@ -751,8 +751,8 @@ class PatchRunIdRunsControllerSpec extends BaseRunsControllerSpec {
                 Seq(JsonPatch.RemoveOp(s"/readGroupLabels/$readGroupId/tags/newTag")).toByteArray, headers) { response })
               "when '/readGroupLabels/*/tags/newTag' is patched with 'remove' again" should ctx.priorReqs(iiictx5) { iiihttp =>
 
-                "return status 400" in {
-                  iiihttp.rep.status mustEqual 400
+                "return status 422" in {
+                  iiihttp.rep.status mustEqual 422
                 }
 
                 "return a JSON object containing the expected message" in {

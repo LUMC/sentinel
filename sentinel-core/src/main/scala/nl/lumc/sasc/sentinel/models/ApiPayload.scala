@@ -85,21 +85,29 @@ object Payloads {
   val IncompleteDeletionError = UnexpectedDatabaseError("Deletion incomplete.")
 
   /** Trait for validation errors from payloads sent by the user. */
-  trait ValidationErrorLike {
+  trait PayloadError {
     def message: String
-    protected val func = (ap: ApiPayload) => BadRequest(ap)
+    protected val func: ApiPayload => ActionResult
     final def apply(validationMessages: Seq[String]) = ApiPayload(message, validationMessages.toList, func)
     final def apply(validationMessage: String) = ApiPayload(message, List(validationMessage), func)
     final def apply() = ApiPayload(message, httpFunc = func)
   }
 
-  /** Returned when a JSON validation error occurs. */
-  object JsonValidationError extends ValidationErrorLike {
+  /** Returned when the payload is either empty or contains syntax errors. */
+  object SyntaxError extends PayloadError {
+    def message = "Payload can not be understood."
+    protected val func = (ap: ApiPayload) => BadRequest(ap)
+  }
+
+  /** Returned when a JSON validation error (or semantic error) occurs. */
+  object JsonValidationError extends PayloadError {
+    protected val func = (ap: ApiPayload) => UnprocessableEntity(ap)
     def message = "JSON is invalid."
   }
 
   /** Returned when a JSON patch validation error occurs. */
-  object PatchValidationError extends ValidationErrorLike {
+  object PatchValidationError extends PayloadError {
+    protected val func = (ap: ApiPayload) => UnprocessableEntity(ap)
     def message = "Invalid patch operation(s)."
     def apply(patch: JsonPatch.PatchOp) = patch match {
 

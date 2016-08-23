@@ -16,10 +16,12 @@
  */
 package nl.lumc.sasc.sentinel.api
 
+import org.json4s._
+
 import nl.lumc.sasc.sentinel.HeaderApiKey
 import nl.lumc.sasc.sentinel.settings.DefaultMaxRunSummarySize
+import nl.lumc.sasc.sentinel.models.Payloads
 import nl.lumc.sasc.sentinel.testing.{ MimeType, UserExamples, VariableSizedPart }
-import org.json4s._
 
 import scalaz.NonEmptyList
 
@@ -185,7 +187,7 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
 
         "return a JSON object containing the expected message" in {
           ihttp.rep.contentType mustEqual MimeType.Json
-          ihttp.rep.body must /("message" -> "JSON is invalid.")
+          ihttp.rep.body must /("message" -> Payloads.SyntaxError.message)
           ihttp.rep.body must /("hints") /# 0 / "Invalid syntax."
         }
       }
@@ -193,8 +195,8 @@ class PostRunsControllerSpec extends BaseRunsControllerSpec {
       val ictx6 = UploadContext(UploadSet(UserExamples.avg, SummaryExamples.Invalid))
       "when an invalid run summary file is uploaded" should ctx.priorReqsOnCleanDb(ictx6, populate = true) { ihttp =>
 
-        "return status 400" in {
-          ihttp.rep.status mustEqual 400
+        "return status 422" in {
+          ihttp.rep.status mustEqual 422
         }
 
         "return a JSON object containing the expected message" in {

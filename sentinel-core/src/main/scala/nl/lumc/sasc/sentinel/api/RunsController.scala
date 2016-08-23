@@ -282,11 +282,12 @@ class RunsController[T <: RunsProcessor](config: Config)(implicit val swagger: S
       StringResponseMessage(400, Payloads.UnspecifiedUserIdError.message),
       StringResponseMessage(400, Payloads.UnspecifiedPipelineError.message),
       StringResponseMessage(400, "Pipeline parameter is invalid."),
-      StringResponseMessage(400, "Run summary is unspecified or invalid."),
+      StringResponseMessage(400, "Run summary is unspecified or contains syntax errors."),
       StringResponseMessage(401, Payloads.AuthenticationError.message),
       StringResponseMessage(403, Payloads.AuthorizationError.message),
       StringResponseMessage(409, "Run summary already uploaded by the user."),
-      StringResponseMessage(413, Payloads.RunSummaryTooLargeError.message)))
+      StringResponseMessage(413, Payloads.RunSummaryTooLargeError.message),
+      StringResponseMessage(422, "Run summary contains semantic errors.")))
   // TODO: add authorizations entry *after* scalatra-swagger fixes the spec deviation
   // format: ON
 
