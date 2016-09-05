@@ -7,17 +7,17 @@ to help out.
 Quick Links
 -----------
 
-* Issue tracker: `https://git.lumc.nl/sasc/sentinel/issues <https://git.lumc.nl/sasc/sentinel/issues>`_
+* Issue tracker: `https://github.com/lumc/sentinel/issues <https://github.com/lumc/sentinel/issues>`_
 
-* Source code: `https://git.lumc.nl/sasc/sentinel <https://git.lumc.nl/sasc/sentinel>`_
+* Source code: `https://github.com/lumc/sentinel/issues <https://github.com/lumc/sentinel>`_
 
-* Git: `git@git.lumc.nl:sasc/sentinel.git <git@git.lumc.nl:sasc/sentinel.git>`_
+* Git: `https://github.com/LUMC/sentinel.git <https://github.com/LUMC/sentinel.git>`_
 
 Bug Reports & Feature Suggestions
 ---------------------------------
 
 Feel free to report bugs and/or suggest new features about our local LUMC deployment or Sentinel in general to our
-`issue tracker <https://git.lumc.nl/sasc/sentinel/issues>`_. We do request that you be as descriptive as possible.
+`issue tracker <https://github.com/lumc/sentinel/issues>`_. We do request that you be as descriptive as possible.
 Particularly for bugs, please describe in as much detail as possible what you expected to see and what you saw instead.
 
 Documentation

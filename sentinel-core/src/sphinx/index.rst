@@ -11,9 +11,6 @@ metrics from various phases of an analysis pipeline run. For a given pipeline ru
 `JSON <https://en.wikipedia.org/wiki/JSON>`_ file containing the metrics of that pipeline. The metrics can then be
 queried using one of the predefined HTTP endpoints.
 
-At the moment, Sentinel is meant for internal `LUMC <http://www.lumc.nl>`_ use only. URLs mentioned in this
-documentation may not work outside LUMC.
-
 Please use the navigation bar on the left to explore this site.
 
 .. toctree::
@@ -22,8 +19,6 @@ Please use the navigation bar on the left to explore this site.
 
    users_introduction
    users_terminologies
-   users_upload
-   users_query
 
 .. toctree::
    :hidden:

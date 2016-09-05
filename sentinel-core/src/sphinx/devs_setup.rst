@@ -48,9 +48,9 @@ Starting Up
 Quick Links
 ^^^^^^^^^^^
 
-* Source code: `https://git.lumc.nl/sasc/sentinel <https://git.lumc.nl/sasc/sentinel>`_
+* Source code: `https://github.com/lumc/sentinel <https://github.com/lumc/sentinel>`_
 
-* Git: `git@git.lumc.nl:sasc/sentinel.git <git@git.lumc.nl:sasc/sentinel.git>`_
+* Git: `https://github.com/lumc/sentinel.git <https://github.com/lumc/sentinel.git>`_
 
 On the Command Line (without an IDE)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,7 +59,7 @@ On the Command Line (without an IDE)
 
     .. code-block:: bash
 
-        $ git clone git@git.lumc.nl:sasc/sentinel.git
+        $ git clone https://github.com/lumc/sentinel.git
         $ cd sentinel
 
 2. If you would like to be able to build documentation, install the python dependencies. We recommend that you use a
@@ -121,7 +121,7 @@ sentinel in IntelliJ following these steps:
 
         .. code-block:: bash
 
-            $ git clone git@git.lumc.nl:sasc/sentinel.git
+            $ git clone https://github.com/lumc/sentinel.git
 
     2. Open IntelliJ, choose ``File`` -> ``New`` -> ``Project From Existing Source...``
 
